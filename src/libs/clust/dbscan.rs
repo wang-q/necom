@@ -16,6 +16,7 @@
 // Adopt from https://blog.petrzemek.net/2017/01/01/implementing-dbscan-from-distance-matrix-in-rust/
 use std::collections::{HashMap, VecDeque};
 
+/// DBSCAN clustering from a distance matrix.
 #[derive(Debug)]
 pub struct Dbscan<T> {
     eps: T,

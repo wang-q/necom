@@ -1,6 +1,7 @@
 use super::LabelMap;
 use std::collections::{HashMap, HashSet};
 
+/// Pairwise clustering evaluation metrics.
 #[derive(Debug, Default)]
 pub struct Metrics {
     /// Adjusted Rand Index
@@ -29,6 +30,7 @@ pub struct Metrics {
     pub recall: f64,
 }
 
+/// Evaluates two partitions and returns pairwise metrics.
 pub fn evaluate(p1: &LabelMap, p2: &LabelMap) -> Metrics {
     // 1. Find intersection of keys
     let keys1: HashSet<_> = p1.keys().collect();

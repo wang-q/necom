@@ -5,6 +5,7 @@ use crate::libs::phylo::tree::traversal::postorder;
 use crate::libs::phylo::tree::Tree;
 use std::collections::HashMap;
 
+/// Options for hybrid tree cutting.
 pub struct HybridOptions {
     pub min_cluster_size: usize,
     pub dist_matrix: NamedMatrix,
@@ -24,6 +25,7 @@ struct BranchInfo {
     scatter: f64,
 }
 
+/// Performs hybrid tree cutting on a phylogenetic tree.
 pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Partition> {
     let matrix = &options.dist_matrix;
     let min_size = options.min_cluster_size;

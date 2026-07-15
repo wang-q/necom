@@ -301,6 +301,7 @@ pub fn pearson_correlation(a: &[f32], b: &[f32]) -> f32 {
     numerator / (denom1 * denom2)
 }
 
+/// Computes the cosine similarity between two vectors.
 pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     let dot_product = dot_product(a, b);
     let denominator = norm_l2(a) * norm_l2(b);
@@ -312,6 +313,7 @@ pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     }
 }
 
+/// Computes the weighted Jaccard similarity between two vectors.
 pub fn weighted_jaccard_similarity(a: &[f32], b: &[f32]) -> f32 {
     let numerator = jaccard_intersection(a, b);
     let denominator = jaccard_union(a, b);

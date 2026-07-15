@@ -10,6 +10,7 @@ use std::io::BufRead;
 //----------------------------
 // FeatureVector
 //----------------------------
+/// A named feature vector for clustering input.
 #[derive(Default, Clone)]
 pub struct FeatureVector {
     name: String,
