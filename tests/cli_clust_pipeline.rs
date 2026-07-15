@@ -43,6 +43,41 @@ fn generate_blobs(data_file: &str, truth_file: &str) -> Result<(), Box<dyn std::
     Ok(())
 }
 
+// Compute Euclidean pairwise distances from the coordinate TSV produced by
+// `generate_blobs` and write them in the three-column TSV format expected by
+// `pgr mat to-phylip`.
+fn compute_pairwise_distances(
+    data_file: &str,
+    dist_file: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let content = fs::read_to_string(data_file)?;
+    let mut points: Vec<(String, f64, f64)> = Vec::new();
+    for line in content.lines() {
+        let parts: Vec<&str> = line.split('\t').collect();
+        if parts.len() != 2 {
+            continue;
+        }
+        let coords: Vec<&str> = parts[1].split(',').collect();
+        if coords.len() != 2 {
+            continue;
+        }
+        let x: f64 = coords[0].parse()?;
+        let y: f64 = coords[1].parse()?;
+        points.push((parts[0].to_string(), x, y));
+    }
+
+    let mut out = String::new();
+    for (id1, x1, y1) in &points {
+        for (id2, x2, y2) in &points {
+            let dist = ((x1 - x2).powi(2) + (y1 - y2).powi(2)).sqrt();
+            out.push_str(&format!("{}\t{}\t{:.6}\n", id1, id2, dist));
+        }
+    }
+
+    fs::write(dist_file, out)?;
+    Ok(())
+}
+
 #[test]
 fn test_clust_pipeline_full() {
     let temp_dir = tempfile::Builder::new()
@@ -64,15 +99,10 @@ fn test_clust_pipeline_full() {
     // 1. Generate Data
     generate_blobs(&data_file, &truth_file).expect("Failed to generate data");
 
-    // 2. Calculate Distances (pgr dist vector)
+    // 2. Calculate Euclidean pairwise distances
     // Input: ID \t X,Y
     // Output: ID1 \t ID2 \t Dist
-    let (_stdout, stderr) = PgrCmd::new()
-        .args(&[
-            "dist", "vector", &data_file, "--mode", "euclid", "-o", &dist_file,
-        ])
-        .run();
-    assert!(stderr.is_empty(), "dist vector failed: {}", stderr);
+    compute_pairwise_distances(&data_file, &dist_file).expect("Failed to compute distances");
     assert!(fs::metadata(&dist_file).is_ok(), "dist file not created");
 
     // 3. Convert to PHYLIP Matrix (pgr mat to-phylip)

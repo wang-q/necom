@@ -4,23 +4,27 @@
 [![codecov](https://codecov.io/gh/wang-q/pgr/branch/master/graph/badge.svg)](https://codecov.io/gh/wang-q/pgr)
 [![license](https://img.shields.io/github/license/wang-q/pgr)](https://github.com//wang-q/pgr)
 
-`pgr` is a command-line toolkit for working with genomes and genome-derived
-data: sequences, alignments, variation, phylogenies, and related formats.
+`pgr` is a command-line toolkit for clustering, distance-matrix processing,
+phylogenetic-tree manipulation, and related workflows.
 
-It is designed as a practical “Swiss Army knife” for day-to-day bioinformatics
-workflows, with a focus on:
+It is designed as a practical companion for day-to-day phylogenetics and
+clustering tasks, with a focus on:
 
-- Format-aware utilities for common genomics file types (FASTA/FASTQ/2bit, AXT/PSL/Chain/Net/MAF, GFF, Newick)
-- Interoperable outputs (tabular `cluster` / `pair` conventions, Newick for trees)
-- Pipeline-friendly behavior (stdin/stdout where possible, predictable output, composable subcommands)
-- Performance and robustness (Rust implementation, zero-panic policy for malformed inputs)
+- Clustering algorithms and evaluation (`pgr clust`)
+- Distance-matrix utilities (`pgr mat`)
+- Newick-tree operations (`pgr nwk`)
+- Pipeline-friendly behavior (stdin/stdout where possible, predictable output,
+  composable subcommands)
+- Performance and robustness (Rust implementation, zero-panic policy for
+  malformed inputs)
 
 High-level capabilities include:
 
-- Sequences: FASTA/FASTQ inspection, filtering, slicing, conversion, 2bit querying, and pbit population archive compression
-- Alignments: sorting, filtering, conversion, and coordinate/range utilities across UCSC formats
-- Clustering & trees: distance/matrix processing, multiple clustering algorithms, tree cutting and visualization
-- Pipelines & plots: integrated workflows (optionally using external tools) and LaTeX/TikZ figure generation
+- Clustering & trees: distance/matrix processing, multiple clustering
+  algorithms, tree cutting, tree comparison, rerooting, pruning, and
+  visualization
+- Pipelines: integrated workflows such as taxonomic tree condensation
+  (`pgr pl condense`)
 
 ## Install
 
@@ -38,50 +42,32 @@ cargo test -- --test-threads=1
 After installation, the `pgr` binary should be available in your `PATH`:
 
 ```bash
-pgr help
-pgr fa --help
-pgr fas --help
+pgr --help
+pgr clust --help
+pgr mat --help
+pgr nwk --help
 ```
 
 ## Examples
 
-This repository contains many subcommands and end-to-end workflows. Extended
-and curated examples are collected in:
-
-- docs/usage_examples.md
-
 Below are a few quick examples to get started:
 
 ```bash
-# Basic FASTA statistics
-pgr fa size tests/fasta/ufasta.fa
+# Hierarchical clustering from a PHYLIP distance matrix
+pgr clust hier tests/mat/IBPA.phy
 
-# Block FA summary
-pgr fas stat tests/fas/example.fas --outgroup
+# Compare two distance matrices
+pgr mat compare tests/mat/IBPA.phy tests/mat/IBPA.71.phy
 
-# 2bit range extraction
-pgr 2bit range tests/genome/mg1655.2bit NC_000913:1-100
+# Tree statistics
+pgr nwk stat tests/newick/catarrhini.nwk
 
-# Create a pbit population archive from a reference and sample assemblies
-pgr pbit create -r tests/pgr/pseudocat.fa -i tests/pgr/pseudopig.fa -o tmp.pbit
-
-# Extract a region from all samples in the archive
-pgr pbit range tmp.pbit scaffold_1:1-1000 -o tmp.fa
+# Condense a tree by taxonomy
+pgr pl condense --taxon tests/pipeline/strains.taxon.tsv \
+    tests/pipeline/minhash.reroot.newick
 ```
 
-## External dependencies
-
-Some subcommands depend on external executables:
-
-- `pgr pl ucsc` requires the UCSC kent-tools suite, including programs such as
-  `faToTwoBit`, `axtChain`, `chainAntiRepeat`, `chainMergeSort`, `chainPreNet`,
-  `chainNet`, `netSyntenic`, `netChainSubset`, `chainStitchId`, `netSplit`,
-  `netToAxt`, `axtSort`, `axtToMaf`, `netFilter`, `netClass`, and `chainSplit`.
-- `pgr pl trf` depends on `trf` and `spanr`.
-- `pgr pl rept` and `pgr pl ir` depend on `FastK`, `Profex`, and `spanr`.
-- `pgr pl p2m` depends on `spanr`.
-- `pgr fas refine` depends on an external multiple sequence alignment tool such as
-  `clustalw` (default), `muscle`, or `mafft`.
+Extended documentation for each command is available in `docs/`.
 
 ## Author
 
