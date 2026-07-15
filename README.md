@@ -1,45 +1,42 @@
-# necom - Clustering, Matrix, and Phylogeny Toolkit
+# necom — NWK, CLUST, and MAT Toolkit
 
 [![Build](https://github.com/wang-q/necom/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/necom/actions)
 [![codecov](https://codecov.io/gh/wang-q/necom/branch/master/graph/badge.svg)](https://codecov.io/gh/wang-q/necom)
 [![license](https://img.shields.io/github/license/wang-q/necom)](https://github.com//wang-q/necom)
 
-`necom` is a command-line toolkit for clustering, distance-matrix processing,
-phylogenetic-tree manipulation, and related workflows.
+`necom` is a command-line toolkit for **clustering**, **distance-matrix processing**, and **phylogenetic-tree manipulation**.
 
-It is designed as a practical companion for day-to-day phylogenetics and
-clustering tasks, with a focus on:
+The name is formed from its three command families — **NWK**, **CLUST**, and **MAT** — with vowels inserted in alphabetical order. It also echoes the Latin *nexum* (“tie” or “bond”), reflecting the toolkit’s focus on connections between clusters, matrix entries, and tree nodes.
 
-- Clustering algorithms and evaluation (`necom clust`)
-- Distance-matrix utilities (`necom mat`)
-- Newick-tree operations (`necom nwk`)
-- Pipeline-friendly behavior (stdin/stdout where possible, predictable output,
-  composable subcommands)
-- Performance and robustness (Rust implementation, zero-panic policy for
-  malformed inputs)
+## Features
 
-High-level capabilities include:
-
-- Clustering & trees: distance/matrix processing, multiple clustering
-  algorithms, tree cutting, tree comparison, rerooting, pruning, and
-  visualization
-- Pipelines: integrated workflows such as taxonomic tree condensation
-  (`necom pl condense`)
+- **Clustering** (`necom clust`): hierarchical clustering, DBSCAN, K-medoids, MCL, connected components, tree cutting, and evaluation metrics.
+- **Matrix utilities** (`necom mat`): format conversion, subsetting, comparison, and mathematical transformations for distance matrices.
+- **Tree operations** (`necom nwk`): rerooting, pruning, renaming, subtree extraction, topology comparison, statistics, and visualization.
+- **Pipelines** (`necom pl condense`): integrated workflows such as taxonomic tree condensation.
+- **Pipeline-friendly**: reads from `stdin`/writes to `stdout` where possible, with predictable output and composable subcommands.
+- **Robust**: Rust implementation with a zero-panic policy for malformed inputs.
 
 ## Install
 
 Current release: 0.2.0
 
-```bash
-cargo install --path . --force #--offline
+`necom` uses unstable Rust features (notably `portable_simd`), so a **nightly** toolchain is required:
 
-# test
-cargo test -- --test-threads=1
+```bash
+rustup toolchain install nightly
+rustup run nightly cargo install --path . --force
 ```
 
-## Usage
+## Test
 
-After installation, the `necom` binary should be available in your `PATH`:
+```bash
+rustup run nightly cargo test
+```
+
+## Quick start
+
+After installation, the `necom` binary is available in your `PATH`:
 
 ```bash
 necom --help
@@ -48,9 +45,7 @@ necom mat --help
 necom nwk --help
 ```
 
-## Examples
-
-Below are a few quick examples to get started:
+### Examples
 
 ```bash
 # Hierarchical clustering from a PHYLIP distance matrix
@@ -67,7 +62,17 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
     tests/pipeline/minhash.reroot.newick
 ```
 
-Extended documentation for each command is available in `docs/`.
+## Documentation
+
+Extended documentation for each command is available in `docs/`:
+
+- [`docs/clust.md`](docs/clust.md) — clustering algorithms
+- [`docs/clust-cut.md`](docs/clust-cut.md) — tree cutting
+- [`docs/clust-eval.md`](docs/clust-eval.md) — clustering evaluation
+- [`docs/mat.md`](docs/mat.md) — matrix utilities
+- [`docs/mat-transform.md`](docs/mat-transform.md) — matrix transformations
+- [`docs/nwk.md`](docs/nwk.md) — Newick tree operations
+- [`docs/pl.md`](docs/pl.md) — integrated pipelines
 
 ## Author
 
