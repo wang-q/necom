@@ -90,7 +90,7 @@ necom nwk stat [OPTIONS] <infile>
 ```
 
 *   `--style <col|line>`: Output format (key-value pairs or TSV lines).
-*   Statistics include: type (cladogram/phylogram/neither), node count, leaf count, rooted status, binary branch count, leaf labels, internal labels, cherries, Sackin index, Colless index.
+*   Statistics include: type (cladogram/phylogram/neither), node count, leaf count, rooted status, dichotomies, leaf labels, internal labels, cherries, Sackin index, Colless index.
 
 ### support
 

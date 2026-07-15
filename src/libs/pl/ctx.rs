@@ -1,7 +1,7 @@
 //! Pipeline working-directory context and path helpers.
 
+use crate::libs::io::absolute_path;
 use cmd_lib::run_cmd;
-use intspan::absolute_path;
 
 /// Shared pipeline context: necom executable and tempdir.
 ///
