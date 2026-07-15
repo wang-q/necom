@@ -2,7 +2,6 @@
 
 use clap::{builder, Arg, ArgAction, ArgMatches, Command};
 
-use pgr::libs::paf::query::QueryOptions;
 use pgr::libs::poa::AlignmentParams;
 
 /// Standard `-o/--outfile` argument defaulting to stdout.
@@ -329,8 +328,7 @@ pub fn collect_ranges(args: &ArgMatches) -> anyhow::Result<Vec<String>> {
 
 /// Add POA scoring arguments (`--match`, `--mismatch`, `--gap-open`,
 /// `--gap-extend`) to `cmd`. When `with_shorts` is true, also registers the
-/// `-m`/`-n`/`-g`/`-e` short flags (used by `fas consensus`; paf commands
-/// pass false because `-m` collides with `--max-depth`).
+/// `-m`/`-n`/`-g`/`-e` short flags (used by `fas consensus`).
 pub fn add_poa_args(cmd: Command, with_shorts: bool) -> Command {
     let mut match_arg = Arg::new("match")
         .long("match")
@@ -389,31 +387,6 @@ pub fn get_poa_params(args: &ArgMatches) -> AlignmentParams {
         mismatch_score: *args.get_one::<i32>("mismatch").unwrap(),
         gap_open: *args.get_one::<i32>("gap_open").unwrap(),
         gap_extend: *args.get_one::<i32>("gap_extend").unwrap(),
-    }
-}
-
-/// Extract PAF query options from clap matches added by [`add_query_args`].
-pub fn query_options_from_args(args: &ArgMatches) -> QueryOptions {
-    QueryOptions {
-        infile: args.get_one::<String>("infile").unwrap().clone(),
-        region: args.get_one::<String>("region").cloned(),
-        bed_regions: args.get_one::<String>("bed_regions").cloned(),
-        transitive: args.get_flag("transitive"),
-        max_depth: *args.get_one::<u16>("max_depth").unwrap(),
-        min_len: *args.get_one::<usize>("min_len").unwrap(),
-        min_dist: *args.get_one::<i32>("min_dist").unwrap(),
-        min_identity: *args.get_one::<f64>("min_identity").unwrap(),
-        min_output_len: *args.get_one::<i32>("min_output_len").unwrap(),
-        merge_distance: *args.get_one::<i32>("merge_distance").unwrap(),
-        min_degree: *args.get_one::<usize>("min_degree").unwrap(),
-        min_chain_length: *args.get_one::<i32>("min_chain_length").unwrap(),
-        subset_list: args.get_one::<String>("subset_list").cloned(),
-        syntenic_filter: args.get_one::<String>("syntenic_filter").cloned(),
-        fasta_tsv: args
-            .try_get_one::<String>("fasta_tsv")
-            .ok()
-            .flatten()
-            .cloned(),
     }
 }
 
@@ -921,174 +894,6 @@ pub fn mat_input_format_arg() -> Arg {
 }
 
 // ============================================================================
-// paf subcommand builders (Command → Command transformers)
-// ============================================================================
-
-/// Add common query arguments to a clap Command.
-/// Shared by `paf query`, `paf to-bed`, `paf to-gfa`, `paf to-vcf`,
-/// `paf to-fas`, and `paf to-maf`.
-pub fn add_query_args(cmd: Command) -> Command {
-    cmd.arg(
-        Arg::new("infile")
-            .required(true)
-            .index(1)
-            .help("Input PAF file or .paf.idx index to query"),
-    )
-    .arg(
-        Arg::new("region")
-            .index(2)
-            .help("Target region to query (e.g. chr1:1000-5000)"),
-    )
-    .arg(
-        Arg::new("bed_regions")
-            .long("bed-regions")
-            .short('b')
-            .num_args(1)
-            .help("BED file with multiple regions for batch query (name start end per line)"),
-    )
-    .arg(
-        Arg::new("transitive")
-            .long("transitive")
-            .short('t')
-            .action(ArgAction::SetTrue)
-            .help("Enable transitive BFS traversal"),
-    )
-    .arg(
-        Arg::new("max_depth")
-            .long("max-depth")
-            .num_args(1)
-            .default_value("2")
-            .value_parser(clap::value_parser!(u16))
-            .help("Maximum BFS depth (0 = unlimited, default: 2)"),
-    )
-    .arg(
-        Arg::new("min_len")
-            .long("min-len")
-            .num_args(1)
-            .default_value("10")
-            .value_parser(clap::value_parser!(usize))
-            .help("Minimum interval length to propagate (default: 10)"),
-    )
-    .arg(
-        Arg::new("min_dist")
-            .long("min-dist")
-            .num_args(1)
-            .default_value("10")
-            .value_parser(clap::value_parser!(i32))
-            .help("Minimum distance to merge adjacent intervals (default: 10)"),
-    )
-    .arg(
-        Arg::new("min_identity")
-            .long("min-identity")
-            .num_args(1)
-            .default_value("0.0")
-            .value_parser(clap::value_parser!(f64))
-            .help("Minimum gap-compressed identity (0.0-1.0, default: 0.0)"),
-    )
-    .arg(
-        Arg::new("min_output_len")
-            .long("min-output-len")
-            .num_args(1)
-            .default_value("0")
-            .value_parser(clap::value_parser!(i32))
-            .help("Minimum output interval length (default: 0 = no filter)"),
-    )
-    .arg(
-        Arg::new("merge_distance")
-            .long("merge-distance")
-            .num_args(1)
-            .default_value("0")
-            .value_parser(clap::value_parser!(i32))
-            .help("Merge adjacent output intervals within this distance (default: 0 = off)"),
-    )
-    .arg(
-        Arg::new("min_degree")
-            .long("min-degree")
-            .num_args(1)
-            .default_value("0")
-            .value_parser(clap::value_parser!(usize))
-            .help("Minimum distinct query sequences per region (default: 0 = off)"),
-    )
-    .arg(
-        Arg::new("min_chain_length")
-            .long("min-chain-length")
-            .num_args(1)
-            .default_value("0")
-            .value_parser(clap::value_parser!(i32))
-            .help("Minimum total aligned length per query (default: 0 = off)"),
-    )
-    .arg(
-        Arg::new("subset_list")
-            .long("subset-sequence-list")
-            .num_args(1)
-            .help("File with sequence names to include (one per line)"),
-    )
-    .arg(
-        Arg::new("syntenic_filter")
-            .long("syntenic-filter")
-            .num_args(1)
-            .help("UCSC chain file; drop query results whose query interval is not covered by any chain's query span (chain-level, both target and query name must match)"),
-    )
-}
-
-/// Add the required `-f/--fasta-tsv` argument.
-/// Shared by `paf to-gfa`, `paf to-vcf`, `paf to-fas`, and `paf to-maf`.
-pub fn add_fasta_tsv_arg(cmd: Command) -> Command {
-    cmd.arg(
-        Arg::new("fasta_tsv")
-            .long("fasta-tsv")
-            .short('f')
-            .required(true)
-            .num_args(1)
-            .help("TSV file: genome_name <tab> bgzf_fasta_path"),
-    )
-}
-
-/// Add the optional `-f/--fasta-tsv` argument (for topology-only commands).
-/// Shared by `paf stat` and `paf graph`.
-pub fn add_optional_fasta_tsv_arg(cmd: Command) -> Command {
-    cmd.arg(
-        Arg::new("fasta_tsv")
-            .long("fasta-tsv")
-            .short('f')
-            .num_args(1)
-            .help("TSV file: genome_name <tab> bgzf_fasta_path (optional for topology-only mode)"),
-    )
-}
-
-/// Add the `--min-var-len` argument (default 100).
-/// Shared by `paf stat` and `paf graph`.
-pub fn add_min_var_len_arg(cmd: Command) -> Command {
-    cmd.arg(
-        Arg::new("min_var_len")
-            .long("min-var-len")
-            .num_args(1)
-            .default_value("100")
-            .value_parser(clap::value_parser!(i32))
-            .help("Minimum indel length to split at (default: 100)"),
-    )
-}
-
-/// `--crush` flag for `paf to-gfa`.
-pub fn crush_arg() -> Arg {
-    Arg::new("crush")
-        .long("crush")
-        .action(ArgAction::SetTrue)
-        .help("Compress SNP bubbles (impg 'crush' style; loses base-level ALT info)")
-}
-
-/// Add the `--msa` flag for POA-based multi-way output.
-/// Shared by `paf to-fas` and `paf to-maf`.
-pub fn add_msa_flag(cmd: Command) -> Command {
-    cmd.arg(
-        Arg::new("msa")
-            .long("msa")
-            .action(ArgAction::SetTrue)
-            .help("Merge results per region into a multi-way block via POA"),
-    )
-}
-
-// ============================================================================
 // dist subcommand builders
 // ============================================================================
 
@@ -1537,114 +1342,5 @@ pub fn window_arg_with_default(default: &'static str, help: &'static str) -> Arg
         .num_args(1)
         .default_value(default)
         .value_parser(clap::value_parser!(usize))
-        .help(help)
-}
-
-// ============================================================================
-// pbit subcommand builders
-// ============================================================================
-
-/// `--ref`/`-r` argument for `pbit create`.
-pub fn pbit_ref_arg() -> Arg {
-    Arg::new("ref")
-        .long("ref")
-        .short('r')
-        .required(true)
-        .num_args(1)
-        .help("Reference FASTA file (plain or .gz)")
-}
-
-/// `-i/--infile` argument for `pbit create` / `pbit append`.
-pub fn pbit_infiles_arg() -> Arg {
-    Arg::new("infiles")
-        .long("infile")
-        .short('i')
-        .required(false)
-        .num_args(1)
-        .action(ArgAction::Append)
-        .help("Sample FASTA file(s) (plain or .gz)")
-}
-
-/// `--name` argument for `pbit create` / `pbit append` (TSV of sample info).
-pub fn pbit_name_arg() -> Arg {
-    Arg::new("name")
-        .long("name")
-        .num_args(1)
-        .help("TSV file of `sample_name<TAB>fasta_path[<TAB>paf_path]` lines (overrides -i)")
-}
-
-/// `-p/--paf` argument for `pbit create` / `pbit append`.
-pub fn pbit_paf_arg() -> Arg {
-    Arg::new("paf")
-        .long("paf")
-        .short('p')
-        .num_args(1)
-        .action(ArgAction::Append)
-        .help("PAF file(s) for CIGAR-driven encoding (paired with -i by order)")
-}
-
-/// `-s/--segment-size` argument for `pbit create`.
-pub fn pbit_segment_size_arg() -> Arg {
-    Arg::new("segment_size")
-        .long("segment-size")
-        .short('s')
-        .num_args(1)
-        .default_value("4096")
-        .value_parser(clap::value_parser!(usize))
-        .help("Reference segment size in bp (default: 4096)")
-}
-
-/// `-k/--kmer-len` argument for `pbit create`.
-pub fn pbit_kmer_len_arg() -> Arg {
-    Arg::new("kmer_len")
-        .long("kmer-len")
-        .short('k')
-        .num_args(1)
-        .default_value("15")
-        .value_parser(clap::value_parser!(usize))
-        .help("K-mer length for LZ-diff hashing (default: 15)")
-}
-
-/// `-l/--min-match-len` argument for `pbit create`.
-pub fn pbit_min_match_len_arg() -> Arg {
-    Arg::new("min_match_len")
-        .long("min-match-len")
-        .short('l')
-        .num_args(1)
-        .default_value("18")
-        .value_parser(clap::value_parser!(u32))
-        .help("Minimum match length for LZ-diff (default: 18)")
-}
-
-/// `--samples` flag for `pbit stat`.
-pub fn pbit_samples_flag_arg() -> Arg {
-    Arg::new("samples")
-        .long("samples")
-        .action(ArgAction::SetTrue)
-        .help("List all sample names")
-}
-
-/// `--refs` flag for `pbit stat`.
-pub fn pbit_refs_flag_arg() -> Arg {
-    Arg::new("refs")
-        .long("refs")
-        .action(ArgAction::SetTrue)
-        .help("List reference contigs (with segment counts)")
-}
-
-/// `--contigs` flag for `pbit stat`.
-pub fn pbit_contigs_flag_arg() -> Arg {
-    Arg::new("contigs")
-        .long("contigs")
-        .action(ArgAction::SetTrue)
-        .help("List contigs per sample (or for a single sample with -s)")
-}
-
-/// `-s/--sample` argument for `pbit stat` / `pbit to-fa`.
-pub fn pbit_sample_filter_arg(help: &'static str) -> Arg {
-    Arg::new("sample")
-        .long("sample")
-        .short('s')
-        .num_args(1)
         .help(help)
 }
