@@ -3,15 +3,6 @@
 use cmd_lib::run_cmd;
 use intspan::absolute_path;
 
-/// Resolve `path` to an absolute path string. `stdout` is passed through as-is.
-pub fn abs_path_or_stdout(path: &str) -> anyhow::Result<String> {
-    if path == "stdout" {
-        Ok(path.to_string())
-    } else {
-        Ok(absolute_path(path)?.display().to_string())
-    }
-}
-
 /// Shared pipeline context: pgr executable and tempdir.
 ///
 /// Created at the start of a pipeline; call [`PipelineCtx::enter`] to switch
