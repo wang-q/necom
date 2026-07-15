@@ -1,148 +1,153 @@
 # necom mat transform
 
-`necom mat transform` 命令用于对矩阵中的数值进行数学变换。
+The `necom mat transform` command applies mathematical transformations to values in a matrix.
 
-这是将**相似度矩阵 (Similarity Matrix)** 转换为 **距离矩阵 (Distance Matrix)** 的核心工具，也支持归一化和其他数值调整。
+It is the core tool for converting a **Similarity Matrix** into a **Distance Matrix**, and also supports normalization and other numerical adjustments.
 
-> 本文档是 `mat transform` 子命令的深入说明。所有 `mat` 子命令的概览见 [mat.md](mat.md)。
+> This document is an in-depth explanation of the `mat transform` subcommand. For an overview of all `mat` subcommands, see [mat.md](mat.md).
 
-## 用法
+## Usage
 
 ```bash
 necom mat transform [OPTIONS] <infile>
 ```
 
-### 参数
+### Arguments
 
-- `<infile>`: 输入 PHYLIP 矩阵或 Pairwise TSV 文件。
+- `<infile>`: Input PHYLIP matrix or Pairwise TSV file.
 
-### 选项
+### Options
 
-- `--input-format <FORMAT>`: 输入格式 (默认: `phylip`, 可选: `pair`)。
-  - 显式指定 `--input-format pair` 可用于处理管道输入 (STDIN) 的 TSV 数据。
-- `--op <METHOD>`: 变换操作 (默认: `linear`)。
+- `--input-format <FORMAT>`: Input format (default: `phylip`, optional: `pair`).
+  - Explicitly specifying `--input-format pair` is useful for processing TSV data from pipe (STDIN) input.
+- `--op <METHOD>`: Transformation operation (default: `linear`).
   - `linear`: $val = val \times scale + offset$
   - `inv-linear`: $val = max - val$
-  - `log`: $val = -\ln(val)$ (如果 $val \le 0$ 则设为 0 或 Inf)
+  - `log`: $val = -\ln(val)$ (values $\le 0$ are set to 0 or Inf)
   - `exp`: $val = \exp(-val)$
   - `square`: $val = val^2$
   - `sqrt`: $val = \sqrt{val}$
-- `--max <FLOAT>`: 用于 `inv-linear` 的最大值 (默认: 1.0)。
-- `--scale <FLOAT>`: 用于 `linear` 的缩放因子 (默认: 1.0)。
-- `--offset <FLOAT>`: 用于 `linear` 的偏移量 (默认: 0.0)。
-- `--normalize`: 是否在变换前基于对角线元素进行归一化 (需矩阵包含对角线数据)。
-  - 归一化公式: $x_{norm}(i, j) = \frac{x(i, j)}{\sqrt{x(i, i) \times x(j, j)}}$
-  - **为何需要归一化？**
-    - 原始得分（Raw Score）通常受序列长度影响，不可直接比较（如长序列得分 1000 可能不如短序列得分 100 显著）。
-    - 归一化利用对角线（自比对得分）将其转换为相对相似度（0-1 范围），从而使后续的距离转换（如 $1-S$）具有数学意义。
-- `-o, --outfile <outfile>`: 输出文件名 (默认: stdout)。
+- `--max-val <FLOAT>`: Maximum value used for `inv-linear` (default: 1.0).
+- `--scale <FLOAT>`: Scale factor used for `linear` (default: 1.0).
+- `--offset <FLOAT>`: Offset used for `linear` (default: 0.0).
+- `--normalize`: Whether to normalize based on diagonal elements before transformation (requires diagonal data in the matrix).
+  - Normalization formula: $x_{norm}(i, j) = \frac{x(i, j)}{\sqrt{x(i, i) \times x(j, j)}}$
+  - **Why normalize?**
+    - Raw scores are usually affected by sequence length and cannot be directly compared (e.g., a score of 1000 for a long sequence may be less significant than a score of 100 for a short sequence).
+    - Normalization uses the diagonal (self-alignment score) to convert raw scores into relative similarity (0–1 range), giving subsequent distance transformations (e.g., $1-S$) a meaningful mathematical interpretation.
+- `-o, --outfile <outfile>`: Output filename (default: stdout).
 
-## 常见场景
+## Common Scenarios
 
-### 1. Identity (0-100) 转 Distance (0-1)
+### 1. Identity (0–100) to Distance (0–1)
 
-BLAST 等工具输出的 Identity 通常为 0 到 100。
-目标公式: $D = (100 - Identity) / 100 = 1 - 0.01 \times Identity$。
+Identity values output by tools such as BLAST are usually in the range 0 to 100.
+Target formula: $D = (100 - Identity) / 100 = 1 - 0.01 \times Identity$.
 
-使用 `linear` 操作：
+Using the `linear` operation:
 ```bash
 necom mat transform input.phy --op linear --scale -0.01 --offset 1.0 -o dist.phy
 ```
 
-或者分两步（先反转再缩放）：
+Or in two steps (invert first, then scale):
 ```bash
-necom mat transform input.phy --op inv-linear --max 100 | \
+necom mat transform input.phy --op inv-linear --max-val 100 | \
 necom mat transform stdin --op linear --scale 0.01 -o dist.phy
 ```
 
-### 2. Identity (0-100) 转 Distance (0-100)
+### 2. Identity (0–100) to Distance (0–100)
 
-仅做反转：$D = 100 - Identity$。
+Simple inversion: $D = 100 - Identity$.
 
 ```bash
-necom mat transform input.phy --op inv-linear --max 100 -o dist.phy
+necom mat transform input.phy --op inv-linear --max-val 100 -o dist.phy
 ```
 
-### 3. Similarity (0-1) 转 Distance (0-1)
+### 3. Similarity (0–1) to Distance (0–1)
 
-标准的线性反转：$D = 1.0 - S$。
+Standard linear inversion: $D = 1.0 - S$.
 
 ```bash
-necom mat transform input.phy --op inv-linear --max 1.0 -o dist.phy
+necom mat transform input.phy --op inv-linear --max-val 1.0 -o dist.phy
 ```
 
-### 4. 概率/乘性模型转换 (Log)
+### 4. Probability / Multiplicative Model Conversion (Log)
 
-将序列一致性概率转换为进化距离（类似 Jukes-Cantor 校正的第一步）。
-$D = -\ln(S)$。
+Convert sequence identity probability into evolutionary distance (similar to the first step of Jukes-Cantor correction).
+$D = -\ln(S)$.
 
 ```bash
-# 假设输入矩阵是对角线为 1.0 的概率矩阵
+# Assume the input matrix is a probability matrix with diagonal 1.0
 necom mat transform input.phy --op log -o dist.phy
 ```
 
-### 5. 归一化并转换
+### 5. Normalize and Transform
 
-如果输入的是未归一化的相似度得分（如 Alignment Score），且矩阵包含对角线（自比对得分）。
-先归一化为 0-1，再转换为距离。
+If the input is unnormalized similarity scores (e.g., Alignment Score) and the matrix contains diagonal (self-alignment) values:
+normalize to 0–1 first, then convert to distance.
 
 ```bash
 # 1. Normalize: S_norm = S_ij / sqrt(S_ii * S_jj)
 # 2. Transform: D = 1.0 - S_norm
-necom mat transform raw_scores.phy --normalize --op inv-linear --max 1.0 -o dist.phy
+necom mat transform raw_scores.phy --normalize --op inv-linear --max-val 1.0 -o dist.phy
 ```
 
-## 背景与原理
+## Background and Principles
 
-聚类算法（如 UPGMA, NJ, Ward）和多维尺度分析（MDS）通常要求输入 **距离矩阵 (Distance Matrix)** 或 **相异度矩阵 (Dissimilarity Matrix)**，满足：
+Clustering algorithms (such as UPGMA, NJ, Ward) and multidimensional scaling (MDS) usually require a **Distance Matrix** or **Dissimilarity Matrix** that satisfies:
+
 - $D(x, x) = 0$
 - $D(x, y) \ge 0$
-- $D(x, y)$ 越小表示越相似
+- Smaller $D(x, y)$ indicates higher similarity
 
-然而，生物信息学上游工具（如 BLAST, MMseqs2, Diamond）或统计分析通常输出 **相似度 (Similarity)**，满足：
-- $S(x, x) = Max$ (如 1.0 或 100)
-- $S(x, y)$ 越大表示越相似
+However, upstream bioinformatics tools (such as BLAST, MMseqs2, Diamond) or statistical analyses usually output **Similarity**, which satisfies:
 
-目前用户需要使用 `awk` 或外部脚本进行转换（例如 `100 - identity`），这不方便且容易出错（如未处理缺失值或自比对）。
+- $S(x, x) = Max$ (e.g., 1.0 or 100)
+- Larger $S(x, y)$ indicates higher similarity
 
-### 转换模型
+Users currently need to use `awk` or external scripts for conversion (e.g., `100 - identity`), which is inconvenient and error-prone (e.g., missing values or self-alignments may not be handled).
 
-`necom mat transform` 支持以下几种常见的转换模式，用于将相似度转换为距离或进行其他数学处理：
+### Conversion Models
 
-#### 1. 线性反转 (Linear Inversion)
-适用于有固定上限的相似度（如 Identity, Percent Similarity）。
+`necom mat transform` supports the following common transformation modes for converting similarity to distance or performing other mathematical processing:
+
+#### 1. Linear Inversion
+
+Applicable to similarities with a fixed upper bound (e.g., Identity, Percent Similarity).
 $$D = Max - S$$
-- **场景**: BLAST Identity (0-100) $\rightarrow$ $D = 100 - S$
-- **场景**: Fraction (0-1) $\rightarrow$ $D = 1 - S$
+- **Scenario**: BLAST Identity (0–100) $\rightarrow$ $D = 100 - S$
+- **Scenario**: Fraction (0–1) $\rightarrow$ $D = 1 - S$
 
-#### 2. 归一化线性反转 (Normalized Linear Inversion)
-如果 $S$ 没有固定上限（如 Alignment Score），需先归一化。
+#### 2. Normalized Linear Inversion
+
+If $S$ has no fixed upper bound (e.g., Alignment Score), normalization is required first.
 $$D = 1 - \frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}}$$
-或者简单的:
+Or simply:
 $$D = 1 - \frac{S(x, y)}{Max(S)}$$
 
-#### 3. 对数转换 (Logarithmic)
-适用于概率或乘性模型（类似于 Jukes-Cantor 校正）。
+#### 3. Logarithmic
+
+Applicable to probabilities or multiplicative models (similar to Jukes-Cantor correction).
 $$D = -\ln(S)$$
-或者归一化后：
+Or after normalization:
 $$D = -\ln(\frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}})$$
-- **场景**: 序列一致性概率 $\rightarrow$ 进化距离
+- **Scenario**: Sequence identity probability $\rightarrow$ evolutionary distance
 
-#### 4. 倒数转换 (Reciprocal) [未实现]
+#### 4. Reciprocal [Not Implemented]
 $$D = \frac{1}{S} - \frac{1}{Max}$$
-- **场景**: 很少见，用于某些物理量的转换。
-- **状态**: 当前 `necom mat transform` 未实现此 op；可通过 `--op linear` 配合外部脚本近似。
+- **Scenario**: Rarely used, for converting certain physical quantities.
+- **Status**: Not currently implemented as an op in `necom mat transform`; can be approximated with `--op linear` plus an external script.
 
-#### 5. 特殊转换 [未实现]
+#### 5. Special Transformations [Not Implemented]
 - **Cosine Similarity**: $D = 1 - \cos(\theta)$
-- **Correlation**: $D = \sqrt{2(1 - r)}$ 或 $D = 1 - r$
-- **状态**: 当前 `necom mat transform` 未实现。如需 Cosine/Correlation 距离，建议在 Python（SciPy）端计算后导出为 PHYLIP 矩阵。
+- **Correlation**: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$
+- **Status**: Not currently implemented in `necom mat transform`. For Cosine/Correlation distances, we recommend computing them in Python (SciPy) and exporting the result as a PHYLIP matrix.
 
-## 注意事项
+## Notes
 
-- **对角线处理**:
-  - `necom` 读取矩阵时通常会忽略对角线（设为 0），但 `transform` 命令会尝试保留对角线信息以支持 `--normalize`。
-  - 如果输入文件没有对角线信息（如某些 PHYLIP 变体），`--normalize` 将无法正常工作（视为 0）。
-- **数值稳定性**:
-  - `log` 操作对 0 或负值敏感，程序会将其处理为极大值或 0。
-  - 归一化时如果对角线为 0，结果将为 0。
+- **Diagonal handling**:
+  - When `necom` reads a matrix, it usually ignores the diagonal (sets it to 0), but the `transform` command attempts to preserve diagonal information to support `--normalize`.
+  - If the input file lacks diagonal information (as in some PHYLIP variants), `--normalize` will not work correctly (treated as 0).
+- **Numerical stability**:
+  - The `log` operation is sensitive to 0 or negative values; the program handles them as very large values or 0.
+  - If the diagonal is 0 during normalization, the result will be 0.

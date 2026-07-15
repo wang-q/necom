@@ -2,7 +2,7 @@
 
 `necom nwk` 提供完整的 Newick 格式系统发育树处理功能，包括解析、操作、分析和可视化。
 
-> **关联文档**：[[nwk-eval.md]]（计划中的多维树评估框架，复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
+> **关联文档**：[nwk-eval.md](nwk-eval.md)（计划中的多维树评估框架，复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
 
 ## 1. 架构设计
 
@@ -70,7 +70,7 @@ pub struct Tree {
 
 在规划高级分析功能（如距离计算、拓扑比较）之前，有必要明确以下系统发育树比较的核心概念：
 
-### 2.1 基础积木：划分 (Splits / Bipartitions)
+### 2.1 基础积木：划分
 
 **Splits** 是描述无根树拓扑结构的最基本单元。
 *   **定义**: 树上的每一条**内部边**（Edge）都将所有叶子节点（Taxa）划分成两个互不相交的集合 $\{A, B\}$。这种划分被称为一个 Split，通常记作 $A|B$。
@@ -117,7 +117,7 @@ pub struct Tree {
 
 ---
 
-## 3. CLI 功能映射 (newick_utils -> necom)
+## 3. CLI 功能映射（newick_utils → necom）
 
 以下列出 `newick_utils` 工具到 `necom nwk` 子命令的映射：
 
@@ -199,31 +199,31 @@ pub struct Tree {
 
 ---
 
-## 4. API 参考 (necom::phylo)
+## 4. API 参考（necom::phylo）
 
 以下列出 `necom::phylo` 库提供的公开 API。
 
-### 已实现 (Implemented)
+### 已实现
 
-*   **Tree Structure**:
+*   **树结构**:
     *   `Tree::new()`: 创建空树。
     *   `Tree::add_node()`, `Tree::add_child()`: 构建树结构。
     *   `Tree::get_node()`, `Tree::get_root()`: 访问节点。
     *   `Tree::len()`: 节点总数。
-*   **Parsing**:
+*   **解析**:
     *   `Tree::from_newick()`: 解析 Newick 字符串 (支持引号、注释、科学计数法)。
     *   `Tree::from_file()`: 从文件读取并解析 Newick。
-*   **Serialization**:
+*   **序列化**:
     *   `to_newick()`: 紧凑格式输出。
     *   `to_newick_with_format()`: 支持缩进的格式化输出。
     *   `to_newick_subtree()`: 序列化指定子树。
     *   `to_dot()` (Graphviz): 输出 DOT 格式。
     *   `to_svg()`: 输出 SVG 矢量图格式。
     *   `to_forest()`: 输出 LaTeX Forest 代码 (自由函数，通过 `io::to_forest()` 调用)。
-*   **Traversal**:
+*   **遍历**:
     *   `preorder`, `postorder`: 深度优先遍历 (迭代器风格)。
     *   `levelorder`: 广度优先遍历。
-*   **Query**:
+*   **查询**:
     *   `get_leaves()`: 获取所有叶子节点。
     *   `get_path_from_root()`: 获取根到节点的路径。
     *   `get_common_ancestor()` (LCA): 最近公共祖先。
@@ -232,14 +232,14 @@ pub struct Tree {
     *   `find_nodes()`, `get_node_by_name()`: 查找节点。
     *   `get_height()`: 计算节点高度 (到最远叶子的距离)。
     *   `is_monophyletic()`: 判断是否为单系群。
-*   **Modification**:
+*   **修改**:
     *   `reroot_at()`: 重新定根 (支持边长重分配)。
     *   `prune_where()`: 剪枝 (删除匹配节点及其子孙)。
     *   `remove_node()`: 软删除单个节点。
     *   `collapse_node()`: 压缩节点 (合并边长)。
     *   `compact()`: 物理删除软删除节点并重构树。
 
-### 统计与计算 (Statistics & Calculation)
+### 统计与计算
 
 *   `is_binary()`: 检查是否为二叉树。
 *   `get_leaf_names()`: 获取所有叶子节点的名称列表。
@@ -252,19 +252,19 @@ pub struct Tree {
 *   `colless()` (自由函数，`balance.rs`/`stat.rs`): Colless 平衡指数。
 *   `sackin()` (自由函数，`balance.rs`/`stat.rs`): Sackin 平衡指数。
 
-### 未实现 (Missing)
+### 未实现
 
-*   **Tree Statistics (统计指标标准化)**:
+*   **统计指标标准化**:
     *   `colless_yule()`, `colless_pda()`: Colless 指数的标准化版本。
     *   `sackin_yule()`, `sackin_pda()`: Sackin 指数的标准化版本。
-*   **Traversal**:
+*   **遍历**:
     *   `inorder`: 中序遍历 (仅适用于二叉树，`necom` 支持多叉树故未直接实现)。
 
-### 计划中 (Planned)
+### 计划中
 
-*   **Visualization**:
+*   **可视化**:
     *   `print_entity()` (或类似): 在终端打印 ASCII 树状图，用于快速调试和展示。
-*   **Tree Generation**:
+*   **树生成**:
     *   `generate_random_tree()` (Yule/Coalescent 模型): 主要用于模拟研究。优先级较低。
 
 ---
@@ -292,7 +292,7 @@ pub struct Tree {
 *   **`necom nwk to-forest`**: 生成原始 Forest 代码。适合嵌入现有 LaTeX 文档。
 *   **`necom nwk to-tex`**: 生成完整 `.tex` 文档。自动合并模板，可直接用 `xelatex` 编译。
 
-#### 样式系统 (Styles)
+#### 样式系统
 
 模板定义了四种核心样式，可以通过 Newick 文件中的 NHX 注释直接调用：
 
@@ -320,7 +320,7 @@ pub struct Tree {
     *   **默认**: 使用 `Noto Sans` 系列（需安装），兼容性好。
     *   **高级 (`--no-default-style`)**: 保留模板中预设的 `Fira Sans` (英) 和 `Source Han Sans SC` (中) 设置，适合需要特定设计感的场景。
 
-#### 高级特性 (Advanced Features)
+#### 高级特性
 
 *   **Phylogram 模式 (`--bl`)**:
     *   绘制带分支长度的系统发育树。
@@ -379,7 +379,7 @@ necom nwk indent data.nwk --compact
 
 ---
 
-## 7. 附录：Workflow 参考
+## 7. 附录：工作流参考
 
 ### Bootscan Workflow (`bootscan.sh`)
 

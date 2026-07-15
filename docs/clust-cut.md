@@ -1,394 +1,399 @@
 # necom clust cut
 
-`necom clust cut` 用于将 Newick 树（系统发生树或层次聚类树）切分为扁平的聚类分组（Partition）。
+`necom clust cut` cuts a Newick tree (phylogenetic or hierarchical clustering tree) into flat clustering partitions.
 
-与 `necom clust`（从数据构建聚类）不同，`cut` 关注于“从已有树结构导出分组”。它支持多种生物学与统计学切割规则，并提供稳定、可复用的表格输出。
+Unlike `necom clust` (which builds clusters from data), `cut` focuses on "deriving groups from an existing tree structure." It supports multiple biological and statistical cutting rules and provides stable, reusable tabular output.
 
-本文描述该命令的算法模式、选参思路及输入输出约定。
+This document describes the command's algorithm patterns, parameter-selection guidelines, and input/output conventions.
 
-## 适用场景与设计理念
+## Use Cases and Design Rationale
 
-在实际分析中，我们经常已经有一棵树（系统发生树或层次聚类树），并希望在某个阈值下把叶子切分为不同的分组（Partition）。切割规则可能不止一种：按高度、按簇数、按簇内最大距离（直径）、要求单系群（clade）等。
+In practice, we often already have a tree (phylogenetic or hierarchical clustering tree) and want to cut its leaves into different groups (partitions) at some threshold. Cutting rules can vary: by height, by number of clusters, by maximum within-cluster distance (diameter), requiring monophyly (clade), etc.
 
-`necom clust cut` 旨在提供一套高效、规范且功能全面的切割工具：
+`necom clust cut` aims to provide a comprehensive, efficient, and standardized cutting toolkit:
 
-- **算法核心**：
-  实现了基于簇数 (`--k`) 和高度 (`--height`) 的基础切割，逻辑与 `SciPy.cluster.hierarchy` 及 R `cutree` 保持一致；同时完整移植了 TreeCluster 的生物学约束算法（如 `--max-clade`, `--med-clade` 等），专为系统发生树优化。
+- **Algorithm core**:
+  Implements basic cuts by cluster count (`--k`) and height (`--height`), with logic consistent with `SciPy.cluster.hierarchy` and R `cutree`; it also fully ports TreeCluster's biological-constraint algorithms (e.g., `--max-clade`, `--med-clade`), optimized for phylogenetic trees.
 
-- **性能与体验升级**：
-  - **高性能**：基于 Rust 实现，无外部依赖，处理大规模树更高效。
-  - **标准化**：统一了不同来源算法的术语差异（例如统一使用 `--height`, `--single-linkage`），降低认知负担。
-  - **可组合**：作为 `necom` 工具链的一部分，可直接与 `clust eval` 等命令配合进行聚类评估。
+- **Performance and usability improvements**:
+  - **High performance**: Rust-based implementation with no external dependencies, handling large trees more efficiently.
+  - **Standardized**: Unifies terminology differences across source algorithms (e.g., consistently using `--height`, `--single-linkage`), reducing cognitive load.
+  - **Composable**: As part of the `necom` toolchain, it can directly cooperate with `clust eval` for clustering evaluation.
 
-## 支持的模式与算法
+## Supported Modes and Algorithms
 
-`necom clust cut` 提供了丰富的切割算法，涵盖了从简单的阈值切割到复杂的生物学约束聚类。以下是详细的算法定义与复杂度分析。
+`necom clust cut` provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below.
 
-### 1. 按簇数切 (`--k <K>`)
+### 1. Cut by Cluster Count (`--k <K>`)
 
-- **定义**：将树分割成 $K$ 个簇，使得这 $K$ 个簇是由 $K-1$ 次切割产生的。切割顺序基于节点的高度（距最远叶子的距离），优先切割高度最大的节点。
-- **复杂度**：$O(N \log N)$，其中 $N$ 是叶子数量。需要对所有内部节点按高度排序。
-- **适用场景**：探索性分析，当你只想要固定数量的分组，而不关心具体的距离阈值时。
+- **Definition**: Split the tree into $K$ clusters produced by $K-1$ cuts. Cutting order is based on node height (distance to the farthest leaf), prioritizing nodes with the largest height.
+- **Complexity**: $O(N \log N)$, where $N$ is the number of leaves. Requires sorting all internal nodes by height.
+- **Use case**: Exploratory analysis when you only want a fixed number of groups and do not care about the exact distance threshold.
 
-### 2. 按高度切 (`--height <H>`)
+### 2. Cut by Height (`--height <H>`)
 
-- **定义**：切断树中所有高度（距最远叶子的距离）大于 $H$ 的边。
-  - 对于任意结果簇 $C$，其中的所有节点 $u$ 满足 $height(u) \le H$。
-  - 等价于 `SciPy` 的 `fcluster(criterion='distance')` 或 R 的 `cutree(h=H)`。
-- **复杂度**：$O(N)$。只需一次后序遍历（Post-order Traversal）。
-- **适用场景**：适用于超度量树（Ultrametric Tree），其中高度严格代表时间或遗传距离。
+- **Definition**: Cut all edges whose node height (distance to the farthest leaf) is greater than $H$.
+  - For any resulting cluster $C$, all nodes $u$ in it satisfy $height(u) \le H$.
+  - Equivalent to SciPy's `fcluster(criterion='distance')` or R's `cutree(h=H)`.
+- **Complexity**: $O(N)$. Only one post-order traversal is needed.
+- **Use case**: Suitable for ultrametric trees, where height strictly represents time or genetic distance.
 
-### 3. 按根距离切 (`--root-dist <D>`)
+### 3. Cut by Root Distance (`--root-dist <D>`)
 
-- **定义**：切断树中所有距离根节点路径长度大于 $D$ 的边。
-  - 对于任意结果簇 $C$ 的根节点 $r_C$，满足 $dist(root, r_C) \le D$。
-  - 一旦某条路径累积长度超过 $D$，该路径即被切断，不再向下延伸。
-- **复杂度**：$O(N)$。只需一次前序遍历（Pre-order Traversal）。
-- **适用场景**：系统发生树分析，定义从共同祖先（根）演化特定时间后的分化群。
+- **Definition**: Cut all edges whose path length from the root exceeds $D$.
+  - For the root node $r_C$ of any resulting cluster $C$, $dist(root, r_C) \le D$.
+  - Once a path's cumulative length exceeds $D$, that path is cut and no longer extends downward.
+- **Complexity**: $O(N)$. Only one pre-order traversal is needed.
+- **Use case**: Phylogenetic analysis defining clades that diverged a certain time after the common ancestor (root).
 
-### 4. 按最大簇内直径切 (`--max-clade <T>`)
+### 4. Cut by Maximum Within-Cluster Diameter (`--max-clade <T>`)
 
-- **定义**：将叶子划分为互不重叠的簇 $\{C_1, C_2, ..., C_m\}$，使得对于每个簇 $C_i$：
-  1. **单系性 (Monophyly)**：$C_i$ 中的叶子必须在原树 $T$ 中构成一个单系群（Clade）。
-  2. **直径约束**：$\max_{u, v \in C_i} dist(u, v) \le T$。
-  3. **支持度约束**（若指定 `--support`）：$C_i$ 内部的任意两点路径上，不能包含支持度低于阈值的边。
-- **算法**：TreeCluster "Max Clade" 算法。采用高效的自底向上（Bottom-Up）直径计算与自顶向下（Top-Down）贪心选择。
-- **复杂度**：$O(N)$。避免了 $O(N^2)$ 的全距离矩阵计算。
-- **适用场景**：病毒分型、OTU 划分等需要严格控制簇内差异度的场景。
+- **Definition**: Partition leaves into non-overlapping clusters $\{C_1, C_2, ..., C_m\}$ such that for each cluster $C_i$:
+  1. **Monophyly**: Leaves in $C_i$ must form a clade in the original tree $T$.
+  2. **Diameter constraint**: $\max_{u, v \in C_i} dist(u, v) \le T$.
+  3. **Support constraint** (if `--support` is specified): The path between any two points in $C_i$ must not contain edges with support below the threshold.
+- **Algorithm**: TreeCluster "Max Clade" algorithm. Uses efficient bottom-up diameter computation and top-down greedy selection.
+- **Complexity**: $O(N)$. Avoids the $O(N^2)$ all-pairs distance computation.
+- **Use case**: Virus subtyping, OTU clustering, and other scenarios requiring strict control of within-cluster divergence.
 
-### 5. 按平均簇内距离切 (`--avg-clade <T>`)
+### 5. Cut by Average Within-Cluster Distance (`--avg-clade <T>`)
 
-- **定义**：类似于 `--max-clade`，但约束条件改为：
-  1. **单系性**。
-  2. **平均距离约束**：$\frac{1}{|C_i|(|C_i|-1)} \sum_{u, v \in C_i, u \neq v} dist(u, v) \le T$。
-  3. **支持度约束**。
-- **算法**：TreeCluster "Avg Clade" 算法。自底向上维护子树内的距离和与节点数。
-- **复杂度**：$O(N)$。
-- **适用场景**：相比最大距离，平均距离对个别离群点（Outlier）更鲁棒。
+- **Definition**: Similar to `--max-clade`, but the constraint is:
+  1. **Monophyly**.
+  2. **Average distance constraint**: $\frac{1}{|C_i|(|C_i|-1)} \sum_{u, v \in C_i, u \neq v} dist(u, v) \le T$.
+  3. **Support constraint**.
+- **Algorithm**: TreeCluster "Avg Clade" algorithm. Maintains within-subtree distance sums and node counts bottom-up.
+- **Complexity**: $O(N)$.
+- **Use case**: Compared to maximum distance, average distance is more robust to individual outliers.
 
-### 6. 按中位数簇内距离切 (`--med-clade <T>`)
+### 6. Cut by Median Within-Cluster Distance (`--med-clade <T>`)
 
-- **定义**：类似于 `--max-clade`，但约束条件改为：
-  1. **单系性**。
-  2. **中位数距离约束**：$median(\{dist(u, v) \mid u, v \in C_i, u \neq v\}) \le T$。
-  3. **支持度约束**。
-- **算法**：TreeCluster "Med Clade" 算法。采用自底向上合并排序列表的方式计算中位数。
-- **复杂度**：$O(N^2 \log N)$（最坏情况）。相比前两种方法，计算开销显著更大。
-- **注意**：不建议用于超大规模树（如 >10k 叶子），除非确实需要中位数鲁棒性。
+- **Definition**: Similar to `--max-clade`, but the constraint is:
+  1. **Monophyly**.
+  2. **Median distance constraint**: $median(\{dist(u, v) \mid u, v \in C_i, u \neq v\}) \le T$.
+  3. **Support constraint**.
+- **Algorithm**: TreeCluster "Med Clade" algorithm. Computes medians by merging sorted lists bottom-up.
+- **Complexity**: $O(N^2 \log N)$ in the worst case. Significantly more expensive than the previous two methods.
+- **Note**: Not recommended for very large trees (e.g., >10k leaves) unless median robustness is truly required.
 
-### 7. 按簇内总枝长切 (`--sum-branch <T>`)
+### 7. Cut by Total Within-Cluster Branch Length (`--sum-branch <T>`)
 
-- **定义**：类似于 `--max-clade`，但约束条件改为：
-  1. **单系性**。
-  2. **总枝长约束**：簇 $C_i$ 对应的最小生成子树的总枝长（Phylogenetic Diversity, PD） $\le T$。
-  3. **支持度约束**。
-- **生物学意义**：总枝长对应 **Phylogenetic Diversity (PD)**，代表该簇所包含的进化历史总量。
-- **算法**：TreeCluster "Sum Branch Clade" 算法。
-- **复杂度**：$O(N)$。
-- **注意**：
-    - PD 是一个**广延量**（随样本数增加而单调增加），不像直径或平均距离那样是“强度量”。
-    - 因此，作为切割阈值时，它倾向于把紧密的大簇切碎（因为累积枝长很容易超标），而保留松散的小簇。
-    - 除非有特定的生物学理由（如“限制每个 OTU 的最大进化潜能”），否则通常不建议作为首选切割标准。
+- **Definition**: Similar to `--max-clade`, but the constraint is:
+  1. **Monophyly**.
+  2. **Total branch length constraint**: The total branch length of the minimal subtree spanning cluster $C_i$ (Phylogenetic Diversity, PD) $\le T$.
+  3. **Support constraint**.
+- **Biological meaning**: Total branch length corresponds to **Phylogenetic Diversity (PD)**, representing the total evolutionary history contained in the cluster.
+- **Algorithm**: TreeCluster "Sum Branch Clade" algorithm.
+- **Complexity**: $O(N)$.
+- **Notes**:
+    - PD is an **extensive quantity** (monotonically increasing with sample size), unlike diameter or average distance, which are "intensive quantities."
+    - Therefore, as a cutting threshold it tends to chop tight large clusters (because accumulated branch length easily exceeds the limit) while retaining loose small clusters.
+    - Unless there is a specific biological reason (e.g., "limit the maximum evolutionary potential of each OTU"), it is generally not recommended as the primary cutting criterion.
 
-### 8. 按叶子距离切 (`--leaf-dist-max/min/avg <T>`)
+### 8. Cut by Leaf Distance (`--leaf-dist-max/min/avg <T>`)
 
-- **定义**：基于簇根节点到叶子的距离进行切割。
-  - **Max Leaf Dist** (`--leaf-dist-max <T>`): 切割树，使得簇根到任意叶子的最大距离 $\le T$。
-    - 等价于 `root_dist(max_depth - T)`。
-    - 类似于 `--height`，但适用于非超度量树（Non-ultrametric Tree），以最远叶子为基准对齐。
-  - **Min Leaf Dist** (`--leaf-dist-min <T>`): 切割树，使得簇根到任意叶子的最小距离 $\le T$。
-    - 等价于 `root_dist(min_depth - T)`。
-  - **Avg Leaf Dist** (`--leaf-dist-avg <T>`): 切割树，使得簇根到所有叶子的平均距离 $\le T$。
-    - 等价于 `root_dist(avg_depth - T)`。
-- **复杂度**：$O(N)$。需要预先遍历树计算深度统计量。
-- **适用场景**：非超度量树（如病毒树），其中“时间”不是统一的，需要以采样时间（叶子）为基准回溯。
+- **Definition**: Cutting based on the distance from the cluster root to leaves.
+  - **Max Leaf Dist** (`--leaf-dist-max <T>`): Cut the tree so that the maximum distance from the cluster root to any leaf is $\le T$.
+    - Equivalent to `root_dist(max_depth - T)`.
+    - Similar to `--height`, but suitable for non-ultrametric trees, aligned by the farthest leaf.
+  - **Min Leaf Dist** (`--leaf-dist-min <T>`): Cut the tree so that the minimum distance from the cluster root to any leaf is $\le T$.
+    - Equivalent to `root_dist(min_depth - T)`.
+  - **Avg Leaf Dist** (`--leaf-dist-avg <T>`): Cut the tree so that the average distance from the cluster root to all leaves is $\le T$.
+    - Equivalent to `root_dist(avg_depth - T)`.
+- **Complexity**: $O(N)$. Requires a prior traversal to compute depth statistics.
+- **Use case**: Non-ultrametric trees (e.g., virus trees), where "time" is not uniform and one needs to look back from sampling times (leaves).
 
-### 9. 按最大边长切 (`--max-edge <T>`)
+### 9. Cut by Maximum Edge Length (`--max-edge <T>`)
 
-- **定义**：切断树中所有长度大于 $T$ 的边。
-  - 对于任意结果簇 $C$，其中的所有边 $e$ 满足 $length(e) \le T$。
-  - 这种方法在图论中也被称为 **Single Linkage Clustering**（单链接聚类）：只要两点间存在一条由“短边”（$\le T$）构成的路径，它们就在同一簇。
-  - 别名：`--single-linkage <T>`。
-- **复杂度**：$O(N)$。只需一次遍历。
-- **适用场景**：
-  - 去除长枝吸引（Long Branch Attraction）造成的影响。
-  - 快速识别紧密相连的群组，忽略稀疏连接。
+- **Definition**: Cut all edges whose length is greater than $T$.
+  - For any resulting cluster $C$, all edges $e$ in it satisfy $length(e) \le T$.
+  - This method is also known in graph theory as **Single Linkage Clustering**: as long as two points are connected by a path of "short edges" ($\le T$), they belong to the same cluster.
+  - Alias: `--single-linkage <T>`.
+- **Complexity**: $O(N)$. Only one traversal is needed.
+- **Use cases**:
+  - Remove the influence of long branch attraction.
+  - Quickly identify tightly connected groups while ignoring sparse connections.
 
-### 10. 按不一致系数切 (`--inconsistent <T>`)
+### 10. Cut by Inconsistency Coefficient (`--inconsistent <T>`)
 
-- **定义**：基于节点与其子树的“不一致性”进行切割。
-  - 对于树上每个非叶子节点 $i$，计算其不一致系数 $I_i$。
-  - $I_i = \frac{height(i) - \text{mean}(H)}{\text{std}(H)}$，其中 $H$ 是节点 $i$ 下方 $d$ 层（`--deep`）内的所有合并高度集合。
-  - **SciPy 参考**: `scipy.cluster.hierarchy.inconsistent`。
-  - 从根向下遍历每个节点 $i$：
-    - 计算以 $i$ 为根的子树中所有节点不一致系数的最大值 $M_i$。
-    - 若 $M_i \le T$，说明该子树内部足够“一致”，将 $i$ 及其下方叶子作为一个簇，不再向下拆分。
-    - 若 $M_i > T$，说明子树内部存在显著不一致的合并点，继续检查 $i$ 的子节点。
-  - 叶子节点自然成为一个簇。
-- **复杂度**：$O(N)$。
-- **适用场景**：当树的整体演化速率不均匀，寻找“自然”聚类边界。
+- **Definition**: Cut based on the "inconsistency" of a node relative to its subtrees.
+  - For each non-leaf node $i$, compute its inconsistency coefficient $I_i$.
+  - $I_i = \frac{height(i) - \text{mean}(H)}{\text{std}(H)}$, where $H$ is the set of all merge heights within $d$ levels (`--deep`) below node $i$.
+  - **SciPy reference**: `scipy.cluster.hierarchy.inconsistent`.
+  - Traverse from the root downward for each node $i$:
+    - Compute the maximum inconsistency coefficient $M_i$ in the subtree rooted at $i$.
+    - If $M_i \le T$, the subtree is sufficiently "consistent"; treat $i$ and its leaves as one cluster and stop splitting.
+    - If $M_i > T$, the subtree contains significantly inconsistent merge points; continue checking $i$'s children.
+  - Leaf nodes naturally form a cluster.
+- **Complexity**: $O(N)$.
+- **Use case**: When overall evolutionary rates are uneven, find "natural" cluster boundaries.
 
-### 11. 动态树切割 (`--dynamic-tree`) [已实现]
+### 11. Dynamic Tree Cut (`--dynamic-tree`) [Implemented]
 
-- **定义**：参考 R 语言 `dynamicTreeCut` 包的 `cutreeDynamicTree` 算法 (`dynamicTreeCut/R/cutreeDynamic.R`).
-- **原理**：自顶向下的递归算法。
-  1.  首先基于全局高度进行初步切割。
-  2.  对每个初步簇，分析其内部结构（高度分布）。
-  3.  如果一个簇内部包含显著的子结构（即存在“高度差”和“子簇大小”满足条件的分割点），则将其进一步递归拆分。
-- **参数**：
-  - `--dynamic-tree <N>`: 启用动态树切割，N 为最小簇大小（必填，无默认值）。
-  - `--deep-split`: 启用更激进的拆分（对应 R 中的 `deepSplit=TRUE`）。
-  - `--max-tree-height <H>` (可选): 最大合并高度（默认 99% 树高）。
-- **输入**：仅需树结构（Dendrogram），无需距离矩阵。
-- **适用场景**：
-  - 只需要树结构，追求快速、自动化的切割。
-  - 适合处理那些“大簇里套小簇”的嵌套结构。
+- **Definition**: Based on the `cutreeDynamicTree` algorithm in the R package `dynamicTreeCut` (`dynamicTreeCut/R/cutreeDynamic.R`).
+- **Principle**: Top-down recursive algorithm.
+  1.  First perform an initial cut based on global height.
+  2.  For each preliminary cluster, analyze its internal structure (height distribution).
+  3.  If a cluster contains significant substructure (i.e., a split point satisfying conditions for "height difference" and "subcluster size"), recursively split it further.
+- **Options**:
+  - `--dynamic-tree <N>`: Enable dynamic tree cut; N is the minimum cluster size (required, no default).
+  - `--deep-split`: Enable more aggressive splitting (corresponds to `deepSplit=TRUE` in R).
+  - `--max-tree-height <H>` (optional): Maximum merge height (default 99% tree height).
+- **Input**: Only the tree structure (dendrogram) is needed; no distance matrix is required.
+- **Use cases**:
+  - Only tree structure is available; fast, automated cutting is desired.
+  - Suitable for nested structures with small clusters inside large clusters.
 
-### 12. 混合动态切割 (`--dynamic-hybrid`) [已实现]
+### 12. Hybrid Dynamic Cut (`--dynamic-hybrid`) [Implemented]
 
-- **定义**：参考 R 语言 `dynamicTreeCut` 包的 `cutreeHybrid` 算法。
-- **原理**：自底向上的两阶段算法。
-  1.  **Core Detection (核心检测)**:
-      - 实现 R `cutreeHybrid` 的自底向上（Bottom-Up）算法，识别满足紧密度（Core Scatter）和分离度（Gap）要求的“基本簇”。
-  2.  **PAM-like Reassignment (二次分配)**: 利用原始距离矩阵，将第一阶段未分配的对象（Outliers/Singletons）尝试吸附到最近的核心簇中（Medoid-based assignment）。
-      - 默认行为与 R 保持一致 (`pamStage=TRUE`, `pamRespectsDendro=TRUE`, `respectSmallClusters=TRUE`)。
-- **输入**：必须提供树结构 + 原始距离矩阵 (`--matrix`)。
-- **参数**：
-  - `--dynamic-hybrid <N>`: 启用混合切割，N 为最小簇大小。
-  - `--matrix <FILE>`: 距离矩阵文件（PHYLIP 格式）。
-  - `--max-pam-dist <D>`: PAM 分配的最大距离阈值（默认等于切割高度 `cutHeight`）。如果未分配点到最近 Medoid 的距离超过此值，则保持未分配。
-  - `--no-pam-dendro`: 禁用 PAM 阶段的树结构约束（允许跨过高分支将对象分配到簇中）。默认 PAM 阶段尊重树结构（`pamRespectsDendro=TRUE`）。
-- **适用场景**：
-  - 对聚类边界的准确性要求极高。
-  - 需要利用距离矩阵信息来修正树结构中可能存在的微小误差或不确定性。
-  - 能够有效识别并处理离群点（Outliers）。
+- **Definition**: Based on the `cutreeHybrid` algorithm in the R package `dynamicTreeCut`.
+- **Principle**: Two-phase bottom-up algorithm.
+  1.  **Core Detection**:
+      - Implements the bottom-up algorithm of R `cutreeHybrid`, identifying "core clusters" that satisfy tightness (Core Scatter) and separation (Gap) requirements.
+  2.  **PAM-like Reassignment**: Uses the original distance matrix to adsorb objects left unassigned in the first phase (outliers/singletons) to the nearest core cluster (medoid-based assignment).
+      - Default behavior is consistent with R (`pamStage=TRUE`, `pamRespectsDendro=TRUE`, `respectSmallClusters=TRUE`).
+- **Input**: Requires both tree structure and the original distance matrix (`--matrix`).
+- **Options**:
+  - `--dynamic-hybrid <N>`: Enable hybrid cut; N is the minimum cluster size.
+  - `--matrix <FILE>`: Distance matrix file (PHYLIP format).
+  - `--max-pam-dist <D>`: Maximum distance threshold for PAM assignment (default equals the cut height `cutHeight`). If an unassigned point's distance to the nearest medoid exceeds this value, it remains unassigned.
+  - `--no-pam-dendro`: Disable the dendrogram constraint in the PAM stage (allows assigning objects across high branches). By default the PAM stage respects tree structure (`pamRespectsDendro=TRUE`).
+- **Use cases**:
+  - High accuracy at cluster boundaries is required.
+  - The distance matrix is needed to correct small errors or uncertainties in the tree structure.
+  - Can effectively identify and handle outliers.
 
-### 13. 支持度过滤 (`--support <S>`)
+### 13. Support Filtering (`--support <S>`)
 
-- **定义**：作为上述所有方法的**预处理步骤**。
-  - 遍历树中所有边，若某条边的支持度值 $< S$，则将其长度视为 $+\infty$（无限长）。
-  - **默认行为**：对于没有明确支持度值的节点（如多叉树解析产生的内部节点），`necom` 默认其支持度为 100（完全可信）。
-- **效果**：任何跨越低支持度边的聚类尝试都会因距离/高度超标而被阻止，从而强制在低支持度处切断。
+- **Definition**: A **preprocessing step** for all the above methods.
+  - Traverse all edges in the tree; if an edge's support value $< S$, its length is treated as $+\infty$ (infinite).
+  - **Default behavior**: For nodes without explicit support values (e.g., internal nodes produced by parsing multifurcating trees), `necom` defaults their support to 100 (fully trusted).
+- **Effect**: Any clustering attempt that crosses a low-support edge will fail because the distance/height exceeds the limit, thereby forcing a cut at low-support positions.
 
-## 输入与输出
+## Input and Output
 
-### 输入
+### Input
 
-- **输入树**：Newick 格式（单棵树）。
-- **分支长度**：用于距离/高度相关方法（例如按 root distance、max pairwise distance 等）。
-- **分支支持度（可选）**：若树节点/边上携带支持度（例如 bootstrap），可作为“不可跨越”的约束条件。
+- **Input tree**: Newick format (single tree).
+- **Branch lengths**: Used for distance/height-related methods (e.g., root distance, max pairwise distance).
+- **Branch support (optional)**: If nodes/edges carry support values (e.g., bootstrap), they can be used as a "non-crossable" constraint.
 
-### 输出
+### Output
 
-输出建议采用与 `necom clust dbscan` 相同的格式（便于与既有工具互操作）：
+Output follows the same conventions as `necom clust dbscan` for interoperability with existing tools:
 
-```text
-* cluster: Each line contains points of one cluster. The first point is the representative.
-* pair: Each line contains a (representative point, cluster member) pair.
-```
+- `cluster` format: Each line contains all points of one cluster; the first point is the representative.
+- `pair` format: Each line contains a pair (representative, cluster member).
+  - Representative: the representative point of the cluster.
+  - Member: a cluster member.
+  - Singleton: the representative is itself.
 
-- `pair` 格式：每行包含 (Representative, Member)。
-  - Representative：簇的代表点。
-  - Member：簇成员。
-  - 单例簇（singleton）：自己是自己的代表点。
+**Representative selection (`--rep`)**:
+Applies to both `cluster` and `pair` formats:
+- `root` (default): the member closest to the root (alphabetical order as tie-break).
+- `medoid`: Medoid, i.e., the member with the smallest sum of distances to other members.
+- `first`: the alphabetically first member.
 
-**代表点选择 (`--rep`)**：
-适用于 `cluster` 和 `pair` 两种格式：
-- `root` (默认)：距离根节点最近的成员（字母序作为 Tie-break）。
-- `medoid`：Medoid，即到簇内其他成员距离之和最小的成员。
-- `first`：字母序第一个成员。
+### Common Options
 
-## 工作流与工具链协作
+- `--format {cluster|pair}`: Output format. Default: `cluster`.
+- `--rep {root|medoid|first}`: Representative selection. Default: `root`.
+- `--deep <N>`: Depth used by the inconsistency coefficient method (`--inconsistent`). Default: `2`.
+- `--support <S>`: Treat edges with support `< S` as infinite length, forcing a cut. Default behavior treats unlabeled internal nodes as support `100.0`.
+- `--scan <start>,<end>,<step>`: Parameter sweep over the main threshold.
+- `--stats-out <FILE>`: In scan mode, write the summary statistics table to this file.
 
-为了保持命令的专注与正交性，我们推荐以下“生成-评估”分离的工作流：
+## Workflow and Toolchain Collaboration
 
-### 1. 生成 (Generation)
+To keep commands focused and orthogonal, we recommend the following "generate-evaluate" separated workflow:
 
-使用 `necom clust cut`：
-- 它只负责“切”，不负责“评”。
-- 支持多种策略（k, height, max_clade 等）和参数扫描。
-- 输出标准 TSV 格式。
+### 1. Generate
 
-### 2. 评估 (Evaluation)
+Use `necom clust cut`:
+- It only "cuts"; it does not "evaluate."
+- Supports multiple strategies (k, height, max_clade, etc.) and parameter scanning.
+- Outputs standard TSV format.
 
-评估聚类质量通常需要参考标准（Ground Truth）或与其他聚类结果对比。这部分逻辑放入独立的 `necom clust` 或 `necom nwk` 命令中：
+### 2. Evaluate
 
-- **通用指标 (`necom clust eval` / `compare`)**：
-  - 输入：两个聚类结果 TSV（或一个结果 + 一个参考）。
-  - 输出：ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure 等。
-  - 适用场景：当你已知样本的真实分类，或者想比较两种切割参数的差异度时。
+Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate `necom clust` or `necom nwk` commands:
 
-- **树相关指标 (`necom nwk eval` [计划中])**：
-  - 输入：树文件 + 聚类结果。
-  - 输出：Parsimony score, Silhouette score (基于树上距离矩阵) 等。
-  - 适用场景：没有真实分类，需要评估聚类在树结构上的紧密性或分离度。
+- **General metrics (`necom clust eval` / `compare`)**:
+  - Input: two clustering result TSVs (or one result + one reference).
+  - Output: ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure, etc.
+  - Use case: When the true classification of samples is known, or when you want to compare the difference between two cutting parameters.
 
-### 推荐工作流示例
+- **Tree-related metrics (`necom nwk eval` [planned])**:
+  - Input: tree file + clustering result.
+  - Output: Parsimony score, Silhouette score (based on tree distance matrix), etc.
+  - Use case: No true classification is available; assess compactness or separability of clusters on the tree structure.
 
-#### 1. 经典系统发育分析
+### Recommended Workflow Examples
+
+#### 1. Classic Phylogenetic Analysis
 ```bash
-# 1. 扫描不同参数，生成多个聚类结果
-# necom clust cut input.nwk --max-clade 0.10 --scan 0.01,0.05,0.10 > partitions.tsv
+# 1. Scan different parameters to generate multiple clustering results
+# necom clust cut input.nwk --max-clade 0.10 --scan 0.01,0.10,0.01 > partitions.tsv
 
-# 2. 选定最佳阈值，生成最终聚类
+# 2. Select the best threshold and generate final clusters
 necom clust cut input.nwk --max-clade 0.05 > final_cluster.tsv
 
-# 3. 提取 final_cluster.tsv 中第一个簇对应的子树
+# 3. Extract the subtree corresponding to the first cluster in final_cluster.tsv
 head -1 final_cluster.tsv | tr '\t' '\n' > cluster1.names
 necom nwk subtree input.nwk -l cluster1.names > cluster1.nwk
 ```
 
-#### 2. 层次聚类（hclust）接入
-从距离矩阵出发，经由 hclust 生成树，再进行切分与评估。
+#### 2. Hierarchical Clustering (hclust) Integration
+Starting from a distance matrix, generate a tree with hclust, then cut and evaluate.
 
 ```bash
-# 1. 生成层次聚类树
+# 1. Generate hierarchical clustering tree
 necom clust hier matrix.phy --method ward > tree.nwk
 
-# 2. 切分 (按高度阈值切)
+# 2. Cut (by height threshold)
 necom clust cut tree.nwk --height 0.05 > clusters.tsv
 
-# 3. 评估 (计算 Cophenetic 相关系数与 Silhouette)
-# necom nwk eval tree.nwk --part clusters.tsv --metrics silhouette > sil.tsv (计划中，未实现)
+# 3. Evaluate (compute Cophenetic correlation and Silhouette)
+# necom nwk eval tree.nwk --part clusters.tsv --metrics silhouette > sil.tsv (planned, not implemented)
 ```
 
-#### 3. SciPy 风格分析 (不一致系数)
-对于演化速率不均匀的树，使用不一致系数可以找到更自然的聚类边界。
+#### 3. SciPy-style Analysis (Inconsistency Coefficient)
+For trees with uneven evolutionary rates, the inconsistency coefficient can find more natural cluster boundaries.
 
 ```bash
-# 使用不一致系数切割 (默认 depth=2)
+# Cut using inconsistency coefficient (default depth=2)
 necom clust cut tree.nwk --inconsistent 1.5 > clusters.tsv
 ```
 
-## 选择阈值/簇数：扫描与准则
+## Choosing Threshold / Cluster Count: Scanning and Criteria
 
-在 `cut` 场景里，用户常见的选择有两类：
+In `cut` scenarios, users commonly make two types of choices:
 
-- 直接指定簇数 `K`（类比 R `cutree(k=...)`）。
-- 指定阈值 `t`（距离/高度/直径等），由阈值决定切割后的簇数。
+- Directly specify the cluster count `K` (analogous to R `cutree(k=...)`).
+- Specify a threshold `t` (distance/height/diameter etc.) and let the threshold determine the cluster count.
 
-当你不确定 `K` 或 `t` 应该取多少时，推荐使用 `--scan` 进行参数扫描。
+When unsure about `K` or `t`, use `--scan` for parameter scanning.
 
-### 扫描（Scan）
+### Scanning
 
-`necom` 提供显式的扫描能力：适用于所有基于数值参数的方法（如 `--k`, `--height`, `--max-clade`, `--inconsistent` 等）。
+`necom` provides explicit scanning capability: applicable to all numeric-parameter methods (e.g., `--k`, `--height`, `--max-clade`, `--inconsistent`).
 
-**用法**：
-`necom clust cut ... --scan <start>,<end>,<steps>`
-（注：扫描仅针对方法的**主阈值参数**。例如对于 `--inconsistent`，扫描的是系数阈值 `T`，而深度 `--deep` 保持固定为用户指定值或默认值）
+**Usage**:
+`necom clust cut ... --scan <start>,<end>,<step>`
+(Note: scanning only targets the **main threshold parameter** of the method. For `--inconsistent`, it scans the coefficient threshold `T`, while depth `--deep` remains fixed at the user-specified or default value.)
 
-**输出指标表**：
-| Group | Clusters | Singletons | Non-Singletons | MaxSize |
+**Output summary table**:
+| Group | Clusters | Singletons | Non-Singletons | Max Cluster Size |
 | :--- | :--- | :--- | :--- | :--- |
 | height=0.01 | 500 | 480 | 20 | 5 |
 | height=0.02 | 300 | 200 | 100 | 15 |
 | ... | ... | ... | ... | ... |
 
-- **Non-Singletons**: 即 TreeCluster `argmax_clusters` 试图最大化的指标。
-- **MaxSize**: 辅助判断是否存在“超级大簇”（under-clustering）。
+- **Non-Singletons**: The metric that TreeCluster `argmax_clusters` tries to maximize.
+- **Max Cluster Size**: Helps judge whether a "super-cluster" exists (under-clustering).
 
-### 扫描模式的输出格式
+### Output Format in Scan Mode
 
-当启用 `--scan` 时，`--format` 参数将被忽略。输出行为如下：
+When `--scan` is enabled, the `--format` option is ignored. Output behavior is as follows:
 
-1.  **标准输出 (`stdout` 或 `-o`)**：始终输出详细的分区表（Long format / Tidy Data）。
-    - 列定义：`Group`, `ClusterID`, `SampleID`。
-    - `Group` 列格式为 `Method=Value`（例如 `height=0.5`, `max-clade=0.02`），便于区分不同的切割参数。
-    - 这种格式可以直接作为 `necom clust eval --input-format long` 的输入进行批量评估。
-2.  **统计输出 (`--stats-out`)**：若指定，将摘要统计表（阈值, 簇数, 单例数, 非单例数, 最大簇大小）写入该文件。
+1.  **Standard output (`stdout` or `-o`)**: Always outputs a detailed partition table (Long format / Tidy Data).
+    - Column definitions: `Group`, `ClusterID`, `SampleID`.
+    - The `Group` column is formatted as `Method=Value` (e.g., `height=0.5`, `max-clade=0.02`), making it easy to distinguish different cutting parameters.
+    - This format can be directly used as input for `necom clust eval --input-format long` for batch evaluation.
+2.  **Statistics output (`--stats-out`)**: If specified, writes the summary statistics table (threshold, cluster count, singleton count, non-singleton count, max cluster size) to that file.
 
-示例：
+Example:
 ```bash
-# 1. 仅输出详细分区表（用于后续分析或评估）
+# 1. Output only the detailed partition table (for downstream analysis or evaluation)
 necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 > partitions.tsv
 
-# 2. 同时保存统计信息（用于快速检视）
+# 2. Save statistics at the same time (for quick inspection)
 necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv
 ```
 
-### 与 `necom clust eval` 的联动
+### Integration with `necom clust eval`
 
-`necom clust cut` 与 `necom clust eval` 通过 Long Format 完美配合，支持两种评估模式：
+`necom clust cut` and `necom clust eval` work together seamlessly through the Long format, supporting two evaluation modes:
 
-#### 1. 批量内部评估 (Batch Internal Evaluation)
-不需要 Ground Truth，使用距离矩阵或坐标评估所有扫描生成的阈值。
+#### 1. Batch Internal Evaluation
+No Ground Truth is needed; use a distance matrix or coordinates to evaluate all thresholds generated by scanning.
 
 ```bash
-# 生成所有阈值的分区，并直接通过管道传给 eval 进行 Silhouette 评估
+# Generate partitions for all thresholds and pipe directly to eval for Silhouette evaluation
 necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 | \
     necom clust eval - --input-format long --matrix dist.phy > evaluation.tsv
 ```
 
-#### 2. 针对性外部评估 (Targeted External Evaluation)
-如果你手头有 Ground Truth，通常不需要评估所有阈值（计算量大且无必要）。推荐流程：
+#### 2. Targeted External Evaluation
+If you have Ground Truth, evaluating all thresholds is usually unnecessary (computationally expensive and not needed). The recommended workflow is:
 
-1. 先用 `--scan` 快速定位几个有意义的候选阈值区间（例如手肘点附近）。
-2. 对少数候选阈值，分别运行一次 `necom clust cut` 生成分区，再用 `necom clust eval` 计算 ARI/AMI/V-Measure 等外部一致性指标。
+1. First use `--scan` to quickly locate a few meaningful candidate threshold ranges (e.g., near the elbow).
+2. Run `necom clust cut` once for each candidate threshold to generate partitions, then use `necom clust eval` to compute external consistency metrics such as ARI/AMI/V-Measure.
 
-示例：
+Example:
 
 ```bash
-# 1) 扫描阈值，先看摘要趋势
+# 1) Scan thresholds and view the summary trend first
 necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 > scan.tsv
 
-# 2) 选定阈值后生成分区
+# 2) Generate partition for the selected threshold
 necom clust cut tree.nwk --max-clade 0.12 > pred.tsv
 
-# 3) 与 ground truth 对比（Partition vs Partition）
+# 3) Compare with ground truth (Partition vs Partition)
 necom clust eval pred.tsv --other truth.tsv -o eval.tsv
 ```
 
-### 选点策略参考
+### Threshold-Selection Strategy Reference
 
-当你不确定最佳阈值时，可以使用 `--scan` 生成数据，并参考以下两种常用策略进行决策：
+When unsure about the best threshold, use `--scan` to generate data and refer to the following two common strategies for decision-making:
 
-#### 策略 1：最大化非单例簇 (Max Non-Singletons)
+#### Strategy 1: Maximize Non-Singleton Clusters
 
-- **原理**：寻找一个阈值，使得生成的簇中“非单例簇（Non-Singleton Clusters）”的数量最多。
-- **适用性**：当你期望得到尽可能多有意义的（包含 >1 个成员）聚类结果，同时避免过度切碎（导致大量单例）或欠切分（导致巨大簇）时。
-- **操作**：观察扫描结果表中的 `Non-Singletons` 列，选择其最大值对应的阈值。
+- **Principle**: Find a threshold that maximizes the number of "non-singleton clusters" (clusters with >1 member).
+- **Applicability**: When you expect as many meaningful (>1 member) clusters as possible while avoiding over-chopping (many singletons) or under-cutting (huge clusters).
+- **Operation**: Observe the `Non-Singletons` column in the scan result table and choose the threshold corresponding to its maximum.
 
-#### 策略 2：手肘规则 (Elbow Rule)
-这是数据分析中的通用策略。
+#### Strategy 2: Elbow Rule
+This is a general strategy in data analysis.
 
-- **原理**：观察阈值与簇数量（或单例数）的变化曲线，寻找“拐点”。
-  - **陡峭下降期**：随着阈值放松，簇数量迅速减少（大量微小簇合并）。
-  - **平缓平台期**：簇数量变化趋于稳定。
-  - **拐点（手肘）**：即从“陡峭”转变为“平缓”的点，通常对应着数据内在的自然结构。
-- **操作**：
-  1. 运行扫描：`necom clust cut ... --scan ... > scan.tsv`
-  2. 观察变化率：若阈值从 $T_1$ 增至 $T_2$ 时簇数剧烈变化，而从 $T_2$ 增至 $T_3$ 时变化平缓，则 $T_2$ 可能是最佳切点。
-  3. 可视化：将 `scan.tsv` 导入绘图工具辅助判断。
+- **Principle**: Look at the curve of threshold versus cluster count (or singleton count) and find the "elbow" point.
+  - **Steep decline phase**: As the threshold relaxes, cluster count drops rapidly (many tiny clusters merge).
+  - **Flat plateau phase**: Cluster count changes stabilize.
+  - **Elbow point**: The point where the curve changes from "steep" to "flat," usually corresponding to the data's inherent natural structure.
+- **Operation**:
+  1. Run scan: `necom clust cut ... --scan ... > scan.tsv`
+  2. Observe the rate of change: if cluster count changes sharply when the threshold increases from $T_1$ to $T_2$ but flattens from $T_2$ to $T_3$, then $T_2$ may be the best cut point.
+  3. Visualization: Import `scan.tsv` into plotting tools to assist judgment.
 
-#### 策略 3：基于评估指标 (Evaluation Metrics)
-这是最严谨的策略，通过 `necom clust eval` 计算聚类质量指标。
+#### Strategy 3: Evaluation-Metric Based
+This is the most rigorous strategy, using `necom clust eval` to compute clustering quality metrics.
 
-- **原理**：直接计算分区的内部有效性（如 Silhouette）或外部一致性（如 ARI，如果有 Ground Truth）。
-- **操作**：结合 `necom clust eval` 使用。
+- **Principle**: Directly compute internal validity (e.g., Silhouette) or external consistency (e.g., ARI, if Ground Truth is available) of the partition.
+- **Operation**: Use together with `necom clust eval`.
   ```bash
-  # 生成所有候选分区的详细列表
+  # Generate detailed list of all candidate partitions
   necom clust cut ... --scan ... > partitions.tsv
-  # 批量评估
+  # Batch evaluation
   necom clust eval partitions.tsv --input-format long --matrix dist.phy
   ```
 
-## 现有工具参考 (Prior Art)
+## Existing Tool References
 
-`necom clust cut` 的设计吸收了多个领域的最佳实践：
+The design of `necom clust cut` draws on best practices from multiple fields:
 
 - **SciPy (`scipy.cluster.hierarchy`)**:
-  - 提供了 `fcluster` 函数，支持按高度 (`distance`)、簇数 (`maxclust`) 和不一致系数 (`inconsistent`) 切割。
-  - `necom` 复用了其 `height` 和 `inconsistent` 的定义。
+  - Provides the `fcluster` function, supporting cuts by height (`distance`), cluster count (`maxclust`), and inconsistency coefficient (`inconsistent`).
+  - `necom` reuses its definitions of `height` and `inconsistent`.
 
 - **R (`dynamicTreeCut`)**:
-  - 提供了 `cutreeDynamic` (Tree) 和 `cutreeHybrid` (Hybrid) 方法。
-  - 引入了“自适应递归切割”和“核心检测+二次分配”的思路。
-  - `necom` 完整实现了其 `Dynamic Tree` 和 `Hybrid` 算法，提供了高性能的 Rust 版本。
+  - Provides `cutreeDynamic` (Tree) and `cutreeHybrid` (Hybrid) methods.
+  - Introduces the ideas of "adaptive recursive cutting" and "core detection + reassignment."
+  - `necom` fully implements its Dynamic Tree and Hybrid algorithms, providing a high-performance Rust version.
 
 - **TreeCluster**:
-  - 专为系统发生树设计，引入了 `Max Clade` (直径)、`Avg Clade` 等约束。
-  - 解决了非超度量树的切割问题。
-  - `necom` 完整实现了其核心算法集。
+  - Designed specifically for phylogenetic trees, introducing `Max Clade` (diameter), `Avg Clade`, etc.
+  - Solves cutting problems for non-ultrametric trees.
+  - `necom` fully implements its core algorithm set.
 
 - **R (`cutree`)**:
-  - 提供了最基础的 `h` (高度) 和 `k` (簇数) 切割。
+  - Provides the most basic `h` (height) and `k` (cluster count) cuts.

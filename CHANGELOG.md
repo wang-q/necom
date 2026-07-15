@@ -2,6 +2,19 @@
 
 ## Unreleased - ReleaseDate
 
+### Documentation
+
+*   Added `docs/pl.md` to document the `necom pl condense` pipeline.
+*   Updated `docs/clust.md` with complete CLI options and defaults for `cc`, `dbscan`, `k-medoids`, `mcl`, `upgma`, `nj`, and `hier`.
+*   Fixed `docs/mat.md` and `docs/mat-transform.md` to use the correct `--max-val` flag for `necom mat transform`.
+*   Updated `docs/clust-cut.md` with common options (`--format`, `--rep`, `--deep`, `--support`, `--scan`, `--stats-out`) and corrected a scan-range example.
+*   Updated `docs/nwk.md` to note commands that process only the first tree in a multi-tree file.
+*   Added missing `--lca` option to `docs/nwk.md` (`necom nwk comment`) and noted the default value of `--context` in the `subtree` section.
+*   Corrected another stale `--max` reference in `docs/clust.md` (`clust hier` similarity conversion example) to `--max-val`.
+*   Clarified input format support in `docs/clust-eval.md` (single mode defaults to `pair`; batch mode requires `long`).
+*   Fixed `--scan` placeholder wording in `docs/clust-cut.md`.
+*   Supplemented `docs/mat.md` with `--method` defaults/multi-value support for `mat compare` and the default `--format` for `mat format`.
+
 ## 0.2.0 - 2026-04-05
 
 ### New Features

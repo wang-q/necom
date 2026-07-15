@@ -6,7 +6,7 @@
 
 根据输入数据的特性和算法需求，`necom` 采用三种不同的内存布局策略。
 
-### 1.1 构树类 (Tree-building)
+### 1.1 构树类
 - **命令**：`hier`, `upgma`, `nj`
 - **输入**：PHYLIP 矩阵 (Dense)
 - **数据结构**：`NamedMatrix` (内部封装 `CondensedMatrix`)
@@ -15,7 +15,7 @@
   - **内存瓶颈**：当 $N=100k$ 时，`f32` 矩阵需占用约 **18.6 GiB** 内存。这是单机内存处理全连接矩阵的实用极限。
   - **原因**：PHYLIP 格式本身就是全矩阵格式，且传统构树算法基于全距离矩阵。
 
-### 1.2 扁平聚类 (Flat Clustering)
+### 1.2 扁平聚类
 - **命令**：`k-medoids`, `mcl`, `dbscan`
 - **输入**：Pair Scores TSV (Sparse-like)
 - **数据结构**：`ScoringMatrix` (内部封装 `HashMap<(usize, usize), f32>`)
@@ -24,7 +24,7 @@
   - **开销**：虽然不分配 $N^2$ 数组，但 `HashMap` 的每个 Entry 内存开销较大（Key+Value+Overhead），且查找速度不如数组索引。
   - **适用性**：适合边数 $E \ll N^2$ 的稀疏场景。
 
-### 1.3 图连通分量 (Graph Components)
+### 1.3 图连通分量
 - **命令**：`cc`
 - **输入**：Pair TSV (Graph edges)
 - **数据结构**：`petgraph::graphmap::UnGraphMap`
@@ -139,7 +139,7 @@
 
 ### 5.4 阶段性实现路线
 
-#### Phase 1: MVP (Primitive Implementation) - **已完成 (Completed)**
+#### Phase 1：MVP — **已完成**
 - **状态**：已在 `src/libs/clust/hier.rs` 中实现，并集成到 CLI `src/cmd_necom/clust/hier.rs`。
 - **特性**：
   - 实现了基于 `CondensedMatrix`（上三角压缩矩阵）的存储，节省 50% 内存。
@@ -148,7 +148,7 @@
   - 复杂度：$O(N^3)$ 时间，$O(N^2)$ 空间。
   - 验证：单元测试覆盖了核心算法，集成测试覆盖了 CLI 功能。
 
-#### Phase 2: 性能优化 (NN-chain) - **已完成 (Completed)**
+#### Phase 2：性能优化（NN-chain）— **已完成**
 - **状态**：已在 `src/libs/clust/hier.rs` 中实现 NN-chain 算法。
 - **特性**：
   - **算法**：NN-chain (Nearest-neighbor chain) 算法。
@@ -173,10 +173,10 @@
 
 *注：Ward Linkage 在优化后（平方距离更新）性能与 Average Linkage 几乎持平。*
 
-#### Phase 3: 大规模数据策略 (Two-stage / Representative) - **推荐 (Recommended)**
+#### Phase 3：大规模数据策略（两阶段/代表点）— **推荐**
 参见 `docs/clust.md` 中的"大规模数据策略"章节。
 
-#### Phase 4: 性能与正确性优化 (Pending)
+#### Phase 4：性能与正确性优化
 通过分析 `kodama`、`scikit-learn` 和 `scipy` 实现，确定以下优化方向：
 1.  **Generic Clustering Algorithm (Heap)**:
     - 目标：优化 **Centroid** 和 **Median** 方法。
@@ -196,7 +196,7 @@
     - 结论：对于稠密矩阵，NN-Chain 和 Prim MST 都是 $O(N^2)$。当前的 NN-Chain 实现通用且足够高效。MST 主要优势在于处理稀疏图输入（Phase 3 范畴）。
     - 决策：维持现状。
 
-#### Phase 5: 测试覆盖率增强 (已完成)
+#### Phase 5：测试覆盖率增强（已完成）
 参考 `kodama` 和 `scikit-learn` 的测试策略，已增加以下测试以提升稳健性：
 1.  **Fuzzing / Randomized Testing (Kodama)**:
     - 目标：验证 NN-Chain 算法与 Primitive 算法在大量随机输入下的一致性。
@@ -208,7 +208,7 @@
     - 目标：验证极小输入的处理 ($N=0, 1, 2$)。
     - 状态：已实现 `test_edge_cases`，确保空输入或单点输入正确返回空结果。
 
-#### Phase 6: 基准测试增强 (已完成)
+#### Phase 6：基准测试增强（已完成）
 参考 `kodama` 和 `scikit-learn` 的基准测试策略，已实施了以下测试：
 1.  **多尺度性能曲线 (Scalability)**:
     - 验证了 NN-Chain 算法在 $N=1000 \sim 4000$ 范围内的 $O(N^2)$ 扩展性。
@@ -228,7 +228,7 @@
 | 2000 | (未测) | ~29.0 ms |
 | 4000 | (未测) | ~174 ms |
 
-#### Phase 7: 真实分布与效果验证 (Planned)
+#### Phase 7：真实分布与效果验证（计划中）
 参考 `linfa-hierarchical` 的 `test_blobs` 测试，计划增加以下内容以验证算法的统计有效性：
 1.  **真实分布测试 (Blobs Test)**:
     - 目标：验证算法能否正确聚类具有明显几何结构的合成数据（Statistical Correctness）。
