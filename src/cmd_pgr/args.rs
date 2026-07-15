@@ -1,8 +1,6 @@
 //! Shared clap argument builders for subcommands.
 
-use clap::{builder, Arg, ArgAction, ArgMatches, Command};
-
-use pgr::libs::poa::AlignmentParams;
+use clap::{builder, Arg, ArgAction, ArgMatches};
 
 /// Standard `-o/--outfile` argument defaulting to stdout.
 pub fn outfile_arg() -> Arg {
@@ -11,25 +9,6 @@ pub fn outfile_arg() -> Arg {
         .short('o')
         .num_args(1)
         .default_value("stdout")
-        .help("Output filename. [stdout] for screen")
-}
-
-/// `-o/--outfile` with a custom default value.
-pub fn outfile_arg_with_default(val: &'static str) -> Arg {
-    Arg::new("outfile")
-        .long("outfile")
-        .short('o')
-        .num_args(1)
-        .default_value(val)
-        .help("Output filename. [stdout] for screen")
-}
-
-/// `-o/--outfile` without default (optional). Caller must handle `None`.
-pub fn outfile_arg_optional() -> Arg {
-    Arg::new("outfile")
-        .long("outfile")
-        .short('o')
-        .num_args(1)
         .help("Output filename. [stdout] for screen")
 }
 
@@ -115,16 +94,6 @@ pub fn infiles_arg_at(label: &str, index: usize) -> Arg {
         .num_args(1..)
         .index(index)
         .help(format!("Input {label} file(s) to process"))
-}
-
-/// Positional `infiles` argument at index 1 with a custom help text.
-/// Use when the default "Input {label} file(s) to process" pattern doesn't fit.
-pub fn infiles_arg_with_help(help: &'static str) -> Arg {
-    Arg::new("infiles")
-        .required(true)
-        .num_args(1..)
-        .index(1)
-        .help(help)
 }
 
 /// Positional `infiles` argument at index 1 with custom num_args and help.
@@ -229,24 +198,6 @@ pub fn no_ns_arg() -> Arg {
         .help("Output size without Ns")
 }
 
-/// `-U/--upper` flag (convert sequences to uppercase).
-pub fn upper_arg() -> Arg {
-    Arg::new("upper")
-        .long("upper")
-        .short('U')
-        .action(ArgAction::SetTrue)
-        .help("Convert sequences to uppercase")
-}
-
-/// `-d/--dash` flag (remove dashes from sequences).
-pub fn dash_arg() -> Arg {
-    Arg::new("dash")
-        .long("dash")
-        .short('d')
-        .action(ArgAction::SetTrue)
-        .help("Remove dashes '-'")
-}
-
 /// `--t-name` argument with an optional default value.
 pub fn t_name_arg(default: Option<&'static str>) -> Arg {
     let arg = Arg::new("t_name")
@@ -288,15 +239,6 @@ pub fn seed_arg(default: Option<&'static str>, short: Option<char>, help: &'stat
     }
 }
 
-/// `--name-prefix` argument with an optional default value.
-pub fn name_prefix_arg(default: Option<&'static str>) -> Arg {
-    let arg = Arg::new("name_prefix").long("name-prefix").num_args(1);
-    match default {
-        Some(d) => arg.default_value(d).help("Prefix of record names"),
-        None => arg.help("Add prefix to sequence names"),
-    }
-}
-
 /// Extract the `outfile` value from `args` as `&str`.
 pub fn get_outfile(args: &ArgMatches) -> &str {
     args.get_one::<String>("outfile").unwrap()
@@ -324,167 +266,6 @@ pub fn collect_ranges(args: &ArgMatches) -> anyhow::Result<Vec<String>> {
         ranges.append(&mut rgs);
     }
     Ok(ranges)
-}
-
-/// Add POA scoring arguments (`--match`, `--mismatch`, `--gap-open`,
-/// `--gap-extend`) to `cmd`. When `with_shorts` is true, also registers the
-/// `-m`/`-n`/`-g`/`-e` short flags (used by `fas consensus`).
-pub fn add_poa_args(cmd: Command, with_shorts: bool) -> Command {
-    let mut match_arg = Arg::new("match")
-        .long("match")
-        .num_args(1)
-        .default_value("5")
-        .value_parser(clap::value_parser!(i32))
-        .allow_negative_numbers(true)
-        .help("POA match score (default: 5)");
-    if with_shorts {
-        match_arg = match_arg.short('m');
-    }
-
-    let mut mismatch_arg = Arg::new("mismatch")
-        .long("mismatch")
-        .num_args(1)
-        .default_value("-4")
-        .value_parser(clap::value_parser!(i32))
-        .allow_negative_numbers(true)
-        .help("POA mismatch score (default: -4)");
-    if with_shorts {
-        mismatch_arg = mismatch_arg.short('n');
-    }
-
-    let mut gap_open_arg = Arg::new("gap_open")
-        .long("gap-open")
-        .num_args(1)
-        .default_value("-8")
-        .value_parser(clap::value_parser!(i32))
-        .allow_negative_numbers(true)
-        .help("POA gap open penalty (default: -8)");
-    if with_shorts {
-        gap_open_arg = gap_open_arg.short('g');
-    }
-
-    let mut gap_extend_arg = Arg::new("gap_extend")
-        .long("gap-extend")
-        .num_args(1)
-        .default_value("-6")
-        .value_parser(clap::value_parser!(i32))
-        .allow_negative_numbers(true)
-        .help("POA gap extend penalty (default: -6)");
-    if with_shorts {
-        gap_extend_arg = gap_extend_arg.short('e');
-    }
-
-    cmd.arg(match_arg)
-        .arg(mismatch_arg)
-        .arg(gap_open_arg)
-        .arg(gap_extend_arg)
-}
-
-/// Extract POA scoring parameters from `ArgMatches` into `AlignmentParams`.
-pub fn get_poa_params(args: &ArgMatches) -> AlignmentParams {
-    AlignmentParams {
-        match_score: *args.get_one::<i32>("match").unwrap(),
-        mismatch_score: *args.get_one::<i32>("mismatch").unwrap(),
-        gap_open: *args.get_one::<i32>("gap_open").unwrap(),
-        gap_extend: *args.get_one::<i32>("gap_extend").unwrap(),
-    }
-}
-
-// ============================================================================
-// fas subcommand builders
-// ============================================================================
-
-/// Standard `--outgroup` flag for fas subcommands.
-pub fn outgroup_arg() -> Arg {
-    Arg::new("outgroup")
-        .long("outgroup")
-        .action(ArgAction::SetTrue)
-        .help("Indicates the presence of outgroups at the end of each block")
-}
-
-/// Standard `-n/--name` argument for fas subcommands (species name selector).
-pub fn fas_name_arg(help: &'static str) -> Arg {
-    Arg::new("name")
-        .short('n')
-        .long("name")
-        .num_args(1)
-        .help(help)
-}
-
-/// Standard `-g/--genome` argument for fas subcommands (reference genome FA file).
-pub fn genome_arg() -> Arg {
-    Arg::new("genome")
-        .short('g')
-        .long("genome")
-        .required(true)
-        .num_args(1)
-        .help("Path to the reference genome FA file")
-}
-
-/// `--align-mode` argument for POA-based consensus (`local`/`global`/`semi_global`).
-pub fn align_mode_arg() -> Arg {
-    Arg::new("align_mode")
-        .long("align-mode")
-        .num_args(1)
-        .value_parser([
-            builder::PossibleValue::new("local"),
-            builder::PossibleValue::new("global"),
-            builder::PossibleValue::new("semi_global"),
-        ])
-        .default_value("global")
-        .help("Alignment mode")
-}
-
-/// Extract the `--align-mode` value and map it to an internal integer code.
-///
-/// Returns `0` for `local`, `1` for `global`, and `2` for `semi_global`.
-pub fn get_align_mode_code(args: &ArgMatches) -> anyhow::Result<i32> {
-    match args.get_one::<String>("align_mode").unwrap().as_str() {
-        "local" => Ok(0),
-        "global" => Ok(1),
-        "semi_global" => Ok(2),
-        other => anyhow::bail!("unknown align_mode: {}", other),
-    }
-}
-
-/// `-R/--required` argument (file with species names to keep).
-pub fn required_species_list_arg() -> Arg {
-    Arg::new("required")
-        .long("required")
-        .short('R')
-        .required(true)
-        .num_args(1)
-        .help("File with a list of species names to keep, one per line")
-}
-
-/// `--suffix` argument with a custom default (file extension for output files).
-pub fn suffix_arg(default: &'static str) -> Arg {
-    Arg::new("suffix")
-        .long("suffix")
-        .short('s')
-        .num_args(1)
-        .default_value(default)
-        .help("File extension for output files")
-}
-
-/// `--engine` argument with parameterized possible values, default, and help.
-/// Used by fas consensus (POA engine) and fas refine (MSA engine).
-pub fn engine_arg(
-    possible: &'static [&'static str],
-    default: &'static str,
-    help: &'static str,
-) -> Arg {
-    let values: Vec<builder::PossibleValue> = possible
-        .iter()
-        .map(|v| builder::PossibleValue::new(*v))
-        .collect();
-    Arg::new("engine")
-        .long("engine")
-        .num_args(1)
-        .action(ArgAction::Set)
-        .default_value(default)
-        .value_parser(values)
-        .help(help)
 }
 
 // ============================================================================
@@ -985,15 +766,6 @@ pub fn min_score_arg_optional(help: &'static str) -> Arg {
         .help(help)
 }
 
-/// `--min-len` (usize) without default.
-pub fn min_len_arg() -> Arg {
-    Arg::new("min_len")
-        .long("min-len")
-        .num_args(1)
-        .value_parser(clap::value_parser!(usize))
-        .help("Minimum length")
-}
-
 /// `--min-len` (usize) with a custom default and help text.
 pub fn min_len_arg_with_default(default: &'static str, help: &'static str) -> Arg {
     Arg::new("min_len")
@@ -1002,15 +774,6 @@ pub fn min_len_arg_with_default(default: &'static str, help: &'static str) -> Ar
         .default_value(default)
         .value_parser(clap::value_parser!(usize))
         .help(help)
-}
-
-/// `--max-len` (usize) without default.
-pub fn max_len_arg() -> Arg {
-    Arg::new("max_len")
-        .long("max-len")
-        .num_args(1)
-        .value_parser(clap::value_parser!(usize))
-        .help("Maximum length")
 }
 
 /// `--max-score` (f64) without default (optional threshold).
@@ -1087,15 +850,6 @@ pub fn replace_tsv_arg() -> Arg {
         .required(true)
         .num_args(1)
         .help("TSV file of original_name and replacement_name(s)")
-}
-
-/// `--runlist` argument (required) for region-based commands.
-pub fn runlist_arg() -> Arg {
-    Arg::new("runlist")
-        .long("runlist")
-        .required(true)
-        .num_args(1)
-        .help("JSON file of chromosome runlists")
 }
 
 /// `--mode` argument with possible values, a default, and a custom help text.
@@ -1308,15 +1062,6 @@ pub fn color_arg(default: Option<&'static str>, help: &'static str) -> Arg {
 pub fn by_query_arg(help: &'static str) -> Arg {
     Arg::new("by_query")
         .long("by-query")
-        .action(ArgAction::SetTrue)
-        .help(help)
-}
-
-/// `-C/--count` flag (count records/occurrences).
-pub fn count_arg(help: &'static str) -> Arg {
-    Arg::new("count")
-        .long("count")
-        .short('C')
         .action(ArgAction::SetTrue)
         .help(help)
 }

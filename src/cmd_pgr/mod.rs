@@ -1,21 +1,8 @@
 //! Subcommand modules for the `pgr` binary.
 
 pub mod args;
-pub mod axt;
-pub mod chain;
 pub mod clust;
 pub mod dist;
-pub mod fa;
-pub mod fas;
-pub mod fq;
-pub mod gff;
-pub mod lav;
-pub mod maf;
 pub mod mat;
-pub mod ms;
-pub mod net;
 pub mod nwk;
 pub mod pl;
-pub mod plot;
-pub mod psl;
-pub mod twobit;
