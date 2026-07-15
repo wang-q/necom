@@ -4,17 +4,24 @@
 [![codecov](https://codecov.io/gh/wang-q/necom/branch/master/graph/badge.svg)](https://codecov.io/gh/wang-q/necom)
 [![license](https://img.shields.io/github/license/wang-q/necom)](https://github.com//wang-q/necom)
 
-`necom` is a command-line toolkit for **clustering**, **distance-matrix processing**, and **phylogenetic-tree manipulation**.
+`necom` is a command-line toolkit for **clustering**, **distance-matrix processing**, and **phylogenetic-tree
+manipulation**.
 
-The name is formed from its three command families — **NWK**, **CLUST**, and **MAT** — with vowels inserted in alphabetical order. It also echoes the Latin *nexum* (“tie” or “bond”), reflecting the toolkit’s focus on connections between clusters, matrix entries, and tree nodes.
+The name is formed from its three command families — **NWK**, **CLUST**, and **MAT** — with vowels inserted in
+alphabetical order. It also echoes the Latin *nexum* (“tie” or “bond”), reflecting the toolkit’s focus on connections
+between clusters, matrix entries, and tree nodes.
 
 ## Features
 
-- **Clustering** (`necom clust`): hierarchical clustering, DBSCAN, K-medoids, MCL, connected components, tree cutting, and evaluation metrics.
-- **Matrix utilities** (`necom mat`): format conversion, subsetting, comparison, and mathematical transformations for distance matrices.
-- **Tree operations** (`necom nwk`): rerooting, pruning, renaming, subtree extraction, topology comparison, statistics, and visualization.
+- **Clustering** (`necom clust`): hierarchical clustering, DBSCAN, K-medoids, MCL, connected components, tree cutting,
+  and evaluation metrics.
+- **Matrix utilities** (`necom mat`): format conversion, subsetting, comparison, and mathematical transformations for
+  distance matrices.
+- **Tree operations** (`necom nwk`): rerooting, pruning, renaming, subtree extraction, topology comparison, statistics,
+  and visualization.
 - **Pipelines** (`necom pl condense`): integrated workflows such as taxonomic tree condensation.
-- **Pipeline-friendly**: reads from `stdin`/writes to `stdout` where possible, with predictable output and composable subcommands.
+- **Pipeline-friendly**: reads from `stdin`/writes to `stdout` where possible, with predictable output and composable
+  subcommands.
 - **Robust**: Rust implementation with a zero-panic policy for malformed inputs.
 
 ## Install

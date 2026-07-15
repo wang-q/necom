@@ -1,6 +1,7 @@
 # clust 计划中算法
 
 > **实现状态注记**：本文档列出尚未实现的聚类算法规划。当前 `necom clust` 已实现 hier/dbscan/mcl/k-medoids/cc/nj/upgma + cut/eval。
+> 截至 2026-07-16，GMM、HDBSCAN、Louvain/Leiden 仍为规划，未进入实现阶段。
 
 ## 1. GMM (Gaussian Mixture Models)
 

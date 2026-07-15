@@ -1,6 +1,7 @@
 # clust dbscan 规划
 
 > **实现状态注记**：本文档列出 `necom clust dbscan` 尚未实现的规划功能（`--scan`/`--opt-eps`/`--min-pct` 等）。当前已实现基本的 `--eps`/`--min_points` 密度聚类。
+> 截至 2026-07-16，扫描、自动选优、比例参数及距离矩阵版 Silhouette/DBIndex 仍未实现。
 
 ## 1. 扫描与评分
 

@@ -2,6 +2,8 @@
 
 `necom nwk` 提供完整的 Newick 格式系统发育树处理功能，包括解析、操作、分析和可视化。
 
+> **实现状态注记**：截至 2026-07-16，`necom nwk` 主体命令体系（stat/distance/indent/cmp/comment/to-*/topo/label/reroot/prune/subtree/order/rename/replace/support）已实现；`nwk condense`/`match`/`ed`/`gen`/`duration`、部分标准化统计指标（`colless_yule`/`pda`、`sackin_yule`/`pda`）以及 ASCII 树/随机树生成为规划中。
+>
 > **关联文档**：[nwk-eval.md](nwk-eval.md)（计划中的多维树评估框架，复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
 
 ## 1. 架构设计

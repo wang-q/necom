@@ -1,6 +1,7 @@
 # clust 模块实现分析
 
 > **实现状态注记**：本文档记录 `necom clust` 模块的实现分析、优化路线与外部生态对比，从 `docs/clust.md` 剥离而来。
+> 截至 2026-07-16，Phase 1/2/5/6 及 Ward/Centroid 平方距离优化、In-place 接口已完成；Phase 3/4(Heap)/7 及 GMM/HDBSCAN 仍为规划。
 
 ## 1. 内存数据布局
 
@@ -181,6 +182,7 @@
 1.  **Generic Clustering Algorithm (Heap)**:
     - 目标：优化 **Centroid** 和 **Median** 方法。
     - 方案：参考 SciPy 的 `fast_linkage` 实现（基于 Müllner 2011），引入 Binary Heap 维护最近邻距离。这将把这两个方法的复杂度从 $O(N^3)$ 降至 $O(N^2 \log N)$。
+    - 状态：**未实现**（截至 2026-07-16）。
     - 优先级：中（除非用户有大量 Centroid/Median 聚类需求）。
 2.  **Ward/Centroid 平方距离优化 (已完成)**:
     - 改进：在算法开始时一次性将距离矩阵平方，使用简化版 Lance-Williams 更新，仅在输出时开方。
@@ -228,7 +230,7 @@
 | 2000 | (未测) | ~29.0 ms |
 | 4000 | (未测) | ~174 ms |
 
-#### Phase 7：真实分布与效果验证（计划中）
+#### Phase 7：真实分布与效果验证（计划中，未实现）
 参考 `linfa-hierarchical` 的 `test_blobs` 测试，计划增加以下内容以验证算法的统计有效性：
 1.  **真实分布测试 (Blobs Test)**:
     - 目标：验证算法能否正确聚类具有明显几何结构的合成数据（Statistical Correctness）。

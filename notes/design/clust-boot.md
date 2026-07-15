@@ -1,6 +1,7 @@
 # clust boot：层次聚类的多尺度 Bootstrap p-value（pvclust 风格）
 
 > **状态：计划中（未实现）** — `necom clust boot` 命令尚未实现，本文档为设计稿。
+> 截至 2026-07-16，底层 `necom clust hier` 与 `libs/clust/hier.rs` 已就绪，可作为实现基础。
 
 本页基于外部 R 包 `pvclust`（CRAN 版本 2.2-0）的源码梳理其算法与数据结构，并给出 `necom` 侧计划新增命令 `necom clust boot` 的接口与输出约定。
 

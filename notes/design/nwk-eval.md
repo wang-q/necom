@@ -1,6 +1,7 @@
 # nwk eval [设计中]
 
 > **实现状态注记**：本文档为设计稿，所有功能均未实现（Roadmap 四个 Phase 全部 `[ ]`）。`necom nwk` 当前无 `eval` 子命令。本文档基于 [phylo.md](phylo.md) 中描述的 phylo 架构（Arena 树、`cmp.rs`、`stat.rs`）。
+> 截至 2026-07-16，底层依赖已就绪：`libs/phylo/cmp.rs` 提供 RF 距离，`Tree::is_monophyletic`、`Tree::get_distance`、`libs/phylo/tree/stat.rs` 均已实现，但尚未包装为 `necom nwk eval` 命令。
 
 `necom nwk eval` 的目标是建立一个**多维度的树评估框架**。除了基于树拓扑的几何指标外，重点引入**生物学语境**，评估基因树（Gene Tree）与物种树（Species Tree）或分类单元（Taxonomy）的一致性。
 
