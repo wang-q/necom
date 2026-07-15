@@ -233,8 +233,9 @@
 # 2. 选定最佳阈值，生成最终聚类
 necom clust cut input.nwk --max-clade 0.05 > final_cluster.tsv
 
-# 3. 可视化或提取子树
-necom nwk subtree input.nwk --list final_cluster.tsv --cluster-id 1 > cluster1.nwk
+# 3. 提取 final_cluster.tsv 中第一个簇对应的子树
+head -1 final_cluster.tsv | tr '\t' '\n' > cluster1.names
+necom nwk subtree input.nwk -l cluster1.names > cluster1.nwk
 ```
 
 #### 2. 层次聚类（hclust）接入

@@ -357,7 +357,7 @@ necom clust k-medoids all_data.tsv --k 5000 --format pair > clusters.tsv
 cut -f1 clusters.tsv | sort -u > representatives.list
 
 # 3. 提取代表点的子矩阵
-necom mat subset all_data.tsv --list representatives.list -o sub_matrix.phy
+necom mat subset all_data.tsv representatives.list -o sub_matrix.phy
 
 # 4. 对代表点构树
 necom clust hier sub_matrix.phy --method ward > backbone.nwk

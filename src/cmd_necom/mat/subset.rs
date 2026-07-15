@@ -21,7 +21,7 @@ Examples:
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input PHYLIP matrix file",
         ))
-        .arg(crate::cmd_necom::args::fa_name_list_arg(true))
+        .arg(crate::cmd_necom::args::mat_name_list_arg(true))
         .arg(crate::cmd_necom::args::outfile_arg())
 }
 /// Execute the subset command.

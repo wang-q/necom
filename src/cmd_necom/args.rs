@@ -507,7 +507,7 @@ pub fn mode_arg(
 // ============================================================================
 
 /// Positional `name_list` file argument (used by `mat subset`).
-pub fn fa_name_list_arg(required: bool) -> Arg {
+pub fn mat_name_list_arg(required: bool) -> Arg {
     Arg::new("name_list")
         .required(required)
         .index(2)
