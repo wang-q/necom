@@ -1,12 +1,7 @@
 pub mod condense;
-pub mod ir;
-pub mod p2m;
-pub mod prefilter;
-pub mod rept;
-pub mod trf;
-pub mod ucsc;
 
 use clap::{ArgMatches, Command};
+
 /// Build the clap subcommand for pl.
 pub fn make_subcommand() -> Command {
     Command::new("pl")
@@ -14,23 +9,12 @@ pub fn make_subcommand() -> Command {
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(condense::make_subcommand())
-        .subcommand(p2m::make_subcommand())
-        .subcommand(prefilter::make_subcommand())
-        .subcommand(trf::make_subcommand())
-        .subcommand(ir::make_subcommand())
-        .subcommand(rept::make_subcommand())
-        .subcommand(ucsc::make_subcommand())
 }
+
 /// Execute the pl command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     match args.subcommand() {
         Some(("condense", sub_matches)) => condense::execute(sub_matches),
-        Some(("p2m", sub_matches)) => p2m::execute(sub_matches),
-        Some(("prefilter", sub_matches)) => prefilter::execute(sub_matches),
-        Some(("trf", sub_matches)) => trf::execute(sub_matches),
-        Some(("ir", sub_matches)) => ir::execute(sub_matches),
-        Some(("rept", sub_matches)) => rept::execute(sub_matches),
-        Some(("ucsc", sub_matches)) => ucsc::execute(sub_matches),
         _ => Ok(()),
     }
 }

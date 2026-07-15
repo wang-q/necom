@@ -15,7 +15,6 @@ fn main() -> anyhow::Result<()> {
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)
         .subcommand(cmd_pgr::clust::make_subcommand())
-        .subcommand(cmd_pgr::dist::make_subcommand())
         .subcommand(cmd_pgr::mat::make_subcommand())
         .subcommand(cmd_pgr::nwk::make_subcommand())
         .subcommand(cmd_pgr::pl::make_subcommand())
@@ -25,9 +24,6 @@ fn main() -> anyhow::Result<()> {
 * Clustering:
     * clust - Algorithms: cc, cut, dbscan, eval, hier, k-medoids, mcl, nj, upgma
 
-* Distance:
-    * dist  - Metrics: hv, seq, vector
-
 * Matrix:
     * mat   - Processing: compare, format, subset, to-pair, to-phylip, transform
 
@@ -35,15 +31,13 @@ fn main() -> anyhow::Result<()> {
     * nwk   - Newick tools: stat, distance, cmp, reroot, prune, label, order, indent, comment, rename, replace, subtree, support, topo, to-dot, to-forest, to-svg, to-tex
 
 * Pipelines:
-    * pl - Workflows: condense, p2m, prefilter, trf, ir, rept, ucsc
+    * pl - Workflows: condense
 
 "###,
         );
 
-    // Check which subcommand the user ran...
     match app.get_matches().subcommand() {
         Some(("clust", sub_matches)) => cmd_pgr::clust::execute(sub_matches),
-        Some(("dist", sub_matches)) => cmd_pgr::dist::execute(sub_matches),
         Some(("mat", sub_matches)) => cmd_pgr::mat::execute(sub_matches),
         Some(("nwk", sub_matches)) => cmd_pgr::nwk::execute(sub_matches),
         Some(("pl", sub_matches)) => cmd_pgr::pl::execute(sub_matches),

@@ -1,10 +1,6 @@
 pub mod clust;
-pub mod fmt;
-pub mod hash;
-pub mod hv;
 pub mod io;
 pub mod linalg;
-pub mod loc;
 pub mod pairmat;
 pub mod par;
 pub mod phylo;
