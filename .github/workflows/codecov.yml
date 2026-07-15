@@ -7,7 +7,7 @@ env:
 
 jobs:
   check:
-    name: codecov pgr
+    name: codecov necom
     runs-on: ubuntu-latest
     container:
       image: xd009642/tarpaulin:develop-nightly

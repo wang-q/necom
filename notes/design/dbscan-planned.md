@@ -1,6 +1,6 @@
 # clust dbscan 规划
 
-> **实现状态注记**：本文档列出 `pgr clust dbscan` 尚未实现的规划功能（`--scan`/`--opt-eps`/`--min-pct` 等）。当前已实现基本的 `--eps`/`--min_points` 密度聚类。
+> **实现状态注记**：本文档列出 `necom clust dbscan` 尚未实现的规划功能（`--scan`/`--opt-eps`/`--min-pct` 等）。当前已实现基本的 `--eps`/`--min_points` 密度聚类。
 
 ## 1. 扫描与评分
 
@@ -13,7 +13,7 @@
 - 自动选优（可选）：`--opt-eps {silhouette|max-clusters|min-noise}`，在扫描后直接选点并输出该分区
 
 **用法规划**：
-`pgr clust dbscan ... --scan <start>,<end>,<steps>`
+`necom clust dbscan ... --scan <start>,<end>,<steps>`
 （注：扫描仅针对方法的**主阈值参数**，此处为 `eps`。例如 `min_points` 保持固定为用户指定值或默认值）
 
 **输出指标表（示例）**：
@@ -68,17 +68,17 @@
 
 ```bash
 # 1) 基本聚类（pairwise 距离输入）
-pgr clust dbscan pairs.tsv --eps 0.15 --min_points 3 -o clusters.tsv
+necom clust dbscan pairs.tsv --eps 0.15 --min_points 3 -o clusters.tsv
 
 # 2) 扫描 eps 并输出评分曲线（TSV）
-pgr clust dbscan pairs.tsv --scan 0.05,0.5,100 -o scan.tsv
+necom clust dbscan pairs.tsv --scan 0.05,0.5,100 -o scan.tsv
 
 # 3) 自动基于 Silhouette 选优 eps 并直接输出分区
-pgr clust dbscan pairs.tsv --scan 0.05,0.5,100 --opt-eps silhouette -o best.tsv
+necom clust dbscan pairs.tsv --scan 0.05,0.5,100 --opt-eps silhouette -o best.tsv
 
 # 4) 使用比例表达 min_points
-pgr clust dbscan pairs.tsv --eps 0.15 --min-pct 0.02 -o clusters.tsv
+necom clust dbscan pairs.tsv --eps 0.15 --min-pct 0.02 -o clusters.tsv
 
 # 5) 输出 pair 格式，便于后续评估
-pgr clust dbscan pairs.tsv --eps 0.15 --min_points 3 --format pair -o pairs.out.tsv
+necom clust dbscan pairs.tsv --eps 0.15 --min_points 3 --format pair -o pairs.out.tsv
 ```

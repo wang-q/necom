@@ -476,7 +476,7 @@ impl Tree {
     ///
     /// # Example
     /// ```ignore
-    /// use pgr::libs::phylo::tree::Tree;
+    /// use necom::libs::phylo::tree::Tree;
     ///
     /// // Successful parse
     /// let input = "(A:0.1,B:0.2)Root;";

@@ -2,17 +2,17 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 use std::io::Write;
 use tempfile::Builder;
 
 // ================================================================================================
-// pgr nwk stat
+// necom nwk stat
 // ================================================================================================
 
 #[test]
 fn command_stat_basic() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "stat", "tests/newick/hg38.7way.nwk"])
         .run();
 
@@ -26,7 +26,7 @@ fn command_stat_basic() {
 
 #[test]
 fn command_stat_catarrhini() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "stat", "tests/newick/catarrhini.nwk"])
         .run();
 
@@ -44,7 +44,7 @@ fn command_stat_catarrhini() {
 
 #[test]
 fn command_stat_style_line() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "stat",
@@ -63,7 +63,7 @@ fn command_stat_style_line() {
 
 #[test]
 fn command_stat_forest() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "stat", "tests/newick/forest.nwk", "--style", "line"])
         .run();
 
@@ -94,7 +94,7 @@ fn command_stat_forest() {
 
 #[test]
 fn command_stat_stdin() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "stat", "stdin"])
         .stdin("((A:1,B:1):1,C:2);")
         .run();
@@ -106,7 +106,7 @@ fn command_stat_stdin() {
 
 #[test]
 fn command_stat_multi_tree_stdin() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "stat", "stdin"])
         .stdin("(A,B)C;(D,E)F;")
         .run();
@@ -121,7 +121,7 @@ fn command_stat_outfile() {
     let temp_file = Builder::new().suffix(".tsv").tempfile().unwrap();
     let outfile = temp_file.path().to_str().unwrap();
 
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&["nwk", "stat", "tests/newick/catarrhini.nwk", "-o", outfile])
         .assert()
         .success();
@@ -132,12 +132,12 @@ fn command_stat_outfile() {
 }
 
 // ================================================================================================
-// pgr nwk label
+// necom nwk label
 // ================================================================================================
 
 #[test]
 fn command_label_basic() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "label", "tests/newick/hg38.7way.nwk"])
         .run();
 
@@ -150,7 +150,7 @@ fn command_label_basic() {
 #[test]
 fn command_label_leaf_only() {
     // -I: Don't print internal labels (so print leaves only)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "label", "tests/newick/catarrhini.nwk", "-I"])
         .run();
 
@@ -163,7 +163,7 @@ fn command_label_leaf_only() {
 #[test]
 fn command_label_internal_only() {
     // -L: Don't print leaf labels (so print internal only)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "label", "tests/newick/catarrhini.nwk", "-L"])
         .run();
 
@@ -176,7 +176,7 @@ fn command_label_internal_only() {
 fn command_label_empty_internal() {
     // Test on a tree with no internal labels using -L
     // hg38.7way.nwk has no internal labels
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "label", "tests/newick/hg38.7way.nwk", "-L"])
         .run();
 
@@ -190,7 +190,7 @@ fn command_label_selection_node_monophyly() {
     // In catarrhini.nwk, Homininae is an internal node. Pongo is a leaf (genus).
     // -D includes descendants.
     // -M checks monophyly.
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "label",
@@ -216,7 +216,7 @@ fn command_label_selection_file() {
     writeln!(temp_file, "Pan").unwrap();
     let list_file = temp_file.path().to_str().unwrap();
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "label",
@@ -234,7 +234,7 @@ fn command_label_selection_file() {
 #[test]
 fn command_label_regex() {
     // -r regex
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "label",
@@ -252,7 +252,7 @@ fn command_label_regex() {
 #[test]
 fn command_label_regex_case_insensitive() {
     // Verify case insensitivity explicitly
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "label",
@@ -271,7 +271,7 @@ fn command_label_regex_case_insensitive() {
 #[test]
 fn command_label_columns() {
     // -c columns
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "label",
@@ -290,7 +290,7 @@ fn command_label_columns() {
 #[test]
 fn command_label_columns_full() {
     // -c full should emit the comment in NHX format
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "label",
@@ -307,7 +307,7 @@ fn command_label_columns_full() {
 #[test]
 fn command_label_formatting_root() {
     // --root
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "label", "tests/newick/root.nwk", "--root"])
         .run();
 
@@ -318,7 +318,7 @@ fn command_label_formatting_root() {
 #[test]
 fn command_label_formatting_tab() {
     // --tab (tab separated on one line)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "label", "tests/newick/catarrhini.nwk", "--tab"])
         .run();
 
@@ -330,7 +330,7 @@ fn command_label_formatting_tab() {
 #[test]
 fn command_label_special_chars() {
     // Special chars (slash, space)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "label", "tests/newick/slash_and_space.nwk"])
         .run();
 
@@ -342,7 +342,7 @@ fn command_label_special_chars() {
 #[test]
 fn command_label_multi_tree() {
     // Multiple trees in one file, --tab option
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "label", "tests/newick/forest.nwk", "--tab"])
         .run();
 
@@ -355,12 +355,12 @@ fn command_label_multi_tree() {
 }
 
 // ================================================================================================
-// pgr nwk distance
+// necom nwk distance
 // ================================================================================================
 
 #[test]
 fn command_distance_root() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "distance",
@@ -377,7 +377,7 @@ fn command_distance_root() {
 
 #[test]
 fn command_distance_parent() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "distance",
@@ -394,7 +394,7 @@ fn command_distance_parent() {
 
 #[test]
 fn command_distance_pairwise() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "distance",
@@ -412,7 +412,7 @@ fn command_distance_pairwise() {
 
 #[test]
 fn command_distance_lca() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "distance",
@@ -430,7 +430,7 @@ fn command_distance_lca() {
 
 #[test]
 fn command_distance_phylip() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "distance",
@@ -451,7 +451,7 @@ fn command_distance_phylip() {
 fn command_distance_stdin() {
     // Topological distance (stdin input)
     let input = "((A,B)C,D)E;";
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "distance", "stdin", "--mode", "root"])
         .stdin(input)
         .run();
@@ -465,7 +465,7 @@ fn command_distance_stdin() {
 
 #[test]
 fn command_distance_reference_dist_root() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "distance", "tests/newick/dist.nwk", "--mode", "root"])
         .run();
 
@@ -480,7 +480,7 @@ fn command_distance_reference_dist_root() {
 
 #[test]
 fn command_distance_reference_unnamed() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "distance",
@@ -492,7 +492,7 @@ fn command_distance_reference_unnamed() {
 
     // Verified against newick_utils test_nw_distance_nsf.exp
     // Unnamed nodes might appear as tabs with no label or internal ID.
-    // Based on my experience, pgr usually outputs label if present.
+    // Based on my experience, necom usually outputs label if present.
     // If empty label, it outputs "\tDist".
     assert!(stdout.contains("\t3"));
     assert!(stdout.contains("\t4"));
@@ -502,18 +502,18 @@ fn command_distance_reference_unnamed() {
 
 #[test]
 fn command_distance_reference_lca() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "distance", "tests/newick/dist.nwk", "--mode", "lca"])
         .run();
 
     // Verified against newick_utils test_nw_distance_an_2.exp (D F -> 4 2)
-    // pgr output: D \t F \t 4 \t 2
+    // necom output: D \t F \t 4 \t 2
     assert!(stdout.contains("D\tF\t4\t2"));
 }
 
 #[test]
 fn command_distance_reference_pairwise() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "distance",
@@ -534,7 +534,7 @@ fn command_distance_reference_pairwise() {
 
 #[test]
 fn command_distance_reference_phylip() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "distance",
@@ -545,7 +545,7 @@ fn command_distance_reference_phylip() {
         .run();
 
     // Verified against newick_utils test_nw_distance_m.exp
-    // Note: pgr includes all named nodes (leaves + internal) in phylip mode.
+    // Note: necom includes all named nodes (leaves + internal) in phylip mode.
     // dist.nwk has 6 leaves + 5 named internal nodes = 11 nodes.
     // newick_utils defaults to leaves only for matrix.
     assert!(stdout.lines().next().unwrap().trim().starts_with("11"));
@@ -559,7 +559,7 @@ fn command_distance_reference_phylip() {
 
 #[test]
 fn command_distance_float_noise() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "distance",
@@ -578,7 +578,7 @@ fn command_distance_float_noise() {
 
 #[test]
 fn command_distance_reference_parent() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "distance",

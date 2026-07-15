@@ -3,16 +3,19 @@ use tempfile::Builder;
 
 #[path = "common/mod.rs"]
 mod common;
-use common::PgrCmd;
+use common::NecomCmd;
 
 #[test]
 fn test_dynamic_tree_cut_basic() {
-    let temp = Builder::new().prefix("pgr_test_dynamic").tempdir().unwrap();
+    let temp = Builder::new()
+        .prefix("necom_test_dynamic")
+        .tempdir()
+        .unwrap();
     let tree_file = temp.path().join("basic.nwk");
     let tree_content = "((A:0.1,B:0.1):0.8,(C:0.1,D:0.1):0.8);";
     fs::write(&tree_file, tree_content).unwrap();
 
-    let (stdout, stderr) = PgrCmd::new()
+    let (stdout, stderr) = NecomCmd::new()
         .args(&[
             "clust",
             "cut",
@@ -40,7 +43,7 @@ fn test_dynamic_tree_cut_basic() {
 #[test]
 fn test_dynamic_tree_cut_unassigned() {
     let temp = Builder::new()
-        .prefix("pgr_test_dynamic_un")
+        .prefix("necom_test_dynamic_un")
         .tempdir()
         .unwrap();
     let tree_file = temp.path().join("unassigned.nwk");
@@ -57,7 +60,7 @@ fn test_dynamic_tree_cut_unassigned() {
     // So we expect a cluster with ID 0 containing A,B,C,D (or however many are unassigned).
     // Or maybe multiple unassigned clusters? No, 0 is a single ID.
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "clust",
             "cut",

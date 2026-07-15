@@ -1,6 +1,6 @@
-# pgr mat transform
+# necom mat transform
 
-`pgr mat transform` 命令用于对矩阵中的数值进行数学变换。
+`necom mat transform` 命令用于对矩阵中的数值进行数学变换。
 
 这是将**相似度矩阵 (Similarity Matrix)** 转换为 **距离矩阵 (Distance Matrix)** 的核心工具，也支持归一化和其他数值调整。
 
@@ -9,7 +9,7 @@
 ## 用法
 
 ```bash
-pgr mat transform [OPTIONS] <infile>
+necom mat transform [OPTIONS] <infile>
 ```
 
 ### 参数
@@ -46,13 +46,13 @@ BLAST 等工具输出的 Identity 通常为 0 到 100。
 
 使用 `linear` 操作：
 ```bash
-pgr mat transform input.phy --op linear --scale -0.01 --offset 1.0 -o dist.phy
+necom mat transform input.phy --op linear --scale -0.01 --offset 1.0 -o dist.phy
 ```
 
 或者分两步（先反转再缩放）：
 ```bash
-pgr mat transform input.phy --op inv-linear --max 100 | \
-pgr mat transform stdin --op linear --scale 0.01 -o dist.phy
+necom mat transform input.phy --op inv-linear --max 100 | \
+necom mat transform stdin --op linear --scale 0.01 -o dist.phy
 ```
 
 ### 2. Identity (0-100) 转 Distance (0-100)
@@ -60,7 +60,7 @@ pgr mat transform stdin --op linear --scale 0.01 -o dist.phy
 仅做反转：$D = 100 - Identity$。
 
 ```bash
-pgr mat transform input.phy --op inv-linear --max 100 -o dist.phy
+necom mat transform input.phy --op inv-linear --max 100 -o dist.phy
 ```
 
 ### 3. Similarity (0-1) 转 Distance (0-1)
@@ -68,7 +68,7 @@ pgr mat transform input.phy --op inv-linear --max 100 -o dist.phy
 标准的线性反转：$D = 1.0 - S$。
 
 ```bash
-pgr mat transform input.phy --op inv-linear --max 1.0 -o dist.phy
+necom mat transform input.phy --op inv-linear --max 1.0 -o dist.phy
 ```
 
 ### 4. 概率/乘性模型转换 (Log)
@@ -78,7 +78,7 @@ $D = -\ln(S)$。
 
 ```bash
 # 假设输入矩阵是对角线为 1.0 的概率矩阵
-pgr mat transform input.phy --op log -o dist.phy
+necom mat transform input.phy --op log -o dist.phy
 ```
 
 ### 5. 归一化并转换
@@ -89,7 +89,7 @@ pgr mat transform input.phy --op log -o dist.phy
 ```bash
 # 1. Normalize: S_norm = S_ij / sqrt(S_ii * S_jj)
 # 2. Transform: D = 1.0 - S_norm
-pgr mat transform raw_scores.phy --normalize --op inv-linear --max 1.0 -o dist.phy
+necom mat transform raw_scores.phy --normalize --op inv-linear --max 1.0 -o dist.phy
 ```
 
 ## 背景与原理
@@ -107,7 +107,7 @@ pgr mat transform raw_scores.phy --normalize --op inv-linear --max 1.0 -o dist.p
 
 ### 转换模型
 
-`pgr mat transform` 支持以下几种常见的转换模式，用于将相似度转换为距离或进行其他数学处理：
+`necom mat transform` 支持以下几种常见的转换模式，用于将相似度转换为距离或进行其他数学处理：
 
 #### 1. 线性反转 (Linear Inversion)
 适用于有固定上限的相似度（如 Identity, Percent Similarity）。
@@ -131,17 +131,17 @@ $$D = -\ln(\frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}})$$
 #### 4. 倒数转换 (Reciprocal) [未实现]
 $$D = \frac{1}{S} - \frac{1}{Max}$$
 - **场景**: 很少见，用于某些物理量的转换。
-- **状态**: 当前 `pgr mat transform` 未实现此 op；可通过 `--op linear` 配合外部脚本近似。
+- **状态**: 当前 `necom mat transform` 未实现此 op；可通过 `--op linear` 配合外部脚本近似。
 
 #### 5. 特殊转换 [未实现]
 - **Cosine Similarity**: $D = 1 - \cos(\theta)$
 - **Correlation**: $D = \sqrt{2(1 - r)}$ 或 $D = 1 - r$
-- **状态**: 当前 `pgr mat transform` 未实现。如需 Cosine/Correlation 距离，建议在 Python（SciPy）端计算后导出为 PHYLIP 矩阵。
+- **状态**: 当前 `necom mat transform` 未实现。如需 Cosine/Correlation 距离，建议在 Python（SciPy）端计算后导出为 PHYLIP 矩阵。
 
 ## 注意事项
 
 - **对角线处理**:
-  - `pgr` 读取矩阵时通常会忽略对角线（设为 0），但 `transform` 命令会尝试保留对角线信息以支持 `--normalize`。
+  - `necom` 读取矩阵时通常会忽略对角线（设为 0），但 `transform` 命令会尝试保留对角线信息以支持 `--normalize`。
   - 如果输入文件没有对角线信息（如某些 PHYLIP 变体），`--normalize` 将无法正常工作（视为 0）。
 - **数值稳定性**:
   - `log` 操作对 0 或负值敏感，程序会将其处理为极大值或 0。

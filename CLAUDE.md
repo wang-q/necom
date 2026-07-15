@@ -38,17 +38,17 @@
 
 ### 分层原则
 
-**复杂逻辑放 `libs/`，`cmd_pgr/` 保持薄壳。**
+**复杂逻辑放 `libs/`，`cmd_necom/` 保持薄壳。**
 
 - `src/libs/` 是复杂逻辑、算法、格式 I/O、共享工具的归宿。
-- `src/cmd_pgr/` 仅负责：CLI 参数解析、参数转换、调用 `libs`、输出格式化。
+- `src/cmd_necom/` 仅负责：CLI 参数解析、参数转换、调用 `libs`、输出格式化。
 - 单命令专用的复杂逻辑也放 `libs/`，即使当前只有一个消费者。
 - 命令文件中内联的算法/业务逻辑应回迁 `libs/`。
 
-判断标准：涉及算法、数据结构、复杂流程控制的代码属 `libs/`；只是 `clap` 参数 → 调用 → 打印的代码属 `cmd_pgr/`。
+判断标准：涉及算法、数据结构、复杂流程控制的代码属 `libs/`；只是 `clap` 参数 → 调用 → 打印的代码属 `cmd_necom/`。
 
-反例：在 `cmd_pgr/foo.rs` 里实现距离计算函数 → 应迁到 `libs/`。
-正例：`cmd_pgr/foo.rs` 只做 `let args = parse(matches); let result = libs::foo::run(args); println!("{result}")`。
+反例：在 `cmd_necom/foo.rs` 里实现距离计算函数 → 应迁到 `libs/`。
+正例：`cmd_necom/foo.rs` 只做 `let args = parse(matches); let result = libs::foo::run(args); println!("{result}")`。
 
 > 注："三次相似代码"原则针对的是重复代码的抽象提取，与本节的代码分层无关。
 
@@ -108,12 +108,12 @@
 
 **目录约定**: 任何被 `.gitignore` 完全忽略的目录，均仅作为参考资料，**不是本项目的一部分**。
 
-这个 `pgr` clone 已被精简为聚焦聚类、距离矩阵与系统发育树的工具集。它仅保留以下命令：
+这个 `necom` clone 已被精简为聚焦聚类、距离矩阵与系统发育树的工具集。它仅保留以下命令：
 
-- `pgr clust` — 聚类算法与评估
-- `pgr mat` — 距离矩阵处理
-- `pgr nwk` — Newick 树操作与可视化
-- `pgr pl condense` — 基于分类学的树压缩流程
+- `necom clust` — 聚类算法与评估
+- `necom mat` — 距离矩阵处理
+- `necom nwk` — Newick 树操作与可视化
+- `necom pl condense` — 基于分类学的树压缩流程
 
 其他命令（`fa`、`fas`、`fq`、`gff`、`axt`、`chain`、`lav`、`maf`、`ms`、`net`、`paf`、`plot`、`psl`、`twobit`、`dist` 以及 `pl` 的其余子命令）均已被移除。
 
@@ -140,11 +140,11 @@ cargo test
 
 ### 源代码组织
 
-- **`src/pgr.rs`** - 主程序入口，负责命令行解析和分发。
+- **`src/necom.rs`** - 主程序入口，负责命令行解析和分发。
     - 使用 `clap` 进行参数解析。
     - 在 `main` 函数中注册所有子命令模块。
 - **`src/lib.rs`** - 库入口，导出模块。
-- **`src/cmd_pgr/`** - 命令实现模块。当前仅保留：
+- **`src/cmd_necom/`** - 命令实现模块。当前仅保留：
     - `clust` (Clustering)
     - `mat` (Matrix)
     - `nwk` (Phylogeny/Newick)
@@ -177,7 +177,7 @@ cargo test
 
 ## 命令结构 (Command Structure)
 
-每个命令在 `src/cmd_pgr/` 下作为一个独立的模块实现，通常包含两个公开函数：
+每个命令在 `src/cmd_necom/` 下作为一个独立的模块实现，通常包含两个公开函数：
 
 1.  **`make_subcommand`**: 定义命令行接口。
     -   返回 `clap::Command`。
@@ -203,9 +203,9 @@ cargo test
 
 ### 添加新命令
 
-1.  在 `src/cmd_pgr/` 下相应的类别目录中创建新文件 (或新建目录)。
-2.  在 `src/cmd_pgr/mod.rs` (或子目录的 `mod.rs`) 中声明该模块。
-3.  在 `src/pgr.rs` 中注册该子命令。
+1.  在 `src/cmd_necom/` 下相应的类别目录中创建新文件 (或新建目录)。
+2.  在 `src/cmd_necom/mod.rs` (或子目录的 `mod.rs`) 中声明该模块。
+3.  在 `src/necom.rs` 中注册该子命令。
 4.  实现 `make_subcommand` 和 `execute`。
 5.  添加测试文件 `tests/cli_<command>.rs`。
 
@@ -213,7 +213,7 @@ cargo test
 
 - 集成测试位于 `tests/` 目录下，文件命名为 `cli_<command>.rs`。
 - 测试数据通常放在 `tests/<command>/` 目录下。
-- **推荐使用 `PgrCmd` 辅助结构体**（定义在 `tests/common/mod.rs`）来编写集成测试，以简化子进程调用和断言。
+- **推荐使用 `NecomCmd` 辅助结构体**（定义在 `tests/common/mod.rs`）来编写集成测试，以简化子进程调用和断言。
 - 测试函数**不需要**返回 `anyhow::Result<()>`，也不需要以 `Ok(())` 结尾。直接在函数体中执行断言即可。
 - 必须使用 `assert_cmd` 来定位二进制文件，以兼容自定义构建目录。
 - **稳定性原则 (Zero Panic)**: 任何用户输入（包括畸形数据、二进制文件）都不应导致程序 Panic。必须捕获所有错误并返回友好的错误信息。

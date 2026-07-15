@@ -9,8 +9,8 @@
 /// # Example
 ///
 /// ```ignore
-/// use pgr::libs::clust::k_medoids::KMedoids;
-/// use pgr::libs::pairmat::ScoringMatrix;
+/// use necom::libs::clust::k_medoids::KMedoids;
+/// use necom::libs::pairmat::ScoringMatrix;
 ///
 /// // Create a distance matrix for 5 points
 /// let mut sm = ScoringMatrix::<f32>::with_size_and_defaults(5, 0.0, 100.0);

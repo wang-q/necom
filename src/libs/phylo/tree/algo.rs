@@ -12,8 +12,8 @@ use std::collections::{HashMap, HashSet};
 ///
 /// # Example
 /// ```ignore
-/// use pgr::libs::phylo::tree::Tree;
-/// use pgr::libs::phylo::tree::algo;
+/// use necom::libs::phylo::tree::Tree;
+/// use necom::libs::phylo::tree::algo;
 ///
 /// let mut tree = Tree::from_newick("(B,A);").unwrap();
 /// algo::sort_by_name(&mut tree, false);
@@ -90,8 +90,8 @@ fn get_sort_key(name_map: &HashMap<NodeId, String>, id: NodeId) -> String {
 ///
 /// # Example
 /// ```ignore
-/// use pgr::libs::phylo::tree::Tree;
-/// use pgr::libs::phylo::tree::algo;
+/// use necom::libs::phylo::tree::Tree;
+/// use necom::libs::phylo::tree::algo;
 ///
 /// // ((A,B),C)
 /// // (A,B) has 2 descendants (leaves), C has 1 descendant.
@@ -161,8 +161,8 @@ pub fn ladderize(tree: &mut Tree, descending: bool) {
 ///
 /// # Example
 /// ```ignore
-/// use pgr::libs::phylo::tree::Tree;
-/// use pgr::libs::phylo::tree::algo;
+/// use necom::libs::phylo::tree::Tree;
+/// use necom::libs::phylo::tree::algo;
 ///
 /// let mut tree = Tree::from_newick("(A,B,C);").unwrap();
 /// let order = vec!["C".to_string(), "B".to_string(), "A".to_string()];

@@ -1,4 +1,4 @@
-//! Shared helpers for `pgr pl` pipeline subcommands.
+//! Shared helpers for `necom pl` pipeline subcommands.
 //!
 //! Pure pipeline orchestration logic (no clap dependency): workflow context
 //! and path resolution for `pl condense`.

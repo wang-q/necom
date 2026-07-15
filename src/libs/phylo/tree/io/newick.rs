@@ -12,7 +12,7 @@ use std::io::Read;
 /// # Example
 /// ```ignore
 /// // usage in CLI:
-/// // let trees = pgr::libs::phylo::tree::io::from_file("path/to/tree.nwk")?;
+/// // let trees = necom::libs::phylo::tree::io::from_file("path/to/tree.nwk")?;
 /// ```
 pub fn from_file(infile: &str) -> anyhow::Result<Vec<Tree>> {
     let mut reader = crate::reader(infile)?;

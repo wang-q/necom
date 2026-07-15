@@ -34,7 +34,7 @@ D 1.0 1.0 0.2 0.0
     // 0.4: Cut at 0.4. Same as 0.2.
     // 0.6: Cut at 0.6. Root height 0.5 <= 0.6. Keep. -> {A,B,C,D}.
 
-    let mut cmd_cut = Command::cargo_bin("pgr")?;
+    let mut cmd_cut = Command::cargo_bin("necom")?;
     let output_cut = cmd_cut
         .arg("clust")
         .arg("cut")
@@ -64,7 +64,7 @@ D 1.0 1.0 0.2 0.0
     let mut partitions_file = NamedTempFile::new()?;
     write!(partitions_file, "{}", stdout_cut)?;
 
-    let mut cmd_eval = Command::cargo_bin("pgr")?;
+    let mut cmd_eval = Command::cargo_bin("necom")?;
     let output_eval = cmd_eval
         .arg("clust")
         .arg("eval")

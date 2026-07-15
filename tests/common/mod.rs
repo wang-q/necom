@@ -1,14 +1,14 @@
 use assert_cmd::assert::Assert;
 use assert_cmd::Command;
 
-pub struct PgrCmd {
+pub struct NecomCmd {
     cmd: Command,
     stdin: Option<String>,
 }
 
-impl PgrCmd {
+impl NecomCmd {
     pub fn new() -> Self {
-        let mut cmd = Command::cargo_bin("pgr").unwrap();
+        let mut cmd = Command::cargo_bin("necom").unwrap();
         cmd.env("RUST_BACKTRACE", "1");
         Self { cmd, stdin: None }
     }

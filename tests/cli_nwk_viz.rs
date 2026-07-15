@@ -2,11 +2,11 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 
 #[test]
 fn command_indent() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "indent",
@@ -23,7 +23,7 @@ fn command_indent() {
 
 #[test]
 fn command_indent_compact() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "indent", "tests/newick/catarrhini.nwk", "--compact"])
         .run();
 
@@ -34,7 +34,7 @@ fn command_indent_compact() {
 
 #[test]
 fn command_indent_simple() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "indent", "tests/newick/catarrhini_wrong.nwk"])
         .run();
 
@@ -45,7 +45,7 @@ fn command_indent_simple() {
 
 #[test]
 fn command_indent_optt() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "indent",
@@ -62,7 +62,7 @@ fn command_indent_optt() {
 
 #[test]
 fn command_indent_multiple_optc() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "indent", "tests/newick/forest_ind.nwk", "--compact"])
         .run();
 
@@ -75,7 +75,7 @@ fn command_indent_multiple_optc() {
 #[test]
 fn command_indent_stdin() {
     // 1. Default indentation
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "indent", "stdin"])
         .stdin("((A,B),C);")
         .run();
@@ -89,24 +89,24 @@ fn command_indent_stdin() {
 #[test]
 fn command_indent_special_chars() {
     // 1. Plus/Minus in labels (plusminus.nw)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "indent", "tests/newick/plusminus.nwk"])
         .run();
 
-    // pgr should output it, likely quoted if it contains special chars that require quoting.
+    // necom should output it, likely quoted if it contains special chars that require quoting.
     // + is not strictly a special char in Newick (unlike (),:;), but some parsers might quote it.
-    // pgr quote_label: "(),:;[] \t\n".contains(c) -> quotes.
+    // necom quote_label: "(),:;[] \t\n".contains(c) -> quotes.
     // + is NOT in that list. So it should be unquoted.
     assert!(stdout.contains("HRV-A+A2"));
 
     // 2. Slash and Space (slash_and_space.nw)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "indent", "tests/newick/slash_and_space.nwk"])
         .run();
 
     // Label: B/Washington/05/2009 gi_255529494 gb_GQ451489
-    // Contains space, so pgr WILL quote it.
-    // newick_utils might not quote it if it's lax, but pgr is safer.
+    // Contains space, so necom WILL quote it.
+    // newick_utils might not quote it if it's lax, but necom is safer.
     // We just check if the text is present.
     assert!(stdout.contains("B/Washington/05/2009 gi_255529494 gb_GQ451489"));
     // Check if it is quoted
@@ -115,12 +115,12 @@ fn command_indent_special_chars() {
 
 #[test]
 fn command_indent_multiple_trees() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "indent", "tests/newick/forest.nwk"])
         .run();
 
     // forest.nwk contains multiple trees (5 lines).
-    // pgr should output all of them.
+    // necom should output all of them.
     // Verify specific labels from different trees to ensure all are processed.
     assert!(stdout.contains("Pandion")); // From tree 1
     assert!(stdout.contains("Diomedea")); // From tree 2
@@ -134,9 +134,9 @@ fn command_indent_multiple_trees() {
 
 #[test]
 fn command_comment() {
-    // This test involves piping output from one pgr command to another.
-    // 1. Run pgr nwk comment ... --color green
-    let (color_stdout, _) = PgrCmd::new()
+    // This test involves piping output from one necom command to another.
+    // 1. Run necom nwk comment ... --color green
+    let (color_stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "comment",
@@ -150,8 +150,8 @@ fn command_comment() {
         ])
         .run();
 
-    // 2. Run pgr nwk comment stdin ... --dot with input from step 1
-    let (stdout, _) = PgrCmd::new()
+    // 2. Run necom nwk comment stdin ... --dot with input from step 1
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "comment", "stdin", "-l", "A,B", "--dot"])
         .stdin(color_stdout)
         .run();
@@ -164,7 +164,7 @@ fn command_comment() {
 
 #[test]
 fn command_comment_remove() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "comment",
@@ -179,7 +179,7 @@ fn command_comment_remove() {
 
 #[test]
 fn command_comment_string_free_form() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "comment",
@@ -196,7 +196,7 @@ fn command_comment_string_free_form() {
 
 #[test]
 fn command_to_dot() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "to-dot", "tests/newick/catarrhini.nwk"])
         .run();
 
@@ -208,7 +208,7 @@ fn command_to_dot() {
 
 #[test]
 fn command_to_forest() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "to-forest", "tests/newick/catarrhini.nwk"])
         .run();
 
@@ -220,7 +220,7 @@ fn command_to_forest() {
 
 #[test]
 fn command_to_forest_bl() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "to-forest", "tests/newick/catarrhini.nwk", "--bl"])
         .run();
 
@@ -232,7 +232,7 @@ fn command_to_forest_bl() {
 #[test]
 fn command_tex() {
     // 1. Default (Cladogram)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "to-tex", "tests/newick/hg38.7way.nwk"])
         .run();
 
@@ -241,7 +241,7 @@ fn command_tex() {
     assert!(stdout.contains("tier=4"));
 
     // 2. Phylogram (--bl)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "to-tex", "tests/newick/hg38.7way.nwk", "--bl"])
         .run();
 
@@ -253,7 +253,7 @@ fn command_tex() {
 #[test]
 fn command_to_svg() {
     // catarrhini.nwk has branch lengths, so it should auto-detect phylogram mode
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "to-svg", "tests/newick/catarrhini.nwk"])
         .run();
 
@@ -270,7 +270,7 @@ fn command_to_svg() {
 #[test]
 fn command_to_svg_cladogram() {
     // abc.nwk has no branch lengths, so it should auto-detect cladogram mode
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "to-svg", "tests/newick/abc.nwk"])
         .run();
 
@@ -285,7 +285,7 @@ fn command_to_svg_cladogram() {
 #[test]
 fn command_to_svg_width_vskip() {
     // Custom width and vskip
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "to-svg",

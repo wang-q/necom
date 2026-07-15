@@ -2,8 +2,8 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
-use pgr::libs::phylo::tree::Tree;
+use common::NecomCmd;
+use necom::libs::phylo::tree::Tree;
 
 // Helper to check support values and branch lengths with delta
 fn check_support_and_length(
@@ -45,7 +45,7 @@ fn check_support_and_length(
 
 #[test]
 fn test_nwk_support_simple() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "support",
@@ -76,7 +76,7 @@ fn test_nwk_support_simple() {
 
 #[test]
 fn test_nwk_support_percent() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "support",
@@ -109,7 +109,7 @@ fn test_nwk_support_percent() {
 
 #[test]
 fn test_nwk_support_multi() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "support",

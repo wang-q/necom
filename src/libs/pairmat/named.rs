@@ -120,7 +120,7 @@ impl NamedMatrix {
     /// Get matrix value by sequence names
     ///
     /// ```ignore
-    /// # use pgr::libs::pairmat::NamedMatrix;
+    /// # use necom::libs::pairmat::NamedMatrix;
     /// let names = vec!["seq1".to_string(), "seq2".to_string()];
     /// let mut matrix = NamedMatrix::new(names);
     /// matrix.set(0, 1, 0.5);
@@ -137,7 +137,7 @@ impl NamedMatrix {
     /// Set matrix value by sequence names
     ///
     /// ```ignore
-    /// # use pgr::libs::pairmat::NamedMatrix;
+    /// # use necom::libs::pairmat::NamedMatrix;
     /// let names = vec!["seq1".to_string(), "seq2".to_string()];
     /// let mut matrix = NamedMatrix::new(names);
     ///
@@ -177,7 +177,7 @@ impl NamedMatrix {
     /// Creates a new matrix from a relaxed PHYLIP format file
     ///
     /// ```ignore
-    /// # use pgr::libs::pairmat::NamedMatrix;
+    /// # use necom::libs::pairmat::NamedMatrix;
     /// let matrix = NamedMatrix::from_relaxed_phylip("input.phy").unwrap();
     /// ```
     pub fn from_relaxed_phylip(infile: &str) -> anyhow::Result<Self> {

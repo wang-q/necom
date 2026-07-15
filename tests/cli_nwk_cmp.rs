@@ -2,7 +2,7 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 use std::io::Write;
 use tempfile::Builder;
 
@@ -17,7 +17,7 @@ fn command_nwk_cmp_single_file() {
     writeln!(file, "((A,B),(C,D));").unwrap();
     writeln!(file, "((A,C),(B,D));").unwrap();
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "cmp", file.path().to_str().unwrap()])
         .run();
 
@@ -42,7 +42,7 @@ fn command_nwk_cmp_two_files() {
     writeln!(file2, "((A,B),(C,D));").unwrap(); // Tree 1 (Same)
     writeln!(file2, "((A,C),(B,D));").unwrap(); // Tree 2 (Diff, RF=2)
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "cmp",
@@ -72,7 +72,7 @@ fn command_nwk_cmp_branch_lengths() {
     // T3: Diff topology, lengths 0.2
     writeln!(file, "((A:0.1,C:0.1):0.2,(B:0.1,D:0.1):0.2);").unwrap();
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "cmp", file.path().to_str().unwrap()])
         .run();
 

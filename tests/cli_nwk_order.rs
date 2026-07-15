@@ -1,17 +1,17 @@
 #[macro_use]
 #[path = "common/mod.rs"]
 mod common;
-use common::PgrCmd;
+use common::NecomCmd;
 
 #[test]
 fn command_order_basic() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "order", "tests/newick/abc.nwk", "--num-descendants"])
         .run();
 
     assert!(stdout.contains("(C,(A,B));"));
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "order",
@@ -22,19 +22,19 @@ fn command_order_basic() {
 
     assert!(stdout.contains("((A,B),C);"));
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "order", "tests/newick/abc.nwk", "--alphanumeric"])
         .run();
 
     assert!(stdout.contains("((A,B),C);"));
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "order", "tests/newick/abc.nwk", "--alphanumeric-rev"])
         .run();
 
     assert!(stdout.contains("(C,(B,A));"));
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "order",
@@ -49,7 +49,7 @@ fn command_order_basic() {
 
 #[test]
 fn command_order_list() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "order",
@@ -76,7 +76,7 @@ fn command_order_unnamed() {
     // (A,B) -> rep "A"
     // Root -> compares "C" vs "A", should be ((A,B),(C,D))
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "order", "stdin", "--alphanumeric"])
         .stdin("((C,D),(A,B));")
         .run();
@@ -94,14 +94,14 @@ fn command_order_species() {
     std::fs::copy("tests/newick/species.nwk", temp_path.join("species.nwk")).unwrap();
 
     // Generate a list of labels from the tree
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&["nwk", "label", "species.nwk", "-o", "species.list"])
         .current_dir(temp_path)
         .assert()
         .success();
 
     // Order the tree using the generated list
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "order", "species.nwk", "--name-list", "species.list"])
         .current_dir(temp_path)
         .run();
@@ -115,7 +115,7 @@ fn command_order_species() {
     std::fs::copy("tests/newick/pmxc.nwk", temp_path.join("pmxc.nwk")).unwrap();
 
     // Order pmxc.nwk using the generated list
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "order", "pmxc.nwk", "--name-list", "species.list"])
         .current_dir(temp_path)
         .run();
@@ -133,7 +133,7 @@ fn command_order_default_catarrhini() {
     // Expected: test_nw_order_def.exp
     let expected = "(((Cercopithecus:10,(Macaca:10,Papio:10):20)Cercopithecinae:25,(Colobus:7,Simias:10)Colobinae:5)Cercopithecidae:10,(((Gorilla:16,(Homo:10,Pan:10)Hominini:10)Homininae:15,Pongo:30)Hominidae:15,Hylobates:20):10);";
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "order", "tests/newick/catarrhini.nwk"])
         .run();
 
@@ -148,7 +148,7 @@ fn command_order_multiple_trees() {
 ((((((Cebus,((Cercopithecus,(Macaca,Papio)),Simias)),Hylobates),Pongo),Gorilla),Pan),Homo);
 ((((((Cebus,((Cercopithecus,(Macaca,Papio)),Simias)),Hylobates),Pongo),Gorilla),Pan),Homo);"#;
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "order", "tests/newick/catarrhini_wrong_mult.nwk"])
         .run();
 
@@ -163,7 +163,7 @@ fn command_order_descendants_tetrapoda() {
     // Expected: test_nw_order_num.exp (adjusted for Rust float formatting)
     let expected = "(Tetrao:0.015266,(Bombina:0.269848,(Didelphis:0.007148,((Bradypus:0.020167,(Procavia:0.019702,(Vulpes:0.008083,Orcinus:0.008289)84:0.008124)42:0.003924)16:0,((Sorex:0.01766,(Mesocricetus:0.011181,Tamias:0.049599)88:0.023597)32:0.000744,(Lepus:0.030777,(Homo:0.004051,(Papio:0,Hylobates:0.004076)42:0)99:0.012677)67:0.007717)26:0.006246)78:0.02125)71:0.013125)30:0.006278)100;";
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "order",
@@ -181,7 +181,7 @@ fn command_order_deladderize_verify() {
     // Expected: test_nw_order_dl.exp
     let expected = "(Petromyzon,((Xenopus,((Equus,Homo)Mammalia,Columba)Amniota)Tetrapoda,Carcharodon)Gnathostomata)Vertebrata;";
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "order",

@@ -2,7 +2,7 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
@@ -19,7 +19,7 @@ fn test_nwk_support() {
     writeln!(replicates_file, "((A,C),(B,D));").unwrap(); // different topology
 
     // 3. Run command (absolute counts)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "support",
@@ -31,7 +31,7 @@ fn test_nwk_support() {
     assert!(stdout.contains("((A,B)2,(C,D)2)3;"));
 
     // 4. Run command (percent)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "support",

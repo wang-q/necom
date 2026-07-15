@@ -1,8 +1,8 @@
 # nwk eval [设计中]
 
-> **实现状态注记**：本文档为设计稿，所有功能均未实现（Roadmap 四个 Phase 全部 `[ ]`）。`pgr nwk` 当前无 `eval` 子命令。本文档基于 [[phylo.md]] 中描述的 phylo 架构（Arena 树、`cmp.rs`、`stat.rs`）。
+> **实现状态注记**：本文档为设计稿，所有功能均未实现（Roadmap 四个 Phase 全部 `[ ]`）。`necom nwk` 当前无 `eval` 子命令。本文档基于 [[phylo.md]] 中描述的 phylo 架构（Arena 树、`cmp.rs`、`stat.rs`）。
 
-`pgr nwk eval` 的目标是建立一个**多维度的树评估框架**。除了基于树拓扑的几何指标外，重点引入**生物学语境**，评估基因树（Gene Tree）与物种树（Species Tree）或分类单元（Taxonomy）的一致性。
+`necom nwk eval` 的目标是建立一个**多维度的树评估框架**。除了基于树拓扑的几何指标外，重点引入**生物学语境**，评估基因树（Gene Tree）与物种树（Species Tree）或分类单元（Taxonomy）的一致性。
 
 它旨在回答四个核心问题：
 1.  **几何紧密性**：从图论角度，分组是否紧密且分离？（Silhouette, Diameter）
@@ -84,7 +84,7 @@
 ### 3.4 高级树比较 (Advanced Tree Comparison) [计划中]
 *参考 R `dendextend` 包的功能，支持更深入的树结构比较。*
 
-- **Tanglegram**: 可视化两棵树的对应关系（通常用于比较基因树与物种树，或不同聚类方法的树）。虽然 `pgr` 是 CLI 工具，但可以输出用于绘图的匹配表（link file）。
+- **Tanglegram**: 可视化两棵树的对应关系（通常用于比较基因树与物种树，或不同聚类方法的树）。虽然 `necom` 是 CLI 工具，但可以输出用于绘图的匹配表（link file）。
 - **Baker's Gamma Index**: 类似于 Cophenetic 相关系数，但基于秩（Rank），对非线性关系更鲁棒。
 - **Tree Distance**:
   - **Robinson-Foulds (RF)**: 拓扑差异（已在 Phase 3 提及）。
@@ -95,32 +95,32 @@
 
 ```bash
 # 场景 A: 纯几何评估 (无外部信息)
-pgr nwk eval tree.nwk --part clusters.tsv > geom_eval.tsv
+necom nwk eval tree.nwk --part clusters.tsv > geom_eval.tsv
 # 输出: ClusterID, Size, Silhouette, Diameter
 
 # 场景 B: 性状/地理一致性验证
 # traits.tsv: LeafName <tab> Region
-pgr nwk eval tree.nwk --part clusters.tsv --traits location.tsv > geo_eval.tsv
+necom nwk eval tree.nwk --part clusters.tsv --traits location.tsv > geo_eval.tsv
 # 输出: ..., Purity, DominantTrait, Entropy
 
 # 场景 C: 基因树质量控制 (Reference Tree)
-pgr nwk eval gene_tree.nwk --ref species_tree.nwk > phylo_eval.tsv
+necom nwk eval gene_tree.nwk --ref species_tree.nwk > phylo_eval.tsv
 # 输出: Global_RF_Dist, Cluster_Conflict_Score
 
 # 场景 D: 原始距离拟合度 (Cophenetic)
-pgr nwk eval tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
+necom nwk eval tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 ```
 
 ## 5. 实现备注（技术细节）
 
 - **代码复用与协同**：
   - **距离计算**：
-    - 基础：复用 `Tree::get_distance` (来自 [libs/phylo/tree/mod.rs](../../../src/libs/phylo/tree/mod.rs)，CLI 入口为 [distance.rs](../../../src/cmd_pgr/nwk/distance.rs))。
-    - 优化：对于 `avg_clade` (AvgDist) 和 `max_clade` (Diameter)，直接复用 `libs/phylo/tree/stat.rs` 中的 $O(N)$ 自底向上聚合算法（已在 `pgr clust cut` 中验证）。
+    - 基础：复用 `Tree::get_distance` (来自 [libs/phylo/tree/mod.rs](../../../src/libs/phylo/tree/mod.rs)，CLI 入口为 [distance.rs](../../../src/cmd_necom/nwk/distance.rs))。
+    - 优化：对于 `avg_clade` (AvgDist) 和 `max_clade` (Diameter)，直接复用 `libs/phylo/tree/stat.rs` 中的 $O(N)$ 自底向上聚合算法（已在 `necom clust cut` 中验证）。
   - **拓扑比较**：
-    - RF 距离：核心逻辑在 [libs/phylo/cmp.rs](../../../src/libs/phylo/cmp.rs)（`TreeComparison` trait 提供 `robinson_foulds`/`weighted_robinson_foulds`/`kuhner_felsenstein`），CLI 入口为 [cmp.rs](../../../src/cmd_pgr/nwk/cmp.rs)。
+    - RF 距离：核心逻辑在 [libs/phylo/cmp.rs](../../../src/libs/phylo/cmp.rs)（`TreeComparison` trait 提供 `robinson_foulds`/`weighted_robinson_foulds`/`kuhner_felsenstein`），CLI 入口为 [cmp.rs](../../../src/cmd_necom/nwk/cmp.rs)。
   - **单系性检查**：
-    - 复用 `Tree::is_monophyletic` (已在 [label.rs](../../../src/cmd_pgr/nwk/label.rs) 和 [subtree.rs](../../../src/cmd_pgr/nwk/subtree.rs) 中使用)。
+    - 复用 `Tree::is_monophyletic` (已在 [label.rs](../../../src/cmd_necom/nwk/label.rs) 和 [subtree.rs](../../../src/cmd_necom/nwk/subtree.rs) 中使用)。
 
 - **性能策略**：
   - 优先使用基于遍历的聚合算法，避免构建 $O(N^2)$ 全距离矩阵。
@@ -142,7 +142,7 @@ pgr nwk eval tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 ### Phase 3: 参考树对比 (Reference Comparison)
 - [ ] 在 `nwk eval` 中复用已有的 `phylo::cmp` 模块（已实现，见 §5）。
-- [ ] 接入 RF 距离（`pgr nwk cmp` 已实现）与单系性检查（`is_monophyletic` 已实现）到 eval 输出。
+- [ ] 接入 RF 距离（`necom nwk cmp` 已实现）与单系性检查（`is_monophyletic` 已实现）到 eval 输出。
 
 ### Phase 4: 文档与高级功能
 - [ ] 完善文档，添加 Benchmark。

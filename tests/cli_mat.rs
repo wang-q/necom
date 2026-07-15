@@ -2,11 +2,11 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 
 #[test]
 fn command_mat_to_phylip() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["mat", "to-phylip", "tests/mat/IBPA.fa.tsv"])
         .run();
 
@@ -16,7 +16,7 @@ fn command_mat_to_phylip() {
 
 #[test]
 fn command_mat_to_pair() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["mat", "to-pair", "tests/mat/IBPA.phy"])
         .run();
 
@@ -27,7 +27,7 @@ fn command_mat_to_pair() {
 
 #[test]
 fn command_mat_format_full() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["mat", "format", "tests/mat/IBPA.phy"])
         .run();
 
@@ -38,7 +38,7 @@ fn command_mat_format_full() {
 
 #[test]
 fn command_mat_format_lower() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["mat", "format", "tests/mat/IBPA.phy", "--format", "lower"])
         .run();
 
@@ -49,7 +49,7 @@ fn command_mat_format_lower() {
 
 #[test]
 fn command_mat_format_strict() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["mat", "format", "tests/mat/IBPA.phy", "--format", "strict"])
         .run();
 
@@ -67,7 +67,7 @@ fn command_mat_format_strict() {
 
 #[test]
 fn command_mat_subset() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["mat", "subset", "tests/mat/IBPA.phy", "tests/mat/IBPA.list"])
         .run();
 
@@ -81,7 +81,7 @@ fn command_mat_subset() {
 #[test]
 fn command_mat_compare() {
     // Test single method
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "mat",
             "compare",
@@ -97,7 +97,7 @@ fn command_mat_compare() {
     assert!(stdout.contains("pearson\t0.93"));
 
     // Test all methods
-    let (stdout, stderr) = PgrCmd::new()
+    let (stdout, stderr) = NecomCmd::new()
         .args(&[
             "mat",
             "compare",
@@ -126,7 +126,7 @@ fn command_mat_transform_linear() {
     // Input: A-B=0.1
     // Linear: x*2 + 1
     // Output: A-B=1.2
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "mat",
             "transform",
@@ -150,7 +150,7 @@ fn command_mat_transform_inv_linear() {
     // Input: A-B=0.1
     // Inv-linear: 1.0 - x
     // Output: A-B=0.9
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "mat",
             "transform",
@@ -172,7 +172,7 @@ fn command_mat_transform_log() {
     // Input: A-B=0.1
     // Log: -ln(x)
     // Output: -ln(0.1) = 2.302585
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["mat", "transform", "tests/mat/IBPA.phy", "--op", "log"])
         .run();
 
@@ -195,7 +195,7 @@ fn command_mat_transform_normalize() {
 
     let input = "3\nA\t1.0\t0.5\t0.5\nB\t0.5\t4.0\t1.0\nC\t0.5\t1.0\t9.0\n";
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["mat", "transform", "stdin", "--normalize"])
         .stdin(input)
         .run();
@@ -215,7 +215,7 @@ fn command_mat_transform_normalize_inv() {
 
     let input = "3\nA\t1.0\t0.5\t0.5\nB\t0.5\t4.0\t1.0\nC\t0.5\t1.0\t9.0\n";
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "mat",
             "transform",
@@ -240,7 +240,7 @@ fn command_mat_transform_pairwise_stdin() {
 
     let input = "A\tB\t0.1\nA\tC\t0.5\nB\tC\t0.2\n";
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "mat",
             "transform",
@@ -266,7 +266,7 @@ fn command_mat_transform_pairwise_stdin() {
 #[test]
 fn command_mat_transform_tsv_explicit() {
     // Should NOT auto-detect .tsv extension, must specify --input-format pair
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "mat",
             "transform",

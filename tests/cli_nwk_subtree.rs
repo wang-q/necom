@@ -2,11 +2,11 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 
 #[test]
 fn command_subtree_basic() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "subtree",
@@ -21,7 +21,7 @@ fn command_subtree_basic() {
 
     assert_eq!(stdout.lines().count(), 0);
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "subtree",
@@ -39,7 +39,7 @@ fn command_subtree_basic() {
     assert_eq!(stdout.lines().count(), 1);
     assert!(stdout.contains("((Human:0.007,Chimp:0.00684):0.027,Rhesus:0.037601):0.11;"));
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "subtree",
@@ -56,13 +56,13 @@ fn command_subtree_basic() {
         ])
         .run();
 
-    // pgr outputs NHX style comments
+    // necom outputs NHX style comments
     assert!(stdout.contains("Primates:0.11[&&NHX:member=3:tri=white]"));
 }
 
 #[test]
 fn command_subtree_context() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "subtree",
@@ -82,7 +82,7 @@ fn command_subtree_context() {
 
 #[test]
 fn command_subtree_multiple() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "subtree",
@@ -102,7 +102,7 @@ fn command_subtree_multiple() {
 
 #[test]
 fn command_subtree_monophyly() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "subtree",
@@ -124,7 +124,7 @@ fn command_subtree_monophyly() {
 
 #[test]
 fn command_subtree_monophyly_fail() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "subtree",
@@ -144,21 +144,21 @@ fn command_subtree_monophyly_fail() {
 
 #[test]
 fn command_subtree_regex() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "subtree", "tests/newick/HRV.nwk", "-x", "^HRV.*"])
         .run();
 
     // Only checking the structure briefly to avoid super long string matching issues
     assert!(stdout
         .contains("(((((HRV85_1:0.114608,(HRV89_1:0.219212,HRV1B_1:0.123339):0.076821):0.043577,"));
-    // pgr formats floats without trailing zeros
+    // necom formats floats without trailing zeros
     assert!(stdout.contains("HRV39_1:0.044427):0.65675,"));
     assert!(stdout.contains("):0.317738;"));
 }
 
 #[test]
 fn command_subtree_default() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "subtree",
@@ -177,7 +177,7 @@ fn command_subtree_default() {
 fn command_subtree_condense_basic() {
     // Create a tree with species annotations and condense
     // Use a simpler approach - condense by node name first to verify the mechanism works
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "subtree",

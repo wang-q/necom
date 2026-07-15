@@ -10,7 +10,7 @@
 ///
 /// # Examples
 /// ```ignore
-/// # use pgr::libs::pairmat::CondensedMatrix;
+/// # use necom::libs::pairmat::CondensedMatrix;
 /// let mut m = CondensedMatrix::new(3);
 /// m.set(0, 1, 0.5);
 /// m.set(0, 2, 0.8);

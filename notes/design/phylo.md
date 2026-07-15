@@ -1,6 +1,6 @@
-# 系统发育树处理 — libs/phylo 与 pgr nwk
+# 系统发育树处理 — libs/phylo 与 necom nwk
 
-`pgr nwk` 提供完整的 Newick 格式系统发育树处理功能，包括解析、操作、分析和可视化。
+`necom nwk` 提供完整的 Newick 格式系统发育树处理功能，包括解析、操作、分析和可视化。
 
 > **关联文档**：[[nwk-eval.md]]（计划中的多维树评估框架，复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
 
@@ -117,91 +117,91 @@ pub struct Tree {
 
 ---
 
-## 3. CLI 功能映射 (newick_utils -> pgr)
+## 3. CLI 功能映射 (newick_utils -> necom)
 
-以下列出 `newick_utils` 工具到 `pgr nwk` 子命令的映射：
+以下列出 `newick_utils` 工具到 `necom nwk` 子命令的映射：
 
-*   **`nw_stats`** $\to$ **`pgr nwk stat`**
+*   **`nw_stats`** $\to$ **`necom nwk stat`**
     *   **功能**: 树的统计信息 (节点数, 深度, 类型等)
     *   **状态**: **已实现** (支持多树处理, TSV/KV 输出, 统计二叉分枝)
 
-*   **`nw_distance`** $\to$ **`pgr nwk distance`**
+*   **`nw_distance`** $\to$ **`necom nwk distance`**
     *   **功能**: 计算节点间距离 / 树间距离
     *   **状态**: **已实现** (支持 root, parent, pairwise, lca, phylip)
 
-*   **`nw_indent`** $\to$ **`pgr nwk indent`**
+*   **`nw_indent`** $\to$ **`necom nwk indent`**
     *   **功能**: 格式化/缩进 Newick 树
     *   **状态**: **已实现** (支持紧凑/缩进输出)
 
-*   **`pgr nwk cmp`**
+*   **`necom nwk cmp`**
     *   **功能**: 比较树 (RF, WRF, KF 距离)
     *   **状态**: **已实现** (支持单文件内两两比较, 双文件比较)
 
-*   **`pgr nwk comment`**
+*   **`necom nwk comment`**
     *   **功能**: 添加 NHX 注释 (color, dot, bar, rec, tri 等)
     *   **状态**: **已实现** (支持按名称/LCA 选择节点, 移除注释)
 
-*   **`nw_display`** $\to$ **`pgr nwk to-dot` / `to-forest` / `to-svg` / `to-tex`**
+*   **`nw_display`** $\to$ **`necom nwk to-dot` / `to-forest` / `to-svg` / `to-tex`**
     *   **功能**: 树的可视化 (Graphviz/LaTeX Forest/SVG)
     *   **状态**: **已实现** (支持 Graphviz DOT, LaTeX Forest 代码及完整文档导出, SVG 矢量图)
 
-*   **`nw_topology`** $\to$ **`pgr nwk topo`**
+*   **`nw_topology`** $\to$ **`necom nwk topo`**
     *   **功能**: 仅保留拓扑结构 (去除分支长度)
     *   **状态**: **已实现** (支持 `--bl`, `--comment`, `-I`, `-L`)
 
-*   **`nw_labels`** $\to$ **`pgr nwk label`**
+*   **`nw_labels`** $\to$ **`necom nwk label`**
     *   **功能**: 提取所有标签 (叶子/内部节点)
     *   **状态**: **已实现** (支持正则过滤, 内部/叶子筛选, 单行输出)
 
-*   **`nw_reroot`** $\to$ **`pgr nwk reroot`**
+*   **`nw_reroot`** $\to$ **`necom nwk reroot`**
     *   **功能**: 重定根 (Outgroup, Midpoint)
     *   **状态**: **已实现** (支持 Midpoint, Outgroup (LCA), Lax mode, Deroot)
 
-*   **`nw_prune`** $\to$ **`pgr nwk prune`**
+*   **`nw_prune`** $\to$ **`necom nwk prune`**
     *   **功能**: 剪枝 (移除指定节点)
     *   **状态**: **已实现** (支持正则/列表，自动清理，反选)
 
-*   **`nw_clade`** $\to$ **`pgr nwk subtree`**
+*   **`nw_clade`** $\to$ **`necom nwk subtree`**
     *   **功能**: 提取子树 (Clade)
     *   **状态**: **已实现** (支持 context 扩展、单系群检查、正则匹配)
 
-*   **`nw_order`** $\to$ **`pgr nwk order`**
+*   **`nw_order`** $\to$ **`necom nwk order`**
     *   **功能**: 节点排序 (Ladderize)
     *   **状态**: **已实现** (支持 alphanumeric/descendants/list/deladderize)
 
-*   **`nw_rename`** $\to$ **`pgr nwk rename` / `replace`**
+*   **`nw_rename`** $\to$ **`necom nwk rename` / `replace`**
     *   **功能**: 重命名节点 (Map file/Rule)
     *   **状态**: **已实现** (Split into `rename` & `replace`)
 
-*   **`nw_condense`** $\to$ **`pgr nwk condense`**
+*   **`nw_condense`** $\to$ **`necom nwk condense`**
     *   **功能**: 压缩树 (合并短枝/多叉化)
     *   **状态**: 未实现 (`subtree` 命令支持 `-C` / `--condense` 选项来压缩子树)
 
-*   **`nw_support`** $\to$ **`pgr nwk support`**
+*   **`nw_support`** $\to$ **`necom nwk support`**
     *   **功能**: 计算/显示支持率 (Bootstrap)
     *   **状态**: **已实现** (支持 target + replicates 输入, `--percent` 选项)
 
-*   **`nw_match`** $\to$ **`pgr nwk match`**
+*   **`nw_match`** $\to$ **`necom nwk match`**
     *   **功能**: 匹配两棵树的节点
     *   **状态**: 未实现
 
-*   **`nw_ed`** $\to$ **`pgr nwk ed`**
+*   **`nw_ed`** $\to$ **`necom nwk ed`**
     *   **功能**: 编辑距离 / 树操作脚本
     *   **状态**: 未实现
 
-*   **`nw_gen`** $\to$ **`pgr nwk gen`**
+*   **`nw_gen`** $\to$ **`necom nwk gen`**
     *   **功能**: 生成随机树
     *   **状态**: 未实现
 
-*   **`nw_duration`** $\to$ **`pgr nwk duration`**
+*   **`nw_duration`** $\to$ **`necom nwk duration`**
     *   **功能**: (通常指时间树相关)
     *   **状态**: 未实现
 
 ---
 
-## 4. API 参考 (pgr::phylo)
+## 4. API 参考 (necom::phylo)
 
-以下列出 `pgr::phylo` 库提供的公开 API。
+以下列出 `necom::phylo` 库提供的公开 API。
 
 ### 已实现 (Implemented)
 
@@ -258,7 +258,7 @@ pub struct Tree {
     *   `colless_yule()`, `colless_pda()`: Colless 指数的标准化版本。
     *   `sackin_yule()`, `sackin_pda()`: Sackin 指数的标准化版本。
 *   **Traversal**:
-    *   `inorder`: 中序遍历 (仅适用于二叉树，`pgr` 支持多叉树故未直接实现)。
+    *   `inorder`: 中序遍历 (仅适用于二叉树，`necom` 支持多叉树故未直接实现)。
 
 ### 计划中 (Planned)
 
@@ -271,11 +271,11 @@ pub struct Tree {
 
 ## 5. 可视化详情
 
-`pgr` 的可视化功能支持三种输出格式：SVG（浏览器直接查看）、LaTeX Forest（出版级质量）、Graphviz DOT（通用图形工具）。
+`necom` 的可视化功能支持三种输出格式：SVG（浏览器直接查看）、LaTeX Forest（出版级质量）、Graphviz DOT（通用图形工具）。
 
 ### 5.1 SVG 输出
 
-*   **`pgr nwk to-svg`**: 生成 SVG 矢量图，无需外部依赖，浏览器直接打开。
+*   **`necom nwk to-svg`**: 生成 SVG 矢量图，无需外部依赖，浏览器直接打开。
 
 **特点**：
 *   自动检测模式：有枝长时绘制 phylogram（含比例尺），无枝长时绘制 cladogram。
@@ -285,12 +285,12 @@ pub struct Tree {
 
 ### 5.2 LaTeX Forest 输出
 
-`pgr` 的可视化功能深度集成了 LaTeX Forest 包，配合精心设计的模板 (`src/assets/template.tex`)，能够生成出版级质量的进化树。
+`necom` 的可视化功能深度集成了 LaTeX Forest 包，配合精心设计的模板 (`src/assets/template.tex`)，能够生成出版级质量的进化树。
 
 #### 核心命令
 
-*   **`pgr nwk to-forest`**: 生成原始 Forest 代码。适合嵌入现有 LaTeX 文档。
-*   **`pgr nwk to-tex`**: 生成完整 `.tex` 文档。自动合并模板，可直接用 `xelatex` 编译。
+*   **`necom nwk to-forest`**: 生成原始 Forest 代码。适合嵌入现有 LaTeX 文档。
+*   **`necom nwk to-tex`**: 生成完整 `.tex` 文档。自动合并模板，可直接用 `xelatex` 编译。
 
 #### 样式系统 (Styles)
 
@@ -332,14 +332,14 @@ pub struct Tree {
 
 #### 工作流示例
 
-1.  **准备数据**: 使用 `pgr nwk comment` 命令或是手动为节点添加样式注释。
+1.  **准备数据**: 使用 `necom nwk comment` 命令或是手动为节点添加样式注释。
     ```bash
     # 为节点 A 和 B 的最近公共祖先 (LCA) 添加背景矩形和标签
-    pgr nwk comment input.nwk --lca A,B --rec TeaRose --label Group1 > annotated.nwk
+    necom nwk comment input.nwk --lca A,B --rec TeaRose --label Group1 > annotated.nwk
     ```
 2.  **转换**:
     ```bash
-    pgr nwk to-tex annotated.nwk > output.tex
+    necom nwk to-tex annotated.nwk > output.tex
     ```
 3.  **编译**:
     ```bash
@@ -350,31 +350,31 @@ pub struct Tree {
 
 ## 6. 使用示例
 
-### pgr nwk stat
+### necom nwk stat
 
 统计 Newick 文件的基本信息（节点数、叶子数、二分歧节点数等）。
 
 ```bash
 # 默认输出 (Key-Value 格式)
-pgr nwk stat data.nwk
+necom nwk stat data.nwk
 
 # 表格输出 (TSV 格式，适合后续处理)
-pgr nwk stat data.nwk --style line
+necom nwk stat data.nwk --style line
 ```
 
-### pgr nwk indent
+### necom nwk indent
 
 格式化 Newick 树，使其更易读，或压缩为单行。
 
 ```bash
 # 默认缩进 (2个空格)
-pgr nwk indent data.nwk
+necom nwk indent data.nwk
 
 # 自定义缩进字符 (例如使用4个空格)
-pgr nwk indent data.nwk --text "    "
+necom nwk indent data.nwk --text "    "
 
 # 压缩为单行 (Compact)
-pgr nwk indent data.nwk --compact
+necom nwk indent data.nwk --compact
 ```
 
 ---
@@ -383,7 +383,7 @@ pgr nwk indent data.nwk --compact
 
 ### Bootscan Workflow (`bootscan.sh`)
 
-`newick_utils` 源码中的 `bootscan.sh` 展示了一个结合多种生物信息学工具进行重组检测的完整流程。这为 `pgr` 的 CLI 设计提供了实际应用场景参考。
+`newick_utils` 源码中的 `bootscan.sh` 展示了一个结合多种生物信息学工具进行重组检测的完整流程。这为 `necom` 的 CLI 设计提供了实际应用场景参考。
 
 **流程步骤详解：**
 
@@ -410,7 +410,7 @@ pgr nwk indent data.nwk --compact
     *   **工具**: `nw_reroot` (Newick Utilities)
     *   **操作**: 使用指定的外群 (`OUTGROUP`) 对每棵树进行定根。
     *   **命令**: `nw_reroot $unrooted_tree $OUTGROUP > ${unrooted_tree/.txt/.rr.nw}`
-    *   **对应 pgr**: `pgr nwk reroot`
+    *   **对应 necom**: `necom nwk reroot`
 
 5.  **距离提取 (Distance Extraction)**
     *   **工具**: `nw_distance`, `nw_clade`, `nw_labels`
@@ -418,7 +418,7 @@ pgr nwk indent data.nwk --compact
         *   计算参考序列 (`REFERENCE`) 到树中其他所有节点的距离 (`nw_distance -n`).
         *   提取相关标签 (`nw_clade`, `nw_labels`).
         *   生成包含 `(Position, Distance1, Distance2, ...)` 的表格数据。
-    *   **对应 pgr**: `pgr nwk distance`, `pgr nwk subtree`, `pgr nwk label`
+    *   **对应 necom**: `necom nwk distance`, `necom nwk subtree`, `necom nwk label`
 
 6.  **可视化 (Visualization)**
     *   **工具**: `gnuplot`

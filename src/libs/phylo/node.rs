@@ -38,7 +38,7 @@ impl Node {
     ///
     /// # Example
     /// ```ignore
-    /// use pgr::libs::phylo::node::Node;
+    /// use necom::libs::phylo::node::Node;
     /// let node = Node::new(1);
     /// assert_eq!(node.id, 1);
     /// assert!(node.children.is_empty());
@@ -60,7 +60,7 @@ impl Node {
     ///
     /// # Example
     /// ```ignore
-    /// use pgr::libs::phylo::node::Node;
+    /// use necom::libs::phylo::node::Node;
     /// let mut node = Node::new(1);
     /// node.set_name("Node1");
     /// assert_eq!(node.name, Some("Node1".to_string()));
@@ -73,7 +73,7 @@ impl Node {
     ///
     /// # Example
     /// ```ignore
-    /// use pgr::libs::phylo::node::Node;
+    /// use necom::libs::phylo::node::Node;
     /// let node = Node::new(1).with_name("Node1");
     /// assert_eq!(node.name, Some("Node1".to_string()));
     /// ```
@@ -86,7 +86,7 @@ impl Node {
     ///
     /// # Example
     /// ```ignore
-    /// use pgr::libs::phylo::node::Node;
+    /// use necom::libs::phylo::node::Node;
     /// let node = Node::new(1).with_length(0.5);
     /// assert_eq!(node.length, Some(0.5));
     /// ```
@@ -99,7 +99,7 @@ impl Node {
     ///
     /// # Example
     /// ```ignore
-    /// use pgr::libs::phylo::node::Node;
+    /// use necom::libs::phylo::node::Node;
     /// let mut node = Node::new(1);
     /// node.add_property("color", "blue");
     /// assert_eq!(node.get_property("color"), Some(&"blue".to_string()));
@@ -119,7 +119,7 @@ impl Node {
     ///
     /// # Example
     /// ```ignore
-    /// use pgr::libs::phylo::node::Node;
+    /// use necom::libs::phylo::node::Node;
     /// let mut node = Node::new(0);
     /// node.add_property_from_str("color=red");
     /// assert_eq!(node.get_property("color"), Some(&"red".to_string()));
@@ -141,7 +141,7 @@ impl Node {
     ///
     /// # Example
     /// ```ignore
-    /// use pgr::libs::phylo::node::Node;
+    /// use necom::libs::phylo::node::Node;
     /// let mut node = Node::new(0);
     /// node.add_property("T", "9606");
     /// node.add_property("S", "Homo sapiens");
@@ -158,7 +158,7 @@ impl Node {
     ///
     /// # Example
     /// ```ignore
-    /// use pgr::libs::phylo::node::Node;
+    /// use necom::libs::phylo::node::Node;
     /// let mut node = Node::new(1);
     /// assert!(node.is_leaf());
     ///

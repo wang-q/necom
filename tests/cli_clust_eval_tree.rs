@@ -15,7 +15,7 @@ fn test_clust_eval_tree_internal() -> anyhow::Result<()> {
     let partition_content = "1\tA\n1\tB\n2\tD\n2\tE\n";
     fs::write(&partition_path, partition_content)?;
 
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")

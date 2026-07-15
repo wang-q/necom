@@ -45,7 +45,7 @@ fn generate_blobs(data_file: &str, truth_file: &str) -> Result<(), Box<dyn std::
 
 // Compute Euclidean pairwise distances from the coordinate TSV produced by
 // `generate_blobs` and write them in the three-column TSV format expected by
-// `pgr mat to-phylip`.
+// `necom mat to-phylip`.
 fn compute_pairwise_distances(
     data_file: &str,
     dist_file: &str,
@@ -81,7 +81,7 @@ fn compute_pairwise_distances(
 #[test]
 fn test_clust_pipeline_full() {
     let temp_dir = tempfile::Builder::new()
-        .prefix("pgr_pipeline_test")
+        .prefix("necom_pipeline_test")
         .tempdir()
         .expect("Failed to create temp dir");
     let base_dir = temp_dir.path().to_str().unwrap();
@@ -105,16 +105,16 @@ fn test_clust_pipeline_full() {
     compute_pairwise_distances(&data_file, &dist_file).expect("Failed to compute distances");
     assert!(fs::metadata(&dist_file).is_ok(), "dist file not created");
 
-    // 3. Convert to PHYLIP Matrix (pgr mat to-phylip)
-    let (_stdout, stderr) = PgrCmd::new()
+    // 3. Convert to PHYLIP Matrix (necom mat to-phylip)
+    let (_stdout, stderr) = NecomCmd::new()
         .args(&["mat", "to-phylip", &dist_file, "-o", &phy_file])
         .run();
     assert!(stderr.is_empty(), "mat to-phylip failed: {}", stderr);
     assert!(fs::metadata(&phy_file).is_ok(), "phylip file not created");
 
-    // 4. Hierarchical Clustering (pgr clust hier)
+    // 4. Hierarchical Clustering (necom clust hier)
     // Method: Ward (standard for Euclidean)
-    let (_stdout, stderr) = PgrCmd::new()
+    let (_stdout, stderr) = NecomCmd::new()
         .args(&[
             "clust", "hier", &phy_file, "--method", "ward", "-o",
             &tree_file, // Explicit output file
@@ -123,9 +123,9 @@ fn test_clust_pipeline_full() {
     assert!(stderr.is_empty(), "clust hier failed: {}", stderr);
     assert!(fs::metadata(&tree_file).is_ok(), "tree file not created");
 
-    // 5. Cut Tree (pgr clust cut)
+    // 5. Cut Tree (necom clust cut)
     // We know there are 3 clusters, so use --k 3
-    let (_stdout, stderr) = PgrCmd::new()
+    let (_stdout, stderr) = NecomCmd::new()
         .args(&[
             "clust", "cut", &tree_file, "--k", "3", "--format",
             "pair", // Output: Rep \t Member (compatible with eval)
@@ -135,10 +135,10 @@ fn test_clust_pipeline_full() {
     assert!(stderr.is_empty(), "clust cut failed: {}", stderr);
     assert!(fs::metadata(&cut_file).is_ok(), "cut file not created");
 
-    // 6. Evaluate (pgr clust eval)
+    // 6. Evaluate (necom clust eval)
     // Compare cut result with ground truth
     // Output ARI should be 1.0 for perfect clustering
-    let (stdout, stderr) = PgrCmd::new()
+    let (stdout, stderr) = NecomCmd::new()
         .args(&[
             "clust",
             "eval",

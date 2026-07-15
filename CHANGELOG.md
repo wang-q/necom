@@ -8,7 +8,7 @@
 
 #### Clustering and Phylogenetic Analysis
 
-* **`pgr clust`** - Clustering operations (9 subcommands)
+* **`necom clust`** - Clustering operations (9 subcommands)
   * `hier`: Hierarchical clustering (NN-chain algorithm)
   * `nj`: Neighbor-Joining tree construction
   * `upgma`: UPGMA tree construction
@@ -19,7 +19,7 @@
   * `mcl`: Markov Clustering (MCL)
   * `eval`: Cluster evaluation metrics
 
-* **`pgr mat`** - Matrix operations (6 subcommands)
+* **`necom mat`** - Matrix operations (6 subcommands)
   * `compare`: Compare distance matrices
   * `format`: Format matrix files
   * `subset`: Create matrix subset
@@ -27,7 +27,7 @@
   * `to-phylip`: Convert to PHYLIP format
   * `transform`: Matrix transformations
 
-* **`pgr nwk`** - Newick tree manipulation and visualization (17 subcommands)
+* **`necom nwk`** - Newick tree manipulation and visualization (17 subcommands)
   * `stat`: Tree statistics
   * `label`: Label tree nodes
   * `distance`: Calculate pairwise distances
@@ -48,7 +48,7 @@
 
 #### Pipelines
 
-* **`pgr pl`** - Integrated pipelines
+* **`necom pl`** - Integrated pipelines
   * `condense`: Condense subtrees based on taxonomy
 
 ### Core Libraries
@@ -86,4 +86,4 @@
 
 ## 0.1.0 - 2025-02-08
 
-* New binary `pgr`
+* New binary `necom`

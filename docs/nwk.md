@@ -1,6 +1,6 @@
-# pgr nwk
+# necom nwk
 
-`pgr nwk` provides a comprehensive suite of tools for manipulating, analyzing, and visualizing phylogenetic trees in **Newick** format.
+`necom nwk` provides a comprehensive suite of tools for manipulating, analyzing, and visualizing phylogenetic trees in **Newick** format.
 
 ## Subcommands
 
@@ -37,7 +37,7 @@ The subcommands are organized into the following categories:
 Compares trees using Robinson-Foulds (RF) distance and its variants.
 
 ```bash
-pgr nwk cmp [OPTIONS] <infile> [compare_file]
+necom nwk cmp [OPTIONS] <infile> [compare_file]
 ```
 
 *   `[compare_file]`: Optional second file. If omitted, compares all trees in `<infile>` pairwise.
@@ -49,7 +49,7 @@ pgr nwk cmp [OPTIONS] <infile> [compare_file]
 Calculates distances between nodes or generates distance matrices.
 
 ```bash
-pgr nwk distance [OPTIONS] <infile>
+necom nwk distance [OPTIONS] <infile>
 ```
 
 *   `--mode <mode>`: Calculation mode.
@@ -66,7 +66,7 @@ pgr nwk distance [OPTIONS] <infile>
 Extracts labels (names) from the tree.
 
 ```bash
-pgr nwk label [OPTIONS] <infile>
+necom nwk label [OPTIONS] <infile>
 ```
 
 *   `-I`: Skip internal labels.
@@ -83,7 +83,7 @@ pgr nwk label [OPTIONS] <infile>
 Prints statistics about the trees.
 
 ```bash
-pgr nwk stat [OPTIONS] <infile>
+necom nwk stat [OPTIONS] <infile>
 ```
 
 *   `--style <col|line>`: Output format (key-value pairs or TSV).
@@ -94,7 +94,7 @@ pgr nwk stat [OPTIONS] <infile>
 Attributes bootstrap support values to a target tree based on replicate trees.
 
 ```bash
-pgr nwk support [OPTIONS] <target> <replicates>
+necom nwk support [OPTIONS] <target> <replicates>
 ```
 
 *   `-p, --percent`: Output support values as percentages (0-100).
@@ -108,7 +108,7 @@ pgr nwk support [OPTIONS] <target> <replicates>
 Sorts the children of each node (rotates branches) without changing topology.
 
 ```bash
-pgr nwk order [OPTIONS] <infile>
+necom nwk order [OPTIONS] <infile>
 ```
 
 *   `--num-descendants` / `--num-descendants-rev`: Sort by number of descendants (Ladderize).
@@ -126,7 +126,7 @@ equal size.
 Removes nodes from the tree.
 
 ```bash
-pgr nwk prune [OPTIONS] <infile>
+necom nwk prune [OPTIONS] <infile>
 ```
 
 *   `-n <name>` / `-l <file>` / `-x <regex>`: Select nodes to remove.
@@ -138,7 +138,7 @@ pgr nwk prune [OPTIONS] <infile>
 Renames specific nodes.
 
 ```bash
-pgr nwk rename [OPTIONS] <infile>
+necom nwk rename [OPTIONS] <infile>
 ```
 
 *   `-n <name>`: Select node by name.
@@ -150,7 +150,7 @@ pgr nwk rename [OPTIONS] <infile>
 Batch replaces node names or annotations using a TSV file.
 
 ```bash
-pgr nwk replace [OPTIONS] --replace-tsv <replace.tsv> <infile>
+necom nwk replace [OPTIONS] --replace-tsv <replace.tsv> <infile>
 ```
 
 *   `--replace-tsv <replace.tsv>`: Tab-separated file: `Original <TAB> Replacement [TAB Extra...]`.
@@ -167,7 +167,7 @@ pgr nwk replace [OPTIONS] --replace-tsv <replace.tsv> <infile>
 Reroots the tree.
 
 ```bash
-pgr nwk reroot [OPTIONS] <infile>
+necom nwk reroot [OPTIONS] <infile>
 ```
 
 *   (Default): Reroot at the midpoint of the longest branch.
@@ -181,7 +181,7 @@ pgr nwk reroot [OPTIONS] <infile>
 Extracts a subtree (clade) rooted at the LCA of selected nodes.
 
 ```bash
-pgr nwk subtree [OPTIONS] <infile>
+necom nwk subtree [OPTIONS] <infile>
 ```
 
 *   `-n` / `-l` / `-x`: Select nodes.
@@ -197,7 +197,7 @@ pgr nwk subtree [OPTIONS] <infile>
 Modifies tree topology and attributes.
 
 ```bash
-pgr nwk topo [OPTIONS] <infile>
+necom nwk topo [OPTIONS] <infile>
 ```
 
 *   By default, removes branch lengths and comments (topology only).
@@ -215,7 +215,7 @@ pgr nwk topo [OPTIONS] <infile>
 Adds annotations/comments to nodes for visualization.
 
 ```bash
-pgr nwk comment [OPTIONS] <infile>
+necom nwk comment [OPTIONS] <infile>
 ```
 
 *   `-n` / `-l`: Select nodes.
@@ -230,7 +230,7 @@ pgr nwk comment [OPTIONS] <infile>
 Formats Newick trees with indentation.
 
 ```bash
-pgr nwk indent [OPTIONS] <infile>
+necom nwk indent [OPTIONS] <infile>
 ```
 
 *   `--text <str>`: Indentation string (default: "  ").
@@ -242,7 +242,7 @@ pgr nwk indent [OPTIONS] <infile>
 Converts Newick trees to Graphviz DOT format.
 
 ```bash
-pgr nwk to-dot [OPTIONS] <infile>
+necom nwk to-dot [OPTIONS] <infile>
 ```
 
 *   `-o, --outfile <file>`: Output filename. `[stdout]` for screen.
@@ -252,7 +252,7 @@ pgr nwk to-dot [OPTIONS] <infile>
 Converts Newick trees to raw LaTeX Forest code.
 
 ```bash
-pgr nwk to-forest [OPTIONS] <infile>
+necom nwk to-forest [OPTIONS] <infile>
 ```
 
 *   `-b, --bl`: Include branch lengths.
@@ -263,7 +263,7 @@ pgr nwk to-forest [OPTIONS] <infile>
 Converts Newick trees to SVG format for visualization.
 
 ```bash
-pgr nwk to-svg [OPTIONS] <infile>
+necom nwk to-svg [OPTIONS] <infile>
 ```
 
 *   Automatically draws a phylogram if branch lengths are present, otherwise a cladogram.
@@ -276,7 +276,7 @@ pgr nwk to-svg [OPTIONS] <infile>
 Converts Newick trees to a full LaTeX document (wrapper around `to-forest`).
 
 ```bash
-pgr nwk to-tex [OPTIONS] <infile>
+necom nwk to-tex [OPTIONS] <infile>
 ```
 
 *   `-b, --bl`: Draw phylogram (with branch lengths).
@@ -288,7 +288,7 @@ pgr nwk to-tex [OPTIONS] <infile>
 
 ## Branch Length Handling
 
-`pgr nwk` treats non-finite branch lengths (`NaN`, positive/negative infinity) and negative values as `0.0` during calculations and visualization. This applies to:
+`necom nwk` treats non-finite branch lengths (`NaN`, positive/negative infinity) and negative values as `0.0` during calculations and visualization. This applies to:
 
 *   Statistics (`stat`) and distance calculations (`distance`).
 *   Tree comparisons (`cmp`), including weighted Robinson-Foulds and Kuhner-Felsenstein distances.
@@ -301,4 +301,4 @@ This normalization prevents invalid values from poisoning sums, maxima, or dista
 
 ## Planned Subcommands
 
-*   `eval` [Planned]: Multi-dimensional tree evaluation framework (geometric, taxonomic, phylogenetic, trait consistency). Referenced by `pgr clust eval` and `pgr clust cut` for tree-based metrics.
+*   `eval` [Planned]: Multi-dimensional tree evaluation framework (geometric, taxonomic, phylogenetic, trait consistency). Referenced by `necom clust eval` and `necom clust cut` for tree-based metrics.

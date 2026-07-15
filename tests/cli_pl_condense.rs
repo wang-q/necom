@@ -4,7 +4,7 @@ use tempfile::tempdir;
 
 #[test]
 fn command_pl_condense_basic() {
-    let mut cmd = Command::cargo_bin("pgr").unwrap();
+    let mut cmd = Command::cargo_bin("necom").unwrap();
     cmd.arg("pl")
         .arg("condense")
         .arg("--taxon")
@@ -37,7 +37,7 @@ fn command_pl_condense_monophyly_check() {
     let dir = tempdir().unwrap();
     let output_path = dir.path().join("condensed.nwk");
 
-    let mut cmd = Command::cargo_bin("pgr").unwrap();
+    let mut cmd = Command::cargo_bin("necom").unwrap();
     cmd.arg("pl")
         .arg("condense")
         .arg("--taxon")
@@ -58,7 +58,7 @@ fn command_pl_condense_monophyly_check() {
 
 #[test]
 fn command_pl_condense_with_rank() {
-    let mut cmd = Command::cargo_bin("pgr").unwrap();
+    let mut cmd = Command::cargo_bin("necom").unwrap();
     cmd.arg("pl")
         .arg("condense")
         .arg("--taxon")
@@ -80,7 +80,7 @@ fn command_pl_condense_with_output() {
     let dir = tempdir().unwrap();
     let output_path = dir.path().join("condensed.nwk");
 
-    let mut cmd = Command::cargo_bin("pgr").unwrap();
+    let mut cmd = Command::cargo_bin("necom").unwrap();
     cmd.arg("pl")
         .arg("condense")
         .arg("--taxon")
@@ -104,7 +104,7 @@ fn command_pl_condense_with_map() {
     let dir = tempdir().unwrap();
     let output_path = dir.path().join("condensed.nwk");
 
-    let mut cmd = Command::cargo_bin("pgr").unwrap();
+    let mut cmd = Command::cargo_bin("necom").unwrap();
     cmd.arg("pl")
         .arg("condense")
         .arg("--taxon")
@@ -151,7 +151,7 @@ fn command_pl_condense_with_map() {
 #[test]
 fn command_pl_condense_genus_level() {
     // Test condensing at genus level (column 3)
-    let mut cmd = Command::cargo_bin("pgr").unwrap();
+    let mut cmd = Command::cargo_bin("necom").unwrap();
     cmd.arg("pl")
         .arg("condense")
         .arg("--taxon")
@@ -171,7 +171,7 @@ fn command_pl_condense_genus_level() {
 #[test]
 fn command_pl_condense_family_level() {
     // Test condensing at family level (column 4)
-    let mut cmd = Command::cargo_bin("pgr").unwrap();
+    let mut cmd = Command::cargo_bin("necom").unwrap();
     cmd.arg("pl")
         .arg("condense")
         .arg("--taxon")
@@ -190,7 +190,7 @@ fn command_pl_condense_family_level() {
 
 #[test]
 fn command_pl_condense_help() {
-    let mut cmd = Command::cargo_bin("pgr").unwrap();
+    let mut cmd = Command::cargo_bin("necom").unwrap();
     cmd.arg("pl").arg("condense").arg("--help");
     let output = cmd.output().expect("Failed to execute command");
     let stdout = String::from_utf8_lossy(&output.stdout);

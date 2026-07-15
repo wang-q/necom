@@ -1,13 +1,13 @@
 #[macro_use]
 #[path = "common/mod.rs"]
 mod common;
-use common::PgrCmd;
+use common::NecomCmd;
 use std::io::Write;
 use tempfile::Builder;
 
 #[test]
 fn command_rename_basic() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "rename",
@@ -28,7 +28,7 @@ fn command_rename_basic() {
 fn command_rename_lca() {
     // In catarrhini.nwk, Homo and Pan are children of Hominini.
     // Rename Hominini (LCA of Homo,Pan) to CladeX
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "rename",
@@ -50,7 +50,7 @@ fn command_rename_mixed() {
     // Rename A -> A1.
     // Rename LCA(A,B) -> AB.
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk", "rename", "stdin", "-n", "A", "--rename", "A1", "-l", "A,B", "--rename", "AB",
         ])
@@ -62,7 +62,7 @@ fn command_rename_mixed() {
 
 #[test]
 fn command_replace() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "replace",
@@ -75,7 +75,7 @@ fn command_replace() {
     assert_eq!(stdout.lines().count(), 1);
     assert!(stdout.contains("((Homo,Pan),Gorilla);"));
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "replace",
@@ -89,7 +89,7 @@ fn command_replace() {
 
     assert!(stdout.contains("((A[&&NHX:S=Homo],B[&&NHX:S=Pan]),C[&&NHX:S=Gorilla]);"));
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "replace",
@@ -106,7 +106,7 @@ fn command_replace() {
 
 #[test]
 fn command_replace_comments() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "replace",
@@ -128,7 +128,7 @@ fn command_replace_comments() {
 
 #[test]
 fn command_replace_remove() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "replace",
@@ -157,7 +157,7 @@ fn command_replace_asis_empty() {
     writeln!(tsv, "B\ttag").unwrap();
     let replace_tsv = tsv.path().to_str().unwrap();
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "replace",
@@ -181,7 +181,7 @@ fn command_replace_filter() {
     // All are leaves.
 
     // 1. Skip leaves (should change nothing if all matches are leaves)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "replace",
@@ -196,7 +196,7 @@ fn command_replace_filter() {
     assert!(stdout.contains("((A,B),C);"));
 
     // 2. Skip internal (should change leaves)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "replace",
@@ -213,7 +213,7 @@ fn command_replace_filter() {
 
 #[test]
 fn command_replace_multi() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "replace",
@@ -234,7 +234,7 @@ fn command_replace_multi() {
 
 #[test]
 fn command_reroot() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "reroot",
@@ -246,13 +246,13 @@ fn command_reroot() {
 
     assert!(stdout.contains("(Cebus,(((Cercopithecus,(Macaca,Papio)),Simias),(Hylobates,(Pongo,(Gorilla,(Pan,Homo))))));"));
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "reroot", "tests/newick/abcde.nwk", "-n", "B"])
         .run();
 
     assert!(stdout.contains("(B:0.5,(A:1,C:2)D:0.5);"));
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "reroot", "tests/newick/bs.nwk", "-n", "C"])
         .run();
 
@@ -269,7 +269,7 @@ fn command_reroot_support() {
     // 61 moves to 41. 41 moves to ...
     // Result should show labels in new positions.
     // Just verify execution for now and check consistency.
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "reroot",
@@ -289,7 +289,7 @@ fn command_reroot_support() {
 
 #[test]
 fn command_reroot_ingroup() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "reroot",
@@ -312,7 +312,7 @@ fn command_reroot_ingroup() {
 
 #[test]
 fn command_reroot_midlen() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "reroot", "tests/newick/catarrhini.nwk"])
         .run();
 
@@ -322,7 +322,7 @@ fn command_reroot_midlen() {
 
 #[test]
 fn command_reroot_nolbl_ingrp() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "reroot",
@@ -351,7 +351,7 @@ fn command_reroot_deroot() {
     // D has 2 descendants (A,B). C has 0 (leaf).
     // Deroot should splice out D.
     // Result: (A:2,B:2,C:1)E;
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "reroot", "tests/newick/abcde.nwk", "-d"])
         .run();
 
@@ -360,7 +360,7 @@ fn command_reroot_deroot() {
 
 #[test]
 fn command_reroot_lax() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "reroot",
@@ -378,7 +378,7 @@ fn command_reroot_lax() {
 
 #[test]
 fn command_reroot_default() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "reroot", "tests/newick/abcde.nwk"])
         .run();
 
@@ -390,7 +390,7 @@ fn command_reroot_default() {
 
 #[test]
 fn command_nwk_reroot_node_not_found() {
-    let (_, stderr) = PgrCmd::new()
+    let (_, stderr) = NecomCmd::new()
         .args(&[
             "nwk",
             "reroot",

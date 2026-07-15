@@ -305,7 +305,7 @@ pub enum TreeType {
 }
 
 impl TreeType {
-    /// Lowercase label used in `pgr nwk stat` output.
+    /// Lowercase label used in `necom nwk stat` output.
     pub fn as_str(self) -> &'static str {
         match self {
             TreeType::Cladogram => "cladogram",
@@ -315,7 +315,7 @@ impl TreeType {
     }
 }
 
-/// Aggregate statistics for a single tree, as reported by `pgr nwk stat`.
+/// Aggregate statistics for a single tree, as reported by `necom nwk stat`.
 #[derive(Debug, Clone)]
 pub struct TreeSummary {
     /// Total number of nodes (excluding soft-deleted nodes).
@@ -344,7 +344,7 @@ pub struct TreeSummary {
     pub tree_type: TreeType,
 }
 
-/// Compute the full `pgr nwk stat` summary for `tree`.
+/// Compute the full `necom nwk stat` summary for `tree`.
 pub fn tree_summary(tree: &Tree) -> TreeSummary {
     let mut nodes = 0usize;
     let mut leaves = 0usize;

@@ -58,8 +58,8 @@ where
     /// # Example
     ///
     /// ```ignore
-    /// # use pgr::libs::clust::dbscan::Dbscan;
-    /// # use pgr::libs::pairmat::ScoringMatrix;
+    /// # use necom::libs::clust::dbscan::Dbscan;
+    /// # use necom::libs::pairmat::ScoringMatrix;
     ///
     /// let mut dbscan = Dbscan::new(1, 2);
     /// let mut m = ScoringMatrix::<i8>::with_size_and_defaults(5, 0, 100);

@@ -1,18 +1,18 @@
-# pgr - Practical Genome Refiner
+# necom - Practical Genome Refiner
 
-[![Build](https://github.com/wang-q/pgr/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/pgr/actions)
-[![codecov](https://codecov.io/gh/wang-q/pgr/branch/master/graph/badge.svg)](https://codecov.io/gh/wang-q/pgr)
-[![license](https://img.shields.io/github/license/wang-q/pgr)](https://github.com//wang-q/pgr)
+[![Build](https://github.com/wang-q/necom/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/necom/actions)
+[![codecov](https://codecov.io/gh/wang-q/necom/branch/master/graph/badge.svg)](https://codecov.io/gh/wang-q/necom)
+[![license](https://img.shields.io/github/license/wang-q/necom)](https://github.com//wang-q/necom)
 
-`pgr` is a command-line toolkit for clustering, distance-matrix processing,
+`necom` is a command-line toolkit for clustering, distance-matrix processing,
 phylogenetic-tree manipulation, and related workflows.
 
 It is designed as a practical companion for day-to-day phylogenetics and
 clustering tasks, with a focus on:
 
-- Clustering algorithms and evaluation (`pgr clust`)
-- Distance-matrix utilities (`pgr mat`)
-- Newick-tree operations (`pgr nwk`)
+- Clustering algorithms and evaluation (`necom clust`)
+- Distance-matrix utilities (`necom mat`)
+- Newick-tree operations (`necom nwk`)
 - Pipeline-friendly behavior (stdin/stdout where possible, predictable output,
   composable subcommands)
 - Performance and robustness (Rust implementation, zero-panic policy for
@@ -24,7 +24,7 @@ High-level capabilities include:
   algorithms, tree cutting, tree comparison, rerooting, pruning, and
   visualization
 - Pipelines: integrated workflows such as taxonomic tree condensation
-  (`pgr pl condense`)
+  (`necom pl condense`)
 
 ## Install
 
@@ -39,13 +39,13 @@ cargo test -- --test-threads=1
 
 ## Usage
 
-After installation, the `pgr` binary should be available in your `PATH`:
+After installation, the `necom` binary should be available in your `PATH`:
 
 ```bash
-pgr --help
-pgr clust --help
-pgr mat --help
-pgr nwk --help
+necom --help
+necom clust --help
+necom mat --help
+necom nwk --help
 ```
 
 ## Examples
@@ -54,16 +54,16 @@ Below are a few quick examples to get started:
 
 ```bash
 # Hierarchical clustering from a PHYLIP distance matrix
-pgr clust hier tests/mat/IBPA.phy
+necom clust hier tests/mat/IBPA.phy
 
 # Compare two distance matrices
-pgr mat compare tests/mat/IBPA.phy tests/mat/IBPA.71.phy
+necom mat compare tests/mat/IBPA.phy tests/mat/IBPA.71.phy
 
 # Tree statistics
-pgr nwk stat tests/newick/catarrhini.nwk
+necom nwk stat tests/newick/catarrhini.nwk
 
 # Condense a tree by taxonomy
-pgr pl condense --taxon tests/pipeline/strains.taxon.tsv \
+necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
     tests/pipeline/minhash.reroot.newick
 ```
 

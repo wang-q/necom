@@ -2,7 +2,7 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 
 #[test]
 fn command_clust_upgma() {
@@ -18,7 +18,7 @@ D 14 9 7 0
 ";
     std::fs::write(&input, content).unwrap();
 
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&[
             "clust",
             "upgma",
@@ -74,7 +74,7 @@ D 14 9 7 0
     // Should produce identical results to `clust upgma` (topology & branch lengths logic)
     // In `hier`, branch length = distance/2 - child_height
     // For B-C (d=6): height=3. B,C leaves height=0. Branch=3.
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&[
             "clust",
             "hier",
@@ -112,7 +112,7 @@ D 14 9 7 0
     // Next min is 7. We can merge (BC)-D or (BC)-A.
     // Let's see what happens.
     let output_single = temp.path().join("output_single.nwk");
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&[
             "clust",
             "hier",
@@ -132,7 +132,7 @@ D 14 9 7 0
 
     // 3. Test Ward (default)
     let output_ward = temp.path().join("output_ward.nwk");
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&[
             "clust",
             "hier",
@@ -161,7 +161,7 @@ D 14 9 7 0
 ";
     std::fs::write(&input, content).unwrap();
 
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&[
             "clust",
             "nj",
@@ -184,7 +184,7 @@ D 14 9 7 0
     // Current NJ implementation roots at midpoint of last edge, so we expect a rooted tree.
 
     // We can also verify via pipe
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["clust", "nj", "stdin"])
         .stdin(content)
         .run();
@@ -199,7 +199,7 @@ fn test_clust_hier_empty_matrix() {
     let input = temp.path().join("empty.phy");
     std::fs::write(&input, "").unwrap();
 
-    let (stdout, stderr) = PgrCmd::new()
+    let (stdout, stderr) = NecomCmd::new()
         .args(&["clust", "hier", input.to_str().unwrap()])
         .run();
 
@@ -220,7 +220,7 @@ fn test_clust_hier_single_sample() {
     let input = temp.path().join("single.phy");
     std::fs::write(&input, "1\nA 0.0\n").unwrap();
 
-    let (stdout, stderr) = PgrCmd::new()
+    let (stdout, stderr) = NecomCmd::new()
         .args(&["clust", "hier", input.to_str().unwrap()])
         .run();
 
@@ -237,7 +237,7 @@ fn test_clust_hier_invalid_method() {
     let input = temp.path().join("single.phy");
     std::fs::write(&input, "1\nA 0.0\n").unwrap();
 
-    let (_, stderr) = PgrCmd::new()
+    let (_, stderr) = NecomCmd::new()
         .args(&[
             "clust",
             "hier",
@@ -264,7 +264,7 @@ fn test_clust_hier_average_equals_upgma_alias() {
     std::fs::write(&input, content).unwrap();
 
     let out_average = temp.path().join("average.nwk");
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&[
             "clust",
             "hier",
@@ -278,7 +278,7 @@ fn test_clust_hier_average_equals_upgma_alias() {
         .success();
 
     let out_upgma_alias = temp.path().join("upgma_alias.nwk");
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&[
             "clust",
             "hier",
@@ -304,7 +304,7 @@ fn run_hier_method(method: &str) -> String {
     let content = "4\nA 0 7 11 14\nB 7 0 6 9\nC 11 6 0 7\nD 14 9 7 0\n";
     std::fs::write(&input, content).unwrap();
 
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&[
             "clust",
             "hier",
@@ -363,7 +363,7 @@ fn test_clust_hier_all_zero() {
     let content = "3\nA 0 0 0\nB 0 0 0\nC 0 0 0\n";
     std::fs::write(&input, content).unwrap();
 
-    let (stdout, stderr) = PgrCmd::new()
+    let (stdout, stderr) = NecomCmd::new()
         .args(&["clust", "hier", input.to_str().unwrap()])
         .run();
 
@@ -388,7 +388,7 @@ fn test_clust_hier_two_samples() {
     let content = "2\nA 0 0.5\nB 0.5 0\n";
     std::fs::write(&input, content).unwrap();
 
-    let (stdout, stderr) = PgrCmd::new()
+    let (stdout, stderr) = NecomCmd::new()
         .args(&["clust", "hier", input.to_str().unwrap()])
         .run();
 

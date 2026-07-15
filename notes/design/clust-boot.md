@@ -1,8 +1,8 @@
 # clust boot：层次聚类的多尺度 Bootstrap p-value（pvclust 风格）
 
-> **状态：计划中（未实现）** — `pgr clust boot` 命令尚未实现，本文档为设计稿。
+> **状态：计划中（未实现）** — `necom clust boot` 命令尚未实现，本文档为设计稿。
 
-本页基于外部 R 包 `pvclust`（CRAN 版本 2.2-0）的源码梳理其算法与数据结构，并给出 `pgr` 侧计划新增命令 `pgr clust boot` 的接口与输出约定。
+本页基于外部 R 包 `pvclust`（CRAN 版本 2.2-0）的源码梳理其算法与数据结构，并给出 `necom` 侧计划新增命令 `necom clust boot` 的接口与输出约定。
 
 `pvclust` 的核心价值：给 dendrogram 的每个内部节点（cluster / edge）计算 **BP/AU/SI** 三类支持度（及标准误），用于回答“这个簇是不是稳定/显著”的问题，而不仅是“切成几类”。
 
@@ -22,7 +22,7 @@
 
 这与许多生物学数据矩阵（如 `Genome × Domain`，行是物种，列是功能域特征）的方向恰好相反。
 
-为了适配两种场景并避免额外的转置操作，`pgr clust boot` 将提供 `--along` 参数来指定聚类方向：
+为了适配两种场景并避免额外的转置操作，`necom clust boot` 将提供 `--along` 参数来指定聚类方向：
 
 -   `--along row` (**默认**，推荐用于 `domain.tsv` 等)：
     -   **聚类方向**：行（如物种、基因组）。
@@ -36,16 +36,16 @@
 
 `pvclust` 采用 **多尺度 Bootstrap (Multiscale Bootstrap)**，这是其区别于传统 Bootstrap（如 PHYLIP `seqboot`，固定 $r=1.0$）的核心特征。它在每一次 bootstrap 迭代中都会执行完整的流水线：
 
-1. 重采样（默认对行；在 `pgr clust boot --along row` 模式下对应对列重采样）
+1. 重采样（默认对行；在 `necom clust boot --along row` 模式下对应对列重采样）
     - **默认采样比例 ($r$)**：`0.5, 0.6, ..., 1.4` (共10个尺度)。
     - **每个尺度的 bootstrap 次数**：默认 `1000` 次。
     - **总 bootstrap 次数**：`10 (scales) * 1000 (nboot) = 10000` 次。
 2. 基于重采样后的数据重新计算 `dist`
     - `pvclust` 会根据 `method.dist`（如 correlation, abscor, uncentered）和 `use.cor`（缺失值处理策略）在重采样后的数据矩阵上重新计算距离。
-    - `pgr` 也将复刻此行为，确保每次重采样后的距离计算与原始数据使用相同的度量标准。
+    - `necom` 也将复刻此行为，确保每次重采样后的距离计算与原始数据使用相同的度量标准。
 3. 基于新的距离矩阵重新做 `hclust`
     - `pvclust` 的实现强依赖于层次聚类（调用 R 的 `hclust`），它通过 `method.hclust` 参数支持 `average/ward/single/complete` 等标准方法，但不支持非层次聚类（如 K-means、DBSCAN）。
-    - `pgr clust boot` 也将遵循这一设计，主要支持层次聚类方法（与 `pgr clust hier` 对齐）。
+    - `necom clust boot` 也将遵循这一设计，主要支持层次聚类方法（与 `necom clust hier` 对齐）。
 4. 统计簇的出现频率
     - `pvclust` 不直接比较树的拓扑结构，而是将树分解为一组“簇”（Split/Cluster，即内部节点所包含的叶子集合）。
     - 对每棵 Bootstrap 树，将其所有内部节点转换为“成员 Pattern”（例如叶子索引的 0/1 向量或哈希）。
@@ -96,7 +96,7 @@
 
 见 `pvclust-internal.R` 的 `hc2split()` 函数。
 
-这意味着：在 `pgr` 侧实现时，最稳健的对齐方式也是“按 leaf-set 比较”，而不是依赖内部节点顺序。
+这意味着：在 `necom` 侧实现时，最稳健的对齐方式也是“按 leaf-set 比较”，而不是依赖内部节点顺序。
 
 ---
 
@@ -120,23 +120,23 @@
   - `SI`：基于 selection probability 的修正版本
 - 同时输出 `se.*`、`rss`、`df`、`pchi`
 
-`pgr` 计划复刻该公式与阈值策略（例如 `eps=0.001`、`min.use=3`）以保持与 R 结果可对照。
+`necom` 计划复刻该公式与阈值策略（例如 `eps=0.001`、`min.use=3`）以保持与 R 结果可对照。
 
 ---
 
-## 4. 计划新增命令：pgr clust boot
+## 4. 计划新增命令：necom clust boot
 
 ### 4.1 定位
 
-`pgr clust boot` 负责“给一棵层次聚类树的每个簇打分（BP/AU/SI）”。
+`necom clust boot` 负责“给一棵层次聚类树的每个簇打分（BP/AU/SI）”。
 
-- 与 `pgr clust hier` 的关系：`hier` 只构树；`boot` 在“数据可重采样”的前提下，评估树上簇的统计稳定性
-- 与 `pgr clust eval` 的关系：`eval` 比较两份分区/内部指标；`boot` 产出的是**单棵树**的簇置信度（外部一致性并非必要）
+- 与 `necom clust hier` 的关系：`hier` 只构树；`boot` 在“数据可重采样”的前提下，评估树上簇的统计稳定性
+- 与 `necom clust eval` 的关系：`eval` 比较两份分区/内部指标；`boot` 产出的是**单棵树**的簇置信度（外部一致性并非必要）
 
 ### 4.2 使用方式（草案）
 
 ```bash
-pgr clust boot [OPTIONS] <data.tsv>
+necom clust boot [OPTIONS] <data.tsv>
 ```
 
 **输入 `<data.tsv>`（建议默认）**：
@@ -162,7 +162,7 @@ pgr clust boot [OPTIONS] <data.tsv>
 说明：
 
 - `--other` 这个命名在 `clust eval` 中用于“另一份分区”；在 `clust boot` 中不需要第二份输入文件，因此不复用该参数名。
-- `pvclust` 的 `weight/store/parallel` 先不做强绑定；`pgr` 侧更倾向于用 `--threads`（或继承全局线程设置）控制并行。
+- `pvclust` 的 `weight/store/parallel` 先不做强绑定；`necom` 侧更倾向于用 `--threads`（或继承全局线程设置）控制并行。
 
 ### 4.4 输出（草案）
 
@@ -190,23 +190,23 @@ pgr clust boot [OPTIONS] <data.tsv>
 1. 生成 `edge` 指标表：
 
 ```bash
-pgr clust boot data.tsv --dist correlation --method average --nboot 1000 -o boot.tsv
+necom clust boot data.tsv --dist correlation --method average --nboot 1000 -o boot.tsv
 ```
 
 2. 按阈值挑选显著簇（pvclust 的 `pvrect/pvpick` 思路）：
 
 - `au >= 0.95` 常用作强支持阈值（也可用 SI）
 
-3. 将挑选结果映射回树（后续可设计 `pgr nwk label --from boot.tsv --field au` 一类工具）。
+3. 将挑选结果映射回树（后续可设计 `necom nwk label --from boot.tsv --field au` 一类工具）。
 
 ---
 
-## 5. 与现有 pgr 命令的组合关系（建议）
+## 5. 与现有 necom 命令的组合关系（建议）
 
-- `pgr dist vector → pgr mat to-phylip → pgr clust hier`：现有“向量→距离→树”的通路
-- `pgr clust boot`：需要“可重采样的原始观测矩阵”，因此更适合直接吃 `data.tsv`，内部自算距离与树
-- `pgr clust cut`：在 `boot` 给出簇置信度后，再做阈值切割与导出分区
-- `pgr clust eval`：对不同切割/不同算法产生的分区做一致性比较（用 `--other`）
+- `necom dist vector → necom mat to-phylip → necom clust hier`：现有“向量→距离→树”的通路
+- `necom clust boot`：需要“可重采样的原始观测矩阵”，因此更适合直接吃 `data.tsv`，内部自算距离与树
+- `necom clust cut`：在 `boot` 给出簇置信度后，再做阈值切割与导出分区
+- `necom clust eval`：对不同切割/不同算法产生的分区做一致性比较（用 `--other`）
 
 ---
 

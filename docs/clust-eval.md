@@ -1,20 +1,20 @@
-# pgr clust eval
+# necom clust eval
 
-`pgr clust eval` 提供通用的聚类质量评估与比较功能。它支持**外部有效性（External Validity）**（与 Ground Truth 对比）和**内部有效性（Internal Validity）**（基于数据本身的几何/统计特性）。
+`necom clust eval` 提供通用的聚类质量评估与比较功能。它支持**外部有效性（External Validity）**（与 Ground Truth 对比）和**内部有效性（Internal Validity）**（基于数据本身的几何/统计特性）。
 
 ## 设计哲学
 
-`pgr` 采用**组件化**的设计哲学，将聚类的**生成（Generation）**与**评估（Evaluation）**分离。这与 Python 包 `clusteval` 的一体化设计不同：
+`necom` 采用**组件化**的设计哲学，将聚类的**生成（Generation）**与**评估（Evaluation）**分离。这与 Python 包 `clusteval` 的一体化设计不同：
 
 *   **Python `clusteval`**: `fit()` 方法内部自动执行 Grid Search（尝试不同的 $k$ 或 $\epsilon$），计算内部指标（如 Silhouette），并返回最优结果。
-*   **`pgr` Workflow**:
-    1.  **生成**: 使用 `pgr clust cut --scan` 或 `pgr clust dbscan --scan` 生成一系列候选聚类方案（Partitions）。
-    2.  **评估**: 使用 `pgr clust eval` 批量计算这些方案的评估指标。
+*   **`necom` Workflow**:
+    1.  **生成**: 使用 `necom clust cut --scan` 或 `necom clust dbscan --scan` 生成一系列候选聚类方案（Partitions）。
+    2.  **评估**: 使用 `necom clust eval` 批量计算这些方案的评估指标。
     3.  **决策**: 用户根据指标（如 Silhouette 峰值、Elbow 点）选择最优参数。
 
 * **互补**：
-  * `pgr nwk eval` [计划中]：关注树结构与分组的一致性（几何/演化）。
-  * `pgr clust eval`：关注分组的统计有效性，支持外部（两分组对比）与内部（单分组+矩阵/坐标/树）评估。
+  * `necom nwk eval` [计划中]：关注树结构与分组的一致性（几何/演化）。
+  * `necom clust eval`：关注分组的统计有效性，支持外部（两分组对比）与内部（单分组+矩阵/坐标/树）评估。
 * **场景**：
   * **算法对比**：比较 MCL 与 K-Medoids 在同一数据集上的结果差异。
   * **基准测试**：将聚类结果与已知的标准分类（Ground Truth）对比，计算准确性。
@@ -80,7 +80,7 @@
 
 - **NMI (Normalized Mutual Information)**
   - **定义**：标准化的互信息。
-  - **原理**：$NMI = \frac{MI(U, V)}{\sqrt{H(U) \cdot H(V)}}$（几何平均）或 $\frac{2 \cdot MI}{H(U) + H(V)}$（算术平均）。`pgr` 采用几何平均。
+  - **原理**：$NMI = \frac{MI(U, V)}{\sqrt{H(U) \cdot H(V)}}$（几何平均）或 $\frac{2 \cdot MI}{H(U) + H(V)}$（算术平均）。`necom` 采用几何平均。
   - **范围**：`[0, 1]`。
   - **缺点**：未校正随机性。
   - **适用**：簇大小分布均衡的场景。
@@ -137,7 +137,7 @@
 
 - **Hubert's Gamma**
   - **原理**：距离矩阵与二值聚类矩阵（0=同簇，1=异簇）之间的相关性。
-  - **范围**：`[-1, 1]`。**越大越好**（注意定义中 Y=1 为异簇，通常需根据具体实现确认符号方向，`pgr` 实现中越大表示区分度越好）。
+  - **范围**：`[-1, 1]`。**越大越好**（注意定义中 Y=1 为异簇，通常需根据具体实现确认符号方向，`necom` 实现中越大表示区分度越好）。
 
 - **Kendall's Tau**
   - **原理**：距离矩阵与聚类矩阵的秩相关系数。
@@ -194,7 +194,7 @@
 
 ```bash
 # 比较 result.tsv 和 truth.tsv
-pgr clust eval result.tsv --truth truth.tsv
+necom clust eval result.tsv --truth truth.tsv
 # 输出: ARI, AMI, NMI, FMI, V-Measure...
 ```
 
@@ -203,22 +203,22 @@ pgr clust eval result.tsv --truth truth.tsv
 #### 1. 使用距离矩阵 (Silhouette, Dunn, etc.)
 ```bash
 # 1. 准备距离矩阵
-pgr nwk distance tree.nwk --mode phylip > dist.mat
+necom nwk distance tree.nwk --mode phylip > dist.mat
 
 # 2. 评估
-pgr clust eval result.tsv --matrix dist.mat
+necom clust eval result.tsv --matrix dist.mat
 ```
 
 #### 2. 直接使用树文件 (无需生成矩阵)
 ```bash
 # 直接基于树计算距离 (Patristic Distance)
-pgr clust eval result.tsv --tree tree.nwk
+necom clust eval result.tsv --tree tree.nwk
 ```
 
 #### 3. 使用坐标/向量 (Davies-Bouldin, CH, etc.)
 ```bash
 # 输入特征向量
-pgr clust eval result.tsv --coords vectors.tsv
+necom clust eval result.tsv --coords vectors.tsv
 ```
 
 ### 场景 C: 批量扫描与评估
@@ -227,10 +227,10 @@ pgr clust eval result.tsv --coords vectors.tsv
 
 ```bash
 # 1. 扫描树切割阈值，输出长表 (Group, Cluster, ID)
-pgr clust cut tree.nwk --scan 0.01,1.0,0.01 --leaf-dist-min 0 > partitions.tsv
+necom clust cut tree.nwk --scan 0.01,1.0,0.01 --leaf-dist-min 0 > partitions.tsv
 
 # 2. 批量评估内部指标 (直接传入树文件)
-pgr clust eval partitions.tsv --input-format long --tree tree.nwk > scores.tsv
+necom clust eval partitions.tsv --input-format long --tree tree.nwk > scores.tsv
 
 # 3. 查看结果 (找出 Silhouette 最高的阈值)
 cat scores.tsv | sort -k2 -nr | head
@@ -255,7 +255,7 @@ cat scores.tsv | sort -k2 -nr | head
     2. `ClusterID`: 簇 ID。
     3. `SampleID`: 样本 ID。
   - 数据必须按 `Group` 列排序或聚集（程序会按 Group 逐块处理）。
-  - 通常与 `pgr clust cut --scan` 的输出直接对接。
+  - 通常与 `necom clust cut --scan` 的输出直接对接。
   - 支持 `Group` 列包含 `Method=Value` 格式的元数据（如 `height=0.01`）。
 
 ### 输出

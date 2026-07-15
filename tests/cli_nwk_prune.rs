@@ -2,7 +2,7 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 use std::io::Write;
 
 const ABCDE_NWK: &str = "((A,B),(C,D),E);";
@@ -11,7 +11,7 @@ const CATARRHINI_LABELED: &str = "(((Homo,Pan)Hominini,Gorilla)Homininae,Pongo)H
 
 #[test]
 fn command_prune_remove_single_leaf() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "prune", "stdin", "-n", "Homo"])
         .stdin(CATARRHINI)
         .run();
@@ -21,7 +21,7 @@ fn command_prune_remove_single_leaf() {
 
 #[test]
 fn command_prune_remove_multiple_leaves() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "prune", "stdin", "-n", "Homo", "-n", "Pan"])
         .stdin(CATARRHINI)
         .run();
@@ -31,7 +31,7 @@ fn command_prune_remove_multiple_leaves() {
 
 #[test]
 fn command_prune_remove_all_leaves_in_clade() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk", "prune", "stdin", "-n", "Homo", "-n", "Pan", "-n", "Gorilla",
         ])
@@ -44,7 +44,7 @@ fn command_prune_remove_all_leaves_in_clade() {
 #[test]
 fn command_prune_remove_all_nodes_bug() {
     // Remove all nodes
-    PgrCmd::new()
+    NecomCmd::new()
         .args(&[
             "nwk", "prune", "stdin", "-n", "A", "-n", "B", "-n", "C", "-n", "D", "-n", "E",
         ])
@@ -55,7 +55,7 @@ fn command_prune_remove_all_nodes_bug() {
 #[test]
 fn command_prune_regex_match() {
     // Regex
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "prune", "stdin", "--regex", "^H"])
         .stdin(CATARRHINI)
         .run();
@@ -65,7 +65,7 @@ fn command_prune_regex_match() {
 
 #[test]
 fn command_prune_keep_single_leaf() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "prune", "stdin", "-n", "Homo", "--invert"])
         .stdin(CATARRHINI)
         .run();
@@ -76,7 +76,7 @@ fn command_prune_keep_single_leaf() {
 #[test]
 fn command_prune_multiple_trees() {
     let multi = format!("{}\n{}", CATARRHINI, ABCDE_NWK);
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "prune", "stdin", "-n", "Homo", "-n", "A"])
         .stdin(multi)
         .run();
@@ -90,7 +90,7 @@ fn command_prune_file_remove_single() {
     let mut file = tempfile::Builder::new().suffix(".txt").tempfile().unwrap();
     writeln!(file, "Homo").unwrap();
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "prune", "stdin", "-l", file.path().to_str().unwrap()])
         .stdin(CATARRHINI)
         .run();
@@ -104,7 +104,7 @@ fn command_prune_file_remove_multiple() {
     writeln!(file, "Homo").unwrap();
     writeln!(file, "Pan").unwrap();
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "prune", "stdin", "-l", file.path().to_str().unwrap()])
         .stdin(CATARRHINI)
         .run();
@@ -119,7 +119,7 @@ fn command_prune_file_remove_all() {
     writeln!(file, "Pan").unwrap();
     writeln!(file, "Gorilla").unwrap();
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "prune", "stdin", "-l", file.path().to_str().unwrap()])
         .stdin(CATARRHINI)
         .run();
@@ -132,7 +132,7 @@ fn command_prune_file_keep_single() {
     let mut file = tempfile::Builder::new().suffix(".txt").tempfile().unwrap();
     writeln!(file, "Homo").unwrap();
 
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "prune",
@@ -149,7 +149,7 @@ fn command_prune_file_keep_single() {
 
 #[test]
 fn command_prune_keep_internal_node_by_label() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "prune", "stdin", "--invert", "-n", "Hominini"])
         .stdin(CATARRHINI_LABELED)
         .run();
@@ -160,7 +160,7 @@ fn command_prune_keep_internal_node_by_label() {
 #[test]
 fn command_prune_keep_internal_node_by_name() {
     // Keep internal node by name, check descendants
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "prune", "stdin", "--invert", "-n", "Hominidae"])
         .stdin(CATARRHINI_LABELED)
         .run();
@@ -172,7 +172,7 @@ fn command_prune_keep_internal_node_by_name() {
 
 #[test]
 fn command_prune() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "prune",
@@ -191,7 +191,7 @@ fn command_prune() {
 
 #[test]
 fn command_prune_invert() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "prune",

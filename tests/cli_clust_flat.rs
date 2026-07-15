@@ -2,11 +2,11 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 
 #[test]
 fn command_clust_cc() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["clust", "cc", "tests/clust/IBPA.fa.05.tsv"])
         .run();
 
@@ -16,7 +16,7 @@ fn command_clust_cc() {
 
 #[test]
 fn command_clust_cc_pair() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "clust",
             "cc",
@@ -33,7 +33,7 @@ fn command_clust_cc_pair() {
 
 #[test]
 fn command_clust_dbscan() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "clust",
             "dbscan",
@@ -53,7 +53,7 @@ fn command_clust_dbscan() {
 
 #[test]
 fn command_clust_dbscan_rep_first() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "clust",
             "dbscan",
@@ -73,7 +73,7 @@ fn command_clust_dbscan_rep_first() {
 
 #[test]
 fn command_clust_dbscan_pair() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "clust",
             "dbscan",
@@ -99,7 +99,7 @@ fn command_clust_dbscan_pair() {
 
 #[test]
 fn command_clust_kmedoids() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["clust", "km", "tests/clust/IBPA.fa.tsv", "-k", "2"])
         .run();
 
@@ -109,7 +109,7 @@ fn command_clust_kmedoids() {
 
 #[test]
 fn command_clust_kmedoids_pair() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "clust",
             "k-medoids",
@@ -128,7 +128,7 @@ fn command_clust_kmedoids_pair() {
 
 #[test]
 fn command_clust_mcl() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "clust",
             "mcl",
@@ -145,7 +145,7 @@ fn command_clust_mcl() {
 
 #[test]
 fn command_clust_mcl_complex() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "clust",
             "mcl",
@@ -164,7 +164,7 @@ fn command_clust_mcl_complex() {
 
 #[test]
 fn command_clust_mcl_args() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "clust",
             "mcl",
@@ -183,7 +183,7 @@ fn command_clust_mcl_args() {
 
 #[test]
 fn command_clust_mcl_pair() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "clust",
             "mcl",
@@ -206,7 +206,7 @@ fn command_clust_mcl_pair() {
 
 #[test]
 fn command_clust_dbscan_default_min_points() {
-    let (stdout, _) = PgrCmd::new().args(&["clust", "dbscan", "--help"]).run();
+    let (stdout, _) = NecomCmd::new().args(&["clust", "dbscan", "--help"]).run();
 
     // The help should show default value of 4 for --min-points
     assert!(stdout.contains("4") || stdout.contains("default"));
@@ -222,7 +222,7 @@ fn command_clust_dbscan_pair_rep_first() {
     )
     .unwrap();
 
-    let (stdout_medoid_pair, _) = PgrCmd::new()
+    let (stdout_medoid_pair, _) = NecomCmd::new()
         .args(&[
             "clust",
             "dbscan",
@@ -236,7 +236,7 @@ fn command_clust_dbscan_pair_rep_first() {
         ])
         .run();
 
-    let (stdout_first_pair, _) = PgrCmd::new()
+    let (stdout_first_pair, _) = NecomCmd::new()
         .args(&[
             "clust",
             "dbscan",
@@ -252,7 +252,7 @@ fn command_clust_dbscan_pair_rep_first() {
         ])
         .run();
 
-    let (stdout_medoid_cluster, _) = PgrCmd::new()
+    let (stdout_medoid_cluster, _) = NecomCmd::new()
         .args(&[
             "clust",
             "dbscan",
@@ -266,7 +266,7 @@ fn command_clust_dbscan_pair_rep_first() {
         ])
         .run();
 
-    let (stdout_first_cluster, _) = PgrCmd::new()
+    let (stdout_first_cluster, _) = NecomCmd::new()
         .args(&[
             "clust",
             "dbscan",
@@ -303,11 +303,11 @@ fn command_clust_mcl_pair_rep_first() {
     let input = temp.path().join("pairs.tsv");
     std::fs::write(&input, "A\tB\t1.0\nB\tC\t1.0\nC\tA\t0.5\nD\tE\t1.0\n").unwrap();
 
-    let (stdout_medoid, _) = PgrCmd::new()
+    let (stdout_medoid, _) = NecomCmd::new()
         .args(&["clust", "mcl", input.to_str().unwrap(), "--format", "pair"])
         .run();
 
-    let (stdout_first, _) = PgrCmd::new()
+    let (stdout_first, _) = NecomCmd::new()
         .args(&[
             "clust",
             "mcl",
@@ -319,7 +319,7 @@ fn command_clust_mcl_pair_rep_first() {
         ])
         .run();
 
-    let (stdout_medoid_cluster, _) = PgrCmd::new()
+    let (stdout_medoid_cluster, _) = NecomCmd::new()
         .args(&[
             "clust",
             "mcl",
@@ -329,7 +329,7 @@ fn command_clust_mcl_pair_rep_first() {
         ])
         .run();
 
-    let (stdout_first_cluster, _) = PgrCmd::new()
+    let (stdout_first_cluster, _) = NecomCmd::new()
         .args(&[
             "clust",
             "mcl",
@@ -366,7 +366,7 @@ fn command_clust_kmedoids_pair_rep_first() {
     )
     .unwrap();
 
-    let (stdout_medoid, _) = PgrCmd::new()
+    let (stdout_medoid, _) = NecomCmd::new()
         .args(&[
             "clust",
             "k-medoids",
@@ -378,7 +378,7 @@ fn command_clust_kmedoids_pair_rep_first() {
         ])
         .run();
 
-    let (stdout_first, _) = PgrCmd::new()
+    let (stdout_first, _) = NecomCmd::new()
         .args(&[
             "clust",
             "k-medoids",
@@ -392,7 +392,7 @@ fn command_clust_kmedoids_pair_rep_first() {
         ])
         .run();
 
-    let (stdout_medoid_cluster, _) = PgrCmd::new()
+    let (stdout_medoid_cluster, _) = NecomCmd::new()
         .args(&[
             "clust",
             "k-medoids",
@@ -404,7 +404,7 @@ fn command_clust_kmedoids_pair_rep_first() {
         ])
         .run();
 
-    let (stdout_first_cluster, _) = PgrCmd::new()
+    let (stdout_first_cluster, _) = NecomCmd::new()
         .args(&[
             "clust",
             "k-medoids",

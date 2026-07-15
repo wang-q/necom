@@ -1,0 +1,65 @@
+use anyhow::Context;
+use clap::{ArgMatches, Command};
+use std::io::Write;
+/// Build the clap subcommand for format.
+pub fn make_subcommand() -> Command {
+    Command::new("format")
+        .about("Converts between different PHYLIP matrix formats")
+        .after_help(
+            r###"
+Convert a PHYLIP matrix between different formats while preserving all distance values.
+
+Input format:
+    * PHYLIP distance matrix (full or lower-triangular)
+    * Optional first line: number of sequences
+    * Each line: sequence name followed by distances
+
+Output formats:
+    * full
+        - Full square matrix
+        - Tab-separated values
+        - Original sequence names preserved
+    * lower
+        - Lower triangular matrix
+        - Tab-separated values
+        - Original sequence names preserved
+    * strict
+        - Standard PHYLIP format
+        - Names truncated to 10 characters
+        - Names left-aligned with space padding
+        - Distances in fixed-width format (6 decimal places)
+        - Space-separated values
+
+Examples:
+    1. Create a full matrix:
+       necom mat format input.phy -o output.phy
+
+    2. Create a lower-triangular matrix:
+       necom mat format input.phy --format lower -o output.phy
+
+    3. Create a strict PHYLIP matrix:
+       necom mat format input.phy --format strict -o output.phy
+"###,
+        )
+        .arg(crate::cmd_necom::args::infile_arg_required_with_help(
+            "Input PHYLIP matrix file",
+        ))
+        .arg(crate::cmd_necom::args::mat_format_arg())
+        .arg(crate::cmd_necom::args::outfile_arg())
+}
+/// Execute the format command.
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
+    let infile = args.get_one::<String>("infile").unwrap();
+    let opt_mode = args.get_one::<String>("mat_format").unwrap();
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer =
+        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+
+    let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
+    let fmt = necom::libs::pairmat::MatrixFormat::from_mode(opt_mode)?;
+
+    necom::libs::pairmat::write_phylip_matrix(&matrix, fmt, &mut writer)?;
+
+    writer.flush()?;
+    Ok(())
+}

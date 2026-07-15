@@ -1,0 +1,90 @@
+use anyhow::Context;
+use clap::{Arg, ArgAction, ArgMatches, Command};
+use necom::libs::phylo::tree::Tree;
+use std::io::Write;
+
+/// Build the clap subcommand for topo.
+pub fn make_subcommand() -> Command {
+    Command::new("topo")
+        .about("Manipulates tree topology and attributes")
+        .after_help(
+            r###"
+Modifies tree topology by optionally removing branch lengths, comments, or labels.
+
+Notes:
+* By default, branch lengths and comments are REMOVED.
+* Use `--bl` to KEEP branch lengths.
+* Use `--comment` to KEEP comments.
+* Use `-I` to REMOVE internal labels.
+* Use `-L` to REMOVE leaf labels.
+
+Examples:
+1. Topology only (remove lengths and comments):
+   necom nwk topo tree.nwk
+
+2. Keep branch lengths but remove comments:
+   necom nwk topo tree.nwk --bl
+
+3. Remove internal node labels (topology only):
+   necom nwk topo tree.nwk -I
+"###,
+        )
+        .arg(crate::cmd_necom::args::infile_arg_required())
+        .arg(crate::cmd_necom::args::bl_arg())
+        .arg(
+            Arg::new("comment")
+                .long("comment")
+                .short('c')
+                .action(ArgAction::SetTrue)
+                .help("Keep comments"),
+        )
+        .arg(crate::cmd_necom::args::internal_arg())
+        .arg(crate::cmd_necom::args::leaf_arg())
+        .arg(crate::cmd_necom::args::outfile_arg())
+}
+
+/// Execute the topo command.
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer =
+        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+
+    let is_bl = args.get_flag("bl");
+    let is_comment = args.get_flag("comment");
+    let skip_internal = args.get_flag("internal");
+    let skip_leaf = args.get_flag("leaf");
+
+    let infile = args
+        .get_one::<String>("infile")
+        .ok_or_else(|| anyhow::anyhow!("missing required argument: infile"))?;
+    let trees = Tree::from_file(infile)?;
+
+    for mut tree in trees {
+        if let Some(root) = tree.get_root() {
+            let ids = tree.levelorder(&root);
+
+            for id in ids {
+                if let Some(node) = tree.get_node_mut(id) {
+                    if !is_bl {
+                        node.length = None;
+                    }
+                    if !is_comment {
+                        node.properties = None;
+                    }
+                    if node.is_leaf() && skip_leaf {
+                        node.name = None;
+                    }
+                    if !node.is_leaf() && skip_internal {
+                        node.name = None;
+                    }
+                }
+            }
+        }
+
+        let out_string = tree.to_newick();
+        writer.write_all((out_string + "\n").as_ref())?;
+    }
+
+    writer.flush()?;
+    Ok(())
+}

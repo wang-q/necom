@@ -3,11 +3,14 @@ use tempfile::Builder;
 
 #[path = "common/mod.rs"]
 mod common;
-use common::PgrCmd;
+use common::NecomCmd;
 
 #[test]
 fn test_hybrid_cut_basic() {
-    let temp = Builder::new().prefix("pgr_test_hybrid").tempdir().unwrap();
+    let temp = Builder::new()
+        .prefix("necom_test_hybrid")
+        .tempdir()
+        .unwrap();
     let tree_file = temp.path().join("hybrid.nwk");
     let mat_file = temp.path().join("hybrid.phy");
 
@@ -25,7 +28,7 @@ D 1.0 1.0 0.2 0.0
 ";
     fs::write(&mat_file, mat_content).unwrap();
 
-    let (stdout, stderr) = PgrCmd::new()
+    let (stdout, stderr) = NecomCmd::new()
         .args(&[
             "clust",
             "cut",
@@ -53,7 +56,7 @@ D 1.0 1.0 0.2 0.0
 #[test]
 fn test_hybrid_cut_pam() {
     let temp = Builder::new()
-        .prefix("pgr_test_hybrid_pam")
+        .prefix("necom_test_hybrid_pam")
         .tempdir()
         .unwrap();
     let tree_file = temp.path().join("pam.nwk");
@@ -81,7 +84,7 @@ E 0.5 0.5 1.0 1.0 0.0
     // We use --no-pam-dendro because in the tree, E is far from A/B (root split),
     // and standard PAM logic would prevent crossing such a high branch.
 
-    let (stdout, stderr) = PgrCmd::new()
+    let (stdout, stderr) = NecomCmd::new()
         .args(&[
             "clust",
             "cut",

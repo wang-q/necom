@@ -10,8 +10,8 @@
 //! # Example
 //!
 //! ```ignore
-//! use pgr::libs::clust::mcl::Mcl;
-//! use pgr::libs::pairmat::ScoringMatrix;
+//! use necom::libs::clust::mcl::Mcl;
+//! use necom::libs::pairmat::ScoringMatrix;
 //!
 //! // Create a matrix for 4 nodes (A, B, C, D)
 //! // Defaults: self-loop=1.0, missing=0.0

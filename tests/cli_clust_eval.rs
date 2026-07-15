@@ -2,7 +2,7 @@ use assert_cmd::Command;
 
 #[test]
 fn test_clust_eval_perfect_match() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -59,7 +59,7 @@ fn test_clust_eval_no_singletons() -> anyhow::Result<()> {
     std::fs::write(pred_path, pred_content)?;
 
     // 1. Run WITHOUT --no-singletons
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -77,7 +77,7 @@ fn test_clust_eval_no_singletons() -> anyhow::Result<()> {
     assert!(ari < 0.99, "ARI was {} (expected < 0.99)", ari);
 
     // 2. Run WITH --no-singletons
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -105,7 +105,7 @@ fn test_clust_eval_no_singletons() -> anyhow::Result<()> {
 
 #[test]
 fn test_clust_eval_disjoint() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -138,7 +138,7 @@ fn test_clust_eval_disjoint() -> anyhow::Result<()> {
 
 #[test]
 fn test_clust_eval_single_vs_singletons() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -168,7 +168,7 @@ fn test_clust_eval_single_vs_singletons() -> anyhow::Result<()> {
 
 #[test]
 fn test_clust_eval_pair_format() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -201,7 +201,7 @@ fn test_clust_eval_pair_format() -> anyhow::Result<()> {
 
 #[test]
 fn test_clust_eval_internal_silhouette() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -253,7 +253,7 @@ fn test_clust_eval_internal_silhouette() -> anyhow::Result<()> {
 
 #[test]
 fn test_clust_eval_internal_db() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -300,7 +300,7 @@ fn test_clust_eval_invariance_sample_order() -> anyhow::Result<()> {
     std::fs::write(temp_orig, content_orig)?;
     std::fs::write(temp_shuffled, content_shuffled)?;
 
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -333,7 +333,7 @@ fn test_clust_eval_invariance_label_scaling() -> anyhow::Result<()> {
     std::fs::write(temp_small, content_small)?;
     std::fs::write(temp_large, content_large)?;
 
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -360,7 +360,7 @@ fn test_clust_eval_empty_input() -> anyhow::Result<()> {
     let temp_empty = "tests/clust/empty.tsv";
     std::fs::write(temp_empty, "")?;
 
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -388,7 +388,7 @@ fn test_eval_malformed_pair_format() -> anyhow::Result<()> {
     let malformed_path = "tests/clust/eval/malformed.pair";
     std::fs::write(malformed_path, "A\nB\n")?;
 
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")
@@ -414,7 +414,7 @@ fn test_eval_malformed_pair_format() -> anyhow::Result<()> {
 
 #[test]
 fn test_eval_missing_other_for_external() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("pgr")?;
+    let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("clust")
         .arg("eval")

@@ -2,11 +2,11 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 
 #[test]
 fn command_topo_basic() {
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/catarrhini.nwk"])
         .run();
 
@@ -23,7 +23,7 @@ fn command_topo_basic() {
 #[test]
 fn command_topo_remove_labels() {
     // Test with -I (remove internal labels) and -L (remove leaf labels)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/catarrhini.nwk", "-I", "-L"])
         .run();
 
@@ -36,7 +36,7 @@ fn command_topo_remove_labels() {
 #[test]
 fn command_topo_keep_bl() {
     // Test --bl (keep branch lengths)
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "topo",
@@ -54,7 +54,7 @@ fn command_topo_keep_bl() {
 #[test]
 fn command_topo_compat_simple() {
     // simple:newtree.nw
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/newtree.nwk"])
         .run();
 
@@ -66,7 +66,7 @@ fn command_topo_compat_simple() {
 #[test]
 fn command_topo_compat_multiple() {
     // multiple:forest.nw
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/forest.nwk"])
         .run();
 
@@ -82,7 +82,7 @@ fn command_topo_compat_multiple() {
 #[test]
 fn command_topo_compat_rootedge() {
     // rootedge: edged_root.nw
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/edged_root.nwk"])
         .run();
 
@@ -94,7 +94,7 @@ fn command_topo_compat_rootedge() {
 #[test]
 fn command_topo_compat_i() {
     // I:-I newtree.nw
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/newtree.nwk", "-I"])
         .run();
 
@@ -106,11 +106,11 @@ fn command_topo_compat_i() {
 #[test]
 fn command_topo_compat_l() {
     // L:-L newtree.nw
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/newtree.nwk", "-L"])
         .run();
 
-    // Note: pgr output might differ in empty labels if not handled exactly like newick_utils
+    // Note: necom output might differ in empty labels if not handled exactly like newick_utils
     let expected = "(,((((((((,)52,(,)70)22,(,(,(,)32)54)1)17,(,)92)97,)62,(,)52)100,((((,)65,)89,(,)100)75,(,)99)83)48,((((,((,(,)22)38,)72)97,)76,(((,)83,)99,(,)99)70)64,(,(,))59)100)68);";
 
     assert_eq!(stdout.trim(), expected);
@@ -119,7 +119,7 @@ fn command_topo_compat_l() {
 #[test]
 fn command_topo_compat_li() {
     // LI:-LI newtree.nw
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/newtree.nwk", "-L", "-I"])
         .run();
 
@@ -131,7 +131,7 @@ fn command_topo_compat_li() {
 #[test]
 fn command_topo_compat_bi() {
     // bI:-bI newtree.nw
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/newtree.nwk", "-b", "-I"])
         .run();
 
@@ -143,7 +143,7 @@ fn command_topo_compat_bi() {
 #[test]
 fn command_topo_compat_bl() {
     // bL:-bL newtree.nw
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/newtree.nwk", "-b", "-L"])
         .run();
 
@@ -155,7 +155,7 @@ fn command_topo_compat_bl() {
 #[test]
 fn command_topo_compat_bil() {
     // bIL:-bIL newtree.nw
-    let (stdout, _) = PgrCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "topo", "tests/newick/newtree.nwk", "-b", "-I", "-L"])
         .run();
 

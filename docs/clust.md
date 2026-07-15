@@ -1,10 +1,10 @@
-# pgr clust - Clustering Algorithms
+# necom clust - Clustering Algorithms
 
 ## 概述 (Overview)
 
-`pgr clust` 模块提供了一系列用于序列、基因组特征和一般数据的聚类算法。这些工具旨在处理生物信息学中常见的距离矩阵、相似性网络和特征向量。
+`necom clust` 模块提供了一系列用于序列、基因组特征和一般数据的聚类算法。这些工具旨在处理生物信息学中常见的距离矩阵、相似性网络和特征向量。
 
-命令按输入数据类型分为三类（与 `pgr clust --help` 一致）：
+命令按输入数据类型分为三类（与 `necom clust --help` 一致）：
 1.  **Tree**: 基于距离矩阵构建系统发育树或层级结构 (`hier`, `nj`, `upgma`)。
 2.  **Flat**: 基于图或向量直接生成分组，或从已有树切分得到分组 (`cc`, `cut`, `dbscan`, `k-medoids`, `mcl`)。
 3.  **Eval**: 评估聚类分区的质量 (`eval`)。详见下方 [评估与分析](#评估与分析-evaluation)。
@@ -14,7 +14,7 @@
 ### MCL (Markov Cluster Algorithm)
 
 - **原理**：通过在图上模拟随机游走（Random Walk），通过交替执行“扩展（Expansion）”和“膨胀（Inflation）”操作，使强连接区域内的流更加集中，弱连接区域的流逐渐消失，最终自然分割出模块。
-- **命令**：`pgr clust mcl`
+- **命令**：`necom clust mcl`
 - **特点**：基于流模拟的图聚类。
 - **适用场景**：**生物网络**（如 SSN）、蛋白家族检测、模块发现。
 - **优势**：对噪声鲁棒，能处理复杂的网络结构。
@@ -22,7 +22,7 @@
 ### Connected Components (CC)
 
 - **原理**：图论中的基础概念，寻找图中所有互相可达的节点集合。相当于在给定阈值下，将所有直接或间接相连的样本归为一个簇。
-- **命令**：`pgr clust cc`
+- **命令**：`necom clust cc`
 - **特点**：最基础的连通分量。
 - **适用场景**：极高相似度阈值下的快速去重。
 - **优势**：极快（线性复杂度）。
@@ -30,7 +30,7 @@
 ### K-Medoids
 
 - **原理**：类似 K-Means 的迭代优化，但中心点（Medoid）必须是数据集中的实际样本。通过最小化所有点到其最近中心点的距离之和（Dissimilarity）来更新中心。
-- **命令**：`pgr clust k-medoids`
+- **命令**：`necom clust k-medoids`
 - **特点**：类似 K-Means，但中心点必须是实际样本（Medoid）。
 - **适用场景**：抗噪声需求，或仅有**距离矩阵**（非欧氏空间）的情况。
 - **优势**：对异常值鲁棒，结果可解释（中心是真实样本）。
@@ -38,7 +38,7 @@
 ### DBSCAN
 
 - **原理**：基于密度的聚类。从任意点出发，若其 $\epsilon$ 邻域内的点数超过 `min_samples`，则形成核心点并扩展簇；密度不足的区域被视为噪声。
-- **命令**：`pgr clust dbscan`
+- **命令**：`necom clust dbscan`
 - **特点**：基于密度的聚类，需指定邻域半径 `eps` 和最小点数 `min_samples`。
 - **适用场景**：**非凸形状**簇，密度不均匀分布，需**离群点检测**。
 - **优势**：不需要指定簇数 K，能识别噪声。
@@ -46,23 +46,23 @@
 - **输出**：`cluster`（一行一簇，首元素为代表点）或 `pair`（代表点-成员对）。
 - **CLI 参数**：`infile`、`--format {cluster|pair}`、`--rep {medoid|first}`、`--same`、`--missing`、`--eps`、`--min-points`、`-o/--outfile`。
   - `--rep` 控制代表点选择；默认 `medoid`（距离和最小），`first` 为按名字字典序第一个成员。在 `pair` 格式中作为第一列，在 `cluster` 格式中置于第一列。
-- **未实现参数**：`--scan`、`--opt-eps`、`--min-pct` 等参数扫描与评分功能当前未实现，后续可能通过 `pgr clust dbscan` 的子命令或独立脚本提供。
+- **未实现参数**：`--scan`、`--opt-eps`、`--min-pct` 等参数扫描与评分功能当前未实现，后续可能通过 `necom clust dbscan` 的子命令或独立脚本提供。
 - **评估文档**：[clust-eval.md](clust-eval.md)
 
 #### 使用示例
 
 ```bash
 # 基本聚类（pairwise 距离输入）
-pgr clust dbscan pairs.tsv --eps 0.15 --min-points 3 -o clusters.tsv
+necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 -o clusters.tsv
 
 # 输出 pair 格式，便于后续评估
-pgr clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.tsv
+necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.tsv
 ```
 
 ### UPGMA
 
 - **原理**：非加权组平均法。一种自底向上的层次聚类，每次合并距离最近的两个簇，新簇与其他簇的距离计算为所有成员间距离的算术平均。假设进化速率恒定（分子钟）。
-- **命令**：`pgr clust upgma`
+- **命令**：`necom clust upgma`
 - **特点**：层次聚类（平均链接），输出**有根树**。
 - **适用场景**：假设**分子钟**（超度量）的系统发育分析。
 - **优势**：生成层级结构，树高有明确的距离意义。
@@ -70,7 +70,7 @@ pgr clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.
 ### NJ (Neighbor-Joining)
 
 - **原理**：邻接法。通过最小化树的总枝长（基于 Q 矩阵校正距离），迭代地合并“净发散度”最小的节点对。不假设分子钟，允许不同分支有不同的进化速率。
-- **命令**：`pgr clust nj`
+- **命令**：`necom clust nj`
 - **特点**：基于距离矩阵的构树算法，输出**无根树**。
 - **适用场景**：一般加性距离（无需分子钟假设），构建进化树。
 - **优势**：速度快，对不同演化速率鲁棒。
@@ -78,7 +78,7 @@ pgr clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.
 ### Hierarchical Clustering
 
 - **原理**：通用的自底向上（Agglomerative）聚类框架。通过不同的链接准则（如 Ward 最小方差、Complete 最远距离）合并簇，构建完整的树状层级。
-- **命令**：`pgr clust hier` (别名 `hclust`)
+- **命令**：`necom clust hier` (别名 `hclust`)
 - **特点**：通用层次聚类，支持 `single`, `complete`, `average`, `ward` 等方法。
 - **实现状态**：已实现（$O(N^2)$ NN-Chain 优化）。
 - **价值**：提供通用层级结构视图（不限于生物演化），配合 `clust cut` 可灵活获取不同粒度的分组。
@@ -87,23 +87,23 @@ pgr clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.
 ### Tree Cut
 
 - **原理**：对已有的 Newick 树（系统发生树或层次聚类树），按指定规则切分为扁平的聚类分组（Partition）。支持按簇数 (`--k`)、高度 (`--height`)、簇内直径 (`--max-clade`)、动态切割 (`--dynamic-tree`/`--dynamic-hybrid`) 等多种切割策略。
-- **命令**：`pgr clust cut`
+- **命令**：`necom clust cut`
 - **特点**：从已有树导出分组，不重建聚类；支持参数扫描 (`--scan`) 与代表点选择 (`--rep`)。`--support` 过滤低支持度边；无法解析为数字的内部节点名默认视为支持度 100.0（完全可信，不会被过滤）。
 - **适用场景**：已有树结构（来自 `clust hier`、`clust upgma`、`clust nj` 或外部工具），需要在不同阈值下切分并评估。
 - **文档**：[clust-cut.md](clust-cut.md)
 
 ## Hierarchical Clustering 详细说明
 
-`pgr clust hier`（别名 `hclust`）提供通用的层次聚类（dendrogram）生成能力，支持 `single/complete/average/ward.D2` 等方法，输出 Newick 形式，便于下游 `clust cut`。
+`necom clust hier`（别名 `hclust`）提供通用的层次聚类（dendrogram）生成能力，支持 `single/complete/average/ward.D2` 等方法，输出 Newick 形式，便于下游 `clust cut`。
 
 ### 背景与定位
 
 - **归属**：`clust` 模块，与 `k-medoids`、`mcl` 等并列。
 - **目标**：统计意义的 dendrogram（合并高度表达链接准则的代价），不强制“演化/分子钟”语义。
-- **与 pgr 现有能力协同**：
+- **与 necom 现有能力协同**：
   - 构树：`clust upgma`（有根、超度量）与 `clust nj`（加性、无根）已存在
   - 切分：[clust-cut.md](clust-cut.md) 的切树分组
-  - 评估：`pgr clust eval --matrix` / `--tree` / `--coords`（当前可用）；`pgr nwk eval` 尚未实现
+  - 评估：`necom clust eval --matrix` / `--tree` / `--coords`（当前可用）；`necom nwk eval` 尚未实现
 
 ### 与 UPGMA/NJ 的关系
 
@@ -142,23 +142,23 @@ pgr clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.
   - 一般加性距离场景：`clust nj`
   - 通用层次聚类分析或需要 `ward.D2`：`clust hier --method ward.D2`
 - 切分与评估：
-  - 切分：`pgr clust cut --height H` 或按 TreeCluster 风格阈值/约束
-  - 内部评估（无 Ground Truth）：`pgr clust eval --matrix ...` (Silhouette)（当前可用）；`pgr nwk eval` 尚未实现
-  - 外部评估（有 Ground Truth）：`pgr clust eval` (ARI/AMI/V-Measure)
+  - 切分：`necom clust cut --height H` 或按 TreeCluster 风格阈值/约束
+  - 内部评估（无 Ground Truth）：`necom clust eval --matrix ...` (Silhouette)（当前可用）；`necom nwk eval` 尚未实现
+  - 外部评估（有 Ground Truth）：`necom clust eval` (ARI/AMI/V-Measure)
 
 ### CLI 设计
 
 #### 命令概览
 
-- 名称：`pgr clust hier`（可见别名 `hclust`）
+- 名称：`necom clust hier`（可见别名 `hclust`）
 - 作用：从距离矩阵生成层次聚类树（dendrogram），输出为 Newick，便于后续 `clust cut`。
 - 归属：`clust` 模块，与 `k-medoids` 等并列。
 
 #### 输入
 
 - 矩阵文件：PHYLIP 距离矩阵（标准或宽松格式）
-- 格式转换：若手头是 pair TSV（三列 `name1  name2  distance`），请先使用 `pgr mat to-phylip` 转换为 PHYLIP；统一入口减少歧义，便于与 `clust upgma/nj` 一致。
-- 距离/相似度转换：`clust hier` 仅接受**距离矩阵**（越小越相似）。如果输入是相似度矩阵（如 BLAST Identity, Alignment Score），请先使用 `pgr mat transform` 进行转换（如 `--op inv-linear --max 100` 或 `--op log`）。
+- 格式转换：若手头是 pair TSV（三列 `name1  name2  distance`），请先使用 `necom mat to-phylip` 转换为 PHYLIP；统一入口减少歧义，便于与 `clust upgma/nj` 一致。
+- 距离/相似度转换：`clust hier` 仅接受**距离矩阵**（越小越相似）。如果输入是相似度矩阵（如 BLAST Identity, Alignment Score），请先使用 `necom mat transform` 进行转换（如 `--op inv-linear --max 100` 或 `--op log`）。
 - 名称来源：自动从输入解析；无需额外标签文件
 
 #### 主要参数
@@ -175,13 +175,13 @@ pgr clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.
 
 ```bash
 # 先将 pair TSV 转为 PHYLIP
-pgr mat to-phylip pairs.tsv -o matrix.phy
+necom mat to-phylip pairs.tsv -o matrix.phy
 
 # Ward (PHYLIP 输入，默认 Newick 输出)
-pgr clust hier matrix.phy --method ward > tree.nwk
+necom clust hier matrix.phy --method ward > tree.nwk
 
 # Average/complete/single (PHYLIP 输入)
-pgr clust hier matrix.phy --method average > tree.nwk
+necom clust hier matrix.phy --method average > tree.nwk
 ```
 
 #### 注意事项
@@ -194,33 +194,33 @@ pgr clust hier matrix.phy --method average > tree.nwk
 - 实现约定：`ward.D2` 内部自动按“平方距离”完成更新并返回“距离量纲”的分支长度；用户无需提供或区分 `D` 与 `D^2`
 - 方法特性：
   - `centroid/median` 可能产生非单调的合并高度（inversion），属于算法特性；输出仍为合法 Newick，但高度的直觉性较 `average/ward` 略弱
-  - 叶序优化：hier 命令本身不重排叶子，如需提升可视化可读性，请使用 `pgr nwk order --num-descendants`（Ladderize）
+  - 叶序优化：hier 命令本身不重排叶子，如需提升可视化可读性，请使用 `necom nwk order --num-descendants`（Ladderize）
 
 ### 与 SciPy 的映射与差异
 
 - 方法映射：与 SciPy `linkage` 的 `method` 集合对齐，`ward` 等价 `ward.D2`（内部按平方距离更新）；`average` 等价 UPGMA，`weighted` 等价 WPGMA，`centroid/median` 等价 UPGMC/WPGMC。
-- 输入差异：SciPy 接受“condensed 距离向量”或“观测矩阵”，pgr 统一使用 PHYLIP 距离矩阵；如需从 pair TSV 转换，请使用 `pgr mat to-phylip`。
-- 输出差异：SciPy 返回 `(n-1)×4` 的 linkage 矩阵 Z；pgr 输出 Newick 树，直接用于 `clust cut / to-dot / to-forest`。普通用户无需关心 Z；若需与 SciPy 互操作，请在 Python 端继续使用 Z 与 `fcluster/cophenet`。
-- 叶序优化：`pgr` 推荐 `pgr nwk order --num-descendants` (Ladderize) 以换取极高的性能，且可视化效果通常足够好。
-- 平切（flat clustering）：SciPy 的 `fcluster` 提供 `criterion='distance'|'maxclust'|...`；在 pgr 中分别对应 `clust cut --height H` 与 `clust cut --k K`，其它 `monocrit/inconsistent` 等准则暂不引入。
-- 评估指标：SciPy 有 `cophenet`（共生相关系数）；pgr 计划在 `pgr nwk eval` 中加入 cophenetic 相关系数作为树质量评估的补充（尚未实现）。
+- 输入差异：SciPy 接受“condensed 距离向量”或“观测矩阵”，necom 统一使用 PHYLIP 距离矩阵；如需从 pair TSV 转换，请使用 `necom mat to-phylip`。
+- 输出差异：SciPy 返回 `(n-1)×4` 的 linkage 矩阵 Z；necom 输出 Newick 树，直接用于 `clust cut / to-dot / to-forest`。普通用户无需关心 Z；若需与 SciPy 互操作，请在 Python 端继续使用 Z 与 `fcluster/cophenet`。
+- 叶序优化：`necom` 推荐 `necom nwk order --num-descendants` (Ladderize) 以换取极高的性能，且可视化效果通常足够好。
+- 平切（flat clustering）：SciPy 的 `fcluster` 提供 `criterion='distance'|'maxclust'|...`；在 necom 中分别对应 `clust cut --height H` 与 `clust cut --k K`，其它 `monocrit/inconsistent` 等准则暂不引入。
+- 评估指标：SciPy 有 `cophenet`（共生相关系数）；necom 计划在 `necom nwk eval` 中加入 cophenetic 相关系数作为树质量评估的补充（尚未实现）。
 
 #### 用户提示
 
 - 新手路径（推荐）：`mat to-phylip → clust hier --method ward → clust cut --height → clust eval → nwk 可视化`
-- 互操作与审计：若需要逐步核对合并过程或在 Python 端进一步平切/统计，请使用 SciPy 的 linkage 矩阵与工具；pgr 侧保持 Newick 为主，减少心智负担。
+- 互操作与审计：若需要逐步核对合并过程或在 Python 端进一步平切/统计，请使用 SciPy 的 linkage 矩阵与工具；necom 侧保持 Newick 为主，减少心智负担。
 
 #### 示例映射
 
 - SciPy linkage（Ward）:
   - Python: `Z = linkage(y, method='ward', optimal_ordering=True)`
-  - pgr: `pgr mat to-phylip pairs.tsv -o matrix.phy` → `pgr clust hier matrix.phy --method ward > tree.nwk` → `pgr nwk order tree.nwk --num-descendants > ordered.nwk`
+  - necom: `necom mat to-phylip pairs.tsv -o matrix.phy` → `necom clust hier matrix.phy --method ward > tree.nwk` → `necom nwk order tree.nwk --num-descendants > ordered.nwk`
 - SciPy fcluster（按距离平切）:
   - Python: `labels = fcluster(Z, t=0.05, criterion='distance')`
-  - pgr: `pgr clust cut tree.nwk --height 0.05 > clusters.tsv`
+  - necom: `necom clust cut tree.nwk --height 0.05 > clusters.tsv`
 - SciPy fcluster（按簇数平切）:
   - Python: `labels = fcluster(Z, t=20, criterion='maxclust')`
-  - pgr: `pgr clust cut tree.nwk --k 20 > clusters.tsv`
+  - necom: `necom clust cut tree.nwk --k 20 > clusters.tsv`
 - SciPy cophenet:
   - Python: `c, dists = cophenet(Z, Y)`
 
@@ -228,35 +228,35 @@ pgr clust hier matrix.phy --method average > tree.nwk
 
 - AgglomerativeClustering (Ward):
   - Python: `model = AgglomerativeClustering(linkage='ward').fit(X)`
-  - pgr: `pgr clust hier matrix.phy --method ward > tree.nwk`（需先计算距离矩阵）
+  - necom: `necom clust hier matrix.phy --method ward > tree.nwk`（需先计算距离矩阵）
 - AgglomerativeClustering (Average/Complete/Single):
   - Python: `model = AgglomerativeClustering(linkage='average').fit(X)`
-  - pgr: `pgr clust hier matrix.phy --method average > tree.nwk`
+  - necom: `necom clust hier matrix.phy --method average > tree.nwk`
 - 差异说明:
-  - scikit-learn 侧重于直接输出聚类标签（`labels_`），`pgr` 侧重于生成树结构（Newick）。
-  - 若需在 `pgr` 中获得标签，请配合 `clust cut` 使用。
+  - scikit-learn 侧重于直接输出聚类标签（`labels_`），`necom` 侧重于生成树结构（Newick）。
+  - 若需在 `necom` 中获得标签，请配合 `clust cut` 使用。
 
 #### 与工具链协作
 
-- 构树：`pgr clust hier` → 生成 dendrogram
-- 切分：`pgr clust cut --height H` → 导出分组
+- 构树：`necom clust hier` → 生成 dendrogram
+- 切分：`necom clust cut --height H` → 导出分组
 - 评估：
-  - 无 Ground Truth：`pgr clust eval --matrix` / `--tree` / `--coords`（当前可用）；`pgr nwk eval` 尚未实现
-  - 有 Ground Truth：`pgr clust eval`（ARI/AMI/V-Measure）
-- 可视化：`pgr nwk to-dot/to-forest` → 图形/LaTeX 展示
+  - 无 Ground Truth：`necom clust eval --matrix` / `--tree` / `--coords`（当前可用）；`necom nwk eval` 尚未实现
+  - 有 Ground Truth：`necom clust eval`（ARI/AMI/V-Measure）
+- 可视化：`necom nwk to-dot/to-forest` → 图形/LaTeX 展示
 
 ## 评估与分析 (Evaluation)
 
 这些命令不产生聚类，而是评估聚类或树的质量。
 
 - **Tree-based Evaluation**
-  - **命令**：`pgr nwk eval` (尚未实现)
+  - **命令**：`necom nwk eval` (尚未实现)
   - **定位**：树结构的多维度评估。
   - **功能**：几何紧密性（Silhouette）、分类纯度（Purity）、演化一致性（Discordance）。
-  - **替代方案**：当前可使用 `pgr clust eval --matrix` / `--tree` / `--coords` 进行基于距离/树/坐标的评估。
+  - **替代方案**：当前可使用 `necom clust eval --matrix` / `--tree` / `--coords` 进行基于距离/树/坐标的评估。
 
 - **Partition-based Evaluation**
-  - **命令**：`pgr clust eval`
+  - **命令**：`necom clust eval`
   - **定位**：通用聚类质量评估（支持有/无 Ground Truth）。
   - **功能**：ARI, AMI, V-Measure (外部); Silhouette, Davies-Bouldin (内部)。
   - **文档**：[clust-eval.md](clust-eval.md)
@@ -298,7 +298,7 @@ GMM、HDBSCAN、Louvain/Leiden 等算法已列入路线图。
   - **替代**：推荐使用更现代、参数更少且自动化程度更高的 `HDBSCAN`。
 
 - **Biclustering (双聚类)**
-  - **原因**：同时对行和列进行聚类（如 Spectral Co-Clustering），主要用于基因表达谱分析等特定矩阵子块挖掘场景，与 `pgr` 当前专注的“样本分组”目标差异较大。
+  - **原因**：同时对行和列进行聚类（如 Spectral Co-Clustering），主要用于基因表达谱分析等特定矩阵子块挖掘场景，与 `necom` 当前专注的“样本分组”目标差异较大。
   - **替代**：若需对特征（列）进行聚类，可转置矩阵后使用标准聚类；若需寻找共表达模块，建议使用专门的表达谱分析工具（如 WGCNA）。
 
 - **BIRCH**
@@ -318,7 +318,7 @@ GMM、HDBSCAN、Louvain/Leiden 等算法已列入路线图。
 **计划接口**：
 ```bash
 # 从 CSV/TSV 向量输入进行 GMM 聚类
-pgr clust gmm input.tsv --k 5 --cov full > clusters.tsv
+necom clust gmm input.tsv --k 5 --cov full > clusters.tsv
 
 # 输出包含：ID, Cluster, PosteriorProb (后验概率)
 ```
@@ -329,8 +329,8 @@ pgr clust gmm input.tsv --k 5 --cov full > clusters.tsv
 
 - **BIC (Bayesian Information Criterion)** [计划中]：
   - 在 GMM 中，BIC 权衡了对数似然（拟合度）与参数数量（复杂度）。
-  - `pgr` 可提供 `clust gmm --scan-k 2..20`，自动计算并输出 BIC 曲线，辅助用户选择最佳 K（通常是 BIC 最低点或手肘点）。
-- **Silhouette / Calinski-Harabasz** [部分支持]：基于几何距离的评估指标，适用于 K-means 或一般距离聚类（`clust eval` 已支持距离矩阵版 Silhouette；树上 Silhouette 计划在 `pgr nwk eval` [计划中] 中实现）。
+  - `necom` 可提供 `clust gmm --scan-k 2..20`，自动计算并输出 BIC 曲线，辅助用户选择最佳 K（通常是 BIC 最低点或手肘点）。
+- **Silhouette / Calinski-Harabasz** [部分支持]：基于几何距离的评估指标，适用于 K-means 或一般距离聚类（`clust eval` 已支持距离矩阵版 Silhouette；树上 Silhouette 计划在 `necom nwk eval` [计划中] 中实现）。
 
 ## 大规模数据策略 (Two-stage / Representative Strategy)
 
@@ -345,22 +345,22 @@ pgr clust gmm input.tsv --k 5 --cov full > clusters.tsv
 **结论**: 即使在 64G 内存的高配服务器上，处理 $N=200k$ 也已接近极限。
 
 **推荐策略**：采用“两步法”，结合快速聚类与精细构树。
-1.  **预聚类/压缩**: 使用线性或近线性算法（如 `pgr clust k-medoids`、`pgr clust mcl` 或外部工具 `mmseqs2`）将数据压缩为 $K$ 个代表点（$K \approx 5000 \sim 10000$）。
-2.  **层次聚类**: 提取代表点之间的距离矩阵，运行 `pgr clust hier` 构建骨架树。
+1.  **预聚类/压缩**: 使用线性或近线性算法（如 `necom clust k-medoids`、`necom clust mcl` 或外部工具 `mmseqs2`）将数据压缩为 $K$ 个代表点（$K \approx 5000 \sim 10000$）。
+2.  **层次聚类**: 提取代表点之间的距离矩阵，运行 `necom clust hier` 构建骨架树。
 
 **工作流示例**:
 ```bash
 # 1. 快速聚类选出代表点 (k=5000)
-pgr clust k-medoids all_data.tsv --k 5000 --format pair > clusters.tsv
+necom clust k-medoids all_data.tsv --k 5000 --format pair > clusters.tsv
 
 # 2. 提取代表点列表
 cut -f1 clusters.tsv | sort -u > representatives.list
 
 # 3. 提取代表点的子矩阵
-pgr mat subset all_data.tsv --list representatives.list -o sub_matrix.phy
+necom mat subset all_data.tsv --list representatives.list -o sub_matrix.phy
 
 # 4. 对代表点构树
-pgr clust hier sub_matrix.phy --method ward > backbone.nwk
+necom clust hier sub_matrix.phy --method ward > backbone.nwk
 ```
 
 ## 推荐工作流
@@ -370,7 +370,7 @@ pgr clust hier sub_matrix.phy --method ward > backbone.nwk
 ```bash
 # 1. 序列比对构建网络 (如 mmseqs/blast -> pair.tsv)
 # 2. MCL 聚类
-pgr clust mcl pairs.tsv --inflation 2.0 > families.tsv
+necom clust mcl pairs.tsv --inflation 2.0 > families.tsv
 ```
 
 ### 场景 B: 层次聚类参数扫描与评估 (Workflow)
@@ -379,21 +379,21 @@ pgr clust mcl pairs.tsv --inflation 2.0 > families.tsv
 
 ```bash
 # 1. 生成层次聚类树
-pgr clust hier matrix.phy --method ward > tree.nwk
+necom clust hier matrix.phy --method ward > tree.nwk
 
 # 2. 扫描阈值并评估内部指标 (Silhouette)
 # clust cut 在 scan 模式下输出长表，直接传给 clust eval
-pgr clust cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
-    pgr clust eval - --input-format long --matrix matrix.phy > evaluation.tsv
+necom clust cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
+    necom clust eval - --input-format long --matrix matrix.phy > evaluation.tsv
 
 # 3. 分析 evaluation.tsv 选择最佳阈值 (如 Silhouette 最大处)
 # 假设最佳阈值为 0.45
-pgr clust cut tree.nwk --height 0.45 > final_clusters.tsv
+necom clust cut tree.nwk --height 0.45 > final_clusters.tsv
 ```
 
 ## 输入输出格式约定 (File Formats)
 
-`pgr clust` 系列命令涉及多种数据格式，为了便于与其他工具交互，约定如下标准格式。
+`necom clust` 系列命令涉及多种数据格式，为了便于与其他工具交互，约定如下标准格式。
 
 ### 1. 分区文件 (Partition File)
 
@@ -428,10 +428,10 @@ pgr clust cut tree.nwk --height 0.45 > final_clusters.tsv
   ```
 
 #### Long Format (Batch, `--format long`)
-用于批量评估的专用格式。`--input-format long` 仅 `pgr clust eval` 接受；`pgr clust cut` 的 `--format` 仅支持 `cluster`/`pair`，但在 `--scan` 模式下自动输出 long format。
+用于批量评估的专用格式。`--input-format long` 仅 `necom clust eval` 接受；`necom clust cut` 的 `--format` 仅支持 `cluster`/`pair`，但在 `--scan` 模式下自动输出 long format。
 - **结构**：`Group <tab> ClusterID <tab> Item`
 - **Group 列**：用于标识不同的参数组合或切割方法。格式通常为 `Method=Value`（如 `height=0.5`）。
-  - `pgr clust eval` 会保留此列作为评估结果的标识符。
+  - `necom clust eval` 会保留此列作为评估结果的标识符。
 - **示例**：
   ```text
   height=0.1	1	GeneA
@@ -448,7 +448,7 @@ pgr clust cut tree.nwk --height 0.45 > final_clusters.tsv
 - **结构**：
   - 第一行：样本数量 $N$。
   - 后续 $N$ 行：`Name <space> Dist1 <space> Dist2 ...`
-- **特点**：标准生物信息学格式。`pgr` 支持“宽松”格式（名字与数据间可有任意空白）。
+- **特点**：标准生物信息学格式。`necom` 支持“宽松”格式（名字与数据间可有任意空白）。
 - **示例**：
   ```text
   3

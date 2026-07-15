@@ -1,13 +1,13 @@
 [package]
-name = "pgr"
+name = "necom"
 version = "0.2.0"
 authors = ["wang-q <wang-q@outlook.com>"]
 edition = "2021"
 description = "Practical Genome Refiner"
-documentation = "https://github.com/wang-q/pgr"
+documentation = "https://github.com/wang-q/necom"
 readme = "README.md"
-homepage = "https://github.com/wang-q/pgr"
-repository = "https://github.com/wang-q/pgr"
+homepage = "https://github.com/wang-q/necom"
+repository = "https://github.com/wang-q/necom"
 license = "MIT"
 categories = ["command-line-utilities", "science"]
 publish = false
@@ -40,8 +40,8 @@ flate2 = "1.1.8"
 fixedbitset = "0.5.7"
 
 [[bin]]
-name = "pgr"
-path = "src/pgr.rs"
+name = "necom"
+path = "src/necom.rs"
 
 [[bench]]
 name = "hier_benchmark"
