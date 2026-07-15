@@ -15,6 +15,6 @@ pub fn make_subcommand() -> Command {
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     match args.subcommand() {
         Some(("condense", sub_matches)) => condense::execute(sub_matches),
-        _ => Ok(()),
+        _ => anyhow::bail!("unrecognized pl subcommand"),
     }
 }

@@ -11,6 +11,7 @@ pub fn make_subcommand() -> Command {
     Command::new("mat")
         .about("Operates on matrices")
         .subcommand_required(true)
+        .arg_required_else_help(true)
         .subcommand(compare::make_subcommand())
         .subcommand(format::make_subcommand())
         .subcommand(to_pair::make_subcommand())
@@ -27,6 +28,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         Some(("to-phylip", sub_matches)) => to_phylip::execute(sub_matches),
         Some(("subset", sub_matches)) => subset::execute(sub_matches),
         Some(("transform", sub_matches)) => transform::execute(sub_matches),
-        _ => Ok(()),
+        _ => anyhow::bail!("unrecognized mat subcommand"),
     }
 }

@@ -10,7 +10,7 @@ fn main() -> anyhow::Result<()> {
     let app = Command::new("necom")
         .version(crate_version!())
         .author(crate_authors!())
-        .about("`necom` - Practical Genome Refiner")
+        .about("`necom` - Clustering, Matrix, and Phylogeny Toolkit")
         .propagate_version(true)
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)

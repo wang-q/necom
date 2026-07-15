@@ -88,7 +88,7 @@
     - **背景**: 标准层次聚类算法生成的树，左右子树的顺序是任意的。这导致在绘制热图（Heatmap）时，相似的行/列可能不相邻，视觉效果杂乱。
     - **SciPy 方案**: `scipy.cluster.hierarchy.optimal_leaf_ordering`。
     - **算法**: Bar-Joseph et al. (2001) 的动态规划算法。在不改变树拓扑结构的前提下，通过旋转内部节点，最小化相邻叶子之间的距离之和。
-    - **necom 借鉴**: 计划在 `necom nwk order` 中实现此功能（`--olo` 或 `--optimal`），作为聚类后的标准优化步骤，显著提升下游可视化（`necom plot` 或外部工具）的效果。
+    - **necom 借鉴**: 计划在 `necom nwk order` 中实现此功能（`--olo` 或 `--optimal`），作为聚类后的标准优化步骤，显著提升下游可视化（外部工具）的效果。
 
 5.  **Cophenetic Correlation Coefficient**:
     - **背景**: 如何量化生成的树是否真实反映了原始距离矩阵？
@@ -98,7 +98,7 @@
 
 6.  **Distance Metric Architecture**:
     - **背景**: SciPy/Scikit-learn 的距离计算模块架构清晰，支持稀疏矩阵和多种度量。
-    - **necom 借鉴**: 计划参考 `DistanceMetric` 类设计，统一 `necom dist` 接口，并在未来支持稀疏距离矩阵计算（Phase 3）。
+    - **necom 借鉴**: 计划参考 `DistanceMetric` 类设计，统一距离计算接口（由 `necom mat` 与 `necom clust eval` 等命令复用），并在未来支持稀疏距离矩阵计算（Phase 3）。
 
 ## 5. clust hier 实现规划与优化分析
 
@@ -248,6 +248,6 @@
 1. **基础图聚类**：已完成 MCL、CC、DBSCAN、K-Medoids。
 2. **系统发育构树**：已完成 UPGMA、NJ、Hierarchical Clustering (hier)。
 3. **评估体系**：`clust eval` (Partition) 已完成；`nwk eval` (Tree) 设计完成（未实现，见 [nwk-eval.md](nwk-eval.md)）。
-4. **向量支持**：已完成。`libs/clust/feature.rs` 提供 `FeatureVector` 基础设施，被 `necom dist vector`（欧氏/余弦/Jaccard 距离计算）与 `necom clust eval --coords`（Davies-Bouldin 指标）共用。
+4. **向量支持**：已完成。`libs/clust/feature.rs` 提供 `FeatureVector` 基础设施，被 `necom clust eval --coords`（Davies-Bouldin 指标）等内部评估逻辑复用。
 5. **统计聚类**：引入 GMM 实现，支持 BIC 模型选择（计划中）。
 6. **层次聚类扩展**：实现 HDBSCAN（计划中）。

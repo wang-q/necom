@@ -1,4 +1,4 @@
-# necom - Practical Genome Refiner
+# necom - Clustering, Matrix, and Phylogeny Toolkit
 
 [![Build](https://github.com/wang-q/necom/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/necom/actions)
 [![codecov](https://codecov.io/gh/wang-q/necom/branch/master/graph/badge.svg)](https://codecov.io/gh/wang-q/necom)

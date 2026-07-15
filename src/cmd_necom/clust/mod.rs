@@ -46,6 +46,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         Some(("mcl", sub_matches)) => mcl::execute(sub_matches),
         Some(("nj", sub_matches)) => nj::execute(sub_matches),
         Some(("upgma", sub_matches)) => upgma::execute(sub_matches),
-        _ => Ok(()),
+        _ => anyhow::bail!("unrecognized clust subcommand"),
     }
 }

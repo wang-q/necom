@@ -8,7 +8,7 @@
 
 *   **Python `clusteval`**: `fit()` 方法内部自动执行 Grid Search（尝试不同的 $k$ 或 $\epsilon$），计算内部指标（如 Silhouette），并返回最优结果。
 *   **`necom` Workflow**:
-    1.  **生成**: 使用 `necom clust cut --scan` 或 `necom clust dbscan --scan` 生成一系列候选聚类方案（Partitions）。
+    1.  **生成**: 使用 `necom clust cut --scan` 生成一系列候选聚类方案（Partitions）（`necom clust dbscan` 的 `--scan` 尚未实现）。
     2.  **评估**: 使用 `necom clust eval` 批量计算这些方案的评估指标。
     3.  **决策**: 用户根据指标（如 Silhouette 峰值、Elbow 点）选择最优参数。
 

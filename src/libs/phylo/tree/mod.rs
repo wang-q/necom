@@ -12,7 +12,7 @@ pub mod query;
 pub mod stat;
 pub mod support;
 #[cfg(test)]
-pub mod tests;
+mod tests;
 pub mod traversal;
 
 use super::node::{Node, NodeId};
