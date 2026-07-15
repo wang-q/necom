@@ -49,7 +49,7 @@ mod tests {
     use super::*;
     use std::io::BufReader;
 
-    fn sort_components(components: &mut Vec<Vec<usize>>) {
+    fn sort_components(components: &mut [Vec<usize>]) {
         for c in components.iter_mut() {
             c.sort();
         }

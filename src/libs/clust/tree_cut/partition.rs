@@ -211,6 +211,33 @@ pub fn format_clusters(clusters: &[Cluster], format: &str) -> anyhow::Result<Str
     Ok(out)
 }
 
+/// Format a partition as scan-mode TSV rows.
+/// Each row is "group_label\tcluster_id\tmember_name", clusters ordered by ID.
+pub fn format_scan_rows(partition: &Partition, tree: &Tree, group_label: &str) -> String {
+    let clusters_map = partition.get_clusters();
+    let mut cluster_ids: Vec<usize> = clusters_map.keys().copied().collect();
+    cluster_ids.sort();
+
+    let mut out = String::new();
+    for (i, cid) in cluster_ids.iter().enumerate() {
+        let cluster_label = i + 1;
+        if let Some(members) = clusters_map.get(cid) {
+            let mut member_names: Vec<String> = Vec::with_capacity(members.len());
+            for &mid in members {
+                if let Some(node) = tree.get_node(mid) {
+                    let name = node.name.clone().unwrap_or_else(|| format!("Leaf_{}", mid));
+                    member_names.push(name);
+                }
+            }
+            member_names.sort();
+            for name in member_names {
+                out.push_str(&format!("{}\t{}\t{}\n", group_label, cluster_label, name));
+            }
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -290,31 +317,4 @@ mod tests {
         let clusters = Vec::new();
         assert!(format_clusters(&clusters, "unknown").is_err());
     }
-}
-
-/// Format a partition as scan-mode TSV rows.
-/// Each row is "group_label\tcluster_id\tmember_name", clusters ordered by ID.
-pub fn format_scan_rows(partition: &Partition, tree: &Tree, group_label: &str) -> String {
-    let clusters_map = partition.get_clusters();
-    let mut cluster_ids: Vec<usize> = clusters_map.keys().copied().collect();
-    cluster_ids.sort();
-
-    let mut out = String::new();
-    for (i, cid) in cluster_ids.iter().enumerate() {
-        let cluster_label = i + 1;
-        if let Some(members) = clusters_map.get(cid) {
-            let mut member_names: Vec<String> = Vec::with_capacity(members.len());
-            for &mid in members {
-                if let Some(node) = tree.get_node(mid) {
-                    let name = node.name.clone().unwrap_or_else(|| format!("Leaf_{}", mid));
-                    member_names.push(name);
-                }
-            }
-            member_names.sort();
-            for name in member_names {
-                out.push_str(&format!("{}\t{}\t{}\n", group_label, cluster_label, name));
-            }
-        }
-    }
-    out
 }

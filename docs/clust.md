@@ -223,7 +223,6 @@ pgr clust hier matrix.phy --method average > tree.nwk
   - pgr: `pgr clust cut tree.nwk --k 20 > clusters.tsv`
 - SciPy cophenet:
   - Python: `c, dists = cophenet(Z, Y)`
-  - pgr: `pgr nwk eval tree.nwk --dist matrix.phy > metrics.tsv` [计划中]
 
 #### scikit-learn 映射
 
@@ -470,4 +469,4 @@ pgr clust cut tree.nwk --height 0.45 > final_clusters.tsv
   GeneA	1.2,0.5,3.3
   GeneB	1.1,0.6,3.1
   ```
-- **兼容性**：此格式与 `pgr dist vector` 的输出一致。
+- **兼容性**：这是一种通用的特征向量/坐标表示格式。

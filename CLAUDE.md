@@ -108,7 +108,14 @@
 
 **目录约定**: 任何被 `.gitignore` 完全忽略的目录，均仅作为参考资料，**不是本项目的一部分**。
 
-`pgr` (Practical Genome Refiner) 是一个多功能的基因组数据处理工具集。它旨在提供一套高效、易用的命令行工具，用于处理各种生物信息学格式（FASTA, FASTQ, AXT, MAF, PSL, Chain, Net, Newick 等）以及执行常见的基因组分析任务。
+这个 `pgr` clone 已被精简为聚焦聚类、距离矩阵与系统发育树的工具集。它仅保留以下命令：
+
+- `pgr clust` — 聚类算法与评估
+- `pgr mat` — 距离矩阵处理
+- `pgr nwk` — Newick 树操作与可视化
+- `pgr pl condense` — 基于分类学的树压缩流程
+
+其他命令（`fa`、`fas`、`fq`、`gff`、`axt`、`chain`、`lav`、`maf`、`ms`、`net`、`paf`、`plot`、`psl`、`twobit`、`dist` 以及 `pl` 的其余子命令）均已被移除。
 
 ## 构建命令
 
@@ -137,13 +144,18 @@ cargo test
     - 使用 `clap` 进行参数解析。
     - 在 `main` 函数中注册所有子命令模块。
 - **`src/lib.rs`** - 库入口，导出模块。
-- **`src/cmd_pgr/`** - 命令实现模块。按功能/格式分组：
-    - **Sequences**: `fa` (FASTA), `fq` (FASTQ), `fas` (Block FA), `twobit` (命令 `2bit`), `gff`.
-    - **Alignments**: `axt`, `chain`, `net`, `maf`, `paf`, `psl`, `lav`.
-    - **Analysis**: `clust` (Clustering), `dist` (Distance), `mat` (Matrix), `nwk` (Phylogeny/Newick), `plot`.
-    - **Misc**: `ms` (Simulation), `pl` (Pipelines).
-- **`src/libs/`** - 共享工具库和核心逻辑。
-  - **`fmt/`** - 格式 I/O: `fa`, `fas`, `fq`, `axt`, `maf`, `psl`, `lav`, `twobit`, `vcf`.
+- **`src/cmd_pgr/`** - 命令实现模块。当前仅保留：
+    - `clust` (Clustering)
+    - `mat` (Matrix)
+    - `nwk` (Phylogeny/Newick)
+    - `pl` (Pipelines，仅 `condense` 子命令)
+- **`src/libs/`** - 共享工具库和核心逻辑。当前仅保留：
+  - **`clust/`** - 聚类算法实现。
+    - **`hier.rs`**: 层次聚类 (NN-chain 算法)。
+    - **`dbscan.rs`, `mcl.rs`, `k_medoids.rs`**: 其他聚类算法。
+    - **`nj.rs`, `upgma.rs`**: 建树算法 (Neighbor-Joining, UPGMA)。
+    - **`tree_cut/`**: 树切分算法。
+    - **`eval/`**: 聚类评估指标。
   - **`phylo/`** - 系统发育分析核心库。
     - **`node.rs`/`parser.rs`/`error.rs`**: 树节点定义、Newick 解析、错误类型（位于 `phylo/` 根级）。
     - **`cmp.rs`**: 树拓扑比较 (`TreeComparison` trait，Robinson-Foulds 等)。
@@ -152,25 +164,16 @@ cargo test
       - `traversal.rs`/`query.rs`: 遍历 (pre/post/level-order) 与查询 (LCA/路径/距离/单系性)。
       - `stat.rs`/`balance.rs`/`distance.rs`/`support.rs`: 统计、平衡性指标、距离、支持值。
       - `io/`: 格式 I/O — Newick/DOT/SVG/Forest。
-  - **`poa/`** - 偏序比对 (Partial Order Alignment) 实现。
-  - **`chain/`** - 基因组比对链 (Chain/Net) 处理逻辑。
-  - **`clust/`** - 聚类算法实现。
-    - **`hier.rs`**: 层次聚类 (NN-chain 算法)。
-    - **`dbscan.rs`, `mcl.rs`, `k_medoids.rs`**: 其他聚类算法。
-    - **`nj.rs`, `upgma.rs`**: 建树算法 (Neighbor-Joining, UPGMA)。
-    - **`tree_cut/`**: 树切分算法。
-    - **`eval/`**: 聚类评估指标。
-  - **`paf/`** - PAF 处理: 记录读写、查询、图构建、索引。
-  - **`fasta/`** - FASTA 操作 (chunk/dedup/filter/stat)。
   - **`pairmat/`** - 配对距离矩阵。
+  - **`linalg.rs`** - 线性代数/距离计算辅助。
+  - **`par.rs`** - 并行计算辅助。
   - **`io.rs`** - I/O 辅助函数。
-  - **`alignment/`**, **`fas_multiz/`**, **`ms/`**, **`plot/`** 等 - 特定格式处理逻辑。
+  - **`pl/`** - `pl condense` 的共享流程上下文。
 
 ## 关键设计文档
 
-- **`docs/`**: 用户面向命令文档（英文），每个 `pgr <command>` 对应一个 `docs/<command>.md`（子命令采用 `<command>-<subcommand>.md` 形式，如 `clust-cut.md`）；`docs/formats/` 为格式规范参考。注：`2bit` 命令的文档为 `docs/twobit.md`（历史命名）。
-- **`notes/`**: 开发者面向笔记（中文）：`notes/design/`（设计稿/移植笔记）、`notes/references/`（外部工具源码分析）、`notes/` 根（项目理解/场景规划）。
-- **`notes/project-understanding.md`**: 项目整体理解（架构、命令模块、核心库、现状评估、设计模式），含各文档的索引与定位，需要时查阅。
+- **`docs/`**: 用户面向命令文档（英文）。当前保留的文档包括 `clust.md`、`clust-cut.md`、`clust-eval.md`、`mat.md`、`mat-transform.md`、`nwk.md`，以及 `docs/formats/` 下的 `README.md` 和 `distance.md`。
+- **`notes/`**: 开发者面向笔记（中文）：`notes/design/` 下保留与 `clust` / `nwk` / `phylo` 相关的设计稿，其余笔记已随命令移除而删除。
 
 ## 命令结构 (Command Structure)
 
@@ -186,17 +189,15 @@ cargo test
 
 ### 关键依赖
 
-- **`noodles`**: 处理 FASTA, FASTQ, BGZF, GFF 等标准格式。
 - **`clap`**: 命令行参数解析。
 - **`anyhow`**: 错误处理。
 - **`rayon`**: 并行计算。
 - **`nom`**: 文本解析 (Newick 等)。
 - **`regex`**: 正则表达式。
-- **`coitrees`**: 区间树索引 (PAF/loc 模块核心)。
 - **`intspan`**: 区间集合数据结构。
-- **`petgraph`**: 图结构 (chain/paf 图构建)。
+- **`petgraph`**: 图结构。
 - **`indexmap`**: 保序 HashMap (名称→id 映射统一模式)。
-- **`serde` + `bincode`**: PAF 索引 `.paf.idx` 持久化。
+- **`rand` + `num-traits`**: 随机化与数值计算（聚类算法）。
 
 ## 开发工作流
 
@@ -227,17 +228,10 @@ cargo test
 - **`after_help`**: Uses raw string `r###"..."###`.
     - **Description**: Detailed explanation.
     - **Notes**: Bullet points starting with `*`.
-        - Standard note for `fa`/`fas`: `* Supports both plain text and gzipped (.gz) files`
-        - Standard note for `fa`/`fas`: `* Reads from stdin if input file is 'stdin'`
-        - Standard note for `2bit`: `* 2bit files are binary and require random access (seeking)`
-        - Standard note for `2bit`: `* Does not support stdin or gzipped inputs`
+        - Standard note for text inputs: `* Reads from stdin if input file is 'stdin'`
     - **Examples**: Numbered list (`1.`, `2.`) with code blocks indented by 3 spaces.
 - **Arguments**:
     - **Input**: `infiles` (multiple) or `infile` (single).
-        - Help: `Input [FASTA|block FA|2bit] file(s) to process`.
+        - Help: `Input file(s) to process`.
     - **Output**: `outfile` (`-o`, `--outfile`).
         - Help: `Output filename. [stdout] for screen`.
-- **Terminology**:
-    - `pgr fa` -> "FASTA"
-    - `pgr fas` -> "block FA"
-    - `pgr 2bit` -> "2bit"

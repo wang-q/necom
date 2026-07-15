@@ -503,10 +503,10 @@ pub fn mode_arg(
 }
 
 // ============================================================================
-// fa subcommand additional builders
+// mat subcommand additional builders
 // ============================================================================
 
-/// Positional `name_list` file argument for fa subcommands.
+/// Positional `name_list` file argument (used by `mat subset`).
 pub fn fa_name_list_arg(required: bool) -> Arg {
     Arg::new("name_list")
         .required(required)

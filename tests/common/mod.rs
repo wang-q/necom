@@ -19,7 +19,6 @@ impl PgrCmd {
         self
     }
 
-    #[allow(dead_code)]
     pub fn args(mut self, args: &[&str]) -> Self {
         self.cmd.args(args);
         self
@@ -31,7 +30,6 @@ impl PgrCmd {
         self
     }
 
-    #[allow(dead_code)]
     pub fn run(mut self) -> (String, String) {
         if let Some(input) = self.stdin {
             self.cmd.write_stdin(input);
@@ -60,18 +58,5 @@ impl PgrCmd {
         let stdout = String::from_utf8(output.stdout.clone()).expect("Invalid UTF-8 in stdout");
         let stderr = String::from_utf8(output.stderr.clone()).expect("Invalid UTF-8 in stderr");
         (stdout, stderr)
-    }
-}
-
-#[allow(dead_code)]
-pub fn assert_close(actual: f64, expected: f64, epsilon: f64) {
-    if (actual - expected).abs() > epsilon {
-        panic!(
-            "Assertion failed: {} is not close to {} (epsilon: {}, diff: {})",
-            actual,
-            expected,
-            epsilon,
-            (actual - expected).abs()
-        );
     }
 }
