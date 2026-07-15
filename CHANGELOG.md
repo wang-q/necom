@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.3.0 - 2026-07-15
+
 ### Breaking Changes
 
 *   Renamed project from `pgr` to `necom`.

@@ -19,7 +19,7 @@ The name is formed from its three command families — **NWK**, **CLUST**, and *
 
 ## Install
 
-Current release: 0.2.0
+Current release: 0.3.0
 
 `necom` uses unstable Rust features (notably `portable_simd`), so a **nightly** toolchain is required:
 
