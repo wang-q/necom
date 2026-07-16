@@ -44,3 +44,25 @@ fn test_nwk_support() {
     // 2/3 * 100 = 66
     assert!(stdout.contains("((A,B)66,(C,D)66)100;"));
 }
+
+#[test]
+fn test_nwk_support_overwrites_internal_labels() {
+    // Target tree has an internal label "OldLabel" that should be overwritten.
+    let mut target_file = NamedTempFile::new().unwrap();
+    writeln!(target_file, "((A,B)OldLabel,(C,D));").unwrap();
+
+    let mut replicates_file = NamedTempFile::new().unwrap();
+    writeln!(replicates_file, "((A,B),(C,D));").unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "support",
+            target_file.path().to_str().unwrap(),
+            replicates_file.path().to_str().unwrap(),
+        ])
+        .run();
+
+    assert!(!stdout.contains("OldLabel"));
+    assert!(stdout.contains("((A,B)1,(C,D)1)1;"));
+}

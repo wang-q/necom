@@ -375,9 +375,11 @@ fn test_clust_hier_all_zero() {
     assert!(!trimmed.is_empty());
     assert!(trimmed.starts_with('('));
     assert!(trimmed.ends_with(';'));
-    assert!(stdout.contains("A:"));
-    assert!(stdout.contains("B:"));
-    assert!(stdout.contains("C:"));
+    assert!(stdout.contains('A'));
+    assert!(stdout.contains('B'));
+    assert!(stdout.contains('C'));
+    // Zero branch lengths are omitted on output, so no `:0` should appear.
+    assert!(!stdout.contains(":0"));
 }
 
 #[test]

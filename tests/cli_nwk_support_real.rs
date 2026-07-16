@@ -27,6 +27,11 @@ fn check_support_and_length(
                 if let Some(node) = tree.get_node(node_id) {
                     if let Some(name) = &node.name {
                         if name == expected_support {
+                            // Zero-length edges are omitted on output, so a missing
+                            // length is equivalent to 0.0.
+                            if expected_length.abs() < epsilon && node.length.is_none() {
+                                return true;
+                            }
                             if let Some(len) = node.length {
                                 let diff: f64 = (len - expected_length).abs();
                                 if diff < epsilon {

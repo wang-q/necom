@@ -68,13 +68,12 @@ fn to_newick_recursive(tree: &Tree, node_id: NodeId, indent: &str, depth: usize)
     }
 
     if let Some(len) = node.length {
-        if len.is_finite() && len >= 0.0 {
+        let len = super::super::finite_length(Some(len));
+        if len > 0.0 {
             node_info.push_str(&format!(":{}", len));
-        } else {
-            // Non-finite or negative lengths are normalized to 0.0 on output,
-            // matching the documented "treated as 0.0" semantics.
-            node_info.push_str(":0");
         }
+        // len == 0.0 (including NaN/inf/negative inputs) is omitted to keep
+        // cladograms clean and match the documented output semantics.
     }
 
     if let Some(props) = &node.properties {
@@ -226,14 +225,22 @@ mod tests {
 
         tree.get_node_mut(root).unwrap().set_name("Root");
         tree.get_node_mut(a).unwrap().set_name("A");
+
+        // NaN, infinity, negative, and zero lengths are all omitted on output.
         tree.get_node_mut(a).unwrap().length = Some(f64::NAN);
-        assert_eq!(to_newick(&tree), "(A:0)Root;");
+        assert_eq!(to_newick(&tree), "(A)Root;");
 
         tree.get_node_mut(a).unwrap().length = Some(f64::INFINITY);
-        assert_eq!(to_newick(&tree), "(A:0)Root;");
+        assert_eq!(to_newick(&tree), "(A)Root;");
 
         tree.get_node_mut(a).unwrap().length = Some(f64::NEG_INFINITY);
-        assert_eq!(to_newick(&tree), "(A:0)Root;");
+        assert_eq!(to_newick(&tree), "(A)Root;");
+
+        tree.get_node_mut(a).unwrap().length = Some(-1.0);
+        assert_eq!(to_newick(&tree), "(A)Root;");
+
+        tree.get_node_mut(a).unwrap().length = Some(0.0);
+        assert_eq!(to_newick(&tree), "(A)Root;");
 
         tree.get_node_mut(a).unwrap().length = Some(0.5);
         assert_eq!(to_newick(&tree), "(A:0.5)Root;");

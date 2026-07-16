@@ -112,6 +112,25 @@ pub fn is_rooted(tree: &Tree) -> bool {
     false
 }
 
+/// Check whether the tree has any non-root branch lengths.
+///
+/// The root node's length has no parent edge, so it is ignored. This is used
+/// by visualization commands to decide between cladogram and phylogram modes.
+pub fn has_branch_lengths(tree: &Tree) -> bool {
+    if let Some(root) = tree.get_root() {
+        let ids = tree.preorder(&root);
+        ids.iter().any(|&id| {
+            id != root
+                && tree
+                    .get_node(id)
+                    .map(|n| n.length.is_some())
+                    .unwrap_or(false)
+        })
+    } else {
+        false
+    }
+}
+
 /// Calculate diameter (longest path between any two nodes).
 pub fn diameter(tree: &Tree, weighted: bool) -> f64 {
     #[derive(Clone, Copy)]

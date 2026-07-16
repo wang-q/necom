@@ -70,19 +70,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .ok_or_else(|| anyhow::anyhow!("no trees found in {}", infile))?;
 
     // Auto-detect: if any non-root node has a branch length, draw phylogram.
-    // The root node's length has no parent edge, so it is ignored.
-    let has_bl = if let Some(root) = tree.get_root() {
-        let ids = tree.preorder(&root);
-        ids.iter().any(|&id| {
-            id != root
-                && tree
-                    .get_node(id)
-                    .map(|n| n.length.is_some())
-                    .unwrap_or(false)
-        })
-    } else {
-        false
-    };
+    let has_bl = necom::libs::phylo::tree::stat::has_branch_lengths(&tree);
     let height = if has_bl {
         tree.get_root()
             .map(|r| tree.get_height(r, true))

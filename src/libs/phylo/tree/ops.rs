@@ -27,22 +27,34 @@ pub fn add_child(tree: &mut Tree, parent_id: NodeId, child_id: NodeId) -> anyhow
     Ok(())
 }
 
-/// Soft remove a node and its descendants (optional recursive).
-/// If recursive is false, children are orphaned (parent set to None).
-pub fn remove_node(tree: &mut Tree, id: NodeId, recursive: bool) {
-    if id >= tree.nodes.len() || tree.nodes[id].deleted {
-        return;
-    }
-
-    // 1. Handle Parent Relation
+/// Remove a node from its parent's children list, mark it as deleted, and
+/// clear its parent/children pointers. Updates the tree root if necessary.
+fn detach_and_delete(tree: &mut Tree, id: NodeId) {
     if let Some(parent_id) = tree.nodes[id].parent {
-        // Remove self from parent's children list
         if let Some(parent) = tree.get_node_mut(parent_id) {
             parent.children.retain(|&child| child != id);
         }
     }
 
-    // 2. Handle Children
+    if let Some(node) = tree.get_node_mut(id) {
+        node.deleted = true;
+        node.children.clear();
+        node.parent = None;
+    }
+
+    if tree.root == Some(id) {
+        tree.root = None;
+    }
+}
+
+/// Soft remove a node and its descendants (optional recursive).
+/// If recursive is false, children are orphaned (parent set to None).
+pub fn remove_node(tree: &mut Tree, id: NodeId, recursive: bool) {
+    if tree.get_node(id).is_none() {
+        return;
+    }
+
+    // 1. Handle Children
     let children = tree.nodes[id].children.clone();
     for child_id in children {
         if recursive {
@@ -55,17 +67,8 @@ pub fn remove_node(tree: &mut Tree, id: NodeId, recursive: bool) {
         }
     }
 
-    // 3. Mark as deleted
-    if let Some(node) = tree.get_node_mut(id) {
-        node.deleted = true;
-        node.children.clear();
-        node.parent = None;
-    }
-
-    // 4. Update root if needed
-    if tree.root == Some(id) {
-        tree.root = None;
-    }
+    // 2. Detach from parent and mark deleted
+    detach_and_delete(tree, id);
 }
 
 /// Collapse a node, removing it and connecting its children to its parent.
@@ -121,12 +124,8 @@ pub fn collapse_node(tree: &mut Tree, id: NodeId) -> anyhow::Result<()> {
         }
     }
 
-    // 4. Mark deleted
-    if let Some(node) = tree.get_node_mut(id) {
-        node.deleted = true;
-        node.children.clear();
-        node.parent = None;
-    }
+    // 4. Detach and mark deleted
+    detach_and_delete(tree, id);
 
     Ok(())
 }
@@ -427,24 +426,24 @@ pub fn reroot_at(
         let length = lengths[i];
 
         // a. Remove child from parent's children
-        if let Some(parent) = tree.nodes.get_mut(parent_id) {
+        if let Some(parent) = tree.get_node_mut(parent_id) {
             parent.children.retain(|&x| x != child_id);
         }
 
         // b. Add parent to child's children
-        if let Some(child) = tree.nodes.get_mut(child_id) {
+        if let Some(child) = tree.get_node_mut(child_id) {
             child.children.push(parent_id);
         }
 
         // c. Update parent's parent pointer and length
-        if let Some(parent) = tree.nodes.get_mut(parent_id) {
+        if let Some(parent) = tree.get_node_mut(parent_id) {
             parent.parent = Some(child_id);
             parent.length = length;
         }
     }
 
     // 4. Finalize new root
-    if let Some(new_root) = tree.nodes.get_mut(new_root_id) {
+    if let Some(new_root) = tree.get_node_mut(new_root_id) {
         new_root.parent = None;
         new_root.length = None;
     }

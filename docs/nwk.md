@@ -101,6 +101,7 @@ necom nwk support [OPTIONS] <target> <replicates>
 ```
 
 *   `-p, --percent`: Output support values as percentages (0–100).
+*   Overwrites existing internal node labels in the target tree.
 
 ---
 

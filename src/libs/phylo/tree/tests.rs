@@ -598,6 +598,22 @@ fn nan_length_diameter() {
 }
 
 #[test]
+fn test_has_branch_lengths() {
+    let tree = Tree::from_newick("(A,B)Root;").unwrap();
+    assert!(!super::stat::has_branch_lengths(&tree));
+
+    let tree = Tree::from_newick("(A:1,B)Root;").unwrap();
+    assert!(super::stat::has_branch_lengths(&tree));
+
+    let tree = Tree::from_newick("(A:0,B:0)Root;").unwrap();
+    assert!(super::stat::has_branch_lengths(&tree));
+
+    // Root length is ignored.
+    let tree = Tree::from_newick("(A,B)Root:100;").unwrap();
+    assert!(!super::stat::has_branch_lengths(&tree));
+}
+
+#[test]
 fn nan_length_get_node_with_longest_edge() {
     let mut tree = Tree::new();
     let root = tree.add_node();

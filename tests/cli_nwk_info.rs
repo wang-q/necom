@@ -605,3 +605,49 @@ fn command_distance_reference_parent() {
     assert!(stdout.contains("j\t1"));
     assert!(stdout.contains("k\t0"));
 }
+
+// ================================================================================================
+// Edge cases
+// ================================================================================================
+
+#[test]
+fn command_stat_empty_input() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&["nwk", "stat", "stdin"])
+        .stdin("")
+        .run_fail();
+
+    assert!(!stderr.is_empty());
+}
+
+#[test]
+fn command_indent_single_node() {
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "indent", "stdin", "--compact"])
+        .stdin("A;")
+        .run();
+
+    assert_eq!(stdout.trim(), "A;");
+}
+
+#[test]
+fn command_indent_non_finite_lengths_omitted() {
+    // NaN, negative, and infinite branch lengths are omitted on output.
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "indent", "stdin", "--compact"])
+        .stdin("(A:-1,B:NaN)Root;")
+        .run();
+
+    assert_eq!(stdout.trim(), "(A,B)Root;");
+}
+
+#[test]
+fn command_indent_zero_length_omitted() {
+    // Zero branch lengths are also omitted to keep cladograms clean.
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "indent", "stdin", "--compact"])
+        .stdin("(A:0,B:0)Root;")
+        .run();
+
+    assert_eq!(stdout.trim(), "(A,B)Root;");
+}
