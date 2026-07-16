@@ -385,6 +385,17 @@ fn command_label_multi_tree() {
     assert!(stdout.contains("Gorilla")); // Tree 4/5
 }
 
+#[test]
+fn command_label_single_node_monophyly() {
+    // A single selected internal node should not pass the -M monophyly check.
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "label", "stdin", "-n", "X", "-M"])
+        .stdin("((A,B)X,(C,D)Y);")
+        .run();
+
+    assert!(stdout.trim().is_empty());
+}
+
 // ================================================================================================
 // necom nwk distance
 // ================================================================================================

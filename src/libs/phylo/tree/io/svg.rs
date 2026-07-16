@@ -184,7 +184,7 @@ pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
             "\t<text x=\"{}\" y=\"{}\" text-anchor=\"middle\" class=\"scale-text\">{}</text>\n",
             bar_x + scale_px / 2.0,
             bar_y + 14.0,
-            scale
+            crate::libs::phylo::cmp::format_float(scale)
         ));
     }
 

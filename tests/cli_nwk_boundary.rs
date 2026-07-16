@@ -112,3 +112,59 @@ fn command_nested_top_level_comments() {
     assert!(!stdout.contains("header"));
     assert!(!stdout.contains("tail"));
 }
+
+#[test]
+fn command_to_svg_invalid_width() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&["nwk", "to-svg", "stdin", "-w", "0"])
+        .stdin("(A,B)R;")
+        .run_fail();
+
+    assert!(stderr.contains("positive finite number"));
+}
+
+#[test]
+fn command_to_svg_invalid_vskip() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&["nwk", "to-svg", "stdin", "-v=-1"])
+        .stdin("(A,B)R;")
+        .run_fail();
+
+    assert!(stderr.contains("positive finite number"));
+}
+
+#[test]
+fn command_deroot_symmetric() {
+    // Deroot should collapse both sides of a bifurcating root.
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "reroot", "stdin", "-d"])
+        .stdin("((A,B),(C,D));")
+        .run();
+
+    assert_eq!(stdout.trim(), "(A,B,C,D);");
+}
+
+#[test]
+fn command_label_duplicate_name_warning() {
+    // Duplicate node names should trigger a warning when selected by name.
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["nwk", "label", "stdin", "-n", "A"])
+        .stdin("((A,A),(B,C));")
+        .run();
+
+    assert!(stdout.contains("A"));
+    assert!(stderr.contains("duplicate node name"));
+}
+
+#[test]
+fn command_prune_duplicate_name_warning() {
+    // Duplicate node names should trigger a warning when pruned.
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["nwk", "prune", "stdin", "-n", "A"])
+        .stdin("((A,A),(B,C));")
+        .run();
+
+    assert!(stderr.contains("duplicate node name"));
+    // Only one A is removed, leaving the other.
+    assert!(stdout.contains("A"));
+}

@@ -143,9 +143,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         let ids: BTreeSet<usize> = ids_pos.intersection(&ids_name).cloned().collect();
 
-        // Print nothing if check_monophyly() failed
+        // Print nothing if monophyly check failed.
+        // A single node does not constitute a monophyletic group in this CLI context.
         let ids_vec: Vec<usize> = ids.iter().cloned().collect();
-        if is_monophyly && !tree.is_monophyletic(&ids_vec) {
+        if is_monophyly && (ids_vec.len() < 2 || !tree.is_monophyletic(&ids_vec)) {
             continue;
         }
 

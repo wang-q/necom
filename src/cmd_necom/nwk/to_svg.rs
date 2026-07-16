@@ -56,9 +56,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let width: f64 = *args
         .get_one::<f64>("width")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: width"))?;
+    if width <= 0.0 || !width.is_finite() {
+        anyhow::bail!("--width must be a positive finite number");
+    }
+
     let vskip: f64 = *args
         .get_one::<f64>("vskip")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: vskip"))?;
+    if vskip <= 0.0 || !vskip.is_finite() {
+        anyhow::bail!("--vskip must be a positive finite number");
+    }
 
     let infile = args
         .get_one::<String>("infile")

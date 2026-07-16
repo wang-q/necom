@@ -102,8 +102,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let ids_vec: Vec<usize> = ids.iter().cloned().collect();
         let mut sub_root_id = tree.get_lca(&ids_vec)?;
 
-        // Monophyly check
-        if is_monophyly && !tree.is_monophyletic(&ids_vec) {
+        // Monophyly check. A single node does not constitute a monophyletic group.
+        if is_monophyly && (ids_vec.len() < 2 || !tree.is_monophyletic(&ids_vec)) {
             continue;
         }
 
@@ -128,7 +128,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 anyhow::bail!("--condense requires a non-empty name argument");
             }
 
-            tree.condense_subtree(sub_root_id, name, ids.len())?;
+            // Count named nodes in the selected set, matching the documented semantics.
+            let member_count = ids
+                .iter()
+                .filter(|&&id| tree.get_node(id).map(|n| n.name.is_some()).unwrap_or(false))
+                .count();
+            tree.condense_subtree(sub_root_id, name, member_count)?;
 
             let out_string = tree.to_newick();
             writer.write_fmt(format_args!("{}\n", out_string))?;

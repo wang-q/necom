@@ -400,28 +400,63 @@ pub fn remove_degree_two_nodes(tree: &mut Tree) -> anyhow::Result<()> {
 }
 
 /// Deroot the tree by converting a bifurcating root into a multifurcating root.
+///
+/// Both children of the root are removed and their children are promoted to be
+/// direct children of the root. Edge lengths from the root to each removed
+/// child are added to that child's descendants, matching the behavior of
+/// `collapse_node`.
 pub fn deroot(tree: &mut Tree) -> anyhow::Result<()> {
     let root = tree.root.ok_or_else(|| anyhow::anyhow!("Empty tree"))?;
-    let node = tree
+    let children = tree
         .get_node(root)
-        .ok_or_else(|| anyhow::anyhow!("root node {} not found", root))?;
-    let children = node.children.clone();
+        .ok_or_else(|| anyhow::anyhow!("root node {} not found", root))?
+        .children
+        .clone();
 
     if children.len() != 2 {
         anyhow::bail!("Root is not bifurcating (degree != 2)");
     }
 
-    let c1 = children[0];
-    let c2 = children[1];
+    let mut new_children = Vec::new();
+    let mut to_delete = Vec::new();
 
-    // Weight = 1 (self) + descendants
-    let weight1 = 1 + super::query::count_descendants(tree, c1);
-    let weight2 = 1 + super::query::count_descendants(tree, c2);
+    for &child_id in &children {
+        let is_leaf = tree
+            .get_node(child_id)
+            .map(|child| child.is_leaf())
+            .unwrap_or(false);
 
-    // Collapse the heavier one. If equal, pick first (c1).
-    let target = if weight1 >= weight2 { c1 } else { c2 };
+        if is_leaf {
+            // Leaf children remain direct children of the root.
+            new_children.push(child_id);
+        } else {
+            to_delete.push(child_id);
+            let (parent_len, grandchildren) = {
+                let child = tree
+                    .get_node(child_id)
+                    .ok_or_else(|| anyhow::anyhow!("child node {} not found", child_id))?;
+                (child.finite_length(), child.children.clone())
+            };
+            for &grandchild_id in &grandchildren {
+                if let Some(grandchild) = tree.get_node_mut(grandchild_id) {
+                    grandchild.parent = Some(root);
+                    let new_len = parent_len + grandchild.finite_length();
+                    grandchild.length = if new_len > 0.0 { Some(new_len) } else { None };
+                }
+                new_children.push(grandchild_id);
+            }
+        }
+    }
 
-    collapse_node(tree, target)
+    if let Some(root_node) = tree.get_node_mut(root) {
+        root_node.children = new_children;
+    }
+
+    for id in to_delete {
+        detach_and_delete(tree, id);
+    }
+
+    Ok(())
 }
 
 /// Reroot the tree at the specified node.
@@ -822,7 +857,7 @@ pub fn reroot_at_longest_branch(tree: &mut Tree, process_support: bool) -> anyho
         .iter()
         .any(|n| !n.deleted && n.length.map(|l| l > 0.0).unwrap_or(false));
     if !has_length {
-        log::warn!("reroot_at_longest_branch: tree has no positive branch lengths, skipping");
+        log::debug!("reroot_at_longest_branch: tree has no positive branch lengths, skipping");
         return Ok(());
     }
 

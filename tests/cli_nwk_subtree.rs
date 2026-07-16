@@ -202,3 +202,35 @@ fn command_subtree_condense_basic() {
     // Pongo should still be there (not in the condensed group)
     assert!(stdout.contains("Pongo"));
 }
+
+#[test]
+fn command_subtree_single_node_monophyly() {
+    // A single selected internal node should not pass the -M monophyly check.
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "subtree", "stdin", "-n", "X", "-M"])
+        .stdin("((A,B)X,(C,D)Y);")
+        .run();
+
+    assert!(stdout.trim().is_empty());
+}
+
+#[test]
+fn command_subtree_condense_named_member_count() {
+    // member=<count> should count only named nodes in the selected subtree.
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "subtree",
+            "stdin",
+            "-n",
+            "Root",
+            "-D",
+            "--condense",
+            "Z",
+        ])
+        .stdin("((A,B)X,(C,D)Y)Root;")
+        .run();
+
+    // Named nodes: A, B, X, C, D, Y, Root = 7
+    assert!(stdout.contains("member=7"));
+}

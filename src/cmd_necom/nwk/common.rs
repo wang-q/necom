@@ -1,6 +1,6 @@
 //! Shared helpers for `necom nwk` subcommands.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use anyhow::anyhow;
 use clap::ArgMatches;
@@ -71,10 +71,41 @@ pub(crate) fn format_label_columns(node: &Node, name: &str, columns: &[String]) 
     out
 }
 
+/// Returns the set of node names that appear more than once in the tree.
+fn duplicate_names(tree: &Tree) -> HashSet<String> {
+    let Some(root) = tree.get_root() else {
+        return HashSet::new();
+    };
+
+    let mut counts = HashMap::new();
+    for id in tree.preorder(root) {
+        if let Some(name) = tree.get_node(id).and_then(|n| n.name.as_deref()) {
+            *counts.entry(name.to_string()).or_insert(0usize) += 1;
+        }
+    }
+
+    counts
+        .into_iter()
+        .filter(|(_, count)| *count > 1)
+        .map(|(name, _)| name)
+        .collect()
+}
+
+/// Warn once for each duplicate name that is being matched by name.
+fn warn_duplicate_name(duplicates: &HashSet<String>, name: &str) {
+    if duplicates.contains(name) {
+        log::warn!(
+            "duplicate node name '{}' matched multiple nodes; using one match",
+            name
+        );
+    }
+}
+
 /// Returns IDs of named nodes matching the name selection rules from CLI args.
 pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTreeSet<NodeId>> {
     // IDs with names
     let id_of: BTreeMap<_, _> = tree.get_name_id();
+    let duplicates = duplicate_names(tree);
 
     // all matched IDs
     let mut ids = BTreeSet::new();
@@ -86,6 +117,7 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
             .ok_or_else(|| anyhow!("missing --node values"))?;
         for name in names {
             if let Some(id) = id_of.get(name) {
+                warn_duplicate_name(&duplicates, name);
                 ids.insert(*id);
             } else {
                 log::warn!("node not found: {}", name);
@@ -100,6 +132,7 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
             .ok_or_else(|| anyhow!("missing --name-list value"))?;
         for name in necom::libs::io::read_names::<Vec<String>>(file)?.iter() {
             if let Some(id) = id_of.get(name) {
+                warn_duplicate_name(&duplicates, name);
                 ids.insert(*id);
             } else {
                 log::warn!("name-list node not found: {}", name);
@@ -116,6 +149,7 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
             let re = RegexBuilder::new(regex).case_insensitive(true).build()?;
             for (name, id) in id_of.iter() {
                 if re.is_match(name) {
+                    warn_duplicate_name(&duplicates, name);
                     ids.insert(*id);
                 }
             }
@@ -201,6 +235,7 @@ pub(crate) fn match_nodes_and_lca(
     lca_key: &str,
 ) -> anyhow::Result<BTreeSet<NodeId>> {
     let id_of: BTreeMap<_, _> = tree.get_name_id();
+    let duplicates = duplicate_names(tree);
     let mut ids = BTreeSet::new();
 
     // Explicit --node names
@@ -210,6 +245,7 @@ pub(crate) fn match_nodes_and_lca(
             .ok_or_else(|| anyhow::anyhow!("missing --{} values", node_key))?
         {
             if let Some(id) = id_of.get(name) {
+                warn_duplicate_name(&duplicates, name);
                 ids.insert(*id);
             } else {
                 log::warn!("node not found: {}", name);
@@ -224,6 +260,7 @@ pub(crate) fn match_nodes_and_lca(
             .ok_or_else(|| anyhow::anyhow!("missing --name-list value"))?;
         for name in necom::libs::io::read_names::<Vec<String>>(file)?.iter() {
             if let Some(id) = id_of.get(name) {
+                warn_duplicate_name(&duplicates, name);
                 ids.insert(*id);
             } else {
                 log::warn!("name-list node not found: {}", name);
@@ -240,6 +277,7 @@ pub(crate) fn match_nodes_and_lca(
             let re = RegexBuilder::new(regex).case_insensitive(true).build()?;
             for (name, id) in id_of.iter() {
                 if re.is_match(name) {
+                    warn_duplicate_name(&duplicates, name);
                     ids.insert(*id);
                 }
             }
@@ -253,6 +291,8 @@ pub(crate) fn match_nodes_and_lca(
             .ok_or_else(|| anyhow::anyhow!("missing --{} values", lca_key))?
         {
             let (first, last) = parse_lca_pair(lca)?;
+            warn_duplicate_name(&duplicates, first);
+            warn_duplicate_name(&duplicates, last);
             match (id_of.get(first), id_of.get(last)) {
                 (Some(id1), Some(id2)) => {
                     let ancestor = tree.get_common_ancestor(*id1, *id2)?;
@@ -296,5 +336,21 @@ mod tests {
         assert!(parse_lca_pair(",b").is_err());
         assert!(parse_lca_pair("a,").is_err());
         assert!(parse_lca_pair("").is_err());
+    }
+
+    #[test]
+    fn duplicate_names_finds_duplicates() {
+        let tree = Tree::from_newick("((A,A),(B,C));").unwrap();
+        let dups = duplicate_names(&tree);
+        assert!(dups.contains("A"));
+        assert!(!dups.contains("B"));
+        assert!(!dups.contains("C"));
+    }
+
+    #[test]
+    fn duplicate_names_empty_for_unique() {
+        let tree = Tree::from_newick("((A,B),(C,D));").unwrap();
+        let dups = duplicate_names(&tree);
+        assert!(dups.is_empty());
     }
 }
