@@ -7,12 +7,16 @@ use crate::libs::phylo::node::{Node, NodeId};
 pub fn get_path_from_root(tree: &Tree, id: NodeId) -> anyhow::Result<Vec<NodeId>> {
     let mut path = Vec::new();
     let mut current = id;
+    let mut visited = BTreeSet::new();
 
     if tree.get_node(current).is_none() {
         anyhow::bail!("Node {} not found", current);
     }
 
     loop {
+        if !visited.insert(current) {
+            anyhow::bail!("cycle detected on path to root at node {}", current);
+        }
         path.push(current);
         let node = tree.get_node(current).ok_or_else(|| {
             anyhow::anyhow!(
@@ -77,8 +81,15 @@ pub fn get_distance(tree: &Tree, a: NodeId, b: NodeId) -> anyhow::Result<(f64, u
         let mut weighted = 0.0;
         let mut topo = 0;
         let mut curr = start;
+        let mut visited = BTreeSet::new();
 
         while curr != end {
+            if !visited.insert(curr) {
+                anyhow::bail!(
+                    "cycle detected while computing distance to LCA at node {}",
+                    curr
+                );
+            }
             let node = tree.get_node(curr).ok_or_else(|| {
                 anyhow::anyhow!(
                     "Node {} not found or deleted while computing distance to LCA",

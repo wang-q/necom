@@ -1,5 +1,6 @@
 use super::*;
 use crate::libs::phylo::TreeComparison;
+use std::collections::BTreeSet;
 
 #[test]
 fn test_tree_traversals() {
@@ -828,4 +829,62 @@ fn test_deroot_binary_root_becomes_multifurcating() {
     assert!(child_names.contains(&"A".to_string()));
     assert!(child_names.contains(&"B".to_string()));
     assert!(child_names.contains(&"D".to_string()));
+}
+
+#[test]
+fn test_remove_degree_two_nodes() {
+    let mut tree = Tree::new();
+    let root = tree.add_node();
+    let internal = tree.add_node();
+    let leaf = tree.add_node();
+
+    tree.set_root(root);
+    tree.add_child(root, internal).unwrap();
+    tree.add_child(internal, leaf).unwrap();
+
+    tree.get_node_mut(internal).unwrap().length = Some(2.0);
+    tree.get_node_mut(leaf).unwrap().length = Some(3.0);
+
+    tree.remove_degree_two_nodes();
+
+    assert!(tree.get_node(internal).is_none());
+    let root_node = tree.get_node(root).unwrap();
+    assert_eq!(root_node.children, vec![leaf]);
+
+    let leaf_node = tree.get_node(leaf).unwrap();
+    assert_eq!(leaf_node.parent, Some(root));
+    assert!((leaf_node.length.unwrap() - 5.0).abs() < 1e-9);
+}
+
+#[test]
+fn test_condense_subtree() {
+    let mut tree = Tree::from_newick("((A,B)C,D)Root;").unwrap();
+    let c_id = tree.get_node_by_name("C").unwrap();
+
+    tree.condense_subtree(c_id, "Clade", 2).unwrap();
+
+    let root = tree.get_root().unwrap();
+    let root_node = tree.get_node(root).unwrap();
+    assert_eq!(root_node.children.len(), 2);
+
+    let clade_id = tree.get_node_by_name("Clade").unwrap();
+    let clade = tree.get_node(clade_id).unwrap();
+    assert!(clade.children.is_empty());
+    assert_eq!(clade.get_property("member"), Some(&"2".to_string()));
+    assert_eq!(clade.get_property("tri"), Some(&"white".to_string()));
+
+    assert!(tree.get_node_by_name("A").is_none());
+    assert!(tree.get_node_by_name("B").is_none());
+}
+
+#[test]
+fn test_lax_complement_lca() {
+    let tree = Tree::from_newick("(A,(B,C)D)Root;").unwrap();
+    let a_id = tree.get_node_by_name("A").unwrap();
+    let d_id = tree.get_node_by_name("D").unwrap();
+    let root = tree.get_root().unwrap();
+
+    let specified: BTreeSet<NodeId> = [a_id].into_iter().collect();
+    let comp_lca = super::query::lax_complement_lca(&tree, &specified, root).unwrap();
+    assert_eq!(comp_lca, d_id);
 }

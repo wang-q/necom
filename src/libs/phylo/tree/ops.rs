@@ -16,13 +16,22 @@ pub fn add_child(tree: &mut Tree, parent_id: NodeId, child_id: NodeId) -> anyhow
     }
 
     // Check if child already has a parent
-    let child_parent = tree.nodes[child_id].parent;
+    let child_parent = {
+        let child = tree
+            .get_node(child_id)
+            .ok_or_else(|| anyhow::anyhow!("Child node {} not found or deleted", child_id))?;
+        child.parent
+    };
     if let Some(old_parent) = child_parent {
         anyhow::bail!("Node {} already has parent {}", child_id, old_parent);
     }
 
-    tree.nodes[child_id].parent = Some(parent_id);
-    tree.nodes[parent_id].children.push(child_id);
+    if let Some(child) = tree.get_node_mut(child_id) {
+        child.parent = Some(parent_id);
+    }
+    if let Some(parent) = tree.get_node_mut(parent_id) {
+        parent.children.push(child_id);
+    }
 
     Ok(())
 }
@@ -30,6 +39,9 @@ pub fn add_child(tree: &mut Tree, parent_id: NodeId, child_id: NodeId) -> anyhow
 /// Remove a node from its parent's children list, mark it as deleted, and
 /// clear its parent/children pointers. Updates the tree root if necessary.
 fn detach_and_delete(tree: &mut Tree, id: NodeId) {
+    if tree.get_node(id).is_none() {
+        return;
+    }
     if let Some(parent_id) = tree.nodes[id].parent {
         if let Some(parent) = tree.get_node_mut(parent_id) {
             parent.children.retain(|&child| child != id);
@@ -61,6 +73,10 @@ pub fn remove_node(tree: &mut Tree, id: NodeId, recursive: bool) {
         let mut to_remove = vec![id];
         let mut stack = vec![id];
         while let Some(cur) = stack.pop() {
+            // Guard against malformed trees where a child ID is out of bounds or deleted.
+            if tree.get_node(cur).is_none() {
+                continue;
+            }
             let children = std::mem::take(&mut tree.nodes[cur].children);
             for child_id in children {
                 stack.push(child_id);
@@ -440,6 +456,19 @@ pub fn reroot_at(
         let child_id = path[i];
         let parent_id = path[i - 1];
         let length = lengths[i];
+
+        // Defensive check: detect malformed input that would introduce a cycle.
+        if tree
+            .get_node(child_id)
+            .map(|n| n.children.contains(&parent_id))
+            .unwrap_or(false)
+        {
+            anyhow::bail!(
+                "reroot would create a cycle between nodes {} and {}",
+                parent_id,
+                child_id
+            );
+        }
 
         // a. Remove child from parent's children
         if let Some(parent) = tree.get_node_mut(parent_id) {

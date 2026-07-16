@@ -1,7 +1,6 @@
 use anyhow::Context;
 use clap::{ArgMatches, Command};
 use necom::libs::phylo::tree::Tree;
-use std::collections::BTreeMap;
 use std::io::Write;
 
 /// Build the clap subcommand for replace.
@@ -64,38 +63,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let skip_internal = args.get_flag("internal");
     let skip_leaf = args.get_flag("leaf");
 
-    let mut replace_of: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let rfile = args
         .get_one::<String>("replace_tsv")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: replace_tsv"))?;
-    // Inlined parsing (rather than libs::io::read_replace_tsv) because nwk
-    // replace uses overwrite semantics per key and warns on single-field lines,
-    // whereas read_replace_tsv appends and treats single-field lines as deletes.
-    for line in necom::read_lines(rfile)? {
-        let parts: Vec<_> = line.split('\t').collect();
-
-        if parts.len() < 2 {
-            log::warn!("skipping malformed line in replace file: {}", line);
-            continue;
-        }
-        let name = parts[0].to_string();
-        let replaces = parts
-            .iter()
-            .skip(1)
-            .map(|e| e.to_string())
-            .collect::<Vec<String>>();
-        match replace_of.entry(name) {
-            std::collections::btree_map::Entry::Occupied(entry) => {
-                log::warn!(
-                    "duplicate replacement key '{}' in replace file, keeping first occurrence",
-                    entry.key()
-                );
-            }
-            std::collections::btree_map::Entry::Vacant(entry) => {
-                entry.insert(replaces);
-            }
-        }
-    }
+    // Reuse the shared TSV parser so the CLI layer stays thin.
+    let replace_of = necom::libs::io::read_replace_tsv_overwrite(rfile)?;
 
     let mut trees = Tree::from_file(infile)?;
 

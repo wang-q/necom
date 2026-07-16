@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -47,6 +48,36 @@ pub fn read_names<C: FromIterator<String>>(file: &str) -> anyhow::Result<C> {
         })
         .collect();
     Ok(names)
+}
+
+/// Read a replacement TSV file where the first column is the key and remaining
+/// columns are replacement values.
+///
+/// Duplicate keys keep the first occurrence and warn. Lines with fewer than
+/// two columns are skipped with a warning.
+pub fn read_replace_tsv_overwrite(file: &str) -> anyhow::Result<BTreeMap<String, Vec<String>>> {
+    let mut map = BTreeMap::new();
+    for line in read_lines(file)? {
+        let parts: Vec<&str> = line.split('\t').collect();
+        if parts.len() < 2 {
+            log::warn!("skipping malformed line in replace file: {}", line);
+            continue;
+        }
+        let name = parts[0].to_string();
+        let replaces: Vec<String> = parts.iter().skip(1).map(|s| s.to_string()).collect();
+        match map.entry(name) {
+            std::collections::btree_map::Entry::Occupied(entry) => {
+                log::warn!(
+                    "duplicate replacement key '{}' in replace file, keeping first occurrence",
+                    entry.key()
+                );
+            }
+            std::collections::btree_map::Entry::Vacant(entry) => {
+                entry.insert(replaces);
+            }
+        }
+    }
+    Ok(map)
 }
 
 /// Return the current executable path as a UTF-8 string.

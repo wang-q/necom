@@ -6,44 +6,30 @@ pub type NodeId = usize;
 /// A node in a phylogenetic tree.
 #[derive(Debug, Clone)]
 pub struct Node {
-    /// Unique identifier for the node (index in the arena)
+    /// Unique identifier for the node (index in the arena).
     pub id: NodeId,
 
-    /// Parent node ID (None for root)
+    /// Parent node ID (None for root).
     pub parent: Option<NodeId>,
 
-    /// List of child node IDs
+    /// List of child node IDs.
     pub children: Vec<NodeId>,
 
-    // --- Payload ---
-    /// Node name/label (e.g., "human", "internal_1")
+    /// Node name/label (e.g., "human", "internal_1").
     pub name: Option<String>,
 
-    /// Branch length to parent
-    /// In rooted trees, edge length is an attribute of the child node.
+    /// Branch length to parent.
     pub length: Option<f64>,
 
-    /// Structured properties (e.g., NHX tags like [&&NHX:S=human])
-    /// Using BTreeMap ensures deterministic output order.
+    /// Structured properties (e.g., NHX tags like [&&NHX:S=human]).
     pub properties: Option<BTreeMap<String, String>>,
 
     /// Soft deletion flag.
-    /// If true, this node is considered removed.
-    /// Use Tree::compact() to permanently remove deleted nodes and reclaim memory.
     pub deleted: bool,
 }
 
 impl Node {
-    /// Create a new empty node with a specific ID
-    ///
-    /// # Example
-    /// ```ignore
-    /// use necom::libs::phylo::node::Node;
-    /// let node = Node::new(1);
-    /// assert_eq!(node.id, 1);
-    /// assert!(node.children.is_empty());
-    /// assert!(node.name.is_none());
-    /// ```
+    /// Create a new empty node with a specific ID.
     pub fn new(id: NodeId) -> Self {
         Self {
             id,
@@ -56,49 +42,24 @@ impl Node {
         }
     }
 
-    /// Set the name of the node
-    ///
-    /// # Example
-    /// ```ignore
-    /// use necom::libs::phylo::node::Node;
-    /// let mut node = Node::new(1);
-    /// node.set_name("Node1");
-    /// assert_eq!(node.name, Some("Node1".to_string()));
-    /// ```
+    /// Set the name of the node.
     pub fn set_name(&mut self, name: impl Into<String>) {
         self.name = Some(name.into());
     }
 
-    /// Set the name of the node (builder pattern)
-    ///
-    /// # Example
-    /// ```ignore
-    /// use necom::libs::phylo::node::Node;
-    /// let node = Node::new(1).with_name("Node1");
-    /// assert_eq!(node.name, Some("Node1".to_string()));
-    /// ```
+    /// Set the name of the node (builder pattern).
     pub fn with_name(mut self, name: impl Into<String>) -> Self {
         self.name = Some(name.into());
         self
     }
 
-    /// Set the branch length
-    ///
-    /// # Example
-    /// ```ignore
-    /// use necom::libs::phylo::node::Node;
-    /// let node = Node::new(1).with_length(0.5);
-    /// assert_eq!(node.length, Some(0.5));
-    /// ```
+    /// Set the branch length.
     pub fn with_length(mut self, length: f64) -> Self {
         self.length = Some(length);
         self
     }
 
     /// Return the branch length as a finite, non-negative value.
-    ///
-    /// NaN, infinite, negative, and missing lengths are treated as 0.0 so they
-    /// do not poison sums, maxima, or distance computations.
     pub fn finite_length(&self) -> f64 {
         match self.length {
             Some(v) if v.is_finite() && v >= 0.0 => v,
@@ -106,15 +67,7 @@ impl Node {
         }
     }
 
-    /// Add a property (key-value pair)
-    ///
-    /// # Example
-    /// ```ignore
-    /// use necom::libs::phylo::node::Node;
-    /// let mut node = Node::new(1);
-    /// node.add_property("color", "blue");
-    /// assert_eq!(node.get_property("color"), Some(&"blue".to_string()));
-    /// ```
+    /// Add a property (key-value pair).
     pub fn add_property(&mut self, key: impl Into<String>, value: impl Into<String>) {
         let key = key.into();
         if key.is_empty() {
@@ -125,21 +78,7 @@ impl Node {
             .insert(key, value.into());
     }
 
-    /// Add properties from a string.
-    /// Supports single "key=value" or multiple "key1=value1:key2=value2" (NHX style).
-    ///
-    /// # Example
-    /// ```ignore
-    /// use necom::libs::phylo::node::Node;
-    /// let mut node = Node::new(0);
-    /// node.add_property_from_str("color=red");
-    /// assert_eq!(node.get_property("color"), Some(&"red".to_string()));
-    ///
-    /// // Multiple properties separated by colon
-    /// node.add_property_from_str("S=Homo sapiens:T=9606");
-    /// assert_eq!(node.get_property("S"), Some(&"Homo sapiens".to_string()));
-    /// assert_eq!(node.get_property("T"), Some(&"9606".to_string()));
-    /// ```
+    /// Add properties from a string in "key=value[:key=value...]" format.
     pub fn add_property_from_str(&mut self, props_str: &str) {
         for part in props_str.split(':') {
             if let Some((key, value)) = part.split_once('=') {
@@ -149,34 +88,11 @@ impl Node {
     }
 
     /// Get the value of a property by key.
-    ///
-    /// # Example
-    /// ```ignore
-    /// use necom::libs::phylo::node::Node;
-    /// let mut node = Node::new(0);
-    /// node.add_property("T", "9606");
-    /// node.add_property("S", "Homo sapiens");
-    ///
-    /// assert_eq!(node.get_property("T"), Some(&"9606".to_string()));
-    /// assert_eq!(node.get_property("S"), Some(&"Homo sapiens".to_string()));
-    /// assert_eq!(node.get_property("Missing"), None);
-    /// ```
     pub fn get_property(&self, key: &str) -> Option<&String> {
         self.properties.as_ref().and_then(|p| p.get(key))
     }
 
     /// Returns true if this node has no children.
-    ///
-    /// # Example
-    /// ```ignore
-    /// use necom::libs::phylo::node::Node;
-    /// let mut node = Node::new(1);
-    /// assert!(node.is_leaf());
-    ///
-    /// // Manually adding a child ID (simulating tree operation)
-    /// node.children.push(2);
-    /// assert!(!node.is_leaf());
-    /// ```
     pub fn is_leaf(&self) -> bool {
         self.children.is_empty()
     }
