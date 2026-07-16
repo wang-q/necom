@@ -29,11 +29,17 @@ pub fn read_lines<P: AsRef<Path>>(path: P) -> anyhow::Result<impl Iterator<Item 
 }
 
 /// Read whitespace-delimited names from a file or stdin.
+///
+/// Empty lines and lines whose first non-whitespace character is `#` are ignored.
 pub fn read_names<C: FromIterator<String>>(file: &str) -> anyhow::Result<C> {
     let reader = reader(file)?;
     let names: C = reader
         .lines()
         .map_while(Result::ok)
+        .filter(|line| {
+            let trimmed = line.trim();
+            !trimmed.is_empty() && !trimmed.starts_with('#')
+        })
         .flat_map(|line| {
             line.split_whitespace()
                 .map(|s| s.to_string())
@@ -102,5 +108,24 @@ fn clean_path(path: &Path) -> PathBuf {
         PathBuf::from(".")
     } else {
         cleaned
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::read_names;
+    use std::io::Write;
+
+    #[test]
+    fn test_read_names_skips_empty_and_comments() {
+        let mut tmp = tempfile::NamedTempFile::new().unwrap();
+        writeln!(tmp, "A").unwrap();
+        writeln!(tmp).unwrap();
+        writeln!(tmp, "# comment").unwrap();
+        writeln!(tmp, "  # indented comment").unwrap();
+        writeln!(tmp, "B C").unwrap();
+
+        let names: Vec<String> = read_names(tmp.path().to_str().unwrap()).unwrap();
+        assert_eq!(names, vec!["A", "B", "C"]);
     }
 }

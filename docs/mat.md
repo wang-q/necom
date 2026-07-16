@@ -54,7 +54,7 @@ The `Pairwise` format is a simple three-column TSV format for representing pairw
 
 Sparse or list-form distance data, suitable for storing graph structures or only a subset of pairs.
 
-- **Format**: `name1  name2  distance`
+- **Format**: tab-separated three columns: `name1\tname2\tdistance`
 - **Characteristics**:
   - Suitable for sparse graphs or as an exchange format with other tools (e.g., BLAST/MMseqs2).
   - When converting to a matrix, unlisted pairs are treated as missing values or defaults.

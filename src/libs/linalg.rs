@@ -325,26 +325,43 @@ pub fn weighted_jaccard_similarity(a: &[f32], b: &[f32]) -> f32 {
     }
 }
 
+/// Assign average ranks to `values`, handling ties.
+///
+/// Tied values receive the average of the ranks they would have occupied.
+/// Uses 0-based ranks; the result is invariant under uniform shifting when
+/// passed to Pearson correlation.
+fn assign_ranks(values: &[f32]) -> Vec<f32> {
+    let mut indexed: Vec<_> = values.iter().enumerate().collect();
+    indexed.sort_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    let mut ranks = vec![0.0; values.len()];
+    let mut i = 0;
+    while i < indexed.len() {
+        let mut j = i + 1;
+        while j < indexed.len() && indexed[j].1 == indexed[i].1 {
+            j += 1;
+        }
+        let avg_rank = (i + j - 1) as f32 / 2.0;
+        for &(idx, _) in &indexed[i..j] {
+            ranks[idx] = avg_rank;
+        }
+        i = j;
+    }
+    ranks
+}
+
 /// Computes the Spearman rank correlation coefficient between two vectors.
 ///
-/// Ranks each vector, then computes the Pearson correlation of the ranks.
-/// Returns `NaN` if the vectors are empty or have different lengths.
+/// Ranks each vector using average ranks for ties, then computes the Pearson
+/// correlation of the ranks. Returns `NaN` if the vectors are empty or have
+/// different lengths.
 pub fn spearman_correlation(a: &[f32], b: &[f32]) -> f32 {
-    let mut x_ranked: Vec<_> = a.iter().enumerate().collect();
-    let mut y_ranked: Vec<_> = b.iter().enumerate().collect();
-
-    x_ranked.sort_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal));
-    y_ranked.sort_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal));
-
-    let mut x_ranks = vec![0.0; a.len()];
-    let mut y_ranks = vec![0.0; b.len()];
-
-    for (rank, &(i, _)) in x_ranked.iter().enumerate() {
-        x_ranks[i] = rank as f32;
+    if a.len() != b.len() || a.is_empty() {
+        return f32::NAN;
     }
-    for (rank, &(i, _)) in y_ranked.iter().enumerate() {
-        y_ranks[i] = rank as f32;
-    }
+
+    let x_ranks = assign_ranks(a);
+    let y_ranks = assign_ranks(b);
 
     pearson_correlation(&x_ranks, &y_ranks)
 }
@@ -394,4 +411,37 @@ pub fn vector_score(
     }
 
     Ok(score)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_spearman_no_ties() {
+        let a = [1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = [5.0, 4.0, 3.0, 2.0, 1.0];
+        let rho = spearman_correlation(&a, &b);
+        assert!(
+            (rho + 1.0).abs() < 1e-6,
+            "expected perfect negative correlation"
+        );
+    }
+
+    #[test]
+    fn test_spearman_with_ties() {
+        // Values with ties; average ranks should be used.
+        let a = [1.0, 2.0, 2.0, 4.0];
+        let b = [1.0, 3.0, 3.0, 4.0];
+        let rho = spearman_correlation(&a, &b);
+        assert!(!rho.is_nan());
+        assert!(rho > 0.0);
+    }
+
+    #[test]
+    fn test_spearman_empty() {
+        let a: [f32; 0] = [];
+        let b: [f32; 0] = [];
+        assert!(spearman_correlation(&a, &b).is_nan());
+    }
 }

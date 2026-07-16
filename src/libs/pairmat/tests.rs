@@ -242,3 +242,32 @@ fn test_from_pair_scores_duplicate_pair_uses_last_value() {
     let matrix = NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
     assert_eq!(matrix.get_by_name("A", "B"), Some(0.9));
 }
+
+#[test]
+fn test_from_relaxed_phylip_extra_values() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full 3x3 matrix: upper-triangle values beyond the lower triangle are ignored.
+    writeln!(tmp, "3").unwrap();
+    writeln!(tmp, "A 0.0 0.1 0.2").unwrap();
+    writeln!(tmp, "B 0.1 0.0 0.3").unwrap();
+    writeln!(tmp, "C 0.2 0.3 0.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    assert_eq!(matrix.get_by_name("A", "B"), Some(0.1));
+    assert_eq!(matrix.get_by_name("A", "C"), Some(0.2));
+    assert_eq!(matrix.get_by_name("B", "C"), Some(0.3));
+}
+
+#[test]
+fn test_from_pair_scores_extra_columns() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Pairwise line with extra columns beyond name1, name2, distance.
+    writeln!(tmp, "A\tB\t0.5\textra\tdata").unwrap();
+
+    let matrix = NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
+    assert_eq!(matrix.get_by_name("A", "B"), Some(0.5));
+}

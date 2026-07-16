@@ -153,6 +153,13 @@ impl ScoringMatrix<f32> {
                 );
                 continue;
             }
+            if fields.len() > 3 {
+                log::warn!(
+                    "pairwise line contains {} extra column(s); ignoring: {}",
+                    fields.len() - 3,
+                    line
+                );
+            }
 
             let n1 = fields[0].to_string();
             let n2 = fields[1].to_string();

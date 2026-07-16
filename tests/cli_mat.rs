@@ -79,6 +79,23 @@ fn command_mat_subset() {
 }
 
 #[test]
+fn command_mat_subset_with_comments() {
+    // ID list contains empty lines and comment lines, which should be ignored.
+    let input = "IBPA_ECOLI_GA\n\n# comment\nIBPA_ECOLI_GA_LV\nIBPA_ESCF3\n";
+
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["mat", "subset", "tests/mat/IBPA.phy", "stdin"])
+        .stdin(input)
+        .run();
+
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(lines[0].trim(), "3"); // Number of sequences
+    assert!(lines[1].starts_with("IBPA_ECOLI_GA\t0\t0.10219\t0.058394"));
+    assert!(!stderr.contains("Name not found: #"));
+    assert!(!stderr.contains("Name not found: comment"));
+}
+
+#[test]
 fn command_mat_compare() {
     // Test single method
     let (stdout, _) = NecomCmd::new()
@@ -114,7 +131,7 @@ fn command_mat_compare() {
 
     // Verify all methods are present with approximate values
     assert!(stdout.contains("pearson\t0.93"));
-    assert!(stdout.contains("spearman\t0.91"));
+    assert!(stdout.contains("spearman\t0.93"));
     assert!(stdout.contains("mae\t0.11"));
     assert!(stdout.contains("cosine\t0.97"));
     assert!(stdout.contains("jaccard\t0.75"));

@@ -93,6 +93,10 @@ impl NamedMatrix {
         self.matrix.get(row, col)
     }
 
+    /// Set value at (row, col).
+    ///
+    /// Diagonal values are only stored if `set_diags` has been called;
+    /// otherwise `set(i, i, _)` is silently ignored and `get(i, i)` returns 0.0.
     pub fn set(&mut self, row: usize, col: usize, value: f32) {
         if row == col {
             if let Some(ref mut diags) = self.diags {
@@ -204,6 +208,7 @@ impl NamedMatrix {
     pub fn from_relaxed_phylip(infile: &str) -> anyhow::Result<Self> {
         let mut names = Vec::new();
         let mut raw_values = Vec::new();
+        let mut row_lengths = Vec::new();
         let mut declared_size: Option<usize> = None;
 
         let reader = crate::reader(infile)?;
@@ -215,13 +220,13 @@ impl NamedMatrix {
                 declared_size = Some(size);
             } else {
                 // If first line is not a number, treat it as a data line
-                Self::process_phylip_line(&line, &mut names, &mut raw_values)?;
+                Self::process_phylip_line(&line, &mut names, &mut raw_values, &mut row_lengths)?;
             }
         }
 
         // Process remaining lines
         for line in lines.map_while(Result::ok) {
-            Self::process_phylip_line(&line, &mut names, &mut raw_values)?;
+            Self::process_phylip_line(&line, &mut names, &mut raw_values, &mut row_lengths)?;
         }
 
         let size = names.len();
@@ -231,6 +236,17 @@ impl NamedMatrix {
                     "PHYLIP matrix declares {} sequences but found {}",
                     declared,
                     size
+                );
+            }
+        }
+
+        // Warn about rows that contain more values than a full N x N matrix would have.
+        for (i, &len) in row_lengths.iter().enumerate() {
+            if len > size {
+                log::warn!(
+                    "line for '{}' contains {} extra value(s); ignoring values beyond full matrix size",
+                    names[i],
+                    len - size
                 );
             }
         }
@@ -267,6 +283,7 @@ impl NamedMatrix {
         line: &str,
         names: &mut Vec<String>,
         values: &mut Vec<f32>,
+        row_lengths: &mut Vec<usize>,
     ) -> anyhow::Result<()> {
         let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.is_empty() {
@@ -286,6 +303,11 @@ impl NamedMatrix {
                 parts.len() - 1
             );
         }
+
+        // Track the actual number of values on this line; warnings about values
+        // beyond the full matrix size are emitted once the matrix size is known.
+        row_lengths.push(parts.len() - 1);
+
         // Extra values are ignored: this supports both lower-triangular and full
         // PHYLIP matrices, where only the lower-triangle portion is needed.
         names.push(name);
