@@ -37,6 +37,7 @@ The `PHYLIP` distance matrix format is a common format in phylogenetic analysis.
 - Separators: whitespace characters (spaces or tabs).
 - Matrix form: supports full square matrix or lower triangular matrix.
 - Name length: not restricted.
+- Note: if the first data row starts with a numeric token (e.g. `123`), it may be mistaken for the optional sequence-count header. Use non-numeric prefixes or omit the header line to avoid ambiguity.
 
 **Strict PHYLIP (`strict` mode output)**:
 - Follows the original `PHYLIP` standard.
@@ -152,13 +153,13 @@ Apply mathematical transformations to matrix elements.
 - **Purpose**: Convert similarity matrices to distance matrices, or perform normalization, log transformations, etc.
 - **Operations (`--op`)**:
   - `linear`: `val = val * scale + offset`
-  - `inv-linear`: `val = max - val` (common transformation for similarity → distance)
-  - `log`: `val = -ln(val)`
+  - `inv-linear`: off-diagonal `val = max - val`; diagonal is set to `0` to preserve a valid distance matrix (common transformation for similarity → distance)
+  - `log`: `val = -ln(val)` (off-diagonal `≤ 0` → `Inf`; diagonal `≤ 0` → `0`)
   - `exp`: `val = exp(-val)`
   - `square`: `val = val * val`
-  - `sqrt`: `val = sqrt(val)`
+  - `sqrt`: `val = sqrt(val)` (negative values produce `NaN`)
 - **Normalization (`--normalize`)**: Normalize based on diagonal elements: `x_norm(i, j) = x(i, j) / sqrt(x(i, i) * x(j, j))`.
-- **Parameters**: `--max-val` (maximum value for inv-linear, default 1.0), `--scale` (linear scale factor, default 1.0), `--offset` (linear offset, default 0.0), `--input-format` (input format: `phylip` or `pair`, default `phylip`).
+- **Parameters**: `--max-val` (maximum value for inv-linear, default 1.0), `--scale` (linear scale factor, default 1.0), `--offset` (linear offset, default 0.0), `--input-format` (input format: `phylip` or `pair`, default `phylip`), `--same`/`--missing` (default diagonal/missing values for `pair` input, default 0.0/1.0).
 
 > For detailed transformation scenarios and mathematical background, see [mat-transform.md](mat-transform.md).
 

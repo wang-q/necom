@@ -6,6 +6,20 @@ It is the core tool for converting a **Similarity Matrix** into a **Distance Mat
 
 > This document is an in-depth explanation of the `mat transform` subcommand. For an overview of all `mat` subcommands, see [mat.md](mat.md).
 
+## Data Flow
+
+```mermaid
+flowchart LR
+    A[pair/phylip input] --> B{input format?}
+    B -->|pair| C[from_pair_scores<br/>--same/--missing]
+    B -->|phylip| D[from_relaxed_phylip<br/>sequence/value validation]
+    C --> E[NamedMatrix]
+    D --> E
+    E --> F[transform_matrix<br/>normalize? op]
+    F --> G[write_phylip_matrix<br/>precision=6]
+    G --> H[stdout/file]
+```
+
 ## Usage
 
 ```bash
@@ -20,16 +34,19 @@ necom mat transform [OPTIONS] <infile>
 
 - `--input-format <FORMAT>`: Input format (default: `phylip`, optional: `pair`).
   - Explicitly specifying `--input-format pair` is useful for processing TSV data from pipe (STDIN) input.
+  - When using `pair`, `--same` and `--missing` control the default diagonal and missing-pair values.
 - `--op <METHOD>`: Transformation operation (default: `linear`).
   - `linear`: $val = val \times scale + offset$
-  - `inv-linear`: $val = max - val$
+  - `inv-linear`: off-diagonal $val = max - val$; the diagonal is set to `0` to preserve a valid distance matrix
   - `log`: $val = -\ln(val)$ (off-diagonal values $\le 0$ are set to `Inf`; diagonal values $\le 0$ are set to 0)
   - `exp`: $val = \exp(-val)$
   - `square`: $val = val^2$
-  - `sqrt`: $val = \sqrt{val}$
+  - `sqrt`: $val = \sqrt{val}$ (negative values produce `NaN`)
 - `--max-val <FLOAT>`: Maximum value used for `inv-linear` (default: 1.0).
 - `--scale <FLOAT>`: Scale factor used for `linear` (default: 1.0).
 - `--offset <FLOAT>`: Offset used for `linear` (default: 0.0).
+- `--same <FLOAT>`: Default value for diagonal elements when `--input-format pair` is used and self-pairs are missing (default: 0.0).
+- `--missing <FLOAT>`: Default value for missing pairs when `--input-format pair` is used (default: 1.0).
 - `--normalize`: Whether to normalize based on diagonal elements before transformation (requires diagonal data in the matrix).
   - Normalization formula: $x_{norm}(i, j) = \frac{x(i, j)}{\sqrt{x(i, i) \times x(j, j)}}$
   - **Why normalize?**

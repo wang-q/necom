@@ -152,14 +152,14 @@ impl NamedMatrix {
     /// assert_eq!(matrix.get_by_name("seq1", "seq2"), Some(0.5));
     /// assert!(matrix.set_by_name("seq1", "seq3", 0.5).is_err());  // Non-existent name
     /// ```
-    pub fn set_by_name(&mut self, name1: &str, name2: &str, value: f32) -> Result<(), String> {
+    pub fn set_by_name(&mut self, name1: &str, name2: &str, value: f32) -> anyhow::Result<()> {
         match (self.names.get(name1), self.names.get(name2)) {
             (Some(&i), Some(&j)) => {
                 self.set(i, j, value);
                 Ok(())
             }
-            (None, _) => Err(format!("Name not found: {}", name1)),
-            (_, None) => Err(format!("Name not found: {}", name2)),
+            (None, _) => anyhow::bail!("Name not found: {}", name1),
+            (_, None) => anyhow::bail!("Name not found: {}", name2),
         }
     }
 
@@ -190,13 +190,16 @@ impl NamedMatrix {
     pub fn from_relaxed_phylip(infile: &str) -> anyhow::Result<Self> {
         let mut names = Vec::new();
         let mut raw_values = Vec::new();
+        let mut declared_size: Option<usize> = None;
 
         let reader = crate::reader(infile)?;
         let mut lines = reader.lines();
 
-        // Skip the optional sequence count line
+        // Read the optional sequence count line
         if let Some(Ok(line)) = lines.next() {
-            if line.trim().parse::<usize>().is_err() {
+            if let Ok(size) = line.trim().parse::<usize>() {
+                declared_size = Some(size);
+            } else {
                 // If first line is not a number, treat it as a data line
                 Self::process_phylip_line(&line, &mut names, &mut raw_values)?;
             }
@@ -208,23 +211,38 @@ impl NamedMatrix {
         }
 
         let size = names.len();
+        if let Some(declared) = declared_size {
+            if size != declared {
+                anyhow::bail!(
+                    "PHYLIP matrix declares {} sequences but found {}",
+                    declared,
+                    size
+                );
+            }
+        }
+
         let mut matrix = Self::new(names);
         let mut diags = vec![0.0; size];
 
         // Fill the matrix (lower triangle from PHYLIP)
-        // raw_values contains flattened lower triangle: (1,0), (2,0), (2,1), ...
+        // raw_values contains flattened lower triangle: (0,0), (1,0), (1,1), (2,0), ...
         let mut k = 0;
         for (i, d) in diags.iter_mut().enumerate().take(size) {
             for j in 0..=i {
-                if k < raw_values.len() {
-                    let value = raw_values[k];
-                    if i == j {
-                        *d = value;
-                    } else {
-                        matrix.set(i, j, value);
-                    }
-                    k += 1;
+                if k >= raw_values.len() {
+                    anyhow::bail!(
+                        "malformed PHYLIP matrix: expected {} lower-triangle values, found {}",
+                        size * (size + 1) / 2,
+                        raw_values.len()
+                    );
                 }
+                let value = raw_values[k];
+                if i == j {
+                    *d = value;
+                } else {
+                    matrix.set(i, j, value);
+                }
+                k += 1;
             }
         }
         matrix.set_diags(diags)?;
@@ -242,6 +260,9 @@ impl NamedMatrix {
         }
 
         let name = parts[0].to_string();
+        if names.contains(&name) {
+            anyhow::bail!("duplicate sequence name in PHYLIP matrix: {}", name);
+        }
         let expected_values = names.len() + 1;
         if parts.len() < 1 + expected_values {
             anyhow::bail!(
@@ -251,6 +272,8 @@ impl NamedMatrix {
                 parts.len() - 1
             );
         }
+        // Extra values are ignored: this supports both lower-triangular and full
+        // PHYLIP matrices, where only the lower-triangle portion is needed.
         names.push(name);
 
         // Read lower-triangle distances

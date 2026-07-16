@@ -264,6 +264,31 @@ fn command_mat_transform_pairwise_stdin() {
 }
 
 #[test]
+fn command_mat_transform_pairwise_same_missing() {
+    // Pairwise input without self-pairs and with a missing pair.
+    let input = "A\tB\t0.1\nA\tC\t0.5\n";
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            "stdin",
+            "--input-format",
+            "pair",
+            "--same",
+            "2.0",
+            "--missing",
+            "9.0",
+        ])
+        .stdin(input)
+        .run();
+
+    // Diagonals default to --same=2.0, missing pairs to --missing=9.0
+    assert!(stdout.contains("2.000000"));
+    assert!(stdout.contains("9.000000"));
+}
+
+#[test]
 fn command_mat_transform_tsv_explicit() {
     // Should NOT auto-detect .tsv extension, must specify --input-format pair
     let (stdout, _) = NecomCmd::new()

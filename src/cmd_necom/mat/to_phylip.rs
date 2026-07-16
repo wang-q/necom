@@ -1,6 +1,5 @@
 use anyhow::Context;
 use clap::{ArgMatches, Command};
-use std::io::Write;
 
 /// Build the clap subcommand for to-phylip.
 pub fn make_subcommand() -> Command {
@@ -37,20 +36,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Load matrix from pairwise distances
     let matrix =
         necom::libs::pairmat::NamedMatrix::from_pair_scores(infile, opt_same, opt_missing)?;
-    let names = matrix.get_names();
-    let size = matrix.size();
 
-    // Write sequence count
-    writer.write_fmt(format_args!("{:>4}\n", size))?;
-
-    // Output full matrix
-    for (i, name) in names.iter().enumerate().take(size) {
-        writer.write_fmt(format_args!("{}", name))?;
-        for j in 0..size {
-            writer.write_fmt(format_args!("\t{}", matrix.get(i, j)))?;
-        }
-        writer.write_fmt(format_args!("\n"))?;
-    }
+    necom::libs::pairmat::write_phylip_matrix(
+        &matrix,
+        necom::libs::pairmat::MatrixFormat::Full,
+        None,
+        &mut writer,
+    )?;
 
     writer.flush()?;
     Ok(())

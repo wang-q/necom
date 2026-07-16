@@ -66,9 +66,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         matrix2.size()
     );
 
-    // Extract paired values from common upper triangle
+    // Extract paired values from common lower triangle
     let (common_names, values1, values2) =
-        necom::libs::pairmat::extract_common_upper_triangle(&matrix1, &matrix2)?;
+        necom::libs::pairmat::extract_common_lower_triangle(&matrix1, &matrix2)?;
 
     log::info!("Common sequences: {}", common_names.len());
 

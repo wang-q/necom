@@ -5,6 +5,7 @@ use super::named::NamedMatrix;
 /// Supports: linear, inv-linear, log, exp, square, sqrt.
 /// When `normalize` is true, off-diagonal values are divided by `sqrt(d_i * d_j)`
 /// and diagonal values are normalized to 1.0 (or 0.0 if the original diag <= 1e-9).
+/// `sqrt` of a negative value returns `f32::NAN` to avoid hiding invalid input.
 pub fn transform_matrix(
     matrix: &NamedMatrix,
     method: &str,
@@ -68,7 +69,7 @@ pub fn transform_matrix(
                     if val >= 0.0 {
                         val.sqrt()
                     } else {
-                        0.0
+                        f32::NAN
                     }
                 }
                 _ => anyhow::bail!("unsupported transformation operation: {}", method),
@@ -89,7 +90,8 @@ pub fn transform_matrix(
         }
         d = match method {
             "linear" => d * scale + offset,
-            "inv-linear" => max_val - d,
+            // Keep the diagonal at 0 for a valid distance matrix.
+            "inv-linear" => 0.0,
             "log" => {
                 if d > 0.0 {
                     -d.ln()
@@ -103,7 +105,7 @@ pub fn transform_matrix(
                 if d >= 0.0 {
                     d.sqrt()
                 } else {
-                    0.0
+                    f32::NAN
                 }
             }
             _ => anyhow::bail!("unsupported transformation operation: {}", method),

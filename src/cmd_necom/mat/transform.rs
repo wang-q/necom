@@ -1,6 +1,5 @@
 use anyhow::Context;
 use clap::{builder::PossibleValue, value_parser, Arg, ArgAction, ArgMatches, Command};
-use std::io::Write;
 /// Build the clap subcommand for transform.
 pub fn make_subcommand() -> Command {
     Command::new("transform")
@@ -35,6 +34,10 @@ Examples:
 
     4. Log transformation with normalization (e.g. for probability):
        necom mat transform in.phy --op log --normalize
+
+Pairwise input:
+    When --input-format pair is used, --same and --missing control default
+    diagonal and missing-pair values, respectively.
 "###,
         )
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
@@ -82,6 +85,8 @@ Examples:
                 .help("Normalize based on diagonal values"),
         )
         .arg(crate::cmd_necom::args::mat_input_format_arg())
+        .arg(crate::cmd_necom::args::same_arg("0.0"))
+        .arg(crate::cmd_necom::args::missing_arg("1.0"))
         .arg(crate::cmd_necom::args::outfile_arg())
 }
 /// Execute the transform command.
@@ -93,13 +98,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let offset = *args.get_one::<f32>("offset").unwrap();
     let normalize = args.get_flag("normalize");
     let format = args.get_one::<String>("mat_input_format").unwrap().as_str();
+    let opt_same = *args.get_one::<f32>("same").unwrap();
+    let opt_missing = *args.get_one::<f32>("missing").unwrap();
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer =
         necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // Load and Transform
     let matrix = if format == "pair" {
-        necom::libs::pairmat::NamedMatrix::from_pair_scores(infile, 0.0, 1.0)?
+        necom::libs::pairmat::NamedMatrix::from_pair_scores(infile, opt_same, opt_missing)?
     } else {
         necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?
     };
@@ -107,18 +114,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let matrix =
         necom::libs::pairmat::transform_matrix(&matrix, op, max_val, scale, offset, normalize)?;
 
-    let size = matrix.size();
-    let names = matrix.get_names();
-
-    writer.write_fmt(format_args!("{:>4}\n", size))?;
-    for (i, name) in names.iter().enumerate() {
-        writer.write_fmt(format_args!("{}", name))?;
-        for j in 0..size {
-            let val = matrix.get(i, j);
-            writer.write_fmt(format_args!("\t{:.6}", val))?;
-        }
-        writer.write_fmt(format_args!("\n"))?;
-    }
+    necom::libs::pairmat::write_phylip_matrix(
+        &matrix,
+        necom::libs::pairmat::MatrixFormat::Full,
+        Some(6),
+        &mut writer,
+    )?;
 
     writer.flush()?;
     Ok(())

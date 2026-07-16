@@ -149,3 +149,73 @@ fn test_transform_log_non_positive() {
     assert_eq!(transformed.get(0, 0), 0.0);
     assert_eq!(transformed.get(1, 1), 0.0);
 }
+
+#[test]
+fn test_transform_sqrt_negative() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A -4.0").unwrap();
+    writeln!(tmp, "B -1.0 -9.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    let transformed = super::transform_matrix(&matrix, "sqrt", 1.0, 1.0, 0.0, false).unwrap();
+
+    assert!(transformed.get(0, 1).is_nan());
+    assert!(transformed.get(0, 0).is_nan());
+    assert!(transformed.get(1, 1).is_nan());
+}
+
+#[test]
+fn test_from_relaxed_phylip_truncated() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // 3 sequences but only 3 lower-triangle values (expected 6)
+    writeln!(tmp, "3").unwrap();
+    writeln!(tmp, "A 0.0").unwrap();
+    writeln!(tmp, "B 0.1 0.0").unwrap();
+
+    let result = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap());
+    assert!(
+        result.is_err(),
+        "truncated PHYLIP matrix should return an error"
+    );
+}
+
+#[test]
+fn test_from_relaxed_phylip_duplicate_name() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A 0.0").unwrap();
+    writeln!(tmp, "A 0.1 0.0").unwrap();
+
+    let result = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap());
+    assert!(
+        result.is_err(),
+        "duplicate sequence name should return an error"
+    );
+}
+
+#[test]
+fn test_transform_inv_linear_diagonal() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full matrix with non-zero diagonal
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A 1.0 0.5").unwrap();
+    writeln!(tmp, "B 0.5 1.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    let transformed = super::transform_matrix(&matrix, "inv-linear", 1.0, 1.0, 0.0, false).unwrap();
+
+    // Off-diagonal: 1.0 - 0.5 = 0.5
+    assert_eq!(transformed.get(0, 1), 0.5);
+    // Diagonal should stay 0 for a valid distance matrix
+    assert_eq!(transformed.get(0, 0), 0.0);
+    assert_eq!(transformed.get(1, 1), 0.0);
+}

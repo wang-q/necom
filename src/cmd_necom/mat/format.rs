@@ -58,7 +58,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
     let fmt = necom::libs::pairmat::MatrixFormat::from_mode(opt_mode)?;
 
-    necom::libs::pairmat::write_phylip_matrix(&matrix, fmt, &mut writer)?;
+    necom::libs::pairmat::write_phylip_matrix(&matrix, fmt, None, &mut writer)?;
 
     writer.flush()?;
     Ok(())

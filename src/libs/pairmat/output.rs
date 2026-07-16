@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::io::Write;
 
 use super::NamedMatrix;
@@ -21,9 +22,14 @@ impl MatrixFormat {
 }
 
 /// Write a NamedMatrix in the specified PHYLIP format.
+///
+/// `precision` controls the number of decimal places for `Full` and `Lower`
+/// formats. `None` prints raw values; `Some(n)` prints `n` decimal places.
+/// `Strict` format always uses 6 decimal places as required by the PHYLIP standard.
 pub fn write_phylip_matrix<W: Write>(
     m: &NamedMatrix,
     fmt: MatrixFormat,
+    precision: Option<usize>,
     writer: &mut W,
 ) -> anyhow::Result<()> {
     let names = m.get_names();
@@ -36,13 +42,13 @@ pub fn write_phylip_matrix<W: Write>(
             MatrixFormat::Full => {
                 writer.write_fmt(format_args!("{}", name))?;
                 for j in 0..size {
-                    writer.write_fmt(format_args!("\t{}", m.get(i, j)))?;
+                    writer.write_fmt(format_args!("\t{}", format_value(m.get(i, j), precision)))?;
                 }
             }
             MatrixFormat::Lower => {
                 writer.write_fmt(format_args!("{}", name))?;
                 for j in 0..i {
-                    writer.write_fmt(format_args!("\t{}", m.get(i, j)))?;
+                    writer.write_fmt(format_args!("\t{}", format_value(m.get(i, j), precision)))?;
                 }
             }
             MatrixFormat::Strict => {
@@ -59,6 +65,14 @@ pub fn write_phylip_matrix<W: Write>(
     }
 
     Ok(())
+}
+
+/// Format a single matrix value with optional fixed precision.
+fn format_value(value: f32, precision: Option<usize>) -> String {
+    match precision {
+        Some(p) => format!("{:.1$}", value, p),
+        None => format!("{}", value),
+    }
 }
 
 /// Write a submatrix restricted to `names`. Returns the list of names not found in `m`.
@@ -91,17 +105,18 @@ pub fn write_subset<W: Write>(
     Ok(missing)
 }
 
-/// Extract paired values from the upper triangle (excluding diagonal) of two matrices,
+/// Extract paired values from the lower triangle (excluding diagonal) of two matrices,
 /// restricted to sequence names common to both. Returns `(common_names, values1, values2)`.
-pub fn extract_common_upper_triangle(
+pub fn extract_common_lower_triangle(
     m1: &NamedMatrix,
     m2: &NamedMatrix,
 ) -> anyhow::Result<(Vec<String>, Vec<f32>, Vec<f32>)> {
     let names1 = m1.get_names();
     let names2 = m2.get_names();
+    let names2_set: HashSet<&&String> = names2.iter().collect();
     let common_names: Vec<String> = names1
         .iter()
-        .filter(|name| names2.contains(name))
+        .filter(|name| names2_set.contains(name))
         .map(|s| s.to_string())
         .collect();
 
