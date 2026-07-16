@@ -20,9 +20,10 @@ Output formats:
         - Tab-separated values
         - Original sequence names preserved
     * lower
-        - Lower triangular matrix
+        - Lower triangular matrix without diagonal values
         - Tab-separated values
         - Original sequence names preserved
+        - Row i contains i tab-separated values
     * strict
         - Standard PHYLIP format
         - Names truncated to 10 characters

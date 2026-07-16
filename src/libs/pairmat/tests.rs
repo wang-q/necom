@@ -46,16 +46,18 @@ fn test_condensed_matrix_rw() {
 #[test]
 fn test_condensed_matrix_from_vec() {
     let data = vec![1.0, 2.0, 3.0];
-    let m = CondensedMatrix::from_vec(3, data);
+    let m = CondensedMatrix::from_vec(3, data).unwrap();
     assert_eq!(m.get(0, 1), 1.0);
     assert_eq!(m.get(0, 2), 2.0);
     assert_eq!(m.get(1, 2), 3.0);
 }
 
 #[test]
-#[should_panic(expected = "Data length 2 does not match expected length 3 for size 3")]
 fn test_condensed_matrix_from_vec_invalid_len() {
-    CondensedMatrix::from_vec(3, vec![1.0, 2.0]);
+    let result = CondensedMatrix::from_vec(3, vec![1.0, 2.0]);
+    assert!(result.is_err());
+    let msg = format!("{}", result.unwrap_err());
+    assert!(msg.contains("Data length 2 does not match expected length 3 for size 3"));
 }
 
 #[test]
@@ -270,6 +272,26 @@ fn test_from_pair_scores_extra_columns() {
 
     let matrix = NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
     assert_eq!(matrix.get_by_name("A", "B"), Some(0.5));
+}
+
+#[test]
+fn test_from_relaxed_phylip_asymmetric() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Asymmetric full 3x3 matrix: upper triangle differs from lower triangle.
+    writeln!(tmp, "3").unwrap();
+    writeln!(tmp, "A 0.0 0.1 0.2").unwrap();
+    writeln!(tmp, "B 0.1 0.0 0.999").unwrap();
+    writeln!(tmp, "C 0.2 0.3 0.0").unwrap();
+
+    let result = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap());
+    assert!(
+        result.is_err(),
+        "asymmetric PHYLIP matrix should return an error"
+    );
+    let msg = format!("{}", result.unwrap_err());
+    assert!(msg.contains("asymmetric"));
 }
 
 #[test]

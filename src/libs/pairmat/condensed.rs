@@ -38,19 +38,19 @@ impl CondensedMatrix {
 
     /// Create from existing data vector.
     ///
-    /// # Panics
-    /// Panics if data length doesn't match size*(size-1)/2.
-    pub fn from_vec(size: usize, data: Vec<f32>) -> Self {
+    /// # Errors
+    /// Returns an error if data length doesn't match size*(size-1)/2.
+    pub fn from_vec(size: usize, data: Vec<f32>) -> anyhow::Result<Self> {
         let expected = if size == 0 { 0 } else { size * (size - 1) / 2 };
-        assert_eq!(
-            data.len(),
-            expected,
-            "Data length {} does not match expected length {} for size {}",
-            data.len(),
-            expected,
-            size
-        );
-        Self { size, data }
+        if data.len() != expected {
+            anyhow::bail!(
+                "Data length {} does not match expected length {} for size {}",
+                data.len(),
+                expected,
+                size
+            );
+        }
+        Ok(Self { size, data })
     }
 
     pub fn size(&self) -> usize {

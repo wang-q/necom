@@ -114,7 +114,7 @@ Convert between PHYLIP formats and normalize them.
 - **Purpose**: Clean matrix formats to meet the requirements of specific software.
 - **Modes (`--format`)**:
   - `full` (default): Output a standard $N \times N$ tab-separated matrix with full long names preserved.
-  - `lower`: Output a lower-triangular matrix to save disk space.
+  - `lower`: Output a lower-triangular matrix without diagonal values (row `i` contains `i` values) to save disk space.
   - `strict`: **Truncate names** to 10 characters, left-align and pad with spaces, and use fixed-width values. For compatibility with the original Phylip toolkit.
 
 ### Operations and Analysis

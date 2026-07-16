@@ -59,16 +59,20 @@ pub enum Algorithm {
 ///
 /// Returns a list of steps (merges) forming the dendrogram.
 /// The length of the result will be N-1 for a matrix of size N.
-pub fn linkage(matrix: &NamedMatrix, method: Method) -> Vec<Step> {
+pub fn linkage(matrix: &NamedMatrix, method: Method) -> anyhow::Result<Vec<Step>> {
     linkage_with_algo(matrix, method, Algorithm::Auto)
 }
 
 /// Perform hierarchical clustering with explicit algorithm selection.
-pub fn linkage_with_algo(matrix: &NamedMatrix, method: Method, algo: Algorithm) -> Vec<Step> {
+pub fn linkage_with_algo(
+    matrix: &NamedMatrix,
+    method: Method,
+    algo: Algorithm,
+) -> anyhow::Result<Vec<Step>> {
     // Create a mutable copy of the condensed matrix
-    let mut condensed = CondensedMatrix::from_vec(matrix.size(), matrix.values().to_vec());
+    let mut condensed = CondensedMatrix::from_vec(matrix.size(), matrix.values().to_vec())?;
 
-    linkage_core(&mut condensed, method, algo)
+    Ok(linkage_core(&mut condensed, method, algo))
 }
 
 /// Perform hierarchical clustering in-place (consuming the distance matrix).
@@ -547,7 +551,7 @@ mod tests {
         m.set(0, 2, 4.0);
         m.set(1, 2, 2.0);
 
-        let steps = linkage(&m, Method::Single);
+        let steps = linkage(&m, Method::Single).unwrap();
 
         assert_eq!(steps.len(), 2);
 
@@ -581,7 +585,7 @@ mod tests {
         m.set(0, 2, 4.0);
         m.set(1, 2, 2.0);
 
-        let steps = linkage(&m, Method::Complete);
+        let steps = linkage(&m, Method::Complete).unwrap();
 
         assert_eq!(steps.len(), 2);
         assert_eq!(steps[1].distance, 4.0);
@@ -604,7 +608,7 @@ mod tests {
         m.set(0, 2, 4.0);
         m.set(1, 2, 2.0);
 
-        let steps = linkage(&m, Method::Average);
+        let steps = linkage(&m, Method::Average).unwrap();
 
         assert_eq!(steps.len(), 2);
         assert_eq!(steps[1].distance, 3.0);
@@ -637,8 +641,8 @@ mod tests {
         m.set(3, 4, 1.0); // min
 
         // Test with Average linkage (Reducible)
-        let steps_prim = linkage_with_algo(&m, Method::Average, Algorithm::Primitive);
-        let steps_nn = linkage_with_algo(&m, Method::Average, Algorithm::NnChain);
+        let steps_prim = linkage_with_algo(&m, Method::Average, Algorithm::Primitive).unwrap();
+        let steps_nn = linkage_with_algo(&m, Method::Average, Algorithm::NnChain).unwrap();
 
         assert_eq!(steps_prim.len(), 4);
         assert_eq!(steps_nn.len(), 4);
@@ -684,8 +688,8 @@ mod tests {
             }
         }
 
-        let steps1 = linkage(&m, Method::Average);
-        let steps2 = linkage(&m, Method::Average);
+        let steps1 = linkage(&m, Method::Average).unwrap();
+        let steps2 = linkage(&m, Method::Average).unwrap();
         assert_eq!(steps1.len(), 4);
         assert_eq!(steps1, steps2);
     }
@@ -719,8 +723,8 @@ mod tests {
             let m = create_random_matrix_local(size);
 
             // Test Average
-            let steps_prim = linkage_with_algo(&m, Method::Average, Algorithm::Primitive);
-            let steps_nn = linkage_with_algo(&m, Method::Average, Algorithm::NnChain);
+            let steps_prim = linkage_with_algo(&m, Method::Average, Algorithm::Primitive).unwrap();
+            let steps_nn = linkage_with_algo(&m, Method::Average, Algorithm::NnChain).unwrap();
 
             assert_eq!(steps_prim.len(), size - 1);
             assert_eq!(steps_nn.len(), size - 1);
@@ -738,8 +742,9 @@ mod tests {
             }
 
             // Test Ward (which uses squared optimization)
-            let steps_prim_ward = linkage_with_algo(&m, Method::Ward, Algorithm::Primitive);
-            let steps_nn_ward = linkage_with_algo(&m, Method::Ward, Algorithm::NnChain);
+            let steps_prim_ward =
+                linkage_with_algo(&m, Method::Ward, Algorithm::Primitive).unwrap();
+            let steps_nn_ward = linkage_with_algo(&m, Method::Ward, Algorithm::NnChain).unwrap();
 
             for (j, (s1, s2)) in steps_prim_ward.iter().zip(steps_nn_ward.iter()).enumerate() {
                 assert!(
@@ -769,7 +774,7 @@ mod tests {
         ];
 
         for method in methods {
-            let steps = linkage(&m, method);
+            let steps = linkage(&m, method).unwrap();
             for i in 0..steps.len() - 1 {
                 assert!(
                     steps[i].distance <= steps[i + 1].distance + 1e-6,
@@ -787,16 +792,16 @@ mod tests {
     fn test_edge_cases() {
         // N=0
         let m0 = NamedMatrix::new(vec![]).unwrap();
-        assert!(linkage(&m0, Method::Average).is_empty());
+        assert!(linkage(&m0, Method::Average).unwrap().is_empty());
 
         // N=1
         let m1 = NamedMatrix::new(vec!["A".to_string()]).unwrap();
-        assert!(linkage(&m1, Method::Average).is_empty());
+        assert!(linkage(&m1, Method::Average).unwrap().is_empty());
 
         // N=2
         let mut m2 = NamedMatrix::new(vec!["A".to_string(), "B".to_string()]).unwrap();
         m2.set(0, 1, 0.5);
-        let steps = linkage(&m2, Method::Average);
+        let steps = linkage(&m2, Method::Average).unwrap();
         assert_eq!(steps.len(), 1);
         assert_eq!(steps[0].distance, 0.5);
     }
@@ -889,10 +894,10 @@ mod tests {
         m.set(1, 2, 5.0);
         m.set(1, 3, 10.0);
 
-        let steps_centroid = linkage_with_algo(&m, Method::Centroid, Algorithm::NnChain);
+        let steps_centroid = linkage_with_algo(&m, Method::Centroid, Algorithm::NnChain).unwrap();
         assert_eq!(steps_centroid.len(), 3);
 
-        let steps_median = linkage_with_algo(&m, Method::Median, Algorithm::NnChain);
+        let steps_median = linkage_with_algo(&m, Method::Median, Algorithm::NnChain).unwrap();
         assert_eq!(steps_median.len(), 3);
     }
 
@@ -903,8 +908,8 @@ mod tests {
         let m = create_random_matrix_local(20);
 
         for method in [Method::Single, Method::Complete, Method::Average] {
-            let steps_prim = linkage_with_algo(&m, method, Algorithm::Primitive);
-            let steps_nn = linkage_with_algo(&m, method, Algorithm::NnChain);
+            let steps_prim = linkage_with_algo(&m, method, Algorithm::Primitive).unwrap();
+            let steps_nn = linkage_with_algo(&m, method, Algorithm::NnChain).unwrap();
             assert_eq!(steps_prim.len(), steps_nn.len());
             for (i, (s1, s2)) in steps_prim.iter().zip(steps_nn.iter()).enumerate() {
                 assert!(

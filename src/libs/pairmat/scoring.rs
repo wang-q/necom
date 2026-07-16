@@ -163,7 +163,17 @@ impl ScoringMatrix<f32> {
 
             let n1 = fields[0].to_string();
             let n2 = fields[1].to_string();
-            let score: f32 = fields[2].parse()?;
+            let score: f32 = match fields[2].parse() {
+                Ok(v) => v,
+                Err(e) => {
+                    log::warn!(
+                        "skipping pairwise line with invalid score ({}): {}",
+                        e,
+                        line
+                    );
+                    continue;
+                }
+            };
 
             names.insert(n1.clone());
             names.insert(n2.clone());

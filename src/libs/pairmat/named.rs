@@ -38,7 +38,7 @@ impl NamedMatrix {
     /// Create from existing names and values (condensed upper triangle).
     pub fn new_from_values(names: Vec<String>, values: Vec<f32>) -> anyhow::Result<Self> {
         let size = names.len();
-        let matrix = CondensedMatrix::from_vec(size, values);
+        let matrix = CondensedMatrix::from_vec(size, values)?;
 
         let mut names_map = indexmap::IndexMap::with_capacity(size);
         for (i, name) in names.into_iter().enumerate() {
@@ -311,6 +311,24 @@ impl NamedMatrix {
                 Layout::LowerWithoutDiagonal => {
                     for (j, &value) in values.iter().enumerate().take(i) {
                         matrix.set(i, j, value);
+                    }
+                }
+            }
+        }
+
+        // Validate symmetry for full matrices.
+        if layout == Layout::Full {
+            for (i, (name, values)) in rows.iter().enumerate() {
+                for (j, &value) in values.iter().enumerate().skip(i + 1).take(size - i - 1) {
+                    let expected = matrix.get(i, j);
+                    if (value - expected).abs() > 1e-6 {
+                        anyhow::bail!(
+                            "asymmetric PHYLIP matrix at ('{}', '{}'): {} vs {}",
+                            name,
+                            rows[j].0,
+                            value,
+                            expected
+                        );
                     }
                 }
             }

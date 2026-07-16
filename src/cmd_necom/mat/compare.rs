@@ -51,6 +51,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     } else {
         method.as_str()
     };
+
+    const VALID_METHODS: &[&str] = &["pearson", "spearman", "mae", "cosine", "jaccard", "euclid"];
+    let requested_methods: Vec<&str> = methods
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .collect();
+    for m in &requested_methods {
+        if !VALID_METHODS.contains(m) {
+            anyhow::bail!("unknown method: {}", m);
+        }
+    }
+
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer =
         necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;

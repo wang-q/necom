@@ -39,7 +39,7 @@ necom mat transform [OPTIONS] <infile>
   - `linear`: $val = val \times scale + offset$
   - `inv-linear`: off-diagonal $val = max - val$; the diagonal is set to `0` to preserve a valid distance matrix
   - `log`: $val = -\ln(val)$ (off-diagonal values $\le 0$ are set to `Inf`; diagonal values $\le 0$ are set to 0)
-  - `exp`: $val = \exp(-val)$
+  - `exp`: $val = \exp(-val)$. Note: diagonal values are transformed as $\exp(-diag)$; since input diagonals are typically 0, the output diagonal becomes 1.0.
   - `square`: $val = val^2$
   - `sqrt`: $val = \sqrt{val}$ (negative values produce `NaN`)
 - `--max-val <FLOAT>`: Maximum value used for `inv-linear` (default: 1.0).
@@ -49,6 +49,7 @@ necom mat transform [OPTIONS] <infile>
 - `--missing <FLOAT>`: Default value for missing pairs when `--input-format pair` is used (default: 1.0).
 - `--normalize`: Whether to normalize based on diagonal elements before transformation (requires diagonal data in the matrix).
   - Normalization formula: $x_{norm}(i, j) = \frac{x(i, j)}{\sqrt{x(i, i) \times x(j, j)}}$
+  - Diagonal values less than or equal to `1e-9` are treated as zero during normalization, producing `0` for the corresponding row/column.
   - **Why normalize?**
     - Raw scores are usually affected by sequence length and cannot be directly compared (e.g., a score of 1000 for a long sequence may be less significant than a score of 100 for a short sequence).
     - Normalization uses the diagonal (self-alignment score) to convert raw scores into relative similarity (0–1 range), giving subsequent distance transformations (e.g., $1-S$) a meaningful mathematical interpretation.

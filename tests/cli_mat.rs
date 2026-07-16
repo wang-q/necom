@@ -4,6 +4,48 @@ mod common;
 
 use common::NecomCmd;
 
+/// Assert that a PHYLIP matrix row starting with `row_prefix` has value
+/// approximately equal to `expected` at column index `col_idx`.
+fn assert_row_value(stdout: &str, row_prefix: &str, col_idx: usize, expected: f32, tol: f32) {
+    let line = stdout
+        .lines()
+        .find(|l| l.starts_with(row_prefix))
+        .unwrap_or_else(|| panic!("missing row starting with '{}'", row_prefix));
+    let parts: Vec<&str> = line.split('\t').collect();
+    let value: f32 = parts[col_idx]
+        .parse()
+        .unwrap_or_else(|e| panic!("failed to parse value at column {}: {}", col_idx, e));
+    assert!(
+        (value - expected).abs() < tol,
+        "{}: expected {} got {}",
+        row_prefix,
+        expected,
+        value
+    );
+}
+
+/// Assert that `mat compare` output contains `method` with approximate score.
+fn assert_method_score(stdout: &str, method: &str, expected: f32, tol: f32) {
+    let prefix = format!("{}\t", method);
+    let line = stdout
+        .lines()
+        .find(|l| l.starts_with(&prefix))
+        .unwrap_or_else(|| panic!("missing method '{}'", method));
+    let score: f32 = line
+        .split('\t')
+        .nth(1)
+        .unwrap()
+        .parse()
+        .unwrap_or_else(|e| panic!("failed to parse score for {}: {}", method, e));
+    assert!(
+        (score - expected).abs() < tol,
+        "{}: expected {} got {}",
+        method,
+        expected,
+        score
+    );
+}
+
 #[test]
 fn command_mat_to_phylip() {
     let (stdout, _) = NecomCmd::new()
@@ -111,7 +153,7 @@ fn command_mat_compare() {
 
     // Verify output format and approximate value
     assert!(stdout.contains("Method\tScore"));
-    assert!(stdout.contains("pearson\t0.93"));
+    assert_method_score(&stdout, "pearson", 0.93, 0.01);
 
     // Test all methods
     let (stdout, stderr) = NecomCmd::new()
@@ -130,12 +172,12 @@ fn command_mat_compare() {
     assert!(stderr.contains("Common sequences: 10"));
 
     // Verify all methods are present with approximate values
-    assert!(stdout.contains("pearson\t0.93"));
-    assert!(stdout.contains("spearman\t0.93"));
-    assert!(stdout.contains("mae\t0.11"));
-    assert!(stdout.contains("cosine\t0.97"));
-    assert!(stdout.contains("jaccard\t0.75"));
-    assert!(stdout.contains("euclid\t1.22"));
+    assert_method_score(&stdout, "pearson", 0.93, 0.01);
+    assert_method_score(&stdout, "spearman", 0.93, 0.01);
+    assert_method_score(&stdout, "mae", 0.11, 0.01);
+    assert_method_score(&stdout, "cosine", 0.97, 0.01);
+    assert_method_score(&stdout, "jaccard", 0.75, 0.01);
+    assert_method_score(&stdout, "euclid", 1.22, 0.01);
 }
 
 #[test]
@@ -159,7 +201,7 @@ fn command_mat_transform_linear() {
 
     // Original: IBPA_ECOLI vs IBPA_ECOLI_GA is 0.058394
     // Transformed: 0.058394 * 2 + 1 = 1.116788
-    assert!(stdout.contains("1.116788"));
+    assert_row_value(&stdout, "IBPA_ECOLI\t", 2, 1.116788, 1e-6);
 }
 
 #[test]
@@ -181,7 +223,7 @@ fn command_mat_transform_inv_linear() {
 
     // Original: IBPA_ECOLI vs IBPA_ECOLI_GA is 0.058394
     // Transformed: 1.0 - 0.058394 = 0.941606
-    assert!(stdout.contains("0.941606"));
+    assert_row_value(&stdout, "IBPA_ECOLI\t", 2, 0.941606, 1e-6);
 }
 
 #[test]
@@ -195,7 +237,7 @@ fn command_mat_transform_log() {
 
     // Original: IBPA_ECOLI vs IBPA_ECOLI_GA is 0.058394
     // Transformed: -ln(0.058394) = 2.8405
-    assert!(stdout.contains("2.8405"));
+    assert_row_value(&stdout, "IBPA_ECOLI\t", 2, 2.8405, 1e-4);
 }
 
 #[test]
@@ -218,9 +260,10 @@ fn command_mat_transform_normalize() {
         .run();
 
     // Check normalized values
-    assert!(stdout.contains("0.250000")); // A-B
-    assert!(stdout.contains("0.166667")); // B-C or A-C
-    assert!(stdout.contains("1.000000")); // Diagonals
+    assert_row_value(&stdout, "A\t", 2, 0.25, 1e-5); // A-B
+    assert_row_value(&stdout, "A\t", 3, 0.166_667, 1e-5); // A-C
+    assert_row_value(&stdout, "B\t", 3, 0.166_667, 1e-5); // B-C
+    assert_row_value(&stdout, "A\t", 1, 1.0, 1e-6); // Diagonal
 }
 
 #[test]
@@ -244,8 +287,8 @@ fn command_mat_transform_normalize_inv() {
         .stdin(input)
         .run();
 
-    assert!(stdout.contains("0.750000")); // 1 - 0.25
-    assert!(stdout.contains("0.000000")); // Diagonals: 1 - 1.0
+    assert_row_value(&stdout, "A\t", 2, 0.75, 1e-5); // 1 - 0.25
+    assert_row_value(&stdout, "A\t", 1, 0.0, 1e-6); // Diagonals: 1 - 1.0
 }
 
 #[test]
@@ -275,9 +318,9 @@ fn command_mat_transform_pairwise_stdin() {
     // A-B=0.1 -> 0.2
     // A-C=0.5 -> 1.0
     // B-C=0.2 -> 0.4
-    assert!(stdout.contains("0.200000"));
-    assert!(stdout.contains("1.000000"));
-    assert!(stdout.contains("0.400000"));
+    assert_row_value(&stdout, "A\t", 2, 0.2, 1e-6);
+    assert_row_value(&stdout, "A\t", 3, 1.0, 1e-6);
+    assert_row_value(&stdout, "B\t", 3, 0.4, 1e-6);
 }
 
 #[test]
@@ -339,14 +382,14 @@ fn command_mat_compare_method_whitespace() {
         ])
         .run();
 
-    assert!(stdout.contains("pearson\t0.93"));
-    assert!(stdout.contains("cosine\t0.97"));
+    assert_method_score(&stdout, "pearson", 0.93, 0.01);
+    assert_method_score(&stdout, "cosine", 0.97, 0.01);
 }
 
 #[test]
 fn command_mat_to_phylip_malformed_warning() {
     // Malformed pairwise TSV lines should produce a warning but not fail
-    let input = "A\tB\t0.1\nA\tB\nC\tD\t0.2\n";
+    let input = "A\tB\t0.1\nA\tB\nC\tD\t0.2\nE\tF\tnot-a-number\n";
 
     let (stdout, stderr) = NecomCmd::new()
         .args(&["mat", "to-phylip", "stdin"])
@@ -354,8 +397,9 @@ fn command_mat_to_phylip_malformed_warning() {
         .run();
 
     assert!(stderr.contains("skipping malformed pairwise line"));
+    assert!(stderr.contains("skipping pairwise line with invalid score"));
     assert!(stdout.contains("0.2"));
-    assert_eq!(stdout.lines().count(), 5); // 4 sequences + header
+    assert_eq!(stdout.lines().count(), 5); // 4 valid sequences + header
 }
 
 #[test]
@@ -389,8 +433,8 @@ fn command_mat_compare_empty_method_token() {
         ])
         .run();
 
-    assert!(stdout.contains("pearson\t0.93"));
-    assert!(stdout.contains("cosine\t0.97"));
+    assert_method_score(&stdout, "pearson", 0.93, 0.01);
+    assert_method_score(&stdout, "cosine", 0.97, 0.01);
     // Only two methods should be reported.
     assert_eq!(stdout.lines().count(), 3); // header + pearson + cosine
 }
