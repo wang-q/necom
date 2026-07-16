@@ -71,8 +71,8 @@ pub fn get_node_with_longest_edge(tree: &Tree) -> Option<NodeId> {
         .filter(|n| root_id.map(|r| n.id != r).unwrap_or(true))
         .max_by(|a, b| {
             // Treat non-finite lengths as 0.0 so they are never selected as the longest edge.
-            let len_a = super::finite_length(a.length);
-            let len_b = super::finite_length(b.length);
+            let len_a = a.finite_length();
+            let len_b = b.finite_length();
             match len_a
                 .partial_cmp(&len_b)
                 .unwrap_or(std::cmp::Ordering::Equal)
@@ -118,12 +118,12 @@ pub fn is_rooted(tree: &Tree) -> bool {
 /// by visualization commands to decide between cladogram and phylogram modes.
 pub fn has_branch_lengths(tree: &Tree) -> bool {
     if let Some(root) = tree.get_root() {
-        let ids = tree.preorder(&root);
+        let ids = tree.preorder(root);
         ids.iter().any(|&id| {
             id != root
                 && tree
                     .get_node(id)
-                    .map(|n| n.length.is_some())
+                    .map(|n| n.finite_length() > 0.0)
                     .unwrap_or(false)
         })
     } else {
@@ -185,9 +185,9 @@ pub fn diameter(tree: &Tree, weighted: bool) -> f64 {
                 let weight = if weighted {
                     if let (Some(v_node), Some(u_node)) = (tree.get_node(v), tree.get_node(u)) {
                         if v_node.parent == Some(u) {
-                            super::finite_length(v_node.length)
+                            v_node.finite_length()
                         } else {
-                            super::finite_length(u_node.length)
+                            u_node.finite_length()
                         }
                     } else {
                         0.0
@@ -230,8 +230,7 @@ pub fn compute_node_heights(tree: &Tree) -> HashMap<NodeId, f64> {
                     let mut max_h = 0.0;
                     for &child in &node.children {
                         let child_h = *heights.get(&child).unwrap_or(&0.0);
-                        let edge_len =
-                            super::finite_length(tree.get_node(child).and_then(|n| n.length));
+                        let edge_len = tree.get_node(child).map_or(0.0, |n| n.finite_length());
                         let h = child_h + edge_len;
                         if h > max_h {
                             max_h = h;
@@ -283,7 +282,7 @@ pub fn compute_root_distances(tree: &Tree) -> HashMap<NodeId, f64> {
             dists.insert(node_id, d);
             if let Some(node) = tree.get_node(node_id) {
                 for &child in &node.children {
-                    let len = super::finite_length(tree.get_node(child).and_then(|n| n.length));
+                    let len = tree.get_node(child).map_or(0.0, |n| n.finite_length());
                     stack.push((child, d + len));
                 }
             }
@@ -374,7 +373,7 @@ pub fn tree_summary(tree: &Tree) -> TreeSummary {
     let mut edges_without_length = 0usize;
 
     if let Some(root) = tree.get_root() {
-        let ids = tree.preorder(&root);
+        let ids = tree.preorder(root);
         for id in ids {
             let Some(node) = tree.get_node(id) else {
                 continue;
@@ -397,7 +396,9 @@ pub fn tree_summary(tree: &Tree) -> TreeSummary {
             if id == root {
                 continue;
             }
-            if node.length.is_some() {
+            // Only positive finite lengths count as decorated edges;
+            // zero, missing, and non-finite lengths are treated as undecorated.
+            if node.finite_length() > 0.0 {
                 edges_with_length += 1;
             } else {
                 edges_without_length += 1;

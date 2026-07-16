@@ -2,6 +2,7 @@
 
 use super::super::Tree;
 use crate::libs::phylo::node::NodeId;
+use crate::libs::phylo::parser::is_newick_reserved;
 use std::io::Read;
 
 /// Read a Newick tree from a file.
@@ -67,14 +68,12 @@ fn to_newick_recursive(tree: &Tree, node_id: NodeId, indent: &str, depth: usize)
         node_info.push_str(&quote_label(name));
     }
 
-    if let Some(len) = node.length {
-        let len = super::super::finite_length(Some(len));
-        if len > 0.0 {
-            node_info.push_str(&format!(":{}", len));
-        }
-        // len == 0.0 (including NaN/inf/negative inputs) is omitted to keep
-        // cladograms clean and match the documented output semantics.
+    let len = node.finite_length();
+    if len > 0.0 {
+        node_info.push_str(&format!(":{}", len));
     }
+    // len == 0.0 (including NaN/inf/negative inputs) is omitted to keep
+    // cladograms clean and match the documented output semantics.
 
     if let Some(props) = &node.properties {
         if !props.is_empty() {
@@ -117,7 +116,9 @@ fn to_newick_recursive(tree: &Tree, node_id: NodeId, indent: &str, depth: usize)
 }
 
 fn quote_label(label: &str) -> String {
-    let needs_quote = label.chars().any(|c| "\"'(),:;[] \t\n".contains(c));
+    let needs_quote = label
+        .chars()
+        .any(|c| is_newick_reserved(c) || c == '\'' || c == '"' || c.is_whitespace());
     if needs_quote {
         format!("'{}'", label.replace('\'', "''"))
     } else {

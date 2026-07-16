@@ -22,7 +22,7 @@ fn check_support_and_length(
     for tree in &trees {
         // Use postorder traversal to iterate all nodes since nodes field is private
         if let Some(root) = tree.get_root() {
-            let nodes = tree.postorder(&root);
+            let nodes = tree.postorder(root);
             for node_id in nodes {
                 if let Some(node) = tree.get_node(node_id) {
                     if let Some(name) = &node.name {

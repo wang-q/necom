@@ -14,7 +14,7 @@ pub fn dist_root<W: Write>(
 ) -> Result<()> {
     let root = tree.get_root().ok_or_else(|| anyhow!("tree has no root"))?;
     for (k, v) in id_of.iter() {
-        let dist = tree.node_distance(&root, v)?;
+        let dist = tree.node_distance(root, *v)?;
         writer.write_fmt(format_args!("{}\t{}\n", k, format_float(dist)))?;
     }
     Ok(())
@@ -37,7 +37,7 @@ pub fn dist_parent<W: Write>(
                 continue;
             }
         };
-        let dist = tree.node_distance(&parent, v)?;
+        let dist = tree.node_distance(parent, *v)?;
         writer.write_fmt(format_args!("{}\t{}\n", k, format_float(dist)))?;
     }
     Ok(())
@@ -51,7 +51,7 @@ pub fn dist_pairwise<W: Write>(
 ) -> Result<()> {
     for (k1, v1) in id_of.iter() {
         for (k2, v2) in id_of.iter() {
-            let dist = tree.node_distance(v1, v2)?;
+            let dist = tree.node_distance(*v1, *v2)?;
             writer.write_fmt(format_args!("{}\t{}\t{}\n", k1, k2, format_float(dist)))?;
         }
     }
@@ -66,9 +66,9 @@ pub fn dist_lca<W: Write>(
 ) -> Result<()> {
     for (k1, v1) in id_of.iter() {
         for (k2, v2) in id_of.iter() {
-            let lca = tree.get_common_ancestor(v1, v2)?;
-            let dist1 = tree.node_distance(&lca, v1)?;
-            let dist2 = tree.node_distance(&lca, v2)?;
+            let lca = tree.get_common_ancestor(*v1, *v2)?;
+            let dist1 = tree.node_distance(lca, *v1)?;
+            let dist2 = tree.node_distance(lca, *v2)?;
             writer.write_fmt(format_args!(
                 "{}\t{}\t{}\t{}\n",
                 k1,
@@ -108,7 +108,7 @@ pub fn dist_phylip<W: Write>(
             let dist = if i == j {
                 0.0
             } else {
-                tree.node_distance(v1, v2)?
+                tree.node_distance(*v1, *v2)?
             };
             // Normalize -0.0 to 0.0 so Phylip matrices never print "-0.000000".
             let dist = if dist == 0.0 { 0.0 } else { dist };

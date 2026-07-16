@@ -317,7 +317,7 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
                                 for &m in members {
                                     if let Some(&m_node) = mat_idx_to_node.get(&m) {
                                         if let Ok(lca) =
-                                            tree.get_common_ancestor(&m_node, &medoid_node)
+                                            tree.get_common_ancestor(m_node, medoid_node)
                                         {
                                             let h = *node_heights.get(&lca).unwrap_or(&0.0);
                                             if h > cut_height {
@@ -371,7 +371,7 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
                     let mut valid = true;
                     if options.pam_respects_dendro {
                         if let Some(&medoid_node) = medoid_node_ids.get(&cid) {
-                            if let Ok(lca) = tree.get_common_ancestor(&node_id, &medoid_node) {
+                            if let Ok(lca) = tree.get_common_ancestor(node_id, medoid_node) {
                                 let h = *node_heights.get(&lca).unwrap_or(&0.0);
                                 if h > cut_height {
                                     valid = false;

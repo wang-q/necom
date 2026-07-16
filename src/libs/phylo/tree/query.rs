@@ -4,9 +4,9 @@ use super::Tree;
 use crate::libs::phylo::node::{Node, NodeId};
 
 /// Return the path from root to `id` (inclusive).
-pub fn get_path_from_root(tree: &Tree, id: &NodeId) -> anyhow::Result<Vec<NodeId>> {
+pub fn get_path_from_root(tree: &Tree, id: NodeId) -> anyhow::Result<Vec<NodeId>> {
     let mut path = Vec::new();
-    let mut current = *id;
+    let mut current = id;
 
     if tree.get_node(current).is_none() {
         anyhow::bail!("Node {} not found", current);
@@ -39,7 +39,7 @@ pub fn get_path_from_root(tree: &Tree, id: &NodeId) -> anyhow::Result<Vec<NodeId
 }
 
 /// Find Lowest Common Ancestor (LCA) of two nodes.
-pub fn get_common_ancestor(tree: &Tree, a: &NodeId, b: &NodeId) -> anyhow::Result<NodeId> {
+pub fn get_common_ancestor(tree: &Tree, a: NodeId, b: NodeId) -> anyhow::Result<NodeId> {
     let path_a = get_path_from_root(tree, a)?;
     let path_b = get_path_from_root(tree, b)?;
 
@@ -63,29 +63,29 @@ pub fn get_lca(tree: &Tree, nodes: &[NodeId]) -> anyhow::Result<NodeId> {
     }
     let mut lca = nodes[0];
     for &n in &nodes[1..] {
-        lca = get_common_ancestor(tree, &lca, &n)?;
+        lca = get_common_ancestor(tree, lca, n)?;
     }
     Ok(lca)
 }
 
 /// Calculate distance between two nodes.
 /// Returns (weighted_distance, topological_distance).
-pub fn get_distance(tree: &Tree, a: &NodeId, b: &NodeId) -> anyhow::Result<(f64, usize)> {
+pub fn get_distance(tree: &Tree, a: NodeId, b: NodeId) -> anyhow::Result<(f64, usize)> {
     let lca = get_common_ancestor(tree, a, b)?;
 
-    let dist_to_lca = |start: &NodeId, end: &NodeId| -> anyhow::Result<(f64, usize)> {
+    let dist_to_lca = |start: NodeId, end: NodeId| -> anyhow::Result<(f64, usize)> {
         let mut weighted = 0.0;
         let mut topo = 0;
-        let mut curr = *start;
+        let mut curr = start;
 
-        while curr != *end {
+        while curr != end {
             let node = tree.get_node(curr).ok_or_else(|| {
                 anyhow::anyhow!(
                     "Node {} not found or deleted while computing distance to LCA",
                     curr
                 )
             })?;
-            weighted += super::finite_length(node.length);
+            weighted += node.finite_length();
             topo += 1;
             curr = node.parent.ok_or_else(|| {
                 anyhow::anyhow!(
@@ -98,14 +98,14 @@ pub fn get_distance(tree: &Tree, a: &NodeId, b: &NodeId) -> anyhow::Result<(f64,
         Ok((weighted, topo))
     };
 
-    let (w1, t1) = dist_to_lca(a, &lca)?;
-    let (w2, t2) = dist_to_lca(b, &lca)?;
+    let (w1, t1) = dist_to_lca(a, lca)?;
+    let (w2, t2) = dist_to_lca(b, lca)?;
 
     Ok((w1 + w2, t1 + t2))
 }
 
-/// Distance between two nodes. Uses branch lengths if non-zero, else edge count.
-pub fn node_distance(tree: &Tree, a: &NodeId, b: &NodeId) -> anyhow::Result<f64> {
+/// Distance between two nodes; uses branch lengths when their sum exceeds 1e-9, otherwise edge count.
+pub fn node_distance(tree: &Tree, a: NodeId, b: NodeId) -> anyhow::Result<f64> {
     let (edge_sum, num_edges) = get_distance(tree, a, b)?;
     Ok(if edge_sum.abs() > 1e-9 {
         edge_sum
@@ -129,7 +129,7 @@ pub fn is_monophyletic(tree: &Tree, nodes: &[NodeId]) -> bool {
     // 1. Find LCA
     let mut lca = nodes[0];
     for &n in &nodes[1..] {
-        match get_common_ancestor(tree, &lca, &n) {
+        match get_common_ancestor(tree, lca, n) {
             Ok(anc) => lca = anc,
             Err(_) => return false, // Not in same tree
         }
@@ -156,7 +156,7 @@ pub fn is_monophyletic(tree: &Tree, nodes: &[NodeId]) -> bool {
 /// Collect IDs of all named leaves (children.is_empty() && name.is_some()) in the subtree rooted at `id`.
 pub fn get_named_leaves(tree: &Tree, id: NodeId) -> BTreeSet<NodeId> {
     let mut result = BTreeSet::new();
-    let subtree_nodes = tree.get_subtree(&id);
+    let subtree_nodes = tree.get_subtree(id);
     for nid in subtree_nodes {
         if let Some(node) = tree.get_node(nid) {
             if node.children.is_empty() && node.name.is_some() {
@@ -182,7 +182,7 @@ pub fn get_height(tree: &Tree, id: NodeId, weighted: bool) -> f64 {
         .iter()
         .map(|&child| {
             let dist = if weighted {
-                super::finite_length(tree.get_node(child).and_then(|n| n.length))
+                tree.get_node(child).map_or(0.0, |n| n.finite_length())
             } else {
                 1.0
             };
@@ -238,7 +238,7 @@ pub fn tree_medoid(tree: &Tree, ids: &[NodeId]) -> Option<usize> {
             if i == j {
                 continue;
             }
-            let dist = get_distance(tree, &ids[i], &ids[j])
+            let dist = get_distance(tree, ids[i], ids[j])
                 .map(|(d, _)| d)
                 .unwrap_or(f64::MAX);
             current_sum += dist;
@@ -264,7 +264,7 @@ pub fn lax_complement_lca(
     // Leaves under each specified node
     let mut specified_leaves = BTreeSet::new();
     for &id in specified_ids {
-        let subtree = tree.get_subtree(&id);
+        let subtree = tree.get_subtree(id);
         for sub_id in subtree {
             if let Some(node) = tree.get_node(sub_id) {
                 if node.children.is_empty() {
@@ -285,7 +285,7 @@ pub fn lax_complement_lca(
     let mut comp_nodes = complement_leaves.clone();
     let mut comp_lca = comp_nodes.pop()?;
     for id in &comp_nodes {
-        comp_lca = tree.get_common_ancestor(&comp_lca, id).ok()?;
+        comp_lca = tree.get_common_ancestor(comp_lca, *id).ok()?;
     }
 
     if comp_lca == root_id {

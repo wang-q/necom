@@ -369,11 +369,11 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
 
     // Set root of the tree
     if let Some(&root_node_id) = cluster_to_node.get(&root_cluster_id) {
-        tree.set_root(root_node_id);
+        tree.set_root(root_node_id)?;
     } else if n == 1 {
         // Single leaf case
         if let Some(&root_node_id) = cluster_to_node.get(&0) {
-            tree.set_root(root_node_id);
+            tree.set_root(root_node_id)?;
         }
     }
 

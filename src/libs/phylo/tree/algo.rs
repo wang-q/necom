@@ -27,7 +27,7 @@ pub fn sort_by_name(tree: &mut Tree, descending: bool) {
     let Some(root) = tree.get_root() else {
         return;
     };
-    let ids = tree.postorder(&root);
+    let ids = tree.postorder(root);
 
     // Pre-collect names to avoid borrowing issues during sort
     let mut name_map: HashMap<NodeId, String> = HashMap::new();
@@ -109,11 +109,11 @@ pub fn ladderize(tree: &mut Tree, descending: bool) {
     let Some(root) = tree.get_root() else {
         return;
     };
-    let ids = tree.levelorder(&root);
+    let ids = tree.levelorder(root);
 
     let mut size_map: HashMap<NodeId, usize> = HashMap::new();
 
-    let post_ids = tree.postorder(&root);
+    let post_ids = tree.postorder(root);
     for &id in &post_ids {
         let mut count = 0;
         if let Some(node) = tree.get_node(id) {
@@ -187,7 +187,7 @@ pub fn sort_by_list(tree: &mut Tree, order_list: &[String]) {
     let max_pos = order_list.len();
     let mut node_pos: HashMap<NodeId, usize> = HashMap::new();
 
-    let ids = tree.postorder(&root);
+    let ids = tree.postorder(root);
     for &id in &ids {
         let mut pos = max_pos;
         if let Some(node) = tree.get_node(id) {
@@ -208,7 +208,7 @@ pub fn sort_by_list(tree: &mut Tree, order_list: &[String]) {
         node_pos.insert(id, pos);
     }
 
-    let ids = tree.levelorder(&root);
+    let ids = tree.levelorder(root);
     for id in ids {
         if let Some(node) = tree.get_node_mut(id) {
             if node.children.is_empty() {
@@ -244,7 +244,7 @@ pub fn deladderize(tree: &mut Tree) {
 
     // 1. Calculate descendant counts (same as ladderize)
     let mut size_map: HashMap<NodeId, usize> = HashMap::new();
-    let post_ids = tree.postorder(&root);
+    let post_ids = tree.postorder(root);
     for &id in &post_ids {
         let mut count = 0;
         if let Some(node) = tree.get_node(id) {
@@ -308,7 +308,7 @@ where
 
     // Pass 1: Downward propagation (descendants of targets).
     // levelorder visits parents before children, so `is_in_clade` propagates.
-    let all_nodes = tree.levelorder(&root);
+    let all_nodes = tree.levelorder(root);
     for &id in &all_nodes {
         let mut kept = target_set.contains(&id);
         if !kept {
@@ -351,7 +351,7 @@ pub fn prune_nodes(tree: &mut Tree, to_remove: Vec<NodeId>) {
     //    become leaves after removal.
     let mut old_internals = Vec::new();
     if let Some(root) = tree.get_root() {
-        let all_nodes = tree.levelorder(&root);
+        let all_nodes = tree.levelorder(root);
         for id in all_nodes {
             if let Some(node) = tree.get_node(id) {
                 if !node.children.is_empty() {
@@ -377,14 +377,14 @@ pub fn prune_nodes(tree: &mut Tree, to_remove: Vec<NodeId>) {
 
     // 4. Collapse degree-2 nodes (post-order so children are visited first).
     if let Some(root) = tree.get_root() {
-        let nodes = tree.postorder(&root);
+        let nodes = tree.postorder(root);
         for id in nodes {
             if let Some(node) = tree.get_node(id) {
                 if node.children.len() == 1 {
                     if tree.get_root() == Some(id) {
                         // Root with a single child: promote the child to root.
                         let child_id = node.children[0];
-                        tree.set_root(child_id);
+                        tree.set_root(child_id).expect("child node should exist");
                         tree.remove_node(id, false);
                     } else {
                         let _ = tree.collapse_node(id);

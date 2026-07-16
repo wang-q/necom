@@ -50,7 +50,7 @@ pub fn compute_all_bitsets(
     let mut node_bitsets = HashMap::new();
 
     if let Some(root) = tree.get_root() {
-        let traversal = tree.postorder(&root);
+        let traversal = tree.postorder(root);
 
         for id in traversal {
             let Some(node) = tree.get_node(id) else {

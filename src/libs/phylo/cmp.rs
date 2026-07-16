@@ -16,6 +16,9 @@ pub trait TreeComparison {
     /// Get splits with their associated branch lengths.
     ///
     /// Returns a map from Split -> Branch Length.
+    /// If the same normalized split is produced by multiple edges, their
+    /// lengths are summed. This is defensive for malformed trees and does not
+    /// change results for properly binary or multifurcating trees.
     /// Used for Weighted Robinson-Foulds and Kuhner-Felsenstein distances.
     fn get_splits_with_values(
         &self,
@@ -115,7 +118,7 @@ impl TreeComparison for Tree {
         };
 
         // Get all nodes in postorder (bottom-up)
-        let nodes = self.postorder(&root_id);
+        let nodes = self.postorder(root_id);
 
         // Map NodeId -> BitSet (set of leaves under this node)
         let mut node_leaves: BTreeMap<usize, FixedBitSet> = BTreeMap::new();
@@ -156,7 +159,7 @@ impl TreeComparison for Tree {
 
             // Use branch length, default to 0.0 if None, and treat non-finite
             // lengths as 0.0 so they do not poison WRF/KF calculations.
-            let len = super::tree::finite_length(node.length);
+            let len = node.finite_length();
             *splits.entry(normalized.clone()).or_insert(0.0) += len;
 
             node_leaves.insert(node_id, bitset);
@@ -484,10 +487,87 @@ mod tests {
     }
 
     #[test]
+    fn test_wrf_kf_zero_and_missing_lengths() {
+        // Zero-length internal branches are treated as 0.0; missing lengths too.
+        let zero = "((A,B):0.0,(C,D):0.0);";
+        let with_len = "((A:0.1,B:0.1):0.2,(C:0.1,D:0.1):0.2);";
+        let missing = "((A,B),(C,D));";
+
+        let t_zero = Tree::from_newick(zero).unwrap();
+        let t_with = Tree::from_newick(with_len).unwrap();
+        let t_missing = Tree::from_newick(missing).unwrap();
+
+        let wrf_zero = t_zero.weighted_robinson_foulds(&t_with).unwrap();
+        let kf_zero = t_zero.kuhner_felsenstein(&t_with).unwrap();
+        assert!(
+            (wrf_zero - 0.4).abs() < 1e-6,
+            "WRF expected 0.4, got {}",
+            wrf_zero
+        );
+        assert!(
+            (kf_zero - 0.4).abs() < 1e-6,
+            "KF expected 0.4, got {}",
+            kf_zero
+        );
+
+        let wrf_missing = t_missing.weighted_robinson_foulds(&t_with).unwrap();
+        let kf_missing = t_missing.kuhner_felsenstein(&t_with).unwrap();
+        assert!(
+            (wrf_missing - 0.4).abs() < 1e-6,
+            "WRF (missing) expected 0.4, got {}",
+            wrf_missing
+        );
+        assert!(
+            (kf_missing - 0.4).abs() < 1e-6,
+            "KF (missing) expected 0.4, got {}",
+            kf_missing
+        );
+    }
+
+    #[test]
+    fn test_kf_symmetric() {
+        let t1 = Tree::from_newick("((A:0.1,B:0.1):0.2,(C:0.1,D:0.1):0.2);").unwrap();
+        let t2 = Tree::from_newick("((A:0.1,C:0.1):0.2,(B:0.1,D:0.1):0.2);").unwrap();
+
+        let kf_12 = t1.kuhner_felsenstein(&t2).unwrap();
+        let kf_21 = t2.kuhner_felsenstein(&t1).unwrap();
+        assert!((kf_12 - kf_21).abs() < 1e-9, "KF should be symmetric");
+    }
+
+    #[test]
     fn format_float_negative_zero() {
         assert_eq!(format_float(-0.0), "0");
         assert_eq!(format_float(0.0), "0");
         assert_eq!(format_float(1.0), "1");
         assert_eq!(format_float(1.234560), "1.23456");
+    }
+
+    #[test]
+    fn test_rf_multifurcating_star() {
+        let t1 = Tree::from_newick("(A,B,C,D);").unwrap();
+        let t2 = Tree::from_newick("(A,B,C,D);").unwrap();
+        assert_eq!(t1.robinson_foulds(&t2).unwrap(), 0);
+    }
+
+    #[test]
+    fn test_rf_multifurcating_vs_binary() {
+        // A star tree has no non-trivial splits; the binary tree has one.
+        let t1 = Tree::from_newick("(A,B,C,D);").unwrap();
+        let t2 = Tree::from_newick("((A,B),(C,D));").unwrap();
+        assert_eq!(t1.robinson_foulds(&t2).unwrap(), 1);
+    }
+
+    #[test]
+    fn test_wrf_kf_multifurcating() {
+        // T1 has non-trivial split {A,B} with total length 0.4.
+        // T2 is a star tree with only trivial splits, so its non-trivial
+        // split lengths are all 0. Default WRF/KF exclude trivial splits.
+        let t1 = Tree::from_newick("((A:0.1,B:0.1):0.2,(C:0.1,D:0.1):0.2);").unwrap();
+        let t2 = Tree::from_newick("(A:0.1,B:0.1,C:0.1,D:0.1);").unwrap();
+
+        let wrf = t1.weighted_robinson_foulds(&t2).unwrap();
+        let kf = t1.kuhner_felsenstein(&t2).unwrap();
+        assert!((wrf - 0.4).abs() < 1e-6, "WRF expected 0.4, got {}", wrf);
+        assert!((kf - 0.4).abs() < 1e-6, "KF expected 0.4, got {}", kf);
     }
 }

@@ -18,17 +18,6 @@ pub mod traversal;
 use super::node::{Node, NodeId};
 use std::collections::{BTreeMap, BTreeSet};
 
-/// Return a branch length as a finite, non-negative value for calculations.
-///
-/// NaN, infinite, negative, or missing lengths are treated as 0.0 so they do
-/// not poison sums, maxima, or distance computations.
-pub(crate) fn finite_length(length: Option<f64>) -> f64 {
-    match length {
-        Some(v) if v.is_finite() && v >= 0.0 => v,
-        _ => 0.0,
-    }
-}
-
 /// Arena-based phylogenetic tree.
 #[derive(Debug, Default, Clone)]
 pub struct Tree {
@@ -79,10 +68,12 @@ impl Tree {
     }
 
     /// Set a node as the root of the tree.
-    pub fn set_root(&mut self, id: NodeId) {
-        if self.get_node(id).is_some() {
-            self.root = Some(id);
+    pub fn set_root(&mut self, id: NodeId) -> anyhow::Result<()> {
+        if self.get_node(id).is_none() {
+            anyhow::bail!("node {} not found or deleted", id);
         }
+        self.root = Some(id);
+        Ok(())
     }
 
     // --- Delegation to ops ---
@@ -157,39 +148,39 @@ impl Tree {
     // --- Delegation to traversal ---
 
     /// Pre-order traversal returning node IDs.
-    pub fn preorder(&self, start_node: &NodeId) -> Vec<NodeId> {
-        traversal::preorder(self, *start_node)
+    pub fn preorder(&self, start_node: NodeId) -> Vec<NodeId> {
+        traversal::preorder(self, start_node)
     }
 
     /// Post-order traversal returning node IDs.
-    pub fn postorder(&self, start_node: &NodeId) -> Vec<NodeId> {
-        traversal::postorder(self, *start_node)
+    pub fn postorder(&self, start_node: NodeId) -> Vec<NodeId> {
+        traversal::postorder(self, start_node)
     }
 
     /// Level-order (BFS) traversal returning node IDs.
-    pub fn levelorder(&self, start_node: &NodeId) -> Vec<NodeId> {
-        traversal::levelorder(self, *start_node)
+    pub fn levelorder(&self, start_node: NodeId) -> Vec<NodeId> {
+        traversal::levelorder(self, start_node)
     }
 
     /// Extract a subtree rooted at `root_id` as a new Tree.
-    pub fn extract_subtree(&self, root_id: &NodeId) -> anyhow::Result<Tree> {
-        traversal::extract_subtree(self, *root_id)
+    pub fn extract_subtree(&self, root_id: NodeId) -> anyhow::Result<Tree> {
+        traversal::extract_subtree(self, root_id)
     }
 
     /// Return all node IDs in the subtree rooted at `root_id`.
-    pub fn get_subtree(&self, root_id: &NodeId) -> Vec<NodeId> {
-        traversal::preorder(self, *root_id)
+    pub fn get_subtree(&self, root_id: NodeId) -> Vec<NodeId> {
+        traversal::preorder(self, root_id)
     }
 
     // --- Delegation to query ---
 
     /// Return the path from root to `id` (inclusive).
-    pub fn get_path_from_root(&self, id: &NodeId) -> anyhow::Result<Vec<NodeId>> {
+    pub fn get_path_from_root(&self, id: NodeId) -> anyhow::Result<Vec<NodeId>> {
         query::get_path_from_root(self, id)
     }
 
     /// Find the Lowest Common Ancestor (LCA) of two nodes.
-    pub fn get_common_ancestor(&self, a: &NodeId, b: &NodeId) -> anyhow::Result<NodeId> {
+    pub fn get_common_ancestor(&self, a: NodeId, b: NodeId) -> anyhow::Result<NodeId> {
         query::get_common_ancestor(self, a, b)
     }
 
@@ -199,12 +190,12 @@ impl Tree {
     }
 
     /// Return (weighted distance, edge count) between two nodes.
-    pub fn get_distance(&self, a: &NodeId, b: &NodeId) -> anyhow::Result<(f64, usize)> {
+    pub fn get_distance(&self, a: NodeId, b: NodeId) -> anyhow::Result<(f64, usize)> {
         query::get_distance(self, a, b)
     }
 
     /// Distance between two nodes. Uses branch lengths if non-zero, else edge count.
-    pub fn node_distance(&self, a: &NodeId, b: &NodeId) -> anyhow::Result<f64> {
+    pub fn node_distance(&self, a: NodeId, b: NodeId) -> anyhow::Result<f64> {
         query::node_distance(self, a, b)
     }
 

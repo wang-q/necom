@@ -95,6 +95,17 @@ impl Node {
         self
     }
 
+    /// Return the branch length as a finite, non-negative value.
+    ///
+    /// NaN, infinite, negative, and missing lengths are treated as 0.0 so they
+    /// do not poison sums, maxima, or distance computations.
+    pub fn finite_length(&self) -> f64 {
+        match self.length {
+            Some(v) if v.is_finite() && v >= 0.0 => v,
+            _ => 0.0,
+        }
+    }
+
     /// Add a property (key-value pair)
     ///
     /// # Example

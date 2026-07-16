@@ -83,7 +83,7 @@ pub fn extract_subtree(tree: &Tree, node_id: NodeId) -> anyhow::Result<Tree> {
         if let Some(new_parent) = new_parent_opt {
             super::ops::add_child(&mut new_tree, new_parent, new_id)?;
         } else {
-            new_tree.set_root(new_id);
+            new_tree.set_root(new_id)?;
         }
 
         for &child in old_node.children.iter().rev() {

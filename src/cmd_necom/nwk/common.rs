@@ -141,7 +141,7 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
             .copied()
             .collect();
         for id in &internal_ids {
-            for sid in tree.get_subtree(id) {
+            for sid in tree.get_subtree(*id) {
                 ids.insert(sid);
             }
         }
@@ -179,7 +179,7 @@ pub(crate) fn match_positions(tree: &Tree, args: &ArgMatches) -> BTreeSet<NodeId
     let Some(root_id) = tree.get_root() else {
         return ids;
     };
-    let preorder_ids = tree.preorder(&root_id);
+    let preorder_ids = tree.preorder(root_id);
 
     preorder_ids.iter().for_each(|id| {
         if let Some(node) = tree.get_node(*id) {

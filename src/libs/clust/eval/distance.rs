@@ -35,7 +35,7 @@ impl DistanceMatrix for TreeDistance {
         let n2 = self.name_map.get(id2);
         if let (Some(&id1), Some(&id2)) = (n1, n2) {
             self.tree
-                .get_distance(&id1, &id2)
+                .get_distance(id1, id2)
                 .map(|(d, _)| d)
                 .unwrap_or(f64::NAN)
         } else {

@@ -13,7 +13,7 @@ pub fn to_dot(tree: &Tree) -> String {
     s.push_str("    node [shape=box];\n"); // Optional styling
 
     if let Some(root) = tree.get_root() {
-        let nodes = tree.preorder(&root);
+        let nodes = tree.preorder(root);
         for &node_id in &nodes {
             let Some(node) = tree.get_node(node_id) else {
                 continue;

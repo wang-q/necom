@@ -24,15 +24,15 @@ fn test_tree_traversals() {
     tree.add_child(n2, n5).unwrap();
 
     // Preorder: 0, 1, 3, 4, 2, 5
-    let pre = tree.preorder(&n0);
+    let pre = tree.preorder(n0);
     assert_eq!(pre, vec![n0, n1, n3, n4, n2, n5]);
 
     // Postorder: 3, 4, 1, 5, 2, 0
-    let post = tree.postorder(&n0);
+    let post = tree.postorder(n0);
     assert_eq!(post, vec![n3, n4, n1, n5, n2, n0]);
 
     // Levelorder: 0, 1, 2, 3, 4, 5
-    let level = tree.levelorder(&n0);
+    let level = tree.levelorder(n0);
     assert_eq!(level, vec![n0, n1, n2, n3, n4, n5]);
 }
 
@@ -131,24 +131,40 @@ fn test_tree_paths_and_distances() {
     tree.get_node_mut(n4).unwrap().length = Some(4.0);
 
     // Paths
-    assert_eq!(tree.get_path_from_root(&n3).unwrap(), vec![n0, n1, n3]);
-    assert_eq!(tree.get_path_from_root(&n2).unwrap(), vec![n0, n2]);
+    assert_eq!(tree.get_path_from_root(n3).unwrap(), vec![n0, n1, n3]);
+    assert_eq!(tree.get_path_from_root(n2).unwrap(), vec![n0, n2]);
 
     // LCA
-    assert_eq!(tree.get_common_ancestor(&n3, &n4).unwrap(), n1);
-    assert_eq!(tree.get_common_ancestor(&n3, &n2).unwrap(), n0);
-    assert_eq!(tree.get_common_ancestor(&n1, &n3).unwrap(), n1);
+    assert_eq!(tree.get_common_ancestor(n3, n4).unwrap(), n1);
+    assert_eq!(tree.get_common_ancestor(n3, n2).unwrap(), n0);
+    assert_eq!(tree.get_common_ancestor(n1, n3).unwrap(), n1);
 
     // Distance
     // n3 -> n4: n3(3.0)->n1 + n1->n4(4.0) = 7.0 (weighted). Steps: n3->n1->n4 = 2 edges.
-    let (w, t) = tree.get_distance(&n3, &n4).unwrap();
+    let (w, t) = tree.get_distance(n3, n4).unwrap();
     assert_eq!(w, 7.0);
     assert_eq!(t, 2);
 
     // n3 -> n2: n3(3.0)->n1(1.0)->n0 + n0->n2(2.0) = 6.0. Steps: n3->n1->n0->n2 = 3 edges.
-    let (w, t) = tree.get_distance(&n3, &n2).unwrap();
+    let (w, t) = tree.get_distance(n3, n2).unwrap();
     assert_eq!(w, 6.0);
     assert_eq!(t, 3);
+}
+
+#[test]
+fn node_distance_threshold_fallback() {
+    // When the summed branch lengths are below the 1e-9 threshold,
+    // node_distance falls back to the topological edge count.
+    let tree = Tree::from_newick("(A:1e-10,B:1e-10)R;").unwrap();
+    let a = tree.get_node_by_name("A").unwrap();
+    let b = tree.get_node_by_name("B").unwrap();
+    assert_eq!(tree.node_distance(a, b).unwrap(), 2.0);
+
+    // Above the threshold the weighted sum is returned.
+    let tree = Tree::from_newick("(A:1.0,B:1.0)R;").unwrap();
+    let a = tree.get_node_by_name("A").unwrap();
+    let b = tree.get_node_by_name("B").unwrap();
+    assert_eq!(tree.node_distance(a, b).unwrap(), 2.0);
 }
 
 #[test]
@@ -177,7 +193,7 @@ fn test_tree_queries() {
 
     // Subtree
     // subtree(1) = [1, 3]
-    let sub = tree.extract_subtree(&n1).unwrap();
+    let sub = tree.extract_subtree(n1).unwrap();
     // IDs might change, but names should persist?
     // Subtree renumbers. Root of subtree is 0. Child is 1.
     // Names: None, leaf3.
@@ -456,7 +472,7 @@ fn test_extract_subtree_skips_deleted_children() {
         .children
         .push(deleted_id);
 
-    let subtree = tree.extract_subtree(&root_id).unwrap();
+    let subtree = tree.extract_subtree(root_id).unwrap();
     assert_eq!(subtree.len(), 3); // root + A + B, deleted node skipped
 }
 
@@ -479,7 +495,7 @@ fn nan_length_get_distance() {
     tree.get_node_mut(leaf_a).unwrap().length = Some(1.0);
     tree.get_node_mut(leaf_b).unwrap().length = Some(2.0);
 
-    let (weighted, topo) = tree.get_distance(&leaf_a, &leaf_b).unwrap();
+    let (weighted, topo) = tree.get_distance(leaf_a, leaf_b).unwrap();
     assert!(
         (weighted - 3.0).abs() < 1e-9,
         "expected 3.0, got {}",
@@ -606,7 +622,7 @@ fn test_has_branch_lengths() {
     assert!(super::stat::has_branch_lengths(&tree));
 
     let tree = Tree::from_newick("(A:0,B:0)Root;").unwrap();
-    assert!(super::stat::has_branch_lengths(&tree));
+    assert!(!super::stat::has_branch_lengths(&tree));
 
     // Root length is ignored.
     let tree = Tree::from_newick("(A,B)Root:100;").unwrap();
@@ -715,7 +731,7 @@ fn deleted_node_get_path_from_root_errors() {
     // Simulate malformed tree: internal is marked deleted but leaf still points to it.
     tree.get_node_mut(internal).unwrap().deleted = true;
 
-    assert!(tree.get_path_from_root(&leaf).is_err());
+    assert!(tree.get_path_from_root(leaf).is_err());
 }
 
 #[test]
@@ -741,5 +757,75 @@ fn get_distance_with_deleted_node_on_path() {
 
     // get_distance must return an error (not hang) because the path
     // from n3 to root goes through the deleted n1
-    assert!(tree.get_distance(&n3, &n2).is_err());
+    assert!(tree.get_distance(n3, n2).is_err());
+}
+
+#[test]
+fn test_insert_parent_pair_siblings_preserves_lengths() {
+    let mut tree = Tree::from_newick("((A:1.0,B:2.0)C:3.0,D)Root;").unwrap();
+    let a_id = tree.get_node_by_name("A").unwrap();
+    let b_id = tree.get_node_by_name("B").unwrap();
+    let c_id = tree.get_node_by_name("C").unwrap();
+
+    let new_parent = tree.insert_parent_pair(a_id, b_id).unwrap();
+    let new_parent_node = tree.get_node(new_parent).unwrap();
+
+    assert!(new_parent_node.children.contains(&a_id));
+    assert!(new_parent_node.children.contains(&b_id));
+    assert_eq!(new_parent_node.parent, Some(c_id));
+    assert_eq!(new_parent_node.length, None);
+
+    assert_eq!(tree.get_node(a_id).unwrap().parent, Some(new_parent));
+    assert_eq!(tree.get_node(b_id).unwrap().parent, Some(new_parent));
+    assert!((tree.get_node(a_id).unwrap().length.unwrap() - 1.0).abs() < 1e-9);
+    assert!((tree.get_node(b_id).unwrap().length.unwrap() - 2.0).abs() < 1e-9);
+}
+
+#[test]
+fn test_insert_parent_pair_root_children() {
+    let mut tree = Tree::from_newick("(A,B)Root;").unwrap();
+    let a_id = tree.get_node_by_name("A").unwrap();
+    let b_id = tree.get_node_by_name("B").unwrap();
+    let root = tree.get_root().unwrap();
+
+    let new_parent = tree.insert_parent_pair(a_id, b_id).unwrap();
+    let root_node = tree.get_node(root).unwrap();
+
+    assert_eq!(root_node.children, vec![new_parent]);
+    assert_eq!(tree.get_node(new_parent).unwrap().parent, Some(root));
+}
+
+#[test]
+fn test_compact_preserves_root() {
+    let mut tree = Tree::from_newick("((A,B)C,D)Root;").unwrap();
+    let c_id = tree.get_node_by_name("C").unwrap();
+
+    tree.remove_node(c_id, true);
+    tree.compact();
+
+    let root = tree.get_root().unwrap();
+    let root_node = tree.get_node(root).unwrap();
+    assert_eq!(root_node.name.as_deref(), Some("Root"));
+    assert!(tree.get_node_by_name("A").is_none());
+    assert!(tree.get_node_by_name("C").is_none());
+    assert!(tree.get_node_by_name("D").is_some());
+}
+
+#[test]
+fn test_deroot_binary_root_becomes_multifurcating() {
+    let mut tree = Tree::from_newick("((A:1,B:2)C:3,D:4)Root;").unwrap();
+    tree.deroot().unwrap();
+
+    let root = tree.get_root().unwrap();
+    let root_node = tree.get_node(root).unwrap();
+    assert_eq!(root_node.children.len(), 3);
+
+    let child_names: Vec<String> = root_node
+        .children
+        .iter()
+        .map(|&id| tree.get_node(id).unwrap().name.clone().unwrap_or_default())
+        .collect();
+    assert!(child_names.contains(&"A".to_string()));
+    assert!(child_names.contains(&"B".to_string()));
+    assert!(child_names.contains(&"D".to_string()));
 }

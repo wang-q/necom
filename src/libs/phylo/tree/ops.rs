@@ -54,21 +54,32 @@ pub fn remove_node(tree: &mut Tree, id: NodeId, recursive: bool) {
         return;
     }
 
-    // 1. Handle Children
-    let children = tree.nodes[id].children.clone();
-    for child_id in children {
-        if recursive {
-            remove_node(tree, child_id, true);
-        } else {
-            // Orphan the child
+    if recursive {
+        // Collect all descendants using an explicit stack. `std::mem::take`
+        // moves the children vector out in place, avoiding a clone of every
+        // child list during recursive deletion.
+        let mut to_remove = vec![id];
+        let mut stack = vec![id];
+        while let Some(cur) = stack.pop() {
+            let children = std::mem::take(&mut tree.nodes[cur].children);
+            for child_id in children {
+                stack.push(child_id);
+                to_remove.push(child_id);
+            }
+        }
+        for cur in to_remove {
+            detach_and_delete(tree, cur);
+        }
+    } else {
+        // Orphan direct children without deleting them.
+        let children = std::mem::take(&mut tree.nodes[id].children);
+        for child_id in children {
             if let Some(child) = tree.get_node_mut(child_id) {
                 child.parent = None;
             }
         }
+        detach_and_delete(tree, id);
     }
-
-    // 2. Detach from parent and mark deleted
-    detach_and_delete(tree, id);
 }
 
 /// Collapse a node, removing it and connecting its children to its parent.
@@ -82,31 +93,35 @@ pub fn collapse_node(tree: &mut Tree, id: NodeId) -> anyhow::Result<()> {
     }
 
     // 1. Get info
-    let (parent_id, parent_edge, children_info) = {
+    let (parent_id, parent_has_len, parent_len) = {
         let node = tree
             .get_node(id)
             .ok_or_else(|| anyhow::anyhow!("Node {} not found or deleted", id))?;
         let parent_id = node
             .parent
             .ok_or_else(|| anyhow::anyhow!("Node {} has no parent", id))?;
-        let children_info: Vec<(NodeId, Option<f64>)> = node
-            .children
-            .iter()
-            .filter_map(|&c| tree.get_node(c).map(|child| (c, child.length)))
-            .collect();
-        (parent_id, node.length, children_info)
+        (parent_id, node.length.is_some(), node.finite_length())
     };
+    let children_info: Vec<(NodeId, bool, f64)> = tree
+        .get_node(id)
+        .map(|node| {
+            node.children
+                .iter()
+                .filter_map(|&c| {
+                    tree.get_node(c)
+                        .map(|child| (c, child.length.is_some(), child.finite_length()))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
 
     // 2. Re-parent children
     let mut new_children_ids = Vec::new();
-    for (child_id, child_edge) in children_info {
-        let new_edge = match (parent_edge, child_edge) {
-            (Some(p), Some(c)) => {
-                Some(super::finite_length(Some(p)) + super::finite_length(Some(c)))
-            }
-            (Some(p), None) => Some(super::finite_length(Some(p))),
-            (None, Some(c)) => Some(super::finite_length(Some(c))),
-            (None, None) => None,
+    for (child_id, child_has_len, child_len) in children_info {
+        let new_edge = if parent_has_len || child_has_len {
+            Some(parent_len + child_len)
+        } else {
+            None
         };
 
         // Update child
@@ -195,7 +210,8 @@ pub fn insert_parent(tree: &mut Tree, id: NodeId) -> anyhow::Result<NodeId> {
         .parent
         .ok_or_else(|| anyhow::anyhow!("Node {} has no parent", id))?;
     let length = node.length;
-    let new_length = length.map(|l| super::finite_length(Some(l)) / 2.0);
+    let half_len = node.finite_length() / 2.0;
+    let new_length = length.map(|_| half_len);
 
     let new_node = tree.add_node();
 
@@ -359,7 +375,7 @@ pub fn reroot_at(
     }
 
     // 1. Get path from old root to new root
-    let path = tree.get_path_from_root(&new_root_id)?;
+    let path = tree.get_path_from_root(new_root_id)?;
 
     // 1.5 Process Support Values (Labels)
     // Shift internal node labels along the path to align with edge reversals.
@@ -503,7 +519,7 @@ pub fn condense_subtree(
         tree.remove_node(sub_root_id, true);
 
         let new_root = tree.add_node();
-        tree.set_root(new_root);
+        tree.set_root(new_root)?;
         if let Some(node) = tree.get_node_mut(new_root) {
             node.set_name(name);
             node.add_property("member", member_count.to_string());

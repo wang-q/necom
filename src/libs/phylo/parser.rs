@@ -3,7 +3,7 @@ use super::node::NodeId;
 use super::tree::Tree;
 use nom::{
     branch::alt,
-    bytes::complete::{is_not, tag, take_until, take_while},
+    bytes::complete::{tag, take_until, take_while},
     character::complete::{char, digit1, multispace0},
     combinator::{cut, map, map_res, opt, recognize},
     error::{context, ContextError, ErrorKind, FromExternalError, ParseError},
@@ -12,6 +12,14 @@ use nom::{
     IResult, Offset, Parser,
 };
 use std::collections::BTreeMap;
+
+/// Structural characters that terminate an unquoted Newick label.
+pub(crate) const NEWICK_RESERVED: &str = "():;,[]";
+
+/// Check whether a character is a reserved Newick structural character.
+pub(crate) fn is_newick_reserved(c: char) -> bool {
+    NEWICK_RESERVED.contains(c)
+}
 
 // ================================================================================================
 // Error Handling Structures
@@ -138,7 +146,7 @@ fn parse_label(input: &str) -> IResult<&str, String, DetailedError<'_>> {
     // Unquoted labels cannot contain Newick structural characters
     let unquoted = map(
         // Take characters until a reserved Newick character is found
-        take_while(|c: char| !"():;,[]".contains(c)),
+        take_while(|c: char| !is_newick_reserved(c)),
         |s: &str| s.trim().to_string(),
     );
 
@@ -246,52 +254,106 @@ fn parse_length(input: &str) -> IResult<&str, Option<f64>, DetailedError<'_>> {
 // Returns:
 // - Some(map) if it's an NHX comment with properties
 // - None if it's a regular comment (ignored)
+
+/// Parse a plain `[...]` comment and return its raw content.
+///
+/// Supports nested `[...]` brackets and `\]` escapes. The parser keeps a
+/// nesting depth counter and only terminates when the outer bracket closes.
+fn parse_plain_comment(input: &str) -> IResult<&str, &str, DetailedError<'_>> {
+    let (input, _) = ws(char('[')).parse(input)?;
+
+    let mut depth = 1usize;
+    let mut content_end = 0usize;
+    let mut chars = input.char_indices().peekable();
+
+    while let Some((idx, c)) = chars.next() {
+        if c == '\\' {
+            // Escaped character: consume the escape target and continue.
+            chars.next();
+            continue;
+        }
+        if c == '[' {
+            depth += 1;
+        } else if c == ']' {
+            depth = depth.saturating_sub(1);
+            if depth == 0 {
+                content_end = idx;
+                break;
+            }
+        }
+    }
+
+    if depth != 0 {
+        return Err(nom::Err::Error(DetailedError::from_error_kind(
+            input,
+            ErrorKind::Tag,
+        )));
+    }
+
+    let content = &input[..content_end];
+    let input = &input[content_end..];
+    ws(char(']')).parse(input).map(|(rest, _)| (rest, content))
+}
+
+/// Parse NHX properties from the content of an NHX comment.
+///
+/// Input is expected to start with `&&NHX` (the leading marker itself is
+/// skipped). Properties are colon-separated `key=value` pairs; bare keys
+/// without a value get an empty string.
+fn parse_nhx_content(content: &str) -> Option<BTreeMap<String, String>> {
+    if !content.starts_with("&&NHX") {
+        return None;
+    }
+
+    let mut props = BTreeMap::new();
+    for part in content.split(':') {
+        if part == "&&NHX" {
+            continue;
+        }
+        if let Some((k, v)) = part.split_once('=') {
+            props.insert(k.to_string(), v.to_string());
+        } else if !part.trim().is_empty() {
+            // Unstructured part in NHX -> key with empty value
+            props.insert(part.to_string(), String::new());
+        }
+    }
+
+    if props.is_empty() {
+        None
+    } else {
+        Some(props)
+    }
+}
+
+/// Parse simple `key=value` properties from a regular comment.
+///
+/// Properties are whitespace-separated. Only `key=value` pairs are extracted.
+fn parse_simple_properties(content: &str) -> Option<BTreeMap<String, String>> {
+    let mut props = BTreeMap::new();
+    for part in content.split_whitespace() {
+        if let Some((k, v)) = part.split_once('=') {
+            props.insert(k.to_string(), v.to_string());
+        }
+    }
+
+    if props.is_empty() {
+        None
+    } else {
+        Some(props)
+    }
+}
+
+/// Parse a Newick comment and extract any structured properties.
+///
+/// NHX comments (`[&&NHX:...]`) and simple `key=value` comments yield a
+/// property map; all other comments are ignored and return `None`.
 fn parse_comment(
     input: &str,
 ) -> IResult<&str, Option<BTreeMap<String, String>>, DetailedError<'_>> {
-    let comment_content = delimited(ws(char('[')), is_not("]"), char(']'));
-
     context(
         "comment",
-        map(opt(comment_content), |content: Option<&str>| {
-            if let Some(s) = content {
-                // Check for NHX format signature
-                // Example: [&&NHX:S=human:E=1.5]
-                if s.starts_with("&&NHX") {
-                    let mut props = BTreeMap::new();
-
-                    for part in s.split(':') {
-                        if part == "&&NHX" {
-                            continue;
-                        }
-                        if let Some((k, v)) = part.split_once('=') {
-                            props.insert(k.to_string(), v.to_string());
-                        } else if !part.trim().is_empty() {
-                            // Unstructured part in NHX -> key with empty value
-                            props.insert(part.to_string(), String::new());
-                        }
-                    }
-
-                    if !props.is_empty() {
-                        return Some(props);
-                    }
-                } else {
-                    // Parse simple Key=Value properties (e.g., [S=Gorilla])
-                    let mut props = BTreeMap::new();
-                    let parts: Vec<&str> = s.split_whitespace().collect();
-
-                    for part in parts {
-                        if let Some((k, v)) = part.split_once('=') {
-                            props.insert(k.to_string(), v.to_string());
-                        }
-                    }
-
-                    if !props.is_empty() {
-                        return Some(props);
-                    }
-                }
-            }
-            None
+        map(opt(parse_plain_comment), |content: Option<&str>| {
+            content.and_then(|s| parse_nhx_content(s).or_else(|| parse_simple_properties(s)))
         }),
     )
     .parse(input)
@@ -377,7 +439,8 @@ pub fn parse_newick(input: &str) -> Result<Tree, TreeError> {
             let root_id = root_node.into_tree(&mut tree).map_err(|e| {
                 TreeError::LogicError(format!("failed to build tree from parsed nodes: {}", e))
             })?;
-            tree.set_root(root_id);
+            tree.set_root(root_id)
+                .map_err(|e| TreeError::LogicError(format!("failed to set root node: {}", e)))?;
             Ok(tree)
         }
         Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) => Err(make_tree_error(input, e)),
@@ -402,10 +465,9 @@ pub fn parse_newick_multi(input: &str) -> Result<Vec<Tree>, TreeError> {
 
     // "Garbage" blocks are top-level comments [ ... ] that are ignored.
     // Some tree files (like from Nexus) might have headers in comments.
-    let garbage = map(
-        ws(delimited(char('['), take_while(|c| c != ']'), char(']'))),
-        |_| None,
-    );
+    // Reuse the same comment scanner used by `parse_subtree` so nested
+    // brackets and escaped `]` are handled consistently.
+    let garbage = map(parse_plain_comment, |_| None);
 
     // Parse many occurrences of either valid trees or garbage
     let mut parser = many1(alt((valid_tree, garbage)));
@@ -418,7 +480,9 @@ pub fn parse_newick_multi(input: &str) -> Result<Vec<Tree>, TreeError> {
                 let root_id = root_node.into_tree(&mut tree).map_err(|e| {
                     TreeError::LogicError(format!("failed to build tree from parsed nodes: {}", e))
                 })?;
-                tree.set_root(root_id);
+                tree.set_root(root_id).map_err(|e| {
+                    TreeError::LogicError(format!("failed to set root node: {}", e))
+                })?;
                 trees.push(tree);
             }
             Ok(trees)
@@ -671,7 +735,7 @@ mod tests {
 
         // User's cleaning logic
         let root_id = tree.get_root().unwrap();
-        let traversal = tree.preorder(&root_id);
+        let traversal = tree.preorder(root_id);
 
         for id in traversal {
             let node = tree.get_node_mut(id).unwrap();
@@ -810,6 +874,29 @@ mod tests {
     }
 
     #[test]
+    fn test_parser_nested_comment() {
+        // Nested brackets are supported.
+        let input = "(A[outer [inner] end],B)R;";
+        let tree = Tree::from_newick(input).unwrap();
+        assert_eq!(tree.len(), 3);
+    }
+
+    #[test]
+    fn test_parser_escaped_bracket() {
+        // An escaped `]` does not terminate the comment.
+        let input = "(A[comment with \\] bracket],B)R;";
+        let tree = Tree::from_newick(input).unwrap();
+        assert_eq!(tree.len(), 3);
+    }
+
+    #[test]
+    fn test_parser_unescaped_bracket_still_error() {
+        // An unescaped `]` inside a comment without nesting/escaping is invalid.
+        let input = "(A[comment with ] bracket])R;";
+        assert!(Tree::from_newick(input).is_err());
+    }
+
+    #[test]
     fn test_parser_error() {
         // Case 1: Missing semicolon
         let input = "(A,B)C";
@@ -833,5 +920,21 @@ mod tests {
             }
             _ => panic!("Expected ParseError, got {:?}", res2),
         }
+    }
+
+    #[test]
+    fn test_parse_newick_multi_skips_nested_comments() {
+        // Top-level comments may be nested or contain escaped brackets.
+        let input = "[header [nested] end] (A,B)R; [tail \\] ok] (C,D)S;";
+        let trees = Tree::from_newick_multi(input).unwrap();
+        assert_eq!(trees.len(), 2);
+
+        let first = &trees[0];
+        let root = first.get_node(first.get_root().unwrap()).unwrap();
+        assert_eq!(root.name.as_deref(), Some("R"));
+
+        let second = &trees[1];
+        let root = second.get_node(second.get_root().unwrap()).unwrap();
+        assert_eq!(root.name.as_deref(), Some("S"));
     }
 }

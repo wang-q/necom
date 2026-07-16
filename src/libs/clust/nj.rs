@@ -16,7 +16,7 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
     if n == 1 {
         let mut tree = Tree::new();
         let root = tree.add_node();
-        tree.set_root(root);
+        tree.set_root(root)?;
         let node = tree
             .get_node_mut(root)
             .ok_or_else(|| anyhow::anyhow!("node {} not found", root))?;
@@ -173,7 +173,7 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
 
         // Create a root node between them
         let root = tree.add_node();
-        tree.set_root(root);
+        tree.set_root(root)?;
 
         tree.add_child(root, id1).map_err(|e| anyhow::anyhow!(e))?;
         tree.add_child(root, id2).map_err(|e| anyhow::anyhow!(e))?;

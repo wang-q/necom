@@ -9,7 +9,7 @@ pub(super) fn compute_depths(tree: &Tree) -> HashMap<NodeId, usize> {
     let mut depths = HashMap::new();
     if let Some(root) = tree.get_root() {
         depths.insert(root, 0);
-        for &id in &tree.levelorder(&root) {
+        for &id in &tree.levelorder(root) {
             if let Some(node) = tree.get_node(id) {
                 let depth = depths.get(&id).copied().unwrap_or(0);
                 for &child in &node.children {
@@ -26,7 +26,7 @@ pub(super) fn compute_depths(tree: &Tree) -> HashMap<NodeId, usize> {
 pub(super) fn compute_heights(tree: &Tree) -> HashMap<NodeId, usize> {
     let mut heights = HashMap::new();
     if let Some(root) = tree.get_root() {
-        for &id in &tree.postorder(&root) {
+        for &id in &tree.postorder(root) {
             if let Some(node) = tree.get_node(id) {
                 let h = if node.children.is_empty() {
                     0

@@ -296,7 +296,7 @@ necom nwk to-tex [OPTIONS] <infile>
 
 ## Branch Length Handling
 
-`necom nwk` treats non-finite branch lengths (`NaN`, positive/negative infinity) and negative values as `0.0` during computation and visualization. On input, such values are normalized to `None` (no length annotation); on output, `None` lengths are omitted so that cladograms remain unannotated. This applies to:
+`necom nwk` treats non-finite branch lengths (`NaN`, positive/negative infinity) and negative values as `0.0` during computation and visualization. On input, such values are normalized to `None` (no length annotation); on output, `None` and zero (`0.0`) lengths are omitted so that cladograms remain unannotated. This applies to:
 
 *   Statistics (`stat`) and distance calculations (`distance`).
 *   Tree comparison (`cmp`), including weighted Robinson-Foulds and Kuhner-Felsenstein distances.
@@ -304,6 +304,11 @@ necom nwk to-tex [OPTIONS] <infile>
 *   Visualization (`to-svg`, `to-dot`, `to-forest`, `to-tex`).
 
 This normalization prevents invalid values from polluting sums, maxima, or distance computations. Note that input files themselves are not modified; normalization occurs only during internal computation. If strict branch-length validation is needed, clean the data in the input first.
+
+### Length detection and distance threshold
+
+*   `stat` counts an edge as "with length" only when its branch length is a positive finite value. Missing, zero, and non-finite lengths are reported as "without length".
+*   `distance` uses the sum of branch lengths only when its absolute value exceeds `1e-9`; otherwise it falls back to the topological edge count. This avoids treating near-zero floating-point values as meaningful distances.
 
 ---
 

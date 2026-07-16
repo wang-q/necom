@@ -16,7 +16,7 @@ pub fn upgma(matrix: &NamedMatrix) -> Result<Tree> {
     if n == 1 {
         let mut tree = Tree::new();
         let root = tree.add_node();
-        tree.set_root(root);
+        tree.set_root(root)?;
         let node = tree
             .get_node_mut(root)
             .ok_or_else(|| anyhow::anyhow!("node {} not found", root))?;
@@ -174,7 +174,7 @@ pub fn upgma(matrix: &NamedMatrix) -> Result<Tree> {
 
     // Set root
     if let Some(&root) = active_nodes.first() {
-        tree.set_root(root);
+        tree.set_root(root)?;
     }
 
     Ok(tree)

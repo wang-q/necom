@@ -23,7 +23,7 @@ pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
     }
 
     // Estimate the longest leaf label width (rough: ~7px per char at 12px sans-serif)
-    let nodes = tree.preorder(&root);
+    let nodes = tree.preorder(root);
     let max_label_width = nodes
         .iter()
         .filter_map(|&id| {
@@ -203,7 +203,7 @@ fn compute_svg_positions(
     let mut positions = HashMap::new();
 
     // Get non-deleted leaves in order
-    let nodes = tree.preorder(&root);
+    let nodes = tree.preorder(root);
 
     // Precompute depths in O(n) to avoid O(n^2) repeated node_depth calls
     let depths = super::util::compute_depths(tree);
@@ -239,7 +239,7 @@ fn compute_svg_positions(
             let parent_len = *cl.get(&id).unwrap_or(&0.0);
             for &child_id in &node.children {
                 if let Some(child) = tree.get_node(child_id) {
-                    let edge = super::super::finite_length(child.length);
+                    let edge = child.finite_length();
                     cl.insert(child_id, parent_len + edge);
                 }
             }
@@ -268,7 +268,7 @@ fn compute_svg_positions(
     };
 
     // Post-order traversal to compute y (center over children) and x
-    let postorder = tree.postorder(&root);
+    let postorder = tree.postorder(root);
     for &id in &postorder {
         let node = match tree.get_node(id) {
             Some(n) => n,

@@ -144,7 +144,7 @@ fn to_forest_node_props(
         let tier = *heights.get(&id).unwrap_or(&0);
         options += &format!(", tier={}", tier);
     } else {
-        let edge = node.length.unwrap_or(0.0);
+        let edge = node.finite_length();
         let bl = calc_length(edge, height);
         options += &format!(", l={}mm, l sep=0", bl);
 
@@ -170,7 +170,6 @@ fn to_forest_node_props(
 
 // relative length
 fn calc_length(edge: f64, height: f64) -> i32 {
-    let edge = super::super::finite_length(Some(edge));
     (edge * 100.0 / height).round() as i32
 }
 
