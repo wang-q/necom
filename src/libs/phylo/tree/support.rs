@@ -4,7 +4,9 @@ use fixedbitset::FixedBitSet;
 use std::collections::{BTreeMap, HashMap};
 
 /// Build a map from leaf name to index (0..N-1).
-/// Uses the first tree to establish the mapping.
+///
+/// Uses the first tree to establish the mapping. Duplicate leaf names are
+/// rejected because they cannot be unambiguously matched across replicate trees.
 pub fn build_leaf_map(tree: &Tree) -> anyhow::Result<BTreeMap<String, usize>> {
     let mut map = BTreeMap::new();
     let mut index = 0;
@@ -24,8 +26,8 @@ pub fn build_leaf_map(tree: &Tree) -> anyhow::Result<BTreeMap<String, usize>> {
     leaf_names.dedup();
     let len_after = leaf_names.len();
     if len_after < len_before {
-        log::warn!(
-            "{} duplicate leaf name(s) ignored in leaf map",
+        anyhow::bail!(
+            "{} duplicate leaf name(s) found; duplicate leaf names are not supported for support-value calculation",
             len_before - len_after
         );
     }

@@ -363,7 +363,11 @@ pub fn reroot_at(
     let path = tree.get_path_from_root(&new_root_id)?;
 
     // 1.5 Process Support Values (Labels)
-    // Shift internal node labels along the path to align with edge reversals
+    // Shift internal node labels along the path to align with edge reversals.
+    // Internal node names are treated as support values for the edge immediately
+    // above them (the edge connecting the node to its parent). When rerooting,
+    // edges along the path are reversed, so each support label must follow the
+    // edge it annotates. Leaves keep their taxon names and are never modified.
     if process_support_values {
         let new_root_is_leaf = tree
             .get_node(new_root_id)

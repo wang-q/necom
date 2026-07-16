@@ -295,7 +295,7 @@ necom nwk to-tex [OPTIONS] <infile>
 
 ## Branch Length Handling
 
-`necom nwk` treats non-finite branch lengths (`NaN`, positive/negative infinity) and negative values as `0.0` during computation and visualization. This applies to:
+`necom nwk` treats non-finite branch lengths (`NaN`, positive/negative infinity) and negative values as `0.0` during computation and visualization. On input, such values are normalized to `None` (no length annotation); on output, `None` lengths are omitted so that cladograms remain unannotated. This applies to:
 
 *   Statistics (`stat`) and distance calculations (`distance`).
 *   Tree comparison (`cmp`), including weighted Robinson-Foulds and Kuhner-Felsenstein distances.

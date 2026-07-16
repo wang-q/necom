@@ -66,6 +66,38 @@ pub struct Tree {
 *   **确定性输出**: 使用 `BTreeMap` 而非 `HashMap`，保证序列化输出顺序固定。
 *   **按需计算**: 不缓存中间状态（深度、距离等），按需计算以保持轻量。
 
+### 1.4 数据流与调用链
+
+```mermaid
+graph TD
+    User[用户] -->|命令行| CLI[necom nwk &lt;subcommand&gt;]
+    CLI --> ArgParse[clap ArgMatches]
+    ArgParse --> SubCmd[cmd_necom/nwk/&lt;subcommand&gt;.rs]
+    SubCmd --> Common[cmd_necom/nwk/common.rs<br/>match_names / parse_lca_pair]
+    SubCmd --> Tree[libs/phylo/tree::Tree]
+    Tree --> Parser[libs/phylo/parser.rs<br/>from_newick_multi]
+    Tree --> Ops[tree/ops.rs<br/>reroot / prune / collapse]
+    Tree --> Query[tree/query.rs<br/>LCA / distance / monophyly]
+    Tree --> Stat[tree/stat.rs + balance.rs<br/>cherries / sackin / colless]
+    Tree --> Cmp[libs/phylo/cmp.rs<br/>RF / WRF / KF]
+    Tree --> Support[tree/support.rs<br/>bootstrap support]
+    Tree --> IO[tree/io/*<br/>newick / dot / svg / forest]
+```
+
+```mermaid
+graph LR
+    Input[Newick string/file] -->|Tree::from_newick_multi| Parser[parser.rs<br/>parse_subtree / label / length / comment]
+    Parser -->|构建 arena| Tree[Tree<br/>Vec&lt;Node&gt; + root]
+    Tree -->|reroot_at / prune / collapse| Ops[tree/ops.rs]
+    Tree -->|get_lca / get_distance / is_monophyletic| Query[tree/query.rs]
+    Tree -->|robinson_foulds / weighted_robinson_foulds / kuhner_felsenstein| Cmp[libs/phylo/cmp.rs]
+    Tree -->|compute_all_bitsets / count_clades / annotate_support| Support[tree/support.rs]
+    Tree -->|tree_summary / cherries / sackin / colless| Stat[tree/stat.rs + balance.rs]
+    Tree -->|to_newick / to_newick_with_format| Newick[tree/io/newick.rs]
+    Tree -->|to_svg| SVG[tree/io/svg.rs]
+    Tree -->|to_forest / to_dot| ForestDot[tree/io/forest.rs / dot.rs]
+```
+
 ---
 
 ## 2. 树比较核心概念

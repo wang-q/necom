@@ -353,6 +353,62 @@ fn test_reroot_support_values() {
 }
 
 #[test]
+fn test_reroot_support_at_internal() {
+    // Reroot at the internal node that carries the support value.
+    // Original: (A,(B,C)Support)Root;
+    // After reroot at Support:
+    //   * Support becomes root and receives the old root's name.
+    //   * The old root becomes a child of Support and receives the support label.
+    let mut tree = Tree::from_newick("(A,(B,C)Support)Root;").unwrap();
+    let support_id = tree.get_node_by_name("Support").unwrap();
+
+    tree.reroot_at(support_id, true).unwrap();
+
+    let root = tree.get_root().unwrap();
+    assert_eq!(tree.get_node(root).unwrap().name.as_deref(), Some("Root"));
+
+    let support_node_id = tree
+        .get_node(root)
+        .unwrap()
+        .children
+        .iter()
+        .find(|&&id| tree.get_node(id).unwrap().name.as_deref() == Some("Support"))
+        .copied()
+        .expect("support label should move to the old root node");
+    let support_node = tree.get_node(support_node_id).unwrap();
+    assert!(support_node
+        .children
+        .iter()
+        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("A")));
+}
+
+#[test]
+fn test_reroot_support_multiple_labels() {
+    // Reroot at a leaf when the path contains multiple internal support labels.
+    // Original: ((A,B)S1,C)S2;
+    // Split {A,B}|{C} is supported by S1. After reroot at A, that split is
+    // represented by the edge A -> S2, so the S1 label should follow to S2.
+    let mut tree = Tree::from_newick("((A,B)S1,C)S2;").unwrap();
+    let a_id = tree.get_node_by_name("A").unwrap();
+
+    tree.reroot_at(a_id, true).unwrap();
+
+    assert_eq!(tree.get_root(), Some(a_id));
+    let root = tree.get_node(tree.get_root().unwrap()).unwrap();
+    assert_eq!(root.name.as_deref(), Some("A"));
+
+    let s1_node_id = tree
+        .get_node_by_name("S1")
+        .expect("S1 support label should be preserved");
+    let s1_node = tree.get_node(s1_node_id).unwrap();
+    assert!(!s1_node.is_leaf());
+    assert!(s1_node
+        .children
+        .iter()
+        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("C")));
+}
+
+#[test]
 fn test_reroot_longest_branch() {
     // (A:1, B:2)Root;
     // Longest branch is B (len 2).
