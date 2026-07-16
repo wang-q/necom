@@ -28,10 +28,11 @@ pub fn get_path_from_root(tree: &Tree, id: &NodeId) -> anyhow::Result<Vec<NodeId
 
     path.reverse();
     // Validate root
-    if let Some(root) = tree.root {
-        if path.first() != Some(&root) {
-            anyhow::bail!("Node is detached from root");
-        }
+    let root = tree
+        .root
+        .ok_or_else(|| anyhow::anyhow!("Tree has no root"))?;
+    if path.first() != Some(&root) {
+        anyhow::bail!("Node is detached from root");
     }
 
     Ok(path)
@@ -72,30 +73,33 @@ pub fn get_lca(tree: &Tree, nodes: &[NodeId]) -> anyhow::Result<NodeId> {
 pub fn get_distance(tree: &Tree, a: &NodeId, b: &NodeId) -> anyhow::Result<(f64, usize)> {
     let lca = get_common_ancestor(tree, a, b)?;
 
-    let dist_to_lca = |start: &NodeId, end: &NodeId| -> (f64, usize) {
+    let dist_to_lca = |start: &NodeId, end: &NodeId| -> anyhow::Result<(f64, usize)> {
         let mut weighted = 0.0;
         let mut topo = 0;
         let mut curr = *start;
 
         while curr != *end {
-            if let Some(node) = tree.get_node(curr) {
-                weighted += super::finite_length(node.length);
-                topo += 1;
-                if let Some(p) = node.parent {
-                    curr = p;
-                } else {
-                    break;
-                }
-            } else {
-                // Node deleted or missing; stop to avoid infinite loop
-                break;
-            }
+            let node = tree.get_node(curr).ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Node {} not found or deleted while computing distance to LCA",
+                    curr
+                )
+            })?;
+            weighted += super::finite_length(node.length);
+            topo += 1;
+            curr = node.parent.ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Reached root before finding LCA node {} (start was {})",
+                    end,
+                    start
+                )
+            })?;
         }
-        (weighted, topo)
+        Ok((weighted, topo))
     };
 
-    let (w1, t1) = dist_to_lca(a, &lca);
-    let (w2, t2) = dist_to_lca(b, &lca);
+    let (w1, t1) = dist_to_lca(a, &lca)?;
+    let (w2, t2) = dist_to_lca(b, &lca)?;
 
     Ok((w1 + w2, t1 + t2))
 }

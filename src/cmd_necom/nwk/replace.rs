@@ -84,7 +84,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             .skip(1)
             .map(|e| e.to_string())
             .collect::<Vec<String>>();
-        replace_of.insert(name, replaces);
+        match replace_of.entry(name) {
+            std::collections::btree_map::Entry::Occupied(entry) => {
+                log::warn!(
+                    "duplicate replacement key '{}' in replace file, keeping first occurrence",
+                    entry.key()
+                );
+            }
+            std::collections::btree_map::Entry::Vacant(entry) => {
+                entry.insert(replaces);
+            }
+        }
     }
 
     let mut trees = Tree::from_file(infile)?;

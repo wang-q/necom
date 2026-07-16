@@ -107,15 +107,27 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
     }
 
+    let tab_sep = args.get_flag("tab");
+
     for tree in &trees {
+        let mut collected_labels = Vec::new();
+
         // Handle --root option
         if args.get_flag("root") {
             let root_id = tree.get_root().context("tree has no root")?;
             let root = tree.get_node(root_id).context("root node not found")?;
             if let Some(name) = &root.name {
                 if !name.is_empty() {
-                    writer.write_fmt(format_args!("{}\n", name))?;
+                    let out_string = super::common::format_label_columns(root, name, &columns);
+                    if tab_sep {
+                        collected_labels.push(out_string);
+                    } else {
+                        writer.write_fmt(format_args!("{}\n", out_string))?;
+                    }
                 }
+            }
+            if tab_sep && !collected_labels.is_empty() {
+                writer.write_fmt(format_args!("{}\n", collected_labels.join("\t")))?;
             }
             continue;
         }
@@ -136,9 +148,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         if is_monophyly && !tree.is_monophyletic(&ids_vec) {
             continue;
         }
-
-        let tab_sep = args.get_flag("tab");
-        let mut collected_labels = Vec::new();
 
         for id in ids.iter() {
             let node = tree.get_node(*id).context("node not found")?;

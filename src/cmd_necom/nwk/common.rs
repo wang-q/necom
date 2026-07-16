@@ -141,13 +141,8 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
             .copied()
             .collect();
         for id in &internal_ids {
-            let subtree_ids = tree.get_subtree(id);
-            for sid in &subtree_ids {
-                if let Some(n) = tree.get_node(*sid) {
-                    if n.name.is_some() {
-                        ids.insert(*sid);
-                    }
-                }
+            for sid in tree.get_subtree(id) {
+                ids.insert(sid);
             }
         }
     }

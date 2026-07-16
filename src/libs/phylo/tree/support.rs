@@ -14,9 +14,8 @@ pub fn build_leaf_map(tree: &Tree) -> anyhow::Result<BTreeMap<String, usize>> {
         if !node.deleted && node.is_leaf() {
             if let Some(name) = &node.name {
                 leaf_names.push(name.clone());
-            } else {
-                anyhow::bail!("Leaf node missing name");
             }
+            // Unnamed leaves are skipped; they cannot be matched across replicate trees.
         }
     }
 

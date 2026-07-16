@@ -103,7 +103,7 @@ fn to_forest_node_props(
                 comment += &v.replace('_', " ");
             }
         }
-        if !comment.is_empty() && node.is_leaf() {
+        if !comment.is_empty() {
             options += &format!(", comment={{{}}}", comment);
         }
     }

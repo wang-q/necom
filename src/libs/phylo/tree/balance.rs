@@ -76,11 +76,12 @@ pub fn colless(tree: &Tree) -> Option<f64> {
                 }
                 leaf_counts.insert(id, count);
 
-                if children_counts.len() == 2 {
-                    let diff =
-                        (children_counts[0] as isize - children_counts[1] as isize).abs() as f64;
-                    sum_diff += diff;
+                if children_counts.len() != 2 {
+                    // Colless index is only defined for strictly bifurcating trees.
+                    return None;
                 }
+                let diff = (children_counts[0] as isize - children_counts[1] as isize).abs() as f64;
+                sum_diff += diff;
             }
         }
     }
