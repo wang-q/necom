@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 use super::Tree;
 use crate::libs::phylo::node::{Node, NodeId};
@@ -180,37 +180,45 @@ pub fn get_named_leaves(tree: &Tree, id: NodeId) -> BTreeSet<NodeId> {
 
 /// Get height of a node (max distance to any leaf in its subtree).
 pub fn get_height(tree: &Tree, id: NodeId, weighted: bool) -> f64 {
-    let node = match tree.get_node(id) {
-        Some(n) => n,
-        None => return 0.0,
-    };
-
-    if node.children.is_empty() {
-        return 0.0;
-    }
-
-    node.children
-        .iter()
-        .map(|&child| {
-            let dist = if weighted {
-                tree.get_node(child).map_or(0.0, |n| n.finite_length())
+    let mut heights: HashMap<NodeId, f64> = HashMap::new();
+    for node_id in tree.postorder(id) {
+        if let Some(node) = tree.get_node(node_id) {
+            if node.children.is_empty() {
+                heights.insert(node_id, 0.0);
             } else {
-                1.0
-            };
-            dist + get_height(tree, child, weighted)
-        })
-        .fold(0.0, f64::max)
+                let h = node
+                    .children
+                    .iter()
+                    .map(|&child| {
+                        let dist = if weighted {
+                            tree.get_node(child).map_or(0.0, |n| n.finite_length())
+                        } else {
+                            1.0
+                        };
+                        dist + heights.get(&child).copied().unwrap_or(0.0)
+                    })
+                    .fold(0.0, f64::max);
+                heights.insert(node_id, h);
+            }
+        }
+    }
+    heights.get(&id).copied().unwrap_or(0.0)
 }
 
 /// Count number of descendants (all nodes in subtree excluding self).
 pub fn count_descendants(tree: &Tree, id: NodeId) -> usize {
-    let mut count = 0;
-    if let Some(node) = tree.get_node(id) {
-        for &child in &node.children {
-            count += 1 + count_descendants(tree, child);
+    let mut counts: HashMap<NodeId, usize> = HashMap::new();
+    for node_id in tree.postorder(id) {
+        if let Some(node) = tree.get_node(node_id) {
+            let count = node
+                .children
+                .iter()
+                .map(|&child| 1 + counts.get(&child).copied().unwrap_or(0))
+                .sum();
+            counts.insert(node_id, count);
         }
     }
-    count
+    counts.get(&id).copied().unwrap_or(0)
 }
 
 /// Find nodes matching a predicate.

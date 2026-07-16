@@ -109,7 +109,7 @@ impl Tree {
     }
 
     /// Remove all internal nodes with exactly one child.
-    pub fn remove_degree_two_nodes(&mut self) {
+    pub fn remove_degree_two_nodes(&mut self) -> anyhow::Result<()> {
         ops::remove_degree_two_nodes(self)
     }
 

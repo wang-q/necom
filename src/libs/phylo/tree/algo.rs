@@ -346,7 +346,7 @@ where
 ///
 /// `to_remove` may include both leaves and internal nodes; removal is recursive
 /// (subtrees are detached with their parent).
-pub fn prune_nodes(tree: &mut Tree, to_remove: Vec<NodeId>) {
+pub fn prune_nodes(tree: &mut Tree, to_remove: Vec<NodeId>) -> anyhow::Result<()> {
     // 1. Snapshot internal nodes before pruning, so we can detect those that
     //    become leaves after removal.
     let mut old_internals = Vec::new();
@@ -384,15 +384,17 @@ pub fn prune_nodes(tree: &mut Tree, to_remove: Vec<NodeId>) {
                     if tree.get_root() == Some(id) {
                         // Root with a single child: promote the child to root.
                         let child_id = node.children[0];
-                        tree.set_root(child_id).expect("child node should exist");
+                        tree.set_root(child_id)?;
                         tree.remove_node(id, false);
                     } else {
-                        let _ = tree.collapse_node(id);
+                        tree.collapse_node(id)?;
                     }
                 }
             }
         }
     }
+
+    Ok(())
 }
 
 #[cfg(test)]

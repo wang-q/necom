@@ -23,16 +23,21 @@ pub fn preorder(tree: &Tree, start_node: NodeId) -> Vec<NodeId> {
 /// Get node IDs in postorder traversal (Children -> Root)
 pub fn postorder(tree: &Tree, start_node: NodeId) -> Vec<NodeId> {
     let mut result = Vec::new();
-    fn helper(tree: &Tree, id: NodeId, result: &mut Vec<NodeId>) {
+    let mut stack = vec![(start_node, false)];
+
+    while let Some((id, visited)) = stack.pop() {
         if let Some(node) = tree.get_node(id) {
-            for &child in &node.children {
-                helper(tree, child, result);
+            if visited {
+                result.push(id);
+            } else {
+                stack.push((id, true));
+                for &child in node.children.iter().rev() {
+                    stack.push((child, false));
+                }
             }
-            result.push(id);
         }
     }
 
-    helper(tree, start_node, &mut result);
     result
 }
 

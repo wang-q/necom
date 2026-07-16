@@ -79,7 +79,7 @@ necom nwk label [OPTIONS] <infile>
 *   `-M`: Monophyly check (output only when selected nodes form a clade).
 *   `--tab`: Output tab-separated values (single line).
 *   `-c <col>` / `--extra-column <col>`: Append extra columns (`dup`, `taxid`, `species`, `full`).
-*   `--root`: Output only the root node label.
+*   `--root`: Output only the root node label. When `--root` is given, other selection options (`-I`, `-L`, `-n`, `-x`, etc.) are ignored.
 
 ### stat
 
@@ -119,6 +119,7 @@ necom nwk order [OPTIONS] <infile>
 *   `--alphanumeric` / `--alphanumeric-rev`: Sort labels alphanumerically.
 *   `--name-list <file>`: Sort by a given name list; applied before other sort options.
 *   `--deladderize` (`--dl`): Alternate sort direction at each level.
+*   If no sort option is provided, children are sorted in ascending alphanumeric order by default.
 
 When both `--alphanumeric` and `--num-descendants` are enabled, labels are sorted alphabetically first, then stably ladderized by number of descendants; the final order is primarily by number of descendants, with alphabetical order used as a tie-breaker within groups of the same size.
 
@@ -177,6 +178,7 @@ necom nwk reroot [OPTIONS] <infile>
 *   `-l, --lax`: Lax mode (if the LCA is already the root, use its complement).
 *   `-d, --deroot`: Deroot (produce a multifurcating root).
 *   `--support-as-labels`: Treat support values as labels (rerooting will move labels).
+*   The default midpoint rerooting is a no-op when the tree has no positive branch lengths (cladogram).
 
 ### subtree
 

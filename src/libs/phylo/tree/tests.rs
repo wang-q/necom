@@ -845,7 +845,7 @@ fn test_remove_degree_two_nodes() {
     tree.get_node_mut(internal).unwrap().length = Some(2.0);
     tree.get_node_mut(leaf).unwrap().length = Some(3.0);
 
-    tree.remove_degree_two_nodes();
+    tree.remove_degree_two_nodes().unwrap();
 
     assert!(tree.get_node(internal).is_none());
     let root_node = tree.get_node(root).unwrap();

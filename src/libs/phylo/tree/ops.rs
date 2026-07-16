@@ -42,7 +42,8 @@ fn detach_and_delete(tree: &mut Tree, id: NodeId) {
     if tree.get_node(id).is_none() {
         return;
     }
-    if let Some(parent_id) = tree.nodes[id].parent {
+    let parent_id = tree.get_node(id).and_then(|n| n.parent);
+    if let Some(parent_id) = parent_id {
         if let Some(parent) = tree.get_node_mut(parent_id) {
             parent.children.retain(|&child| child != id);
         }
@@ -77,7 +78,11 @@ pub fn remove_node(tree: &mut Tree, id: NodeId, recursive: bool) {
             if tree.get_node(cur).is_none() {
                 continue;
             }
-            let children = std::mem::take(&mut tree.nodes[cur].children);
+            let children = if let Some(node) = tree.get_node_mut(cur) {
+                std::mem::take(&mut node.children)
+            } else {
+                continue;
+            };
             for child_id in children {
                 stack.push(child_id);
                 to_remove.push(child_id);
@@ -88,7 +93,11 @@ pub fn remove_node(tree: &mut Tree, id: NodeId, recursive: bool) {
         }
     } else {
         // Orphan direct children without deleting them.
-        let children = std::mem::take(&mut tree.nodes[id].children);
+        let children = if let Some(node) = tree.get_node_mut(id) {
+            std::mem::take(&mut node.children)
+        } else {
+            return;
+        };
         for child_id in children {
             if let Some(child) = tree.get_node_mut(child_id) {
                 child.parent = None;
@@ -150,9 +159,18 @@ pub fn collapse_node(tree: &mut Tree, id: NodeId) -> anyhow::Result<()> {
 
     // 3. Update parent's children list
     if let Some(parent) = tree.get_node_mut(parent_id) {
-        if let Some(pos) = parent.children.iter().position(|&x| x == id) {
-            parent.children.splice(pos..pos + 1, new_children_ids);
-        }
+        let pos = parent
+            .children
+            .iter()
+            .position(|&x| x == id)
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "node {} is not recorded as a child of parent {}",
+                    id,
+                    parent_id
+                )
+            })?;
+        parent.children.splice(pos..pos + 1, new_children_ids);
     }
 
     // 4. Detach and mark deleted
@@ -264,6 +282,10 @@ pub fn insert_parent(tree: &mut Tree, id: NodeId) -> anyhow::Result<NodeId> {
 /// node is not found. Restricting this to siblings prevents creating cycles
 /// when one node is an ancestor of the other.
 pub fn insert_parent_pair(tree: &mut Tree, id1: NodeId, id2: NodeId) -> anyhow::Result<NodeId> {
+    if id1 == id2 {
+        anyhow::bail!("Cannot insert a common parent for the same node {}", id1);
+    }
+
     let node1 = tree
         .get_node(id1)
         .ok_or_else(|| anyhow::anyhow!("Node {} not found", id1))?;
@@ -325,7 +347,7 @@ pub fn insert_parent_pair(tree: &mut Tree, id1: NodeId, id2: NodeId) -> anyhow::
 
 /// Remove nodes that have a parent and exactly one child (degree 2 nodes).
 /// This is often used after rerooting to clean up the tree.
-pub fn remove_degree_two_nodes(tree: &mut Tree) {
+pub fn remove_degree_two_nodes(tree: &mut Tree) -> anyhow::Result<()> {
     // Collect all degree-2 nodes in one pass.
     // Collapsing a degree-2 node replaces it with its child in the parent's
     // children list, so the parent's degree is unchanged and no new degree-2
@@ -339,9 +361,11 @@ pub fn remove_degree_two_nodes(tree: &mut Tree) {
             .map(|n| n.parent.is_some() && n.children.len() == 1)
             .unwrap_or(false);
         if need_remove {
-            let _ = collapse_node(tree, id);
+            collapse_node(tree, id)?;
         }
     }
+
+    Ok(())
 }
 
 /// Deroot the tree by splicing out one of the root's children if the root is bifurcating.
@@ -630,7 +654,7 @@ pub fn reroot_at_lca(
 
     let new_root = tree.insert_parent(sub_root_id)?;
     tree.reroot_at(new_root, process_support)?;
-    tree.remove_degree_two_nodes();
+    tree.remove_degree_two_nodes()?;
 
     Ok(())
 }
@@ -653,7 +677,7 @@ pub fn reroot_at_longest_branch(tree: &mut Tree, process_support: bool) -> anyho
     if let Some(longest_node) = tree.get_node_with_longest_edge() {
         let new_root = tree.insert_parent(longest_node)?;
         tree.reroot_at(new_root, process_support)?;
-        tree.remove_degree_two_nodes();
+        tree.remove_degree_two_nodes()?;
     }
     Ok(())
 }

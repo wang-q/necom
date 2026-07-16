@@ -75,7 +75,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             target_ids.into_iter().collect()
         };
 
-        algo::prune_nodes(&mut tree, to_remove);
+        algo::prune_nodes(&mut tree, to_remove)?;
 
         let out_string = tree.to_newick();
         writer.write_all((out_string + "\n").as_ref())?;

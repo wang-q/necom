@@ -2,7 +2,7 @@ use anyhow::Context;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use necom::libs::phylo::tree::io::{compute_scale_bar, to_forest};
 use necom::libs::phylo::tree::Tree;
-use std::io::{Read, Write};
+use std::io::Read;
 
 /// Build the clap subcommand for to-tex.
 pub fn make_subcommand() -> Command {
