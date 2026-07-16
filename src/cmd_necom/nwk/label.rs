@@ -118,7 +118,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let root = tree.get_node(root_id).context("root node not found")?;
             if let Some(name) = &root.name {
                 if !name.is_empty() {
-                    let out_string = super::common::format_label_columns(root, name, &columns);
+                    let out_string = super::common::format_label_columns(root, name, &columns)?;
                     if tab_sep {
                         collected_labels.push(out_string);
                     } else {
@@ -153,7 +153,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let node = tree.get_node(*id).context("node not found")?;
             if let Some(x) = node.name.clone() {
                 if !x.is_empty() {
-                    let out_string = super::common::format_label_columns(node, &x, &columns);
+                    let out_string = super::common::format_label_columns(node, &x, &columns)?;
 
                     if tab_sep {
                         collected_labels.push(out_string);

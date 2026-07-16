@@ -115,10 +115,13 @@ pub fn get_distance(tree: &Tree, a: NodeId, b: NodeId) -> anyhow::Result<(f64, u
     Ok((w1 + w2, t1 + t2))
 }
 
-/// Distance between two nodes; uses branch lengths when their sum exceeds 1e-9, otherwise edge count.
+/// Distance between two nodes.
+///
+/// If the tree has any positive, finite branch lengths, returns the sum of
+/// branch lengths along the path. Otherwise returns the number of edges.
 pub fn node_distance(tree: &Tree, a: NodeId, b: NodeId) -> anyhow::Result<f64> {
     let (edge_sum, num_edges) = get_distance(tree, a, b)?;
-    Ok(if edge_sum.abs() > 1e-9 {
+    Ok(if super::stat::has_branch_lengths(tree) {
         edge_sum
     } else {
         num_edges as f64

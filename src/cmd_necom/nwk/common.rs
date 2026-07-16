@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use clap::ArgMatches;
 use necom::libs::phylo::node::{Node, NodeId};
 use necom::libs::phylo::tree::Tree;
@@ -28,10 +28,14 @@ pub(crate) fn parse_lca_pair(lca: &str) -> anyhow::Result<(&str, &str)> {
 }
 
 /// Format a node's label with extra columns (`dup`, `taxid`, `species`, `full`).
-pub(crate) fn format_label_columns(node: &Node, name: &str, columns: &[String]) -> String {
+pub(crate) fn format_label_columns(
+    node: &Node,
+    name: &str,
+    columns: &[String],
+) -> anyhow::Result<String> {
     let mut out = String::from(name);
     if columns.is_empty() {
-        return out;
+        return Ok(out);
     }
     for column in columns {
         match column.as_str() {
@@ -65,10 +69,10 @@ pub(crate) fn format_label_columns(node: &Node, name: &str, columns: &[String]) 
                     .unwrap_or_default();
                 out.push_str(&format!("\t{}", comment));
             }
-            _ => {}
+            _ => bail!("unknown extra column: {}", column),
         }
     }
-    out
+    Ok(out)
 }
 
 /// Returns the set of node names that appear more than once in the tree.
@@ -314,5 +318,28 @@ mod tests {
         let tree = Tree::from_newick("((A,B),(C,D));").unwrap();
         let dups = duplicate_names(&tree);
         assert!(dups.is_empty());
+    }
+
+    #[test]
+    fn format_label_columns_known_columns() {
+        let mut node = Node::new(0);
+        node.add_property("T", "9606");
+        node.add_property("S", "Homo sapiens");
+        let cols = vec![
+            "dup".to_string(),
+            "taxid".to_string(),
+            "species".to_string(),
+        ];
+        assert_eq!(
+            format_label_columns(&node, "Human", &cols).unwrap(),
+            "Human\tHuman\t9606\tHomo sapiens"
+        );
+    }
+
+    #[test]
+    fn format_label_columns_unknown_column_errors() {
+        let node = Node::new(0);
+        let cols = vec!["unknown".to_string()];
+        assert!(format_label_columns(&node, "A", &cols).is_err());
     }
 }

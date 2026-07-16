@@ -29,7 +29,7 @@ pub fn make_subcommand() -> Command {
 This suite of tools provides a comprehensive set of operations for phylogenetic trees in Newick format.
 
 Subcommand groups:
-* Information: stat / label / distance / support
+* Information: stat / label / distance / support / cmp
 * Manipulation: order / prune / rename / replace / reroot / subtree / topo
 * Visualization: comment / indent / to-dot / to-forest / to-svg / to-tex
 

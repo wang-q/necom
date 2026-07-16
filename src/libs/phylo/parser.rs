@@ -473,7 +473,19 @@ pub fn parse_newick_multi(input: &str) -> Result<Vec<Tree>, TreeError> {
     let mut parser = many1(alt((valid_tree, garbage)));
 
     match parser.parse(input) {
-        Ok((_, trees_data)) => {
+        Ok((remaining, trees_data)) => {
+            // Reject trailing unparsed content.
+            if !remaining.trim().is_empty() {
+                let offset = input.offset(remaining);
+                let (line, column) = line_column(input, offset);
+                return Err(TreeError::ParseError {
+                    message: "trailing unparsed input".to_string(),
+                    line,
+                    column,
+                    snippet: remaining.chars().take(50).collect(),
+                });
+            }
+
             let mut trees = Vec::new();
             for root_node in trees_data.into_iter().flatten() {
                 let mut tree = Tree::new();
@@ -485,6 +497,16 @@ pub fn parse_newick_multi(input: &str) -> Result<Vec<Tree>, TreeError> {
                 })?;
                 trees.push(tree);
             }
+
+            if trees.is_empty() {
+                return Err(TreeError::ParseError {
+                    message: "no valid Newick tree found".to_string(),
+                    line: 0,
+                    column: 0,
+                    snippet: input.chars().take(50).collect(),
+                });
+            }
+
             Ok(trees)
         }
         Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) => Err(make_tree_error(input, e)),
@@ -495,6 +517,15 @@ pub fn parse_newick_multi(input: &str) -> Result<Vec<Tree>, TreeError> {
             snippet: "".to_string(),
         }),
     }
+}
+
+/// Compute 1-based (line, column) for an offset in a string.
+fn line_column(input: &str, offset: usize) -> (usize, usize) {
+    let prefix = &input[..offset];
+    let line = prefix.chars().filter(|&c| c == '\n').count() + 1;
+    let last_newline = prefix.rfind('\n').map(|p| p + 1).unwrap_or(0);
+    let column = offset - last_newline + 1;
+    (line, column)
 }
 
 // Helper to convert nom errors into friendly TreeError
@@ -508,12 +539,7 @@ fn make_tree_error(input: &str, e: DetailedError) -> TreeError {
         };
     };
     let offset = input.offset(remaining);
-
-    // Calculate line/col
-    let prefix = &input[..offset];
-    let line = prefix.chars().filter(|&c| c == '\n').count() + 1;
-    let last_newline = prefix.rfind('\n').map(|p| p + 1).unwrap_or(0);
-    let column = offset - last_newline + 1;
+    let (line, column) = line_column(input, offset);
 
     let mut msg = String::new();
     for (_, kind) in e.errors.iter().rev() {
@@ -936,5 +962,27 @@ mod tests {
         let second = &trees[1];
         let root = second.get_node(second.get_root().unwrap()).unwrap();
         assert_eq!(root.name.as_deref(), Some("S"));
+    }
+
+    #[test]
+    fn test_parse_newick_multi_rejects_garbage_only() {
+        let input = "[header]\n";
+        let res = Tree::from_newick_multi(input);
+        assert!(
+            matches!(res, Err(TreeError::ParseError { ref message, .. }) if message == "no valid Newick tree found"),
+            "expected no valid tree error, got {:?}",
+            res
+        );
+    }
+
+    #[test]
+    fn test_parse_newick_multi_rejects_trailing_garbage() {
+        let input = "[header]\nnot_a_tree";
+        let res = Tree::from_newick_multi(input);
+        assert!(
+            matches!(res, Err(TreeError::ParseError { ref message, .. }) if message == "trailing unparsed input"),
+            "expected trailing input error, got {:?}",
+            res
+        );
     }
 }
