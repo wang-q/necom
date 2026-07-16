@@ -357,3 +357,20 @@ fn command_mat_to_phylip_malformed_warning() {
     assert!(stdout.contains("0.2"));
     assert_eq!(stdout.lines().count(), 5); // 4 sequences + header
 }
+
+#[test]
+fn command_mat_format_lower_no_diag_input() {
+    // Lower-triangular PHYLIP without diagonal values should be converted to full matrix.
+    let input = "3\nA\nB 0.1\nC 0.2 0.3\n";
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["mat", "format", "stdin"])
+        .stdin(input)
+        .run();
+
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(lines[0].trim(), "3");
+    assert!(lines[1].starts_with("A\t0\t0.1\t0.2"));
+    assert!(lines[2].starts_with("B\t0.1\t0\t0.3"));
+    assert!(lines[3].starts_with("C\t0.2\t0.3\t0"));
+}

@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::io::BufRead;
 
 use super::condensed::{get_condensed_index, CondensedMatrix};
@@ -206,10 +207,16 @@ impl NamedMatrix {
     /// let matrix = NamedMatrix::from_relaxed_phylip("input.phy").unwrap();
     /// ```
     pub fn from_relaxed_phylip(infile: &str) -> anyhow::Result<Self> {
-        let mut names = Vec::new();
-        let mut raw_values = Vec::new();
-        let mut row_lengths = Vec::new();
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        enum Layout {
+            Full,
+            LowerWithDiagonal,
+            LowerWithoutDiagonal,
+        }
+
+        let mut rows: Vec<(String, Vec<f32>)> = Vec::new();
         let mut declared_size: Option<usize> = None;
+        let mut seen = HashSet::new();
 
         let reader = crate::reader(infile)?;
         let mut lines = reader.lines();
@@ -218,102 +225,109 @@ impl NamedMatrix {
         if let Some(Ok(line)) = lines.next() {
             if let Ok(size) = line.trim().parse::<usize>() {
                 declared_size = Some(size);
-            } else {
-                // If first line is not a number, treat it as a data line
-                Self::process_phylip_line(&line, &mut names, &mut raw_values, &mut row_lengths)?;
+            } else if let Some((name, values)) = Self::process_phylip_line(&line)? {
+                if !seen.insert(name.clone()) {
+                    anyhow::bail!("duplicate sequence name in PHYLIP matrix: {}", name);
+                }
+                rows.push((name, values));
             }
         }
 
         // Process remaining lines
         for line in lines.map_while(Result::ok) {
-            Self::process_phylip_line(&line, &mut names, &mut raw_values, &mut row_lengths)?;
-        }
-
-        let size = names.len();
-        if let Some(declared) = declared_size {
-            if size != declared {
-                anyhow::bail!(
-                    "PHYLIP matrix declares {} sequences but found {}",
-                    declared,
-                    size
-                );
+            if let Some((name, values)) = Self::process_phylip_line(&line)? {
+                if !seen.insert(name.clone()) {
+                    anyhow::bail!("duplicate sequence name in PHYLIP matrix: {}", name);
+                }
+                rows.push((name, values));
             }
         }
 
-        // Warn about rows that contain more values than a full N x N matrix would have.
-        for (i, &len) in row_lengths.iter().enumerate() {
-            if len > size {
+        let size = declared_size.unwrap_or(rows.len());
+        if rows.len() != size {
+            anyhow::bail!(
+                "PHYLIP matrix declares {} sequences but found {}",
+                declared_size.unwrap_or(0),
+                rows.len()
+            );
+        }
+
+        if size == 0 {
+            return Self::new(Vec::new());
+        }
+
+        // Infer the matrix layout from the first data row.
+        let first_count = rows[0].1.len();
+        let layout = if first_count >= size {
+            Layout::Full
+        } else if first_count >= 1 {
+            Layout::LowerWithDiagonal
+        } else {
+            Layout::LowerWithoutDiagonal
+        };
+
+        // Validate row lengths and warn about values beyond the full matrix size.
+        for (i, (name, values)) in rows.iter().enumerate() {
+            let expected_min = match layout {
+                Layout::Full => size,
+                Layout::LowerWithDiagonal => i + 1,
+                Layout::LowerWithoutDiagonal => i,
+            };
+            if values.len() < expected_min {
+                anyhow::bail!(
+                    "malformed PHYLIP line for '{}': expected at least {} value(s), found {}",
+                    name,
+                    expected_min,
+                    values.len()
+                );
+            }
+            if values.len() > size {
                 log::warn!(
                     "line for '{}' contains {} extra value(s); ignoring values beyond full matrix size",
-                    names[i],
-                    len - size
+                    name,
+                    values.len() - size
                 );
             }
         }
 
+        let names: Vec<String> = rows.iter().map(|(n, _)| n.clone()).collect();
         let mut matrix = Self::new(names)?;
-        let mut diags = vec![0.0; size];
+        let mut diags = vec![0.0f32; size];
 
-        // Fill the matrix (lower triangle from PHYLIP)
-        // raw_values contains flattened lower triangle: (0,0), (1,0), (1,1), (2,0), ...
-        let mut k = 0;
-        for (i, d) in diags.iter_mut().enumerate().take(size) {
-            for j in 0..=i {
-                if k >= raw_values.len() {
-                    anyhow::bail!(
-                        "malformed PHYLIP matrix: expected {} lower-triangle values, found {}",
-                        size * (size + 1) / 2,
-                        raw_values.len()
-                    );
+        // Fill the matrix from the lower-triangle portion of each row.
+        for (i, (_name, values)) in rows.iter().enumerate() {
+            match layout {
+                Layout::Full | Layout::LowerWithDiagonal => {
+                    for (j, &value) in values.iter().enumerate().take(i + 1) {
+                        if j == i {
+                            diags[i] = value;
+                        } else {
+                            matrix.set(i, j, value);
+                        }
+                    }
                 }
-                let value = raw_values[k];
-                if i == j {
-                    *d = value;
-                } else {
-                    matrix.set(i, j, value);
+                Layout::LowerWithoutDiagonal => {
+                    for (j, &value) in values.iter().enumerate().take(i) {
+                        matrix.set(i, j, value);
+                    }
                 }
-                k += 1;
             }
         }
+
         matrix.set_diags(diags)?;
         Ok(matrix)
     }
 
-    fn process_phylip_line(
-        line: &str,
-        names: &mut Vec<String>,
-        values: &mut Vec<f32>,
-        row_lengths: &mut Vec<usize>,
-    ) -> anyhow::Result<()> {
+    /// Parse a single non-empty PHYLIP data line into `(name, raw_values)`.
+    /// Returns `Ok(None)` for empty or whitespace-only lines.
+    fn process_phylip_line(line: &str) -> anyhow::Result<Option<(String, Vec<f32>)>> {
         let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.is_empty() {
-            return Ok(());
+            return Ok(None);
         }
 
         let name = parts[0].to_string();
-        if names.contains(&name) {
-            anyhow::bail!("duplicate sequence name in PHYLIP matrix: {}", name);
-        }
-        let expected_values = names.len() + 1;
-        if parts.len() < 1 + expected_values {
-            anyhow::bail!(
-                "malformed PHYLIP line for '{}': expected {} value(s), found {}",
-                name,
-                expected_values,
-                parts.len() - 1
-            );
-        }
-
-        // Track the actual number of values on this line; warnings about values
-        // beyond the full matrix size are emitted once the matrix size is known.
-        row_lengths.push(parts.len() - 1);
-
-        // Extra values are ignored: this supports both lower-triangular and full
-        // PHYLIP matrices, where only the lower-triangle portion is needed.
-        names.push(name);
-
-        // Read lower-triangle distances
-        let distances: Vec<f32> = parts[1..=names.len()]
+        let values: Vec<f32> = parts[1..]
             .iter()
             .map(|&s| {
                 s.parse::<f32>()
@@ -321,7 +335,6 @@ impl NamedMatrix {
             })
             .collect::<anyhow::Result<Vec<f32>>>()?;
 
-        values.extend(distances);
-        Ok(())
+        Ok(Some((name, values)))
     }
 }

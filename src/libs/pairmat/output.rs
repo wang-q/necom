@@ -16,7 +16,7 @@ impl MatrixFormat {
             "full" => Ok(Self::Full),
             "lower" => Ok(Self::Lower),
             "strict" => Ok(Self::Strict),
-            _ => anyhow::bail!("unsupported output format"),
+            _ => anyhow::bail!("unsupported output format: {}", s),
         }
     }
 }
@@ -113,10 +113,10 @@ pub fn extract_common_lower_triangle(
 ) -> anyhow::Result<(Vec<String>, Vec<f32>, Vec<f32>)> {
     let names1 = m1.get_names();
     let names2 = m2.get_names();
-    let names2_set: HashSet<&&String> = names2.iter().collect();
+    let names2_set: HashSet<&str> = names2.iter().map(|s| s.as_str()).collect();
     let common_names: Vec<String> = names1
         .iter()
-        .filter(|name| names2_set.contains(name))
+        .filter(|name| names2_set.contains(name.as_str()))
         .map(|s| s.to_string())
         .collect();
 

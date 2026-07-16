@@ -271,3 +271,57 @@ fn test_from_pair_scores_extra_columns() {
     let matrix = NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
     assert_eq!(matrix.get_by_name("A", "B"), Some(0.5));
 }
+
+#[test]
+fn test_from_relaxed_phylip_lower_no_diag() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Lower-triangular matrix without diagonal values.
+    writeln!(tmp, "4").unwrap();
+    writeln!(tmp, "A").unwrap();
+    writeln!(tmp, "B 0.1").unwrap();
+    writeln!(tmp, "C 0.2 0.3").unwrap();
+    writeln!(tmp, "D 0.4 0.5 0.6").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    assert_eq!(matrix.get_by_name("A", "B"), Some(0.1));
+    assert_eq!(matrix.get_by_name("A", "C"), Some(0.2));
+    assert_eq!(matrix.get_by_name("A", "D"), Some(0.4));
+    assert_eq!(matrix.get_by_name("B", "C"), Some(0.3));
+    assert_eq!(matrix.get_by_name("B", "D"), Some(0.5));
+    assert_eq!(matrix.get_by_name("C", "D"), Some(0.6));
+    assert_eq!(matrix.get_by_name("A", "A"), Some(0.0));
+    assert_eq!(matrix.get_by_name("C", "C"), Some(0.0));
+}
+
+#[test]
+fn test_from_relaxed_phylip_lower_no_diag_no_header() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Lower-triangular matrix without header and without diagonal values.
+    writeln!(tmp, "A").unwrap();
+    writeln!(tmp, "B 0.1").unwrap();
+    writeln!(tmp, "C 0.2 0.3").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    assert_eq!(matrix.size(), 3);
+    assert_eq!(matrix.get_by_name("A", "B"), Some(0.1));
+    assert_eq!(matrix.get_by_name("A", "C"), Some(0.2));
+    assert_eq!(matrix.get_by_name("B", "C"), Some(0.3));
+}
+
+#[test]
+fn test_matrix_format_from_mode_invalid() {
+    match super::output::MatrixFormat::from_mode("unknown") {
+        Err(e) => {
+            let msg = format!("{}", e);
+            assert!(
+                msg.contains("unknown"),
+                "error message should contain the invalid format"
+            );
+        }
+        Ok(_) => panic!("invalid format should return an error"),
+    }
+}
