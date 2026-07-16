@@ -76,7 +76,7 @@ necom nwk label [OPTIONS] <infile>
 *   `-L`: Skip leaf node labels.
 *   `-n <name>` / `-l <file>` / `-x <regex>`: Filter nodes by name, list, or regex.
 *   `-D`: Include descendants of selected nodes.
-*   `-M`: Monophyly check (output only when selected nodes form a clade).
+*   `-M`: Clade check (output only when the selected nodes form a monophyletic group with at least two nodes).
 *   `--tab`: Output tab-separated values (single line).
 *   `-c <col>` / `--extra-column <col>`: Append extra columns (`dup`, `taxid`, `species`, `full`).
 *   `--root`: Output only the root node label. When `--root` is given, other selection options (`-I`, `-L`, `-n`, `-x`, etc.) are ignored.
@@ -190,7 +190,7 @@ necom nwk subtree [OPTIONS] <infile>
 
 *   `-n` / `-l` / `-x`: Select nodes.
 *   `-D, --descendants`: Include all descendants of selected internal nodes.
-*   `-M`: Monophyly check (output only when selected nodes exactly correspond to one clade).
+*   `-M`: Clade check (output only when selected nodes form a monophyletic group with at least two nodes).
 *   `-c <N>`: Context (expand upward by N levels). Default: `0`.
 *   `-C, --condense <name>`: Condense the subtree to a single node.
     *   The new node gets `member=<count>` and `tri=white` comments.
@@ -262,7 +262,8 @@ necom nwk to-forest [OPTIONS] <infile>
 
 *   If the input file contains multiple trees, only the first tree is processed.
 *   `-b, --bl`: Include branch lengths.
-*   `-o, --outfile <file>`: Output filename; `[stdout]` for screen output.
+*   `-o, --outfile <file>`: Output filename; `[stdout] for screen output.
+*   LaTeX special characters (`{ } \ # $ % & ~ ^`) and underscores in node names, labels, and comments are escaped or normalized for safe Forest output.
 
 ### to-svg
 
@@ -290,9 +291,10 @@ necom nwk to-tex [OPTIONS] <infile>
 *   `-b, --bl`: Draw a phylogram (with branch lengths).
 *   `--forest`: Input is already Forest code.
 *   `--no-default-style`: Skip default style definitions.
-*   `-o, --outfile <file>`: Output filename; `[stdout]` for screen output.
+*   `-o, --outfile <file>`: Output filename; `[stdout] for screen output.
+*   LaTeX special characters (`{ } \ # $ % & ~ ^`) and underscores in node names, labels, and comments are escaped or normalized for safe LaTeX compilation.
 
-> LaTeX output requires a locally installed `xelatex` or an engine such as `tectonic` to compile. The template depends on the `Noto Sans` font by default; if you use `--no-default-style`, configure fonts such as `Fira Sans` / `Source Han Sans SC` yourself.
+> LaTeX output requires a locally installed `xelatex` or an engine such as `tectonic` to compile. By default the embedded style overrides the template fonts with `Noto Sans`; use `--no-default-style` to keep the template's own font setup (`Fira Sans` / `Source Han Sans SC`).
 
 ---
 

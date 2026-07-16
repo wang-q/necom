@@ -361,4 +361,22 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_xml_escape() {
+        assert_eq!(xml_escape("A & B"), "A &amp; B");
+        assert_eq!(xml_escape("A < B"), "A &lt; B");
+        assert_eq!(xml_escape("A > B"), "A &gt; B");
+        assert_eq!(xml_escape("A\"B"), "A&quot;B");
+        assert_eq!(xml_escape("A'B"), "A&apos;B");
+        assert_eq!(xml_escape("plain"), "plain");
+    }
+
+    #[test]
+    fn test_to_svg_escapes_special_chars() {
+        let tree = Tree::from_newick("('A<B&C\"D');").unwrap();
+        let svg = to_svg(&tree, 0.0, 20.0, 800.0);
+        assert!(svg.contains("A&lt;B&amp;C&quot;D"));
+        assert!(!svg.contains("A<B"));
+    }
 }

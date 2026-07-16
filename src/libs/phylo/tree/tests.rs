@@ -937,3 +937,108 @@ fn node_with_length_rejects_non_positive_and_non_finite() {
     assert_eq!(Node::new(0).with_length(-1.0).length, None);
     assert_eq!(Node::new(0).with_length(1.0).length, Some(1.0));
 }
+
+#[test]
+fn test_is_clade() {
+    let tree = Tree::from_newick("((A,B)C,D)Root;").unwrap();
+    let a = tree.get_node_by_name("A").unwrap();
+    let b = tree.get_node_by_name("B").unwrap();
+    let d = tree.get_node_by_name("D").unwrap();
+
+    // Empty and single-node sets are not clades.
+    assert!(!tree.is_clade(&[]));
+    assert!(!tree.is_clade(&[a]));
+
+    // Valid clade.
+    assert!(tree.is_clade(&[a, b]));
+
+    // Non-monophyletic pair.
+    assert!(!tree.is_clade(&[a, d]));
+}
+
+#[test]
+fn test_reroot_support_root_child_leaf() {
+    // Reroot at a leaf that is a direct child of the old root.
+    // Original: (A,(B,C)S1)S2;
+    // Path: S2 -> A. A is a leaf, so S2's name (which annotated the
+    // non-existent edge above the root) is dropped after reversal. S1 is off
+    // the path and keeps its support label.
+    let mut tree = Tree::from_newick("(A,(B,C)S1)S2;").unwrap();
+    let a_id = tree.get_node_by_name("A").unwrap();
+
+    tree.reroot_at(a_id, true).unwrap();
+
+    assert_eq!(tree.get_root(), Some(a_id));
+    let root = tree.get_node(tree.get_root().unwrap()).unwrap();
+    assert_eq!(root.name.as_deref(), Some("A"));
+
+    // Old root S2 should have lost its name.
+    assert!(tree.get_node_by_name("S2").is_none());
+
+    // S1 should still exist and keep its original support label.
+    let s1_id = tree.get_node_by_name("S1").unwrap();
+    let s1_node = tree.get_node(s1_id).unwrap();
+    assert!(s1_node
+        .children
+        .iter()
+        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("B")));
+    assert!(s1_node
+        .children
+        .iter()
+        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("C")));
+}
+
+#[test]
+fn test_reroot_support_multifurcating_internal() {
+    // Reroot at a leaf under a multifurcating internal support node.
+    // Original: (A,(B,C,D)S1)S2;
+    // Path: S2 -> S1 -> B. S1's label moves to S2; S1 loses its label.
+    let mut tree = Tree::from_newick("(A,(B,C,D)S1)S2;").unwrap();
+    let b_id = tree.get_node_by_name("B").unwrap();
+
+    tree.reroot_at(b_id, true).unwrap();
+
+    assert_eq!(tree.get_root(), Some(b_id));
+
+    // S2 should now carry the old S1 label.
+    let s2_id = tree.get_node_by_name("S1").unwrap();
+    let s2_node = tree.get_node(s2_id).unwrap();
+    assert!(s2_node
+        .children
+        .iter()
+        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("A")));
+
+    // S1 should now be a child of the new root, with no name, and still multifurcating.
+    let root = tree.get_node(tree.get_root().unwrap()).unwrap();
+    let s1_id = root
+        .children
+        .iter()
+        .find(|&&id| {
+            let n = tree.get_node(id).unwrap();
+            n.name.is_none() && n.children.len() == 3
+        })
+        .copied()
+        .unwrap();
+    let s1_node = tree.get_node(s1_id).unwrap();
+    assert_eq!(s1_node.children.len(), 3);
+    assert!(s1_node
+        .children
+        .iter()
+        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("C")));
+    assert!(s1_node
+        .children
+        .iter()
+        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("D")));
+}
+
+#[test]
+fn test_reroot_at_root_is_noop() {
+    let mut tree = Tree::from_newick("(A,(B,C)S1)S2;").unwrap();
+    let root_id = tree.get_root().unwrap();
+    let original = tree.to_newick();
+
+    tree.reroot_at(root_id, true).unwrap();
+
+    assert_eq!(tree.get_root(), Some(root_id));
+    assert_eq!(tree.to_newick(), original);
+}

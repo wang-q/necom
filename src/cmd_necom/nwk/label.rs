@@ -19,9 +19,9 @@ Notes:
 * The `-I` and `-L` options filter out internal or leaf nodes.
 * Selection options (`-n`, `-l`, `-x`) can be combined.
 * With `-D`, descendants of selected internal nodes are also included.
-* Monophyly check (`-M`) verifies if the selected nodes form a monophyletic
-  group. It checks terminal nodes against the selection.
-* Warning: Duplicate node names may affect selection/monophyly checks.
+* Clade check (`-M`) verifies if the selected nodes form a monophyletic group
+  with at least two nodes. It checks terminal nodes against the selection.
+* Warning: Duplicate node names may affect selection/clade checks.
 * Extra columns (`-c`) details:
     * `dup`: duplicate the node name
     * `taxid`: `:T=` field in comment
@@ -41,7 +41,7 @@ Examples:
 4. List labels matching regex:
    necom nwk label tree.nwk -x "^Homo"
 
-5. Check monophyly:
+5. Check clade:
    necom nwk label tree.nwk -n Human -n Chimp -M
 
 "###,
@@ -66,7 +66,7 @@ Examples:
                 .help("Print labels on a single line, separated by tab stops"),
         )
         .arg(crate::cmd_necom::args::monophyly_arg(
-            "Only print the labels when they form a monophyletic subtree",
+            "Only print the labels when they form a clade",
         ))
         .arg(
             Arg::new("extra_column")
@@ -143,10 +143,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         let ids: BTreeSet<usize> = ids_pos.intersection(&ids_name).cloned().collect();
 
-        // Print nothing if monophyly check failed.
-        // A single node does not constitute a monophyletic group in this CLI context.
+        // Print nothing if the selected nodes do not form a clade.
         let ids_vec: Vec<usize> = ids.iter().cloned().collect();
-        if is_monophyly && (ids_vec.len() < 2 || !tree.is_monophyletic(&ids_vec)) {
+        if is_monophyly && !tree.is_clade(&ids_vec) {
             continue;
         }
 

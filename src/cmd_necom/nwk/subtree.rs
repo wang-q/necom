@@ -18,10 +18,10 @@ Notes:
     * `-l`: Select nodes from a name-list file.
     * `-x`: Select nodes by regular expression.
     * If no selection is provided, no output is generated.
-* Monophyly check (`-M`):
-    * Ensures the subtree defined by the LCA contains ONLY the selected named
+* Clade check (`-M`):
+    * Ensures the selected nodes form a monophyletic group with at least two
       terminal nodes.
-    * Useful to verify if a group is monophyletic.
+    * Useful to verify if a group is a clade.
 * Condense (`--condense`):
     * Instead of extracting the subtree, it replaces the subtree with a single
       node in the original tree.
@@ -40,7 +40,7 @@ Examples:
 3. Condense the Hominini clade (LCA of Homo and Pan) into a single node "Hominini":
    necom nwk subtree tree.nwk -n Homo -n Pan --condense Hominini
 
-4. Check if a group is monophyletic (prints nothing if not):
+4. Check if a group is a clade (prints nothing if not):
    necom nwk subtree tree.nwk -n Human -n Chimp -n Gorilla -M
 "###,
         )
@@ -50,7 +50,7 @@ Examples:
         .arg(crate::cmd_necom::args::regex_arg())
         .arg(crate::cmd_necom::args::descendants_arg())
         .arg(crate::cmd_necom::args::monophyly_arg(
-            "Only print the subtree when it's monophyletic",
+            "Only print the subtree when it's a clade",
         ))
         .arg(
             Arg::new("condense")
@@ -102,8 +102,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let ids_vec: Vec<usize> = ids.iter().cloned().collect();
         let mut sub_root_id = tree.get_lca(&ids_vec)?;
 
-        // Monophyly check. A single node does not constitute a monophyletic group.
-        if is_monophyly && (ids_vec.len() < 2 || !tree.is_monophyletic(&ids_vec)) {
+        // Monophyly check: selected nodes must form a clade.
+        if is_monophyly && !tree.is_clade(&ids_vec) {
             continue;
         }
 

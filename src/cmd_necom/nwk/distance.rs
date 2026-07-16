@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context};
 use clap::{ArgMatches, Command};
 use necom::libs::phylo::tree::{distance, Tree};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::Write;
 
 /// Build the clap subcommand for distance.
@@ -79,20 +79,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .get_one::<String>("mode")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: mode"))?;
 
-    let skip_internal = args.get_flag("internal");
-    let skip_leaf = args.get_flag("leaf");
+    // Select named nodes, applying -I/-L filters consistently with other commands.
+    let ids_pos = super::common::match_positions(&tree, args)?;
+    let ids_name = super::common::match_names(&tree, args)?;
+    let ids: BTreeSet<usize> = ids_pos.intersection(&ids_name).cloned().collect();
 
-    // ids with names
     let mut id_of = BTreeMap::new();
     let name_id_map = tree.get_name_id();
-
     for (name, id) in name_id_map {
-        let node = tree
-            .get_node(id)
-            .ok_or_else(|| anyhow!("node id {} (name {:?}) not found in tree", id, name))?;
-        let is_leaf = node.children.is_empty();
-
-        if (is_leaf && !skip_leaf) || (!is_leaf && !skip_internal) {
+        if ids.contains(&id) {
             id_of.insert(name, id);
         }
     }

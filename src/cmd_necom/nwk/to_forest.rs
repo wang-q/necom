@@ -18,6 +18,8 @@ Notes:
 * Styles are stored in the comments of each node
 * Drawing a cladogram by default
 * Set `--bl` to draw a phylogenetic tree
+* LaTeX special characters (`{ } \ # $ % & ~ ^`) and underscores in node names,
+  labels, and comments are escaped or normalized for safe Forest output.
 
 Examples:
 1. Convert to Forest code:

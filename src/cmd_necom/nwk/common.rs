@@ -101,21 +101,24 @@ fn warn_duplicate_name(duplicates: &HashSet<String>, name: &str) {
     }
 }
 
-/// Returns IDs of named nodes matching the name selection rules from CLI args.
-pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTreeSet<NodeId>> {
-    // IDs with names
+/// Collect IDs matched by `--node`, `--name-list`, and `--regex` using the
+/// provided argument keys.
+fn collect_name_selection(
+    tree: &Tree,
+    args: &ArgMatches,
+    node_key: &str,
+    name_list_key: &str,
+    regex_key: &str,
+) -> anyhow::Result<BTreeSet<NodeId>> {
     let id_of: BTreeMap<_, _> = tree.get_name_id();
     let duplicates = duplicate_names(tree);
-
-    // all matched IDs
     let mut ids = BTreeSet::new();
 
-    // ids supplied by --node
-    if args.try_contains_id("node").unwrap_or(false) {
-        let names = args
-            .get_many::<String>("node")
-            .ok_or_else(|| anyhow!("missing --node values"))?;
-        for name in names {
+    if args.try_contains_id(node_key).unwrap_or(false) {
+        for name in args
+            .get_many::<String>(node_key)
+            .ok_or_else(|| anyhow!("missing --{} values", node_key))?
+        {
             if let Some(id) = id_of.get(name) {
                 warn_duplicate_name(&duplicates, name);
                 ids.insert(*id);
@@ -125,11 +128,10 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
         }
     }
 
-    // ids supplied by --name-list
-    if args.try_contains_id("name_list").unwrap_or(false) {
+    if args.try_contains_id(name_list_key).unwrap_or(false) {
         let file = args
-            .get_one::<String>("name_list")
-            .ok_or_else(|| anyhow!("missing --name-list value"))?;
+            .get_one::<String>(name_list_key)
+            .ok_or_else(|| anyhow!("missing --{} value", name_list_key))?;
         for name in necom::libs::io::read_names::<Vec<String>>(file)?.iter() {
             if let Some(id) = id_of.get(name) {
                 warn_duplicate_name(&duplicates, name);
@@ -140,12 +142,11 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
         }
     }
 
-    // ids matched with --regex
-    if args.try_contains_id("regex").unwrap_or(false) {
-        let regexes = args
-            .get_many::<String>("regex")
-            .ok_or_else(|| anyhow!("missing --regex values"))?;
-        for regex in regexes {
+    if args.try_contains_id(regex_key).unwrap_or(false) {
+        for regex in args
+            .get_many::<String>(regex_key)
+            .ok_or_else(|| anyhow!("missing --{} values", regex_key))?
+        {
             let re = RegexBuilder::new(regex).case_insensitive(true).build()?;
             for (name, id) in id_of.iter() {
                 if re.is_match(name) {
@@ -156,13 +157,20 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
         }
     }
 
+    Ok(ids)
+}
+
+/// Returns IDs of named nodes matching the name selection rules from CLI args.
+pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTreeSet<NodeId>> {
+    let mut ids = collect_name_selection(tree, args, "node", "name_list", "regex")?;
+
     // Default is printing all named nodes
     let is_all = !(args.try_contains_id("node").unwrap_or(false)
         || args.try_contains_id("name_list").unwrap_or(false)
         || args.try_contains_id("regex").unwrap_or(false));
 
     if is_all {
-        ids = id_of.values().cloned().collect();
+        ids = tree.get_name_id().values().cloned().collect();
     }
 
     // Include all descendants of internal nodes
@@ -236,53 +244,7 @@ pub(crate) fn match_nodes_and_lca(
 ) -> anyhow::Result<BTreeSet<NodeId>> {
     let id_of: BTreeMap<_, _> = tree.get_name_id();
     let duplicates = duplicate_names(tree);
-    let mut ids = BTreeSet::new();
-
-    // Explicit --node names
-    if args.try_contains_id(node_key).unwrap_or(false) {
-        for name in args
-            .get_many::<String>(node_key)
-            .ok_or_else(|| anyhow::anyhow!("missing --{} values", node_key))?
-        {
-            if let Some(id) = id_of.get(name) {
-                warn_duplicate_name(&duplicates, name);
-                ids.insert(*id);
-            } else {
-                log::warn!("node not found: {}", name);
-            }
-        }
-    }
-
-    // --name-list file
-    if args.try_contains_id("name_list").unwrap_or(false) {
-        let file = args
-            .get_one::<String>("name_list")
-            .ok_or_else(|| anyhow::anyhow!("missing --name-list value"))?;
-        for name in necom::libs::io::read_names::<Vec<String>>(file)?.iter() {
-            if let Some(id) = id_of.get(name) {
-                warn_duplicate_name(&duplicates, name);
-                ids.insert(*id);
-            } else {
-                log::warn!("name-list node not found: {}", name);
-            }
-        }
-    }
-
-    // --regex patterns
-    if args.try_contains_id("regex").unwrap_or(false) {
-        for regex in args
-            .get_many::<String>("regex")
-            .ok_or_else(|| anyhow::anyhow!("missing --regex values"))?
-        {
-            let re = RegexBuilder::new(regex).case_insensitive(true).build()?;
-            for (name, id) in id_of.iter() {
-                if re.is_match(name) {
-                    warn_duplicate_name(&duplicates, name);
-                    ids.insert(*id);
-                }
-            }
-        }
-    }
+    let mut ids = collect_name_selection(tree, args, node_key, "name_list", "regex")?;
 
     // --lca pairs
     if args.try_contains_id(lca_key).unwrap_or(false) {

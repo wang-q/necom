@@ -268,7 +268,8 @@ graph LR
     *   `get_subtree()`: 获取子树节点集合。
     *   `find_nodes()`, `get_node_by_name()`: 查找节点。
     *   `get_height()`: 计算节点高度 (到最远叶子的距离)。
-    *   `is_monophyletic()`: 判断是否为单系群。
+    *   `is_monophyletic()`: 判断是否为单系群（数学定义：空集返回 false，单个节点返回 true）。
+    *   `is_clade()`: 判断是否为演化支；要求至少两个节点且构成单系群。
 *   **修改**:
     *   `reroot_at()`: 重新定根 (支持边长重分配)。
     *   `prune_where()`: 剪枝 (删除匹配节点及其子孙)。
@@ -366,6 +367,7 @@ graph LR
     *   允许将外部生成的 Forest 代码文件（非 Newick）直接嵌入模板生成 PDF。
 *   **特殊字符处理**:
     *   Newick 名称中的下划线 `_` 会被自动转换为空格，避免 LaTeX 编译错误。
+    *   节点名、label、comment 中的 LaTeX 特殊字符（`{ } \ # $ % & ~ ^`）会被自动转义，防止破坏 Forest 语法或导致编译失败。
 
 #### 工作流示例
 

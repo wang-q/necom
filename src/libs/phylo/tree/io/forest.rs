@@ -5,6 +5,38 @@ use super::util::{compute_depths, compute_heights};
 use crate::libs::phylo::node::NodeId;
 use std::collections::HashMap;
 
+/// Escape characters that are special in LaTeX/Forest text.
+///
+/// This prevents node labels, comments, and property values from breaking
+/// Forest syntax or causing LaTeX compilation errors.
+fn latex_escape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str(r"\textbackslash{}"),
+            '{' => out.push_str(r"\{"),
+            '}' => out.push_str(r"\}"),
+            '#' => out.push_str(r"\#"),
+            '$' => out.push_str(r"\$"),
+            '%' => out.push_str(r"\%"),
+            '&' => out.push_str(r"\&"),
+            '~' => out.push_str(r"\textasciitilde{}"),
+            '^' => out.push_str(r"\textasciicircum{}"),
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
+/// Convert raw text for LaTeX/Forest display.
+///
+/// Existing underscores are converted to spaces (matching the documented
+/// behavior for `to-forest`/`to-tex`), then LaTeX special characters are
+/// escaped.
+fn display_text(s: &str) -> String {
+    latex_escape(&s.replace('_', " "))
+}
+
 /// Serialize tree to LaTeX Forest format.
 ///
 /// # Arguments
@@ -71,7 +103,7 @@ fn to_forest_node_props(
 
     let mut options = String::new();
 
-    let mut name = node.name.clone().map(|x| x.replace('_', " "));
+    let mut name = node.name.clone().map(|x| display_text(&x));
     let mut color: Option<String> = None;
     let mut label: Option<String> = None;
 
@@ -87,7 +119,7 @@ fn to_forest_node_props(
             color = Some(v.replace('_', " "));
         }
         if let Some(v) = props.get("label") {
-            label = Some(v.replace('_', " "));
+            label = Some(display_text(v));
         }
         for key in ["dot", "bar", "rec", "tri"] {
             if let Some(v) = props.get(key) {
@@ -100,7 +132,7 @@ fn to_forest_node_props(
                 if !comment.is_empty() {
                     comment += " ";
                 }
-                comment += &v.replace('_', " ");
+                comment += &display_text(v);
             }
         }
         if !comment.is_empty() {
@@ -209,6 +241,103 @@ mod tests {
         assert!(
             !output.contains(",,"),
             "unexpected consecutive commas in forest output: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn to_forest_replaces_underscore_with_space() {
+        let mut tree = Tree::new();
+        let root = tree.add_node();
+        let leaf = tree.add_node();
+        let _ = tree.set_root(root);
+        tree.add_child(root, leaf).unwrap();
+
+        tree.get_node_mut(leaf).unwrap().name = Some("Homo_sapiens".to_string());
+
+        let output = to_forest(&tree, 0.0);
+        assert!(
+            output.contains("{Homo sapiens}"),
+            "underscore should become space, got: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn latex_escape_special_chars() {
+        assert_eq!(latex_escape("\\"), r"\textbackslash{}");
+        assert_eq!(latex_escape("{"), r"\{");
+        assert_eq!(latex_escape("}"), r"\}");
+        assert_eq!(latex_escape("#"), r"\#");
+        assert_eq!(latex_escape("$"), r"\$");
+        assert_eq!(latex_escape("%"), r"\%");
+        assert_eq!(latex_escape("&"), r"\&");
+        assert_eq!(latex_escape("~"), r"\textasciitilde{}");
+        assert_eq!(latex_escape("^"), r"\textasciicircum{}");
+        assert_eq!(latex_escape("plain"), "plain");
+    }
+
+    #[test]
+    fn to_forest_escapes_latex_special_chars() {
+        let mut tree = Tree::new();
+        let root = tree.add_node();
+        let leaf = tree.add_node();
+        let _ = tree.set_root(root);
+        tree.add_child(root, leaf).unwrap();
+
+        tree.get_node_mut(leaf).unwrap().name = Some(r"A{B}C\D".to_string());
+        if let Some(node) = tree.get_node_mut(leaf) {
+            let mut props = BTreeMap::new();
+            props.insert("label".to_string(), "E%F".to_string());
+            props.insert("comment".to_string(), "G&H".to_string());
+            node.properties = Some(props);
+        }
+
+        let output = to_forest(&tree, 0.0);
+        assert!(
+            output.contains(r"\{"),
+            "expected escaped brace, got: {}",
+            output
+        );
+        assert!(
+            output.contains(r"\}"),
+            "expected escaped brace, got: {}",
+            output
+        );
+        assert!(
+            output.contains(r"\textbackslash{}"),
+            "expected escaped backslash, got: {}",
+            output
+        );
+        assert!(
+            output.contains(r"\%"),
+            "expected escaped percent, got: {}",
+            output
+        );
+        assert!(
+            output.contains(r"\&"),
+            "expected escaped ampersand, got: {}",
+            output
+        );
+        // Raw special characters should not appear in the output.
+        assert!(
+            !output.contains("{B}"),
+            "unescaped brace group in output: {}",
+            output
+        );
+        assert!(
+            !output.contains(r"C\D"),
+            "unescaped backslash in output: {}",
+            output
+        );
+        assert!(
+            !output.contains("E%F"),
+            "unescaped percent in output: {}",
+            output
+        );
+        assert!(
+            !output.contains("G&H"),
+            "unescaped ampersand in output: {}",
             output
         );
     }

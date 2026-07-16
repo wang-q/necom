@@ -18,6 +18,7 @@ Notes:
 * Set `--bl` to draw a phylogenetic tree
 * Underscore `_` is a control character in LaTeX
   * All `_`s in names, labels and comments will be replaced as spaces " "
+* Other LaTeX special characters (`{ } \ # $ % & ~ ^`) in names, labels and comments are escaped automatically
 * To compile the .tex files to pdf, you need LaTeX or Tectonic
   * `XeLaTeX` and `latexmk` for compiling unicode .tex
   * `xeCJK` package for East Asian characters
@@ -53,6 +54,12 @@ Examples:
 }
 
 /// Execute the to-tex command.
+///
+/// The complete LaTeX document is built from `src/assets/template.tex`, which
+/// must contain the markers `%FOREST_BEGIN`, `%FOREST_END`, `%STYLE_BEGIN`, and
+/// `%STYLE_END`. Forest content replaces the `%FOREST_*` region. Unless
+/// `--no-default-style` is given, the `%STYLE_*` region is replaced with a
+/// `Noto Sans` font setup; otherwise the template's original font setup is kept.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer =

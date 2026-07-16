@@ -246,4 +246,47 @@ mod tests {
         tree.get_node_mut(a).unwrap().length = Some(0.5);
         assert_eq!(to_newick(&tree), "(A:0.5)Root;");
     }
+
+    #[test]
+    fn test_quote_label_escaping() {
+        // Whitespace and reserved characters force quoting.
+        assert_eq!(quote_label("Homo sapiens"), "'Homo sapiens'");
+        assert_eq!(quote_label("A(B)"), "'A(B)'");
+
+        // Single quotes are escaped by doubling.
+        assert_eq!(quote_label("A'B"), "'A''B'");
+
+        // Double quotes force quoting too.
+        assert_eq!(quote_label("A\"B"), "'A\"B'");
+
+        // Plain labels pass through unchanged.
+        assert_eq!(quote_label("AB_123"), "AB_123");
+    }
+
+    #[test]
+    fn test_to_newick_round_trip_quoted_labels() {
+        // Labels that require quoting should round-trip through the parser.
+        let labels = [
+            "Homo sapiens",
+            "A'B",
+            "A\"B",
+            "A(B)",
+            "A,B",
+            "A:B",
+            "A;B",
+            "A[B",
+            "A]B",
+        ];
+        for label in &labels {
+            let newick = format!("('{}');", label.replace('\'', "''"));
+            let trees = Tree::from_newick_multi(&newick).unwrap();
+            assert_eq!(trees.len(), 1, "failed to parse: {}", newick);
+            let tree = &trees[0];
+            let root = tree.get_root().unwrap();
+            let child = tree
+                .get_node(tree.get_node(root).unwrap().children[0])
+                .unwrap();
+            assert_eq!(child.name.as_deref(), Some(*label));
+        }
+    }
 }

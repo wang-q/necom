@@ -102,4 +102,28 @@ mod tests {
         // Edge should exist but without label attribute
         assert!(dot.contains(&format!("{} -> {};", n0, n1)));
     }
+
+    #[test]
+    fn test_escape_dot_label() {
+        // Backslashes and double quotes must be escaped inside DOT labels.
+        assert_eq!(escape_dot_label("A\\B"), "A\\\\B");
+        assert_eq!(escape_dot_label("A\"B"), "A\\\"B");
+        assert_eq!(escape_dot_label("A\\\"B"), "A\\\\\\\"B");
+        assert_eq!(escape_dot_label("plain"), "plain");
+    }
+
+    #[test]
+    fn test_to_dot_escapes_special_chars() {
+        let mut tree = Tree::new();
+        let n0 = tree.add_node();
+        let n1 = tree.add_node();
+
+        let _ = tree.set_root(n0);
+        tree.add_child(n0, n1).unwrap();
+
+        tree.get_node_mut(n1).unwrap().set_name("A\"B\\C");
+
+        let dot = to_dot(&tree);
+        assert!(dot.contains("label=\"A\\\"B\\\\C\""));
+    }
 }

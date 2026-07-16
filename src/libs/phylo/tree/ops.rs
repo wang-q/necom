@@ -501,6 +501,10 @@ pub fn reroot_at(
             names.push(node.name.clone());
         }
 
+        // Each internal node's name annotates the edge to its parent. After
+        // reversing the edges on the path, the label must move to the node
+        // that now sits on that edge. The old root absorbs the label from the
+        // node directly below it; leaves keep their taxon names.
         for i in 0..path.len() {
             let node_id = path[i];
             // Only modify internal nodes (leaves keep Taxon names)

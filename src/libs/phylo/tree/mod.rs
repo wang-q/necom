@@ -256,6 +256,11 @@ impl Tree {
         query::is_monophyletic(self, nodes)
     }
 
+    /// Check if a set of nodes forms a clade (monophyletic group with at least two nodes).
+    pub fn is_clade(&self, nodes: &[NodeId]) -> bool {
+        query::is_clade(self, nodes)
+    }
+
     /// Collect IDs of all named leaves in the subtree rooted at `id`.
     pub fn get_named_leaves(&self, id: NodeId) -> BTreeSet<NodeId> {
         query::get_named_leaves(self, id)

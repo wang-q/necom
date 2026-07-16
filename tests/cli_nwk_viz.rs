@@ -300,3 +300,73 @@ fn command_to_svg_width_vskip() {
     assert!(stdout.contains("<svg xmlns=\"http://www.w3.org/2000/svg\""));
     assert!(stdout.contains("A"));
 }
+
+#[test]
+fn command_viz_escapes_special_chars() {
+    // Leaf label contains LaTeX/XML/DOT special characters.
+    let newick = "(A,'A{B}C\\D'[&&NHX:label=E%F:comment=G&H])Root;";
+
+    // to-forest must escape LaTeX special characters.
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "to-forest", "stdin"])
+        .stdin(newick)
+        .run();
+    assert!(
+        stdout.contains(r"\{"),
+        "expected escaped {{ in forest: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains(r"\}"),
+        "expected escaped }} in forest: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains(r"\textbackslash{}"),
+        "expected escaped backslash in forest: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains(r"\%"),
+        "expected escaped % in forest: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains(r"\&"),
+        "expected escaped & in forest: {}",
+        stdout
+    );
+    assert!(
+        !stdout.contains("{B}"),
+        "unescaped brace group in forest: {}",
+        stdout
+    );
+    assert!(
+        !stdout.contains(r"C\D"),
+        "unescaped backslash in forest: {}",
+        stdout
+    );
+    assert!(!stdout.contains("E%F"), "unescaped % in forest: {}", stdout);
+    assert!(!stdout.contains("G&H"), "unescaped & in forest: {}", stdout);
+
+    // to-dot must escape backslashes and quotes.
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "to-dot", "stdin"])
+        .stdin(newick)
+        .run();
+    assert!(stdout.contains(r#"label="A{B}C\\D""#));
+
+    // to-svg leaves braces and backslashes as-is (only XML specials are escaped).
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "to-svg", "stdin"])
+        .stdin(newick)
+        .run();
+    assert!(stdout.contains("A{B}C\\D"));
+
+    // indent round-trip preserves the original label (quotes are optional).
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "indent", "stdin"])
+        .stdin(newick)
+        .run();
+    assert!(stdout.contains("A{B}C\\D"));
+}

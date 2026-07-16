@@ -208,7 +208,8 @@ pub fn calculate_inconsistency(
             let divisor = if n > 1 { (n - 1) as f64 } else { 1.0 };
             let variance = sub_heights.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / divisor;
             let std = variance.sqrt();
-            if std == 0.0 {
+            if std.abs() < 1e-12 {
+                // All compared heights are identical; the z-score is zero by definition.
                 inconsistency.insert(id, 0.0);
             } else {
                 inconsistency.insert(id, (h - mean) / std);

@@ -126,8 +126,12 @@ pub fn node_distance(tree: &Tree, a: NodeId, b: NodeId) -> anyhow::Result<f64> {
 }
 
 /// Check if a set of nodes is monophyletic.
+///
 /// A set is monophyletic if the set of leaves in the subtree of their LCA
 /// is exactly the same as the set of leaves reachable from the input nodes.
+/// A single node is considered monophyletic with respect to itself; an empty
+/// set is not monophyletic. For CLI use cases that require at least two nodes,
+/// use [`is_clade`] instead.
 pub fn is_monophyletic(tree: &Tree, nodes: &[NodeId]) -> bool {
     if nodes.is_empty() {
         return false;
@@ -162,6 +166,15 @@ pub fn is_monophyletic(tree: &Tree, nodes: &[NodeId]) -> bool {
 
     // 4. Compare
     lca_leaves == input_leaves
+}
+
+/// Check if a set of nodes forms a clade.
+///
+/// A clade is a monophyletic group containing at least two nodes. This is
+/// stricter than [`is_monophyletic`], which considers a single node (and an
+/// empty set as non-monophyletic) monophyletic with respect to itself.
+pub fn is_clade(tree: &Tree, nodes: &[NodeId]) -> bool {
+    nodes.len() >= 2 && is_monophyletic(tree, nodes)
 }
 
 /// Collect IDs of all named leaves (children.is_empty() && name.is_some()) in the subtree rooted at `id`.
