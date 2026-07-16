@@ -266,26 +266,28 @@ impl NamedMatrix {
             Layout::LowerWithoutDiagonal
         };
 
-        // Validate row lengths and warn about values beyond the full matrix size.
+        // Validate row lengths and warn about extra values.
         for (i, (name, values)) in rows.iter().enumerate() {
-            let expected_min = match layout {
+            let expected = match layout {
                 Layout::Full => size,
                 Layout::LowerWithDiagonal => i + 1,
                 Layout::LowerWithoutDiagonal => i,
             };
-            if values.len() < expected_min {
+            if values.len() < expected {
                 anyhow::bail!(
-                    "malformed PHYLIP line for '{}': expected at least {} value(s), found {}",
+                    "malformed PHYLIP line for '{}': expected {} value(s), found {}",
                     name,
-                    expected_min,
+                    expected,
                     values.len()
                 );
             }
-            if values.len() > size {
+            if values.len() > expected {
                 log::warn!(
-                    "line for '{}' contains {} extra value(s); ignoring values beyond full matrix size",
+                    "line for '{}' contains {} extra value(s); ignoring values beyond the expected {} value(s) for {:?} layout",
                     name,
-                    values.len() - size
+                    values.len() - expected,
+                    expected,
+                    layout
                 );
             }
         }

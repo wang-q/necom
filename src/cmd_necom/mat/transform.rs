@@ -11,7 +11,7 @@ Useful for converting similarity matrices to distance matrices.
 
 Operations:
     * linear:     val = val * scale + offset
-    * inv-linear: val = max - val
+    * inv-linear: off-diagonal val = max - val; diagonal set to 0 for a valid distance matrix
     * log:        val = -ln(val)
     * exp:        val = exp(-val)
     * square:     val = val * val

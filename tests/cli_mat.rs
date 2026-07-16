@@ -374,3 +374,42 @@ fn command_mat_format_lower_no_diag_input() {
     assert!(lines[2].starts_with("B\t0.1\t0\t0.3"));
     assert!(lines[3].starts_with("C\t0.2\t0.3\t0"));
 }
+
+#[test]
+fn command_mat_compare_empty_method_token() {
+    // Empty tokens between commas should be skipped.
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            "tests/mat/IBPA.phy",
+            "tests/mat/IBPA.71.phy",
+            "--method",
+            "pearson,,cosine",
+        ])
+        .run();
+
+    assert!(stdout.contains("pearson\t0.93"));
+    assert!(stdout.contains("cosine\t0.97"));
+    // Only two methods should be reported.
+    assert_eq!(stdout.lines().count(), 3); // header + pearson + cosine
+}
+
+#[test]
+fn command_mat_format_lower_extra_values_warning() {
+    // Extra values in lower-triangular PHYLIP should produce a warning.
+    let input = "3\nA\nB 0.1 0.999\nC 0.2 0.3\n";
+
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["mat", "format", "stdin"])
+        .stdin(input)
+        .run();
+
+    assert!(stderr.contains("extra value(s)"));
+    assert!(stderr.contains("LowerWithoutDiagonal"));
+
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(lines[0].trim(), "3");
+    // The extra value 0.999 must be ignored.
+    assert!(lines[2].starts_with("B\t0.1\t0\t0.3"));
+}
