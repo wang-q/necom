@@ -16,21 +16,22 @@ pub fn transform_matrix(
     let mut result = matrix.clone();
     let size = result.size();
 
-    // Get original diagonals (used for normalize and for transforming diagonal elements)
-    let diags: Vec<f32> = result.get_diags().cloned().unwrap_or_default();
-    let has_diags = !diags.is_empty();
+    // Get original diagonals (used for normalize and for transforming diagonal elements).
+    // Missing diagonals are treated as zeros, matching the documentation for --normalize.
+    let diags: Vec<f32> = result
+        .get_diags()
+        .cloned()
+        .unwrap_or_else(|| vec![0.0; size]);
+    let has_diags = result.get_diags().is_some();
 
     // Warn if normalize is requested but diagonals are missing or all zero
     if normalize {
-        if diags.is_empty() {
-            log::warn!(
-                "--normalize requested but no diagonal values found. Result will be Inf/NaN."
-            );
-        } else {
-            let max_diag = diags.iter().fold(0.0f32, |a, &b| a.max(b));
-            if max_diag == 0.0 {
-                log::warn!("--normalize requested but all diagonal values are 0.0. Result will be Inf/NaN.");
-            }
+        if !has_diags {
+            log::warn!("--normalize requested but no diagonal values found; treating them as 0.0.");
+        }
+        let max_diag = diags.iter().fold(0.0f32, |a, &b| a.max(b));
+        if max_diag == 0.0 {
+            log::warn!("--normalize requested but all diagonal values are 0.0.");
         }
     }
 
@@ -58,7 +59,7 @@ pub fn transform_matrix(
                     if val > 0.0 {
                         -val.ln()
                     } else {
-                        1000.0
+                        f32::INFINITY
                     }
                 }
                 "exp" => (-val).exp(),
@@ -70,7 +71,7 @@ pub fn transform_matrix(
                         0.0
                     }
                 }
-                _ => val,
+                _ => anyhow::bail!("unsupported transformation operation: {}", method),
             };
 
             result.set(i, j, val);
@@ -105,11 +106,11 @@ pub fn transform_matrix(
                     0.0
                 }
             }
-            _ => d,
+            _ => anyhow::bail!("unsupported transformation operation: {}", method),
         };
         new_diags[i] = d;
     }
-    result.set_diags(new_diags);
+    result.set_diags(new_diags)?;
 
     Ok(result)
 }

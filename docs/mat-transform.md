@@ -23,7 +23,7 @@ necom mat transform [OPTIONS] <infile>
 - `--op <METHOD>`: Transformation operation (default: `linear`).
   - `linear`: $val = val \times scale + offset$
   - `inv-linear`: $val = max - val$
-  - `log`: $val = -\ln(val)$ (values $\le 0$ are set to 0 or Inf)
+  - `log`: $val = -\ln(val)$ (off-diagonal values $\le 0$ are set to `Inf`; diagonal values $\le 0$ are set to 0)
   - `exp`: $val = \exp(-val)$
   - `square`: $val = val^2$
   - `sqrt`: $val = \sqrt{val}$
@@ -149,5 +149,5 @@ $$D = \frac{1}{S} - \frac{1}{Max}$$
   - When `necom` reads a matrix, it usually ignores the diagonal (sets it to 0), but the `transform` command attempts to preserve diagonal information to support `--normalize`.
   - If the input file lacks diagonal information (as in some PHYLIP variants), `--normalize` will not work correctly (treated as 0).
 - **Numerical stability**:
-  - The `log` operation is sensitive to 0 or negative values; the program handles them as very large values or 0.
+  - The `log` operation is sensitive to 0 or negative values; off-diagonal values are set to `Inf` and diagonal values are set to 0.
   - If the diagonal is 0 during normalization, the result will be 0.

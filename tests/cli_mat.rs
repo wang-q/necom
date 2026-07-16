@@ -282,3 +282,36 @@ fn command_mat_transform_tsv_explicit() {
     assert!(stdout.contains("0.0669"));
     assert!(stdout.lines().count() > 1); // Should output full matrix
 }
+
+#[test]
+fn command_mat_compare_method_whitespace() {
+    // Whitespace around comma-separated methods should be tolerated
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            "tests/mat/IBPA.phy",
+            "tests/mat/IBPA.71.phy",
+            "--method",
+            "pearson, cosine",
+        ])
+        .run();
+
+    assert!(stdout.contains("pearson\t0.93"));
+    assert!(stdout.contains("cosine\t0.97"));
+}
+
+#[test]
+fn command_mat_to_phylip_malformed_warning() {
+    // Malformed pairwise TSV lines should produce a warning but not fail
+    let input = "A\tB\t0.1\nA\tB\nC\tD\t0.2\n";
+
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["mat", "to-phylip", "stdin"])
+        .stdin(input)
+        .run();
+
+    assert!(stderr.contains("skipping malformed pairwise line"));
+    assert!(stdout.contains("0.2"));
+    assert_eq!(stdout.lines().count(), 5); // 4 sequences + header
+}

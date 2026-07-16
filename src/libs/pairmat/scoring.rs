@@ -146,22 +146,28 @@ impl ScoringMatrix<f32> {
         let reader = crate::reader(infile)?;
         for line in reader.lines().map_while(Result::ok) {
             let fields: Vec<&str> = line.split('\t').collect();
-            if fields.len() >= 3 {
-                let n1 = fields[0].to_string();
-                let n2 = fields[1].to_string();
-                let score: f32 = fields[2].parse()?;
-
-                names.insert(n1.clone());
-                names.insert(n2.clone());
-
-                let i1 = names
-                    .get_index_of(&n1)
-                    .ok_or_else(|| anyhow::anyhow!("name not found: {n1}"))?;
-                let i2 = names
-                    .get_index_of(&n2)
-                    .ok_or_else(|| anyhow::anyhow!("name not found: {n2}"))?;
-                matrix.set(i1, i2, score);
+            if fields.len() < 3 {
+                log::warn!(
+                    "skipping malformed pairwise line (expected 3 tab-separated fields): {}",
+                    line
+                );
+                continue;
             }
+
+            let n1 = fields[0].to_string();
+            let n2 = fields[1].to_string();
+            let score: f32 = fields[2].parse()?;
+
+            names.insert(n1.clone());
+            names.insert(n2.clone());
+
+            let i1 = names
+                .get_index_of(&n1)
+                .ok_or_else(|| anyhow::anyhow!("name not found: {n1}"))?;
+            let i2 = names
+                .get_index_of(&n2)
+                .ok_or_else(|| anyhow::anyhow!("name not found: {n2}"))?;
+            matrix.set(i1, i2, score);
         }
 
         matrix.set_size(names.len());

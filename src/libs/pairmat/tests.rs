@@ -107,3 +107,45 @@ fn test_named_matrix_indexing() {
     assert_eq!(m.index(0, 2), 1);
     assert_eq!(m.index(1, 2), 2);
 }
+
+#[test]
+fn test_set_diags_wrong_length() {
+    let names = vec!["A".to_string(), "B".to_string()];
+    let mut m = NamedMatrix::new(names);
+    assert!(m.set_diags(vec![1.0]).is_err());
+    assert!(m.set_diags(vec![1.0, 2.0]).is_ok());
+}
+
+#[test]
+fn test_from_relaxed_phylip_malformed() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A 0.0").unwrap();
+    writeln!(tmp, "B").unwrap(); // missing required value
+
+    let result = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap());
+    assert!(
+        result.is_err(),
+        "malformed PHYLIP input should return an error"
+    );
+}
+
+#[test]
+fn test_transform_log_non_positive() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Lower-triangle PHYLIP: A diag=0.0; B off-diag=-1.0, diag=0.0
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A 0.0").unwrap();
+    writeln!(tmp, "B -1.0 0.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    let transformed = super::transform_matrix(&matrix, "log", 1.0, 1.0, 0.0, false).unwrap();
+
+    assert_eq!(transformed.get(0, 1), f32::INFINITY);
+    assert_eq!(transformed.get(0, 0), 0.0);
+    assert_eq!(transformed.get(1, 1), 0.0);
+}

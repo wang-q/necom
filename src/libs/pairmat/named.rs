@@ -102,9 +102,16 @@ impl NamedMatrix {
         self.names.get(name).copied()
     }
 
-    pub fn set_diags(&mut self, diags: Vec<f32>) {
+    pub fn set_diags(&mut self, diags: Vec<f32>) -> anyhow::Result<()> {
         if diags.len() == self.size() {
             self.diags = Some(diags);
+            Ok(())
+        } else {
+            anyhow::bail!(
+                "diagonal length {} does not match matrix size {}",
+                diags.len(),
+                self.size()
+            )
         }
     }
 
@@ -170,7 +177,7 @@ impl NamedMatrix {
                 matrix.set(i, j, scoring_matrix.get(i, j));
             }
         }
-        matrix.set_diags(diags);
+        matrix.set_diags(diags)?;
         Ok(matrix)
     }
 
@@ -220,7 +227,7 @@ impl NamedMatrix {
                 }
             }
         }
-        matrix.set_diags(diags);
+        matrix.set_diags(diags)?;
         Ok(matrix)
     }
 
@@ -230,21 +237,32 @@ impl NamedMatrix {
         values: &mut Vec<f32>,
     ) -> anyhow::Result<()> {
         let parts: Vec<&str> = line.split_whitespace().collect();
-        if !parts.is_empty() {
-            let name = parts[0].to_string();
-            names.push(name);
-
-            // Read lower-triangle distances
-            let distances: Vec<f32> = parts[1..=names.len()]
-                .iter()
-                .map(|&s| {
-                    s.parse::<f32>()
-                        .map_err(|e| anyhow::anyhow!("parse error: {e}"))
-                })
-                .collect::<anyhow::Result<Vec<f32>>>()?;
-
-            values.extend(distances);
+        if parts.is_empty() {
+            return Ok(());
         }
+
+        let name = parts[0].to_string();
+        let expected_values = names.len() + 1;
+        if parts.len() < 1 + expected_values {
+            anyhow::bail!(
+                "malformed PHYLIP line for '{}': expected {} value(s), found {}",
+                name,
+                expected_values,
+                parts.len() - 1
+            );
+        }
+        names.push(name);
+
+        // Read lower-triangle distances
+        let distances: Vec<f32> = parts[1..=names.len()]
+            .iter()
+            .map(|&s| {
+                s.parse::<f32>()
+                    .map_err(|e| anyhow::anyhow!("parse error: {e}"))
+            })
+            .collect::<anyhow::Result<Vec<f32>>>()?;
+
+        values.extend(distances);
         Ok(())
     }
 }

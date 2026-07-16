@@ -76,7 +76,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     writer.write_all(b"Method\tScore\n")?;
 
     // Calculate and output metrics
-    for method in methods.split(',') {
+    for method in methods.split(',').map(str::trim) {
         let result = match method {
             "pearson" => necom::libs::linalg::pearson_correlation(&values1, &values2),
             "spearman" => necom::libs::linalg::spearman_correlation(&values1, &values2),
