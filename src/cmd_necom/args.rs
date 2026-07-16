@@ -52,15 +52,17 @@ pub fn seed_arg(default: Option<&'static str>, short: Option<char>, help: &'stat
 
 /// Extract the `outfile` value from `args` as `&str`.
 pub fn get_outfile(args: &ArgMatches) -> &str {
-    args.get_one::<String>("outfile").unwrap()
+    args.get_one::<String>("outfile")
+        .map(|s| s.as_str())
+        .unwrap_or("stdout")
 }
 
 // ============================================================================
 // nwk subcommand builders
 // ============================================================================
 
-/// Positional `target` genome file argument (required, index 1).
-pub fn target_genome_arg(help: &'static str) -> Arg {
+/// Positional `target` tree file argument (required, index 1).
+pub fn target_tree_arg(help: &'static str) -> Arg {
     Arg::new("target")
         .required(true)
         .index(1)

@@ -71,13 +71,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Auto-detect: if any non-root node has a branch length, draw phylogram.
     let has_bl = necom::libs::phylo::tree::stat::has_branch_lengths(&tree);
-    let height = if has_bl {
-        tree.get_root()
-            .map(|r| tree.get_height(r, true))
-            .unwrap_or(0.0)
-    } else {
-        0.0
-    };
+    let height = super::common::display_height(&tree, has_bl);
 
     let out_string = necom::libs::phylo::tree::io::to_svg(&tree, height, vskip, width);
 

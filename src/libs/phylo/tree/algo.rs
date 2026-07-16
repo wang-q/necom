@@ -406,7 +406,7 @@ mod tests {
     fn test_sort_by_name() {
         let mut tree = Tree::new();
         let root = tree.add_node();
-        tree.set_root(root);
+        let _ = tree.set_root(root);
 
         let c1 = tree.add_node();
         tree.get_node_mut(c1).unwrap().name = Some("C".to_string());
@@ -442,7 +442,7 @@ mod tests {
     fn test_ladderize() {
         let mut tree = Tree::new();
         let root = tree.add_node();
-        tree.set_root(root);
+        let _ = tree.set_root(root);
 
         // Child 1: Leaf (Size 1)
         let c1 = tree.add_node();
@@ -474,7 +474,7 @@ mod tests {
     fn test_sort_by_list() {
         let mut tree = Tree::new();
         let root = tree.add_node();
-        tree.set_root(root);
+        let _ = tree.set_root(root);
 
         // ( (A, B), C )
         // Let's create a structure:
@@ -555,7 +555,7 @@ mod tests {
     fn test_deladderize() {
         let mut tree = Tree::new();
         let root = tree.add_node();
-        tree.set_root(root);
+        let _ = tree.set_root(root);
 
         // Structure: ((A,B),(C,(D,E)),F)
         // Sizes:

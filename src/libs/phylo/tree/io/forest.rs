@@ -170,7 +170,8 @@ fn to_forest_node_props(
 
 // relative length
 fn calc_length(edge: f64, height: f64) -> i32 {
-    (edge * 100.0 / height).round() as i32
+    let scaled = (edge * 100.0 / height).round();
+    scaled.clamp(i32::MIN as f64, i32::MAX as f64) as i32
 }
 
 #[cfg(test)]
@@ -184,7 +185,7 @@ mod tests {
         let mut tree = Tree::new();
         let root = tree.add_node();
         let leaf = tree.add_node();
-        tree.set_root(root);
+        let _ = tree.set_root(root);
         tree.add_child(root, leaf).unwrap();
 
         if let Some(node) = tree.get_node_mut(leaf) {

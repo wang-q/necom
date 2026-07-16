@@ -37,7 +37,7 @@ pub fn to_newick_with_format(tree: &Tree, indent: &str) -> String {
         s.push(';');
         s
     } else {
-        ";".to_string()
+        String::new()
     }
 }
 
@@ -140,7 +140,7 @@ mod tests {
         let n1 = tree.add_node();
         let n2 = tree.add_node();
 
-        tree.set_root(n0);
+        let _ = tree.set_root(n0);
         tree.add_child(n0, n1).unwrap();
         tree.add_child(n0, n2).unwrap();
 
@@ -172,7 +172,7 @@ mod tests {
         let a = tree.add_node();
         let b = tree.add_node();
 
-        tree.set_root(root);
+        let _ = tree.set_root(root);
         tree.get_node_mut(root).unwrap().set_name("Root");
 
         tree.add_child(root, i1).unwrap();
@@ -194,7 +194,7 @@ mod tests {
     fn test_to_newick_special_chars() {
         let mut tree = Tree::new();
         let n0 = tree.add_node();
-        tree.set_root(n0);
+        let _ = tree.set_root(n0);
         tree.get_node_mut(n0).unwrap().set_name("Homo sapiens");
 
         assert_eq!(to_newick(&tree), "'Homo sapiens';");
@@ -207,7 +207,7 @@ mod tests {
     fn test_to_newick_properties() {
         let mut tree = Tree::new();
         let n0 = tree.add_node();
-        tree.set_root(n0);
+        let _ = tree.set_root(n0);
         tree.get_node_mut(n0).unwrap().set_name("A");
         tree.get_node_mut(n0).unwrap().add_property("color", "red");
 
@@ -221,7 +221,7 @@ mod tests {
         let mut tree = Tree::new();
         let root = tree.add_node();
         let a = tree.add_node();
-        tree.set_root(root);
+        let _ = tree.set_root(root);
         tree.add_child(root, a).unwrap();
 
         tree.get_node_mut(root).unwrap().set_name("Root");

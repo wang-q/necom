@@ -209,9 +209,9 @@ graph LR
     *   **功能**: 重命名节点 (Map file/Rule)
     *   **状态**: **已实现** (Split into `rename` & `replace`)
 
-*   **`nw_condense`** $\to$ **`necom nwk condense`**
+*   **`nw_condense`** $\to$ **`necom nwk subtree --condense`**
     *   **功能**: 压缩树 (合并短枝/多叉化)
-    *   **状态**: 未实现 (`subtree` 命令支持 `-C` / `--condense` 选项来压缩子树)
+    *   **状态**: 通过 `subtree --condense` 提供；暂无独立 `condense` 子命令计划
 
 *   **`nw_support`** $\to$ **`necom nwk support`**
     *   **功能**: 计算/显示支持率 (Bootstrap)

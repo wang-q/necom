@@ -60,26 +60,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let trees = Tree::from_file(infile)?;
 
     for mut tree in trees {
-        if let Some(root) = tree.get_root() {
-            let ids = tree.levelorder(root);
-
-            for id in ids {
-                if let Some(node) = tree.get_node_mut(id) {
-                    if !is_bl {
-                        node.length = None;
-                    }
-                    if !is_comment {
-                        node.properties = None;
-                    }
-                    if node.is_leaf() && skip_leaf {
-                        node.name = None;
-                    }
-                    if !node.is_leaf() && skip_internal {
-                        node.name = None;
-                    }
-                }
-            }
-        }
+        tree.strip_topology(is_bl, is_comment, skip_internal, skip_leaf);
 
         let out_string = tree.to_newick();
         writer.write_all((out_string + "\n").as_ref())?;

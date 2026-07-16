@@ -12,14 +12,17 @@ use regex::RegexBuilder;
 /// Returns `(&str, &str)` to avoid allocation; bails if the input does not
 /// contain exactly one comma delimiting two non-empty names.
 pub(crate) fn parse_lca_pair(lca: &str) -> anyhow::Result<(&str, &str)> {
-    let mut parts = lca.splitn(2, ',');
-    let first = parts.next().unwrap_or("");
-    let last = parts.next().unwrap_or("");
-    if lca.matches(',').count() != 1 || first.is_empty() || last.is_empty() {
-        return Err(anyhow!(
+    let (first, last) = lca.split_once(',').ok_or_else(|| {
+        anyhow!(
             "--lca requires exactly two comma-separated names, got: {}",
             lca
-        ));
+        )
+    })?;
+    if first.is_empty() || last.is_empty() || last.contains(',') {
+        anyhow::bail!(
+            "--lca requires exactly two comma-separated names, got: {}",
+            lca
+        );
     }
     Ok((first, last))
 }
@@ -77,10 +80,10 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
     let mut ids = BTreeSet::new();
 
     // ids supplied by --node
-    if args.contains_id("node") {
+    if args.try_contains_id("node").unwrap_or(false) {
         let names = args
             .get_many::<String>("node")
-            .ok_or_else(|| anyhow::anyhow!("missing --node values"))?;
+            .ok_or_else(|| anyhow!("missing --node values"))?;
         for name in names {
             if let Some(id) = id_of.get(name) {
                 ids.insert(*id);
@@ -91,10 +94,10 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
     }
 
     // ids supplied by --name-list
-    if args.contains_id("name_list") {
+    if args.try_contains_id("name_list").unwrap_or(false) {
         let file = args
             .get_one::<String>("name_list")
-            .ok_or_else(|| anyhow::anyhow!("missing --name-list value"))?;
+            .ok_or_else(|| anyhow!("missing --name-list value"))?;
         for name in necom::libs::io::read_names::<Vec<String>>(file)?.iter() {
             if let Some(id) = id_of.get(name) {
                 ids.insert(*id);
@@ -105,10 +108,10 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
     }
 
     // ids matched with --regex
-    if args.contains_id("regex") {
+    if args.try_contains_id("regex").unwrap_or(false) {
         let regexes = args
             .get_many::<String>("regex")
-            .ok_or_else(|| anyhow::anyhow!("missing --regex values"))?;
+            .ok_or_else(|| anyhow!("missing --regex values"))?;
         for regex in regexes {
             let re = RegexBuilder::new(regex).case_insensitive(true).build()?;
             for (name, id) in id_of.iter() {
@@ -120,8 +123,9 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
     }
 
     // Default is printing all named nodes
-    let is_all =
-        !(args.contains_id("node") || args.contains_id("name_list") || args.contains_id("regex"));
+    let is_all = !(args.try_contains_id("node").unwrap_or(false)
+        || args.try_contains_id("name_list").unwrap_or(false)
+        || args.try_contains_id("regex").unwrap_or(false));
 
     if is_all {
         ids = id_of.values().cloned().collect();
@@ -151,8 +155,8 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
 }
 
 /// Returns IDs of nodes matching the position selection rules from CLI args.
-pub(crate) fn match_positions(tree: &Tree, args: &ArgMatches) -> BTreeSet<NodeId> {
-    let mut skip_internal = if args.try_contains_id("internal").is_ok() {
+pub(crate) fn match_positions(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTreeSet<NodeId>> {
+    let skip_internal = if args.try_contains_id("internal").is_ok() {
         args.get_flag("internal")
     } else {
         false
@@ -163,21 +167,11 @@ pub(crate) fn match_positions(tree: &Tree, args: &ArgMatches) -> BTreeSet<NodeId
         false
     };
 
-    let is_monophyly = if args.try_contains_id("monophyly").is_ok() {
-        args.get_flag("monophyly")
-    } else {
-        false
-    };
-
-    if is_monophyly {
-        skip_internal = true;
-    }
-
     // all matched IDs
     let mut ids = BTreeSet::new();
 
     let Some(root_id) = tree.get_root() else {
-        return ids;
+        anyhow::bail!("tree has no root; cannot select nodes");
     };
     let preorder_ids = tree.preorder(root_id);
 
@@ -192,7 +186,97 @@ pub(crate) fn match_positions(tree: &Tree, args: &ArgMatches) -> BTreeSet<NodeId
         }
     });
 
-    ids
+    Ok(ids)
+}
+
+/// Select nodes from `--node` / `--name-list` / `--regex` plus `--lca` pairs.
+///
+/// Unlike `match_names`, this never defaults to "all named nodes"; it only
+/// returns nodes explicitly selected by the caller. This is important for
+/// commands like `comment` and `rename`, where no selection means "do nothing".
+pub(crate) fn match_nodes_and_lca(
+    tree: &Tree,
+    args: &ArgMatches,
+    node_key: &str,
+    lca_key: &str,
+) -> anyhow::Result<BTreeSet<NodeId>> {
+    let id_of: BTreeMap<_, _> = tree.get_name_id();
+    let mut ids = BTreeSet::new();
+
+    // Explicit --node names
+    if args.try_contains_id(node_key).unwrap_or(false) {
+        for name in args
+            .get_many::<String>(node_key)
+            .ok_or_else(|| anyhow::anyhow!("missing --{} values", node_key))?
+        {
+            if let Some(id) = id_of.get(name) {
+                ids.insert(*id);
+            } else {
+                log::warn!("node not found: {}", name);
+            }
+        }
+    }
+
+    // --name-list file
+    if args.try_contains_id("name_list").unwrap_or(false) {
+        let file = args
+            .get_one::<String>("name_list")
+            .ok_or_else(|| anyhow::anyhow!("missing --name-list value"))?;
+        for name in necom::libs::io::read_names::<Vec<String>>(file)?.iter() {
+            if let Some(id) = id_of.get(name) {
+                ids.insert(*id);
+            } else {
+                log::warn!("name-list node not found: {}", name);
+            }
+        }
+    }
+
+    // --regex patterns
+    if args.try_contains_id("regex").unwrap_or(false) {
+        for regex in args
+            .get_many::<String>("regex")
+            .ok_or_else(|| anyhow::anyhow!("missing --regex values"))?
+        {
+            let re = RegexBuilder::new(regex).case_insensitive(true).build()?;
+            for (name, id) in id_of.iter() {
+                if re.is_match(name) {
+                    ids.insert(*id);
+                }
+            }
+        }
+    }
+
+    // --lca pairs
+    if args.try_contains_id(lca_key).unwrap_or(false) {
+        for lca in args
+            .get_many::<String>(lca_key)
+            .ok_or_else(|| anyhow::anyhow!("missing --{} values", lca_key))?
+        {
+            let (first, last) = parse_lca_pair(lca)?;
+            match (id_of.get(first), id_of.get(last)) {
+                (Some(id1), Some(id2)) => {
+                    let ancestor = tree.get_common_ancestor(*id1, *id2)?;
+                    ids.insert(ancestor);
+                }
+                _ => {
+                    log::warn!("lca name not found in tree: {} / {}", first, last);
+                }
+            }
+        }
+    }
+
+    Ok(ids)
+}
+
+/// Compute tree height for display, returning 0.0 when branch lengths are not used.
+pub(crate) fn display_height(tree: &Tree, use_branch_length: bool) -> f64 {
+    if use_branch_length {
+        tree.get_root()
+            .map(|r| tree.get_height(r, true))
+            .unwrap_or(0.0)
+    } else {
+        0.0
+    }
 }
 
 #[cfg(test)]

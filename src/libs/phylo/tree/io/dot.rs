@@ -69,7 +69,7 @@ mod tests {
         let n0 = tree.add_node();
         let n1 = tree.add_node();
 
-        tree.set_root(n0);
+        let _ = tree.set_root(n0);
         tree.add_child(n0, n1).unwrap();
 
         tree.get_node_mut(n0).unwrap().set_name("Root");
@@ -89,7 +89,7 @@ mod tests {
         let n0 = tree.add_node();
         let n1 = tree.add_node();
 
-        tree.set_root(n0);
+        let _ = tree.set_root(n0);
         tree.add_child(n0, n1).unwrap();
 
         tree.get_node_mut(n0).unwrap().set_name("Root");

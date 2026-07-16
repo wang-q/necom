@@ -1,6 +1,6 @@
 use anyhow::Context;
 use clap::{ArgMatches, Command};
-use necom::libs::phylo::tree::Tree;
+use necom::libs::phylo::tree::{AnnotationMode, Tree};
 use std::io::Write;
 
 /// Build the clap subcommand for replace.
@@ -59,6 +59,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mode = args
         .get_one::<String>("mode")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: mode"))?;
+    let annotation_mode = match mode.as_str() {
+        "label" => AnnotationMode::Label,
+        "taxid" => AnnotationMode::TaxId,
+        "species" => AnnotationMode::Species,
+        "asis" => AnnotationMode::AsIs,
+        other => anyhow::bail!("unknown property mode: {}", other),
+    };
 
     let skip_internal = args.get_flag("internal");
     let skip_leaf = args.get_flag("leaf");
@@ -66,83 +73,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let rfile = args
         .get_one::<String>("replace_tsv")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: replace_tsv"))?;
-    // Reuse the shared TSV parser so the CLI layer stays thin.
-    let replace_of = necom::libs::io::read_replace_tsv_overwrite(rfile)?;
+    let replace_map = necom::libs::io::read_replace_tsv_overwrite(rfile)?;
+    let mapping: Vec<(String, Vec<String>)> = replace_map
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
 
     let mut trees = Tree::from_file(infile)?;
 
     for tree in &mut trees {
-        let id_of = tree.get_name_id();
-
-        // Collect modifications to avoid mutable borrow issues
-        let mut to_modify = Vec::new();
-
-        for (name, id) in &id_of {
-            if let Some(replaces) = replace_of.get(name) {
-                // Check filters
-                if let Some(node) = tree.get_node(*id) {
-                    let is_leaf = node.is_leaf();
-                    if skip_internal && !is_leaf {
-                        continue;
-                    }
-                    if skip_leaf && is_leaf {
-                        continue;
-                    }
-
-                    to_modify.push((*id, replaces.clone()));
-                }
-            }
-        }
-
-        // Apply modifications
-        for (id, replaces) in to_modify {
-            if let Some(node) = tree.get_node_mut(id) {
-                let first = replaces
-                    .first()
-                    .ok_or_else(|| anyhow::anyhow!("no replace values"))?
-                    .to_string();
-                match mode.as_str() {
-                    "label" => {
-                        if first.is_empty() {
-                            node.name = None;
-                        } else {
-                            node.set_name(first);
-                        }
-                    }
-                    "taxid" => {
-                        if !first.is_empty() {
-                            node.add_property("T", first);
-                        }
-                    }
-                    "species" => {
-                        if !first.is_empty() {
-                            node.add_property("S", first);
-                        }
-                    }
-                    "asis" => {
-                        if !first.is_empty() {
-                            if first.contains('=') {
-                                node.add_property_from_str(&first);
-                            } else {
-                                node.add_property(&first, "");
-                            }
-                        }
-                    }
-                    other => anyhow::bail!("unknown property mode: {}", other),
-                }
-
-                replaces.iter().skip(1).for_each(|e| {
-                    if e.is_empty() {
-                        return;
-                    }
-                    if e.contains('=') {
-                        node.add_property_from_str(e);
-                    } else {
-                        node.add_property(e, "");
-                    }
-                });
-            }
-        }
+        tree.replace_annotations(annotation_mode, &mapping, skip_internal, skip_leaf)?;
 
         let out_string = tree.to_newick();
         writer.write_all((out_string + "\n").as_ref())?;

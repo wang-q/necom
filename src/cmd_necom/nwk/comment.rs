@@ -1,5 +1,6 @@
 use anyhow::Context;
 use clap::{Arg, ArgMatches, Command};
+use necom::libs::phylo::node::NodeId;
 use necom::libs::phylo::tree::Tree;
 use std::io::Write;
 
@@ -125,45 +126,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut trees = Tree::from_file(infile)?;
 
     for tree in &mut trees {
-        // ids with names, name => id
-        let id_of = tree.get_name_id();
-
-        // all IDs to be modified
-        let mut ids = vec![];
-
-        // ids supplied by --node
-        if args.contains_id("node") {
-            for name in args
-                .get_many::<String>("node")
-                .ok_or_else(|| anyhow::anyhow!("missing required argument: node"))?
-            {
-                if let Some(id) = id_of.get(name) {
-                    ids.push(*id);
-                } else {
-                    log::warn!("node not found: {}", name);
-                }
-            }
-        }
-
-        // ids supplied by --lca
-        if args.contains_id("lca") {
-            for lca in args
-                .get_many::<String>("lca")
-                .ok_or_else(|| anyhow::anyhow!("missing required argument: lca"))?
-            {
-                let (first, last) = super::common::parse_lca_pair(lca)?;
-
-                match (id_of.get(first), id_of.get(last)) {
-                    (Some(id1), Some(id2)) => {
-                        let id = tree.get_common_ancestor(*id1, *id2)?;
-                        ids.push(id);
-                    }
-                    _ => {
-                        log::warn!("lca name not found in tree: {} / {}", first, last);
-                    }
-                }
-            }
-        }
+        let ids: Vec<NodeId> = super::common::match_nodes_and_lca(tree, args, "node", "lca")?
+            .into_iter()
+            .collect();
 
         for id in &ids {
             if let Some(node) = tree.get_node_mut(*id) {

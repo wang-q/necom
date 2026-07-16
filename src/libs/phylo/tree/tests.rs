@@ -17,7 +17,7 @@ fn test_tree_traversals() {
     let n4 = tree.add_node();
     let n5 = tree.add_node();
 
-    tree.set_root(n0);
+    let _ = tree.set_root(n0);
     tree.add_child(n0, n1).unwrap();
     tree.add_child(n0, n2).unwrap();
     tree.add_child(n1, n3).unwrap();
@@ -49,7 +49,7 @@ fn test_tree_basic_ops() {
     let n2 = tree.add_node();
     let n3 = tree.add_node();
 
-    tree.set_root(n0);
+    let _ = tree.set_root(n0);
 
     tree.add_child(n0, n1).unwrap();
     tree.add_child(n0, n2).unwrap();
@@ -76,7 +76,7 @@ fn test_tree_remove_and_compact() {
 
     tree.add_child(n0, n1).unwrap();
     tree.add_child(n1, n2).unwrap();
-    tree.set_root(n0);
+    let _ = tree.set_root(n0);
 
     // Remove n1 (recursive=false), n2 becomes orphan
     tree.remove_node(n1, false);
@@ -119,7 +119,7 @@ fn test_tree_paths_and_distances() {
     let n3 = tree.add_node();
     let n4 = tree.add_node();
 
-    tree.set_root(n0);
+    let _ = tree.set_root(n0);
     tree.add_child(n0, n1).unwrap();
     tree.add_child(n0, n2).unwrap();
     tree.add_child(n1, n3).unwrap();
@@ -187,7 +187,7 @@ fn test_tree_queries() {
     let n3 = tree.add_node();
     tree.get_node_mut(n3).unwrap().name = Some("leaf3".to_string());
 
-    tree.set_root(n0);
+    let _ = tree.set_root(n0);
     tree.add_child(n0, n1).unwrap();
     tree.add_child(n0, n2).unwrap();
     tree.add_child(n1, n3).unwrap();
@@ -245,7 +245,7 @@ fn test_tree_prune() {
     let n3 = tree.add_node();
     tree.get_node_mut(n3).unwrap().name = Some("n3".to_string());
 
-    tree.set_root(n0);
+    let _ = tree.set_root(n0);
     tree.add_child(n0, n1).unwrap();
     tree.add_child(n0, n2).unwrap();
     tree.add_child(n1, n3).unwrap();
@@ -487,7 +487,7 @@ fn nan_length_get_distance() {
     let leaf_a = tree.add_node();
     let leaf_b = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, internal).unwrap();
     tree.add_child(internal, leaf_a).unwrap();
     tree.add_child(root, leaf_b).unwrap();
@@ -513,7 +513,7 @@ fn nan_length_get_height() {
     let leaf_a = tree.add_node();
     let leaf_b = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, internal).unwrap();
     tree.add_child(internal, leaf_a).unwrap();
     tree.add_child(root, leaf_b).unwrap();
@@ -534,7 +534,7 @@ fn nan_length_compute_node_heights() {
     let leaf_a = tree.add_node();
     let leaf_b = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, internal).unwrap();
     tree.add_child(internal, leaf_a).unwrap();
     tree.add_child(root, leaf_b).unwrap();
@@ -566,7 +566,7 @@ fn nan_length_compute_root_distances() {
     let leaf_a = tree.add_node();
     let leaf_b = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, internal).unwrap();
     tree.add_child(internal, leaf_a).unwrap();
     tree.add_child(root, leaf_b).unwrap();
@@ -598,7 +598,7 @@ fn nan_length_diameter() {
     let leaf_a = tree.add_node();
     let leaf_b = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, internal).unwrap();
     tree.add_child(internal, leaf_a).unwrap();
     tree.add_child(root, leaf_b).unwrap();
@@ -637,7 +637,7 @@ fn nan_length_get_node_with_longest_edge() {
     let leaf_nan = tree.add_node();
     let leaf_long = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, leaf_nan).unwrap();
     tree.add_child(root, leaf_long).unwrap();
 
@@ -654,7 +654,7 @@ fn nan_length_collapse_node() {
     let internal = tree.add_node();
     let leaf = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, internal).unwrap();
     tree.add_child(internal, leaf).unwrap();
 
@@ -678,7 +678,7 @@ fn nan_length_insert_parent() {
     let root = tree.add_node();
     let leaf = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, leaf).unwrap();
     tree.get_node_mut(leaf).unwrap().length = Some(f64::NAN);
 
@@ -705,7 +705,7 @@ fn nan_length_to_dot() {
     let root = tree.add_node();
     let leaf = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, leaf).unwrap();
     tree.get_node_mut(leaf).unwrap().length = Some(f64::NAN);
 
@@ -725,7 +725,7 @@ fn deleted_node_get_path_from_root_errors() {
     let internal = tree.add_node();
     let leaf = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, internal).unwrap();
     tree.add_child(internal, leaf).unwrap();
 
@@ -748,7 +748,7 @@ fn get_distance_with_deleted_node_on_path() {
     let n2 = tree.add_node();
     let n3 = tree.add_node();
 
-    tree.set_root(n0);
+    let _ = tree.set_root(n0);
     tree.add_child(n0, n1).unwrap();
     tree.add_child(n0, n2).unwrap();
     tree.add_child(n1, n3).unwrap();
@@ -838,7 +838,7 @@ fn test_remove_degree_two_nodes() {
     let internal = tree.add_node();
     let leaf = tree.add_node();
 
-    tree.set_root(root);
+    let _ = tree.set_root(root);
     tree.add_child(root, internal).unwrap();
     tree.add_child(internal, leaf).unwrap();
 
@@ -887,4 +887,53 @@ fn test_lax_complement_lca() {
     let specified: BTreeSet<NodeId> = [a_id].into_iter().collect();
     let comp_lca = super::query::lax_complement_lca(&tree, &specified, root).unwrap();
     assert_eq!(comp_lca, d_id);
+}
+
+#[test]
+fn add_child_rejects_cycle() {
+    let mut tree = Tree::new();
+    let root = tree.add_node();
+    let child = tree.add_node();
+    let grandchild = tree.add_node();
+
+    let _ = tree.set_root(root);
+    tree.add_child(root, child).unwrap();
+    tree.add_child(child, grandchild).unwrap();
+
+    // Adding root as child of grandchild would create a cycle.
+    assert!(tree.add_child(grandchild, root).is_err());
+}
+
+#[test]
+fn collapse_node_preserves_none_length_when_both_missing() {
+    let mut tree = Tree::new();
+    let root = tree.add_node();
+    let internal = tree.add_node();
+    let leaf = tree.add_node();
+
+    let _ = tree.set_root(root);
+    tree.add_child(root, internal).unwrap();
+    tree.add_child(internal, leaf).unwrap();
+
+    // Both edges have no length.
+    tree.collapse_node(internal).unwrap();
+
+    assert!(tree.get_node(internal).is_none());
+    let leaf_node = tree.get_node(leaf).unwrap();
+    assert_eq!(
+        leaf_node.length, None,
+        "expected None when both edges lack length"
+    );
+}
+
+#[test]
+fn node_with_length_rejects_non_positive_and_non_finite() {
+    use crate::libs::phylo::Node;
+
+    assert_eq!(Node::new(0).with_length(f64::NAN).length, None);
+    assert_eq!(Node::new(0).with_length(f64::INFINITY).length, None);
+    assert_eq!(Node::new(0).with_length(f64::NEG_INFINITY).length, None);
+    assert_eq!(Node::new(0).with_length(0.0).length, None);
+    assert_eq!(Node::new(0).with_length(-1.0).length, None);
+    assert_eq!(Node::new(0).with_length(1.0).length, Some(1.0));
 }

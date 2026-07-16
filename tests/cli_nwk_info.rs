@@ -190,6 +190,7 @@ fn command_label_selection_node_monophyly() {
     // In catarrhini.nwk, Homininae is an internal node. Pongo is a leaf (genus).
     // -D includes descendants.
     // -M checks monophyly.
+    // Without -I, internal labels are preserved.
     let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
@@ -203,9 +204,39 @@ fn command_label_selection_node_monophyly() {
         ])
         .run();
 
-    // Select Homininae and Pongo, include descendants (-D), and check monophyly (-M).
-    // The output contains the 4 leaf nodes of the Hominidae clade: Gorilla, Pan, Homo, Pongo.
+    // Homininae + its descendants (Gorilla, Pan, Homo, Hominini) + Pongo = 6.
+    // All belong to the Hominidae clade, so -M passes.
+    assert_eq!(stdout.lines().count(), 6);
+    assert!(stdout.contains("Homininae"));
+    assert!(stdout.contains("Hominini"));
+    assert!(stdout.contains("Gorilla"));
+    assert!(stdout.contains("Pan"));
+    assert!(stdout.contains("Homo"));
+    assert!(stdout.contains("Pongo"));
+}
+
+#[test]
+fn command_label_monophyly_respects_internal_flag() {
+    // -M no longer overrides -I: selecting an internal node with -D and -M
+    // but also -I should output only the leaf labels of that clade.
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "label",
+            "tests/newick/catarrhini.nwk",
+            "-n",
+            "Hominidae",
+            "-DMI",
+        ])
+        .run();
+
+    // Hominidae's descendants: Gorilla, Pan, Homo, Pongo.
     assert_eq!(stdout.lines().count(), 4);
+    assert!(stdout.contains("Gorilla"));
+    assert!(stdout.contains("Pan"));
+    assert!(stdout.contains("Homo"));
+    assert!(stdout.contains("Pongo"));
+    assert!(!stdout.contains("Hominidae"));
 }
 
 #[test]

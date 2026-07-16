@@ -33,6 +33,9 @@ Subcommand groups:
 * Manipulation: order / prune / rename / replace / reroot / subtree / topo
 * Visualization: comment / indent / to-dot / to-forest / to-svg / to-tex
 
+Notes:
+* Reads from stdin if input file is 'stdin'
+
 "###,
         )
         .subcommand_required(true)

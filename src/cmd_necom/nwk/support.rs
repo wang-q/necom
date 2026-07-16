@@ -25,9 +25,7 @@ Examples:
    necom nwk support target.nwk replicates.nwk --percent
 "###,
         )
-        .arg(crate::cmd_necom::args::target_genome_arg(
-            "Target tree file",
-        ))
+        .arg(crate::cmd_necom::args::target_tree_arg("Target tree file"))
         .arg(
             Arg::new("replicates")
                 .required(true)

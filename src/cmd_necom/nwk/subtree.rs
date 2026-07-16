@@ -104,10 +104,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         // Monophyly check
         if is_monophyly && !tree.is_monophyletic(&ids_vec) {
-            if is_condense {
-                let out_string = tree.to_newick();
-                writer.write_fmt(format_args!("{}\n", out_string))?;
-            }
             continue;
         }
 

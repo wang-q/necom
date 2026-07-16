@@ -51,13 +51,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .next()
         .ok_or_else(|| anyhow::anyhow!("no trees found in {}", infile))?;
 
-    let height = if is_bl {
-        tree.get_root()
-            .map(|r| tree.get_height(r, true))
-            .unwrap_or(0.0)
-    } else {
-        0.0
-    };
+    let height = super::common::display_height(&tree, is_bl);
 
     let out_string = to_forest(&tree, height);
 

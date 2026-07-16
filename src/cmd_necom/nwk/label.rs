@@ -136,7 +136,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         // Operating
         // All IDs matching positions
-        let ids_pos = super::common::match_positions(tree, args);
+        let ids_pos = super::common::match_positions(tree, args)?;
 
         // All IDs matching names
         let ids_name = super::common::match_names(tree, args)?;

@@ -274,7 +274,7 @@ necom nwk to-svg [OPTIONS] <infile>
 
 *   If the input file contains multiple trees, only the first tree is processed.
 *   Draws a phylogram if branch lengths exist, otherwise a cladogram.
-*   `-w, --width <N>`: SVG width in pixels (default 800).
+*   `-w, --width <N>`: Drawing-area width used as the branch-length scaling baseline in pixels (default 800). The final SVG width also includes margins for leaf labels.
 *   `-v, --vskip <N>`: Vertical spacing between leaf nodes in pixels (default 20).
 *   `-o, --outfile <file>`: Output filename; `[stdout]` for screen output.
 
@@ -316,4 +316,5 @@ This normalization prevents invalid values from polluting sums, maxima, or dista
 
 ## Planned Subcommands
 
+*   `condense`: Tree condensation functionality is currently provided by `necom nwk subtree --condense`; no standalone `condense` subcommand is planned at this time.
 *   `eval`: Multi-dimensional tree evaluation framework (geometric, taxonomic, phylogenetic, trait consistency). Related metrics are referenced in the `necom clust eval` and `necom clust cut` documentation.

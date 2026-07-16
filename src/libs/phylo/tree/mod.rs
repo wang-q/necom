@@ -3,17 +3,28 @@
 //! Provides the core `Tree` type plus modules for traversal, topology
 //! operations, statistics, queries, and format I/O.
 
+/// Tree ordering and rotation algorithms.
 pub mod algo;
+/// Balance index calculations (cherries, Colless, Sackin).
 pub mod balance;
+/// Distance calculations between nodes.
 pub mod distance;
+/// Newick, DOT, SVG, and Forest format I/O.
 pub mod io;
+/// Topology operations (add, remove, reroot, collapse, etc.).
 pub mod ops;
+/// Path, LCA, and monophyly queries.
 pub mod query;
+/// Tree statistics and property collectors.
 pub mod stat;
+/// Bootstrap support value calculations.
 pub mod support;
 #[cfg(test)]
 mod tests;
+/// Tree traversal algorithms.
 pub mod traversal;
+
+pub use ops::AnnotationMode;
 
 use super::node::{Node, NodeId};
 use std::collections::{BTreeMap, BTreeSet};
@@ -113,9 +124,37 @@ impl Tree {
         ops::remove_degree_two_nodes(self)
     }
 
-    /// Deroot the tree by splicing out the root node.
+    /// Deroot the tree by converting a binary root into a multifurcating root.
     pub fn deroot(&mut self) -> anyhow::Result<()> {
         ops::deroot(self)
+    }
+
+    /// Strip branch lengths, comments, and/or labels according to flags.
+    pub fn strip_topology(
+        &mut self,
+        keep_length: bool,
+        keep_comment: bool,
+        remove_internal_labels: bool,
+        remove_leaf_labels: bool,
+    ) {
+        ops::strip_topology(
+            self,
+            keep_length,
+            keep_comment,
+            remove_internal_labels,
+            remove_leaf_labels,
+        );
+    }
+
+    /// Replace node names or append NHX-style annotations from a mapping.
+    pub fn replace_annotations(
+        &mut self,
+        mode: AnnotationMode,
+        mapping: &[(String, Vec<String>)],
+        skip_internal: bool,
+        skip_leaf: bool,
+    ) -> anyhow::Result<()> {
+        ops::replace_annotations(self, mode, mapping, skip_internal, skip_leaf)
     }
 
     /// Reroot the tree at `new_root_id`, optionally shifting support values.

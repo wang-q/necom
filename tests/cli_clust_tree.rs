@@ -208,8 +208,8 @@ fn test_clust_hier_empty_matrix() {
     }
 
     assert!(
-        stdout.trim() == ";",
-        "expected empty Newick, got: {}",
+        stdout.trim().is_empty(),
+        "expected empty output for empty matrix, got: {}",
         stdout
     );
 }

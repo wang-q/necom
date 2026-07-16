@@ -1,6 +1,6 @@
 use super::tree::Tree;
 use fixedbitset::FixedBitSet;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 /// Trait for tree comparison and topology analysis
 pub trait TreeComparison {
@@ -67,14 +67,23 @@ pub trait TreeComparison {
 
 /// Check leaf-set equality and build a sorted leaf_map for split comparison.
 fn check_leaves_and_build_map(t1: &Tree, t2: &Tree) -> anyhow::Result<BTreeMap<String, usize>> {
-    let leaves_self: HashSet<_> = t1.get_leaf_names().into_iter().flatten().collect();
-    let leaves_other: HashSet<_> = t2.get_leaf_names().into_iter().flatten().collect();
+    fn validate_leaves(tree: &Tree) -> anyhow::Result<BTreeSet<String>> {
+        let mut names = BTreeSet::new();
+        for name in tree.get_leaf_names() {
+            let name = name.ok_or_else(|| anyhow::anyhow!("tree contains an unnamed leaf"))?;
+            if !names.insert(name.clone()) {
+                anyhow::bail!("duplicate leaf name: {}", name);
+            }
+        }
+        Ok(names)
+    }
+
+    let leaves_self = validate_leaves(t1)?;
+    let leaves_other = validate_leaves(t2)?;
 
     if leaves_self != leaves_other {
-        let mut diff1: Vec<_> = leaves_self.difference(&leaves_other).collect();
-        let mut diff2: Vec<_> = leaves_other.difference(&leaves_self).collect();
-        diff1.sort();
-        diff2.sort();
+        let diff1: Vec<_> = leaves_self.difference(&leaves_other).cloned().collect();
+        let diff2: Vec<_> = leaves_other.difference(&leaves_self).cloned().collect();
         anyhow::bail!(
             "Leaf sets do not match.\nIn Tree1 but not Tree2: {:?}\nIn Tree2 but not Tree1: {:?}",
             diff1,
@@ -82,12 +91,9 @@ fn check_leaves_and_build_map(t1: &Tree, t2: &Tree) -> anyhow::Result<BTreeMap<S
         );
     }
 
-    let mut all_leaves: Vec<_> = leaves_self.into_iter().collect();
-    all_leaves.sort();
-
     let mut leaf_map = BTreeMap::new();
-    for (i, name) in all_leaves.iter().enumerate() {
-        leaf_map.insert(name.clone(), i);
+    for (i, name) in leaves_self.into_iter().enumerate() {
+        leaf_map.insert(name, i);
     }
 
     Ok(leaf_map)
@@ -331,7 +337,7 @@ pub fn compute_tree_metrics(
 
 /// Format a float to 6 decimal places, stripping trailing zeros.
 pub(crate) fn format_float(val: f64) -> String {
-    if val == 0.0 {
+    if !val.is_finite() || val == 0.0 {
         return "0".to_string();
     }
     let s = format!("{:.6}", val);
@@ -569,5 +575,15 @@ mod tests {
         let kf = t1.kuhner_felsenstein(&t2).unwrap();
         assert!((wrf - 0.4).abs() < 1e-6, "WRF expected 0.4, got {}", wrf);
         assert!((kf - 0.4).abs() < 1e-6, "KF expected 0.4, got {}", kf);
+    }
+
+    #[test]
+    fn cmp_rejects_unnamed_leaves() {
+        let named = Tree::from_newick("((A,B),(C,D));").unwrap();
+        let unnamed = Tree::from_newick("((A,B),(C,));").unwrap();
+        let duplicate = Tree::from_newick("((A,B),(C,A));").unwrap();
+
+        assert!(named.robinson_foulds(&unnamed).is_err());
+        assert!(named.robinson_foulds(&duplicate).is_err());
     }
 }

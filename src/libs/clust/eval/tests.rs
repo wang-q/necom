@@ -15,7 +15,7 @@ fn test_tree_distance() {
 
     let mut tree = Tree::new();
     let root = tree.add_node(); // k
-    tree.set_root(root);
+    let _ = tree.set_root(root);
 
     let g = tree.add_node();
     let j = tree.add_node();

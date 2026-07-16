@@ -443,7 +443,7 @@ mod tests {
         let a = tree.add_node();
         let b = tree.add_node();
         let c = tree.add_node();
-        tree.set_root(root);
+        let _ = tree.set_root(root);
         tree.add_child(root, a).unwrap();
         tree.add_child(root, b).unwrap();
         tree.add_child(root, c).unwrap();
@@ -476,7 +476,7 @@ mod tests {
         let root = tree.add_node();
         let a = tree.add_node();
         let b = tree.add_node();
-        tree.set_root(root);
+        let _ = tree.set_root(root);
         tree.add_child(root, a).unwrap();
         tree.add_child(root, b).unwrap();
         tree.get_node_mut(root).unwrap().length = Some(100.0);

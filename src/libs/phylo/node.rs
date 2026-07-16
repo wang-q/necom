@@ -55,7 +55,11 @@ impl Node {
 
     /// Set the branch length.
     pub fn with_length(mut self, length: f64) -> Self {
-        self.length = Some(length);
+        self.length = if length.is_finite() && length > 0.0 {
+            Some(length)
+        } else {
+            None
+        };
         self
     }
 

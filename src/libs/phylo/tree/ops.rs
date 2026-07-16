@@ -2,6 +2,22 @@ use super::Tree;
 use crate::libs::phylo::node::NodeId;
 use std::collections::BTreeSet;
 
+/// Check if `ancestor` is on the parent chain of `descendant`.
+fn is_ancestor_of(tree: &Tree, ancestor: NodeId, descendant: NodeId) -> bool {
+    let mut current = descendant;
+    while let Some(node) = tree.get_node(current) {
+        if let Some(parent_id) = node.parent {
+            if parent_id == ancestor {
+                return true;
+            }
+            current = parent_id;
+        } else {
+            break;
+        }
+    }
+    false
+}
+
 /// Add a child to a parent node.
 /// Updates both parent's `children` list and child's `parent` field.
 pub fn add_child(tree: &mut Tree, parent_id: NodeId, child_id: NodeId) -> anyhow::Result<()> {
@@ -24,6 +40,13 @@ pub fn add_child(tree: &mut Tree, parent_id: NodeId, child_id: NodeId) -> anyhow
     };
     if let Some(old_parent) = child_parent {
         anyhow::bail!("Node {} already has parent {}", child_id, old_parent);
+    }
+    if is_ancestor_of(tree, child_id, parent_id) {
+        anyhow::bail!(
+            "Cannot add node {} as child of {}; it would create a cycle",
+            child_id,
+            parent_id
+        );
     }
 
     if let Some(child) = tree.get_node_mut(child_id) {
@@ -143,10 +166,18 @@ pub fn collapse_node(tree: &mut Tree, id: NodeId) -> anyhow::Result<()> {
     // 2. Re-parent children
     let mut new_children_ids = Vec::new();
     for (child_id, child_has_len, child_len) in children_info {
-        let new_edge = if parent_has_len || child_has_len {
-            Some(parent_len + child_len)
-        } else {
-            None
+        let new_edge = match (parent_has_len, child_has_len) {
+            (true, true) => {
+                let sum = parent_len + child_len;
+                if sum > 0.0 {
+                    Some(sum)
+                } else {
+                    None
+                }
+            }
+            (true, false) if parent_len > 0.0 => Some(parent_len),
+            (false, true) if child_len > 0.0 => Some(child_len),
+            _ => None,
         };
 
         // Update child
@@ -368,10 +399,7 @@ pub fn remove_degree_two_nodes(tree: &mut Tree) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Deroot the tree by splicing out one of the root's children if the root is bifurcating.
-/// This effectively merges the two edges connected to the root into a single edge,
-/// removing the root node's structural role and making the tree multifurcating at the top level.
-/// The "heavier" child (with more descendants) is the one collapsed into the root.
+/// Deroot the tree by converting a bifurcating root into a multifurcating root.
 pub fn deroot(tree: &mut Tree) -> anyhow::Result<()> {
     let root = tree.root.ok_or_else(|| anyhow::anyhow!("Empty tree"))?;
     let node = tree
@@ -616,6 +644,130 @@ pub fn remove_properties_matching(tree: &mut Tree, pattern: &str) -> anyhow::Res
     }
 
     Ok(())
+}
+
+/// Mode for replacing node annotations in `replace_annotations`.
+#[derive(Debug, Clone, Copy)]
+pub enum AnnotationMode {
+    /// Replace the node name.
+    Label,
+    /// Add an NCBI TaxID property (`:T=`).
+    TaxId,
+    /// Add a species name property (`:S=`).
+    Species,
+    /// Append property/comment as-is.
+    AsIs,
+}
+
+/// Replace node names or append NHX-style annotations from a mapping.
+pub fn replace_annotations(
+    tree: &mut Tree,
+    mode: AnnotationMode,
+    mapping: &[(String, Vec<String>)],
+    skip_internal: bool,
+    skip_leaf: bool,
+) -> anyhow::Result<()> {
+    for (original, replacements) in mapping {
+        let Some(id) = tree.get_node_by_name(original) else {
+            continue;
+        };
+        let is_leaf = tree.get_node(id).map(|n| n.is_leaf()).unwrap_or(true);
+        if skip_internal && !is_leaf {
+            continue;
+        }
+        if skip_leaf && is_leaf {
+            continue;
+        }
+        let Some(node) = tree.get_node_mut(id) else {
+            continue;
+        };
+
+        let mut values = replacements.iter();
+        match mode {
+            AnnotationMode::Label => {
+                if let Some(first) = values.next() {
+                    if first.is_empty() {
+                        node.name = None;
+                    } else {
+                        node.set_name(first);
+                    }
+                }
+                for item in values.filter(|s| !s.is_empty()) {
+                    if let Some((key, value)) = item.split_once('=') {
+                        node.add_property(key, value);
+                    } else {
+                        node.add_property(item, "");
+                    }
+                }
+            }
+            AnnotationMode::TaxId => {
+                if let Some(first) = values.next().filter(|s| !s.is_empty()) {
+                    node.add_property("T", first);
+                }
+                for item in values.filter(|s| !s.is_empty()) {
+                    if let Some((key, value)) = item.split_once('=') {
+                        node.add_property(key, value);
+                    } else {
+                        node.add_property(item, "");
+                    }
+                }
+            }
+            AnnotationMode::Species => {
+                if let Some(first) = values.next().filter(|s| !s.is_empty()) {
+                    node.add_property("S", first);
+                }
+                for item in values.filter(|s| !s.is_empty()) {
+                    if let Some((key, value)) = item.split_once('=') {
+                        node.add_property(key, value);
+                    } else {
+                        node.add_property(item, "");
+                    }
+                }
+            }
+            AnnotationMode::AsIs => {
+                for item in values.filter(|s| !s.is_empty()) {
+                    if let Some((key, value)) = item.split_once('=') {
+                        node.add_property(key, value);
+                    } else {
+                        node.add_property(item, "");
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Strip branch lengths, comments, and/or labels according to flags.
+pub fn strip_topology(
+    tree: &mut Tree,
+    keep_length: bool,
+    keep_comment: bool,
+    remove_internal_labels: bool,
+    remove_leaf_labels: bool,
+) {
+    let ids: Vec<NodeId> = tree
+        .nodes
+        .iter()
+        .filter(|n| !n.deleted)
+        .map(|n| n.id)
+        .collect();
+    for id in ids {
+        if let Some(node) = tree.get_node_mut(id) {
+            if !keep_length {
+                node.length = None;
+            }
+            if !keep_comment {
+                node.properties = None;
+            }
+            if node.is_leaf() && remove_leaf_labels {
+                node.name = None;
+            }
+            if !node.is_leaf() && remove_internal_labels {
+                node.name = None;
+            }
+        }
+    }
 }
 
 /// Reroot the tree on the edge above the LCA of `target_ids`.
