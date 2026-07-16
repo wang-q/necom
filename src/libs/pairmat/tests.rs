@@ -81,7 +81,7 @@ fn test_scoring_matrix_basic() {
 #[test]
 fn test_named_matrix_basic() {
     let names = vec!["A".to_string(), "B".to_string()];
-    let mut m = NamedMatrix::new(names);
+    let mut m = NamedMatrix::new(names).unwrap();
 
     m.set(0, 1, 0.5);
     assert_eq!(m.get(0, 1), 0.5);
@@ -94,7 +94,7 @@ fn test_named_matrix_basic() {
 #[test]
 fn test_named_matrix_indexing() {
     let names = vec!["A".to_string(), "B".to_string(), "C".to_string()];
-    let m = NamedMatrix::new(names);
+    let m = NamedMatrix::new(names).unwrap();
 
     // Size 3 -> len 3
     assert_eq!(m.values().len(), 3);
@@ -111,7 +111,7 @@ fn test_named_matrix_indexing() {
 #[test]
 fn test_set_diags_wrong_length() {
     let names = vec!["A".to_string(), "B".to_string()];
-    let mut m = NamedMatrix::new(names);
+    let mut m = NamedMatrix::new(names).unwrap();
     assert!(m.set_diags(vec![1.0]).is_err());
     assert!(m.set_diags(vec![1.0, 2.0]).is_ok());
 }
@@ -218,4 +218,27 @@ fn test_transform_inv_linear_diagonal() {
     // Diagonal should stay 0 for a valid distance matrix
     assert_eq!(transformed.get(0, 0), 0.0);
     assert_eq!(transformed.get(1, 1), 0.0);
+}
+
+#[test]
+fn test_named_matrix_duplicate_name() {
+    let names = vec!["A".to_string(), "A".to_string()];
+    let result = NamedMatrix::new(names);
+    assert!(
+        result.is_err(),
+        "duplicate sequence name should return an error"
+    );
+}
+
+#[test]
+fn test_from_pair_scores_duplicate_pair_uses_last_value() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Duplicate pair (A,B) with different values; last value should win.
+    writeln!(tmp, "A\tB\t0.1").unwrap();
+    writeln!(tmp, "A\tB\t0.9").unwrap();
+
+    let matrix = NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
+    assert_eq!(matrix.get_by_name("A", "B"), Some(0.9));
 }

@@ -527,7 +527,7 @@ mod tests {
     // Helper to create a NamedMatrix for testing
     fn create_test_matrix(size: usize) -> NamedMatrix {
         let names: Vec<String> = (0..size).map(|i| i.to_string()).collect();
-        NamedMatrix::new(names)
+        NamedMatrix::new(names).unwrap()
     }
 
     #[test]
@@ -701,7 +701,7 @@ mod tests {
 
         // Let's just create names and fill CondensedMatrix manually
         let names: Vec<String> = (0..size).map(|i| i.to_string()).collect();
-        let mut m = NamedMatrix::new(names);
+        let mut m = NamedMatrix::new(names).unwrap();
 
         for i in 0..size {
             for j in (i + 1)..size {
@@ -786,15 +786,15 @@ mod tests {
     #[test]
     fn test_edge_cases() {
         // N=0
-        let m0 = NamedMatrix::new(vec![]);
+        let m0 = NamedMatrix::new(vec![]).unwrap();
         assert!(linkage(&m0, Method::Average).is_empty());
 
         // N=1
-        let m1 = NamedMatrix::new(vec!["A".to_string()]);
+        let m1 = NamedMatrix::new(vec!["A".to_string()]).unwrap();
         assert!(linkage(&m1, Method::Average).is_empty());
 
         // N=2
-        let mut m2 = NamedMatrix::new(vec!["A".to_string(), "B".to_string()]);
+        let mut m2 = NamedMatrix::new(vec!["A".to_string(), "B".to_string()]).unwrap();
         m2.set(0, 1, 0.5);
         let steps = linkage(&m2, Method::Average);
         assert_eq!(steps.len(), 1);

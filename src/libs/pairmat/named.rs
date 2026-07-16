@@ -15,44 +15,58 @@ pub struct NamedMatrix {
 }
 
 impl NamedMatrix {
-    pub fn new(names: Vec<String>) -> Self {
+    /// Create a new named matrix from a list of unique sequence names.
+    pub fn new(names: Vec<String>) -> anyhow::Result<Self> {
         let size = names.len();
         let matrix = CondensedMatrix::new(size);
-        let names: indexmap::IndexMap<_, _> = names
-            .into_iter()
-            .enumerate()
-            .map(|(i, name)| (name, i))
-            .collect();
+        let mut names_map = indexmap::IndexMap::with_capacity(size);
+        for (i, name) in names.into_iter().enumerate() {
+            if names_map.contains_key(&name) {
+                anyhow::bail!("duplicate sequence name: {}", name);
+            }
+            names_map.insert(name, i);
+        }
 
-        NamedMatrix {
-            names,
+        Ok(NamedMatrix {
+            names: names_map,
             matrix,
             diags: None,
-        }
+        })
     }
 
     /// Create from existing names and values (condensed upper triangle).
-    pub fn new_from_values(names: Vec<String>, values: Vec<f32>) -> Self {
+    pub fn new_from_values(names: Vec<String>, values: Vec<f32>) -> anyhow::Result<Self> {
         let size = names.len();
         let matrix = CondensedMatrix::from_vec(size, values);
 
-        let names: indexmap::IndexMap<_, _> = names
-            .into_iter()
-            .enumerate()
-            .map(|(i, name)| (name, i))
-            .collect();
+        let mut names_map = indexmap::IndexMap::with_capacity(size);
+        for (i, name) in names.into_iter().enumerate() {
+            if names_map.contains_key(&name) {
+                anyhow::bail!("duplicate sequence name: {}", name);
+            }
+            names_map.insert(name, i);
+        }
 
-        NamedMatrix {
-            names,
+        Ok(NamedMatrix {
+            names: names_map,
             matrix,
             diags: None,
-        }
+        })
     }
 
     /// Create with numeric names ("0", "1", ...).
     pub fn with_ids(size: usize) -> Self {
-        let names: Vec<String> = (0..size).map(|i| i.to_string()).collect();
-        Self::new(names)
+        let matrix = CondensedMatrix::new(size);
+        let mut names_map = indexmap::IndexMap::with_capacity(size);
+        for i in 0..size {
+            names_map.insert(i.to_string(), i);
+        }
+
+        NamedMatrix {
+            names: names_map,
+            matrix,
+            diags: None,
+        }
     }
 
     pub fn size(&self) -> usize {
@@ -129,7 +143,7 @@ impl NamedMatrix {
     /// ```ignore
     /// # use necom::libs::pairmat::NamedMatrix;
     /// let names = vec!["seq1".to_string(), "seq2".to_string()];
-    /// let mut matrix = NamedMatrix::new(names);
+    /// let mut matrix = NamedMatrix::new(names).unwrap();
     /// matrix.set(0, 1, 0.5);
     ///
     /// assert_eq!(matrix.get_by_name("seq1", "seq2"), Some(0.5));
@@ -146,7 +160,7 @@ impl NamedMatrix {
     /// ```ignore
     /// # use necom::libs::pairmat::NamedMatrix;
     /// let names = vec!["seq1".to_string(), "seq2".to_string()];
-    /// let mut matrix = NamedMatrix::new(names);
+    /// let mut matrix = NamedMatrix::new(names).unwrap();
     ///
     /// assert!(matrix.set_by_name("seq1", "seq2", 0.5).is_ok());
     /// assert_eq!(matrix.get_by_name("seq1", "seq2"), Some(0.5));
@@ -168,7 +182,7 @@ impl NamedMatrix {
         let size = index_name.len();
 
         // Create NamedMatrix from ScoringMatrix
-        let mut matrix = NamedMatrix::new(index_name.into_iter().collect());
+        let mut matrix = NamedMatrix::new(index_name.into_iter().collect())?;
         let mut diags = vec![same; size];
 
         for (i, d) in diags.iter_mut().enumerate().take(size) {
@@ -221,7 +235,7 @@ impl NamedMatrix {
             }
         }
 
-        let mut matrix = Self::new(names);
+        let mut matrix = Self::new(names)?;
         let mut diags = vec![0.0; size];
 
         // Fill the matrix (lower triangle from PHYLIP)

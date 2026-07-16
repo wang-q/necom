@@ -247,14 +247,14 @@ C 4 4 0
 
     #[test]
     fn test_upgma_empty() {
-        let mat = NamedMatrix::new(vec![]);
+        let mat = NamedMatrix::new(vec![]).unwrap();
         let tree = upgma(&mat).unwrap();
         assert!(tree.get_root().is_none());
     }
 
     #[test]
     fn test_upgma_single() {
-        let mat = NamedMatrix::new(vec!["A".to_string()]);
+        let mat = NamedMatrix::new(vec!["A".to_string()]).unwrap();
         let tree = upgma(&mat).unwrap();
         let root = tree.get_root().unwrap();
         let node = tree.get_node(root).unwrap();
@@ -264,7 +264,7 @@ C 4 4 0
 
     #[test]
     fn test_upgma_two() {
-        let mut mat = NamedMatrix::new(vec!["A".to_string(), "B".to_string()]);
+        let mut mat = NamedMatrix::new(vec!["A".to_string(), "B".to_string()]).unwrap();
         mat.set(0, 1, 2.0);
 
         let tree = upgma(&mat).unwrap();

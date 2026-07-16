@@ -229,14 +229,14 @@ D 14 9 7 0
 
     #[test]
     fn test_nj_empty() {
-        let mat = NamedMatrix::new(vec![]);
+        let mat = NamedMatrix::new(vec![]).unwrap();
         let tree = nj(&mat).unwrap();
         assert!(tree.get_root().is_none());
     }
 
     #[test]
     fn test_nj_single() {
-        let mat = NamedMatrix::new(vec!["A".to_string()]);
+        let mat = NamedMatrix::new(vec!["A".to_string()]).unwrap();
         let tree = nj(&mat).unwrap();
         let root = tree.get_root().unwrap();
         let node = tree.get_node(root).unwrap();
@@ -246,7 +246,7 @@ D 14 9 7 0
 
     #[test]
     fn test_nj_two() {
-        let mut mat = NamedMatrix::new(vec!["A".to_string(), "B".to_string()]);
+        let mut mat = NamedMatrix::new(vec!["A".to_string(), "B".to_string()]).unwrap();
         mat.set(0, 1, 4.0);
 
         let tree = nj(&mat).unwrap();

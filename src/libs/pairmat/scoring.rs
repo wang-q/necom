@@ -167,6 +167,19 @@ impl ScoringMatrix<f32> {
             let i2 = names
                 .get_index_of(&n2)
                 .ok_or_else(|| anyhow::anyhow!("name not found: {n2}"))?;
+
+            let key = if i1 <= i2 { (i1, i2) } else { (i2, i1) };
+            if let Some(&existing) = matrix.data.get(&key) {
+                if existing != score {
+                    log::warn!(
+                        "conflicting pairwise entry for ({}, {}): existing {} vs new {}; using last value",
+                        n1,
+                        n2,
+                        existing,
+                        score
+                    );
+                }
+            }
             matrix.set(i1, i2, score);
         }
 

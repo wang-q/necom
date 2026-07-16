@@ -61,7 +61,7 @@ fn test_silhouette_score_simple() {
     p.insert("5".to_string(), 2);
 
     let names: Vec<String> = (0..6).map(|i| i.to_string()).collect();
-    let mut dist_mat = NamedMatrix::new(names);
+    let mut dist_mat = NamedMatrix::new(names).unwrap();
     let points: Vec<f32> = vec![0.0, 1.0, 1.0, 2.0, 3.0, 3.0];
 
     for i in 0..6 {
@@ -84,7 +84,7 @@ fn test_silhouette_score_single_cluster() {
     p.insert("1".to_string(), 0);
 
     let names = vec!["0".to_string(), "1".to_string()];
-    let mut dist_mat = NamedMatrix::new(names);
+    let mut dist_mat = NamedMatrix::new(names).unwrap();
     dist_mat.set_by_name("0", "1", 1.0).unwrap();
 
     let score = silhouette_score(&p, &dist_mat);
@@ -101,7 +101,7 @@ fn test_silhouette_score_all_singletons() {
     p.insert("2".to_string(), 2);
 
     let names = vec!["0".to_string(), "1".to_string(), "2".to_string()];
-    let mut dist_mat = NamedMatrix::new(names);
+    let mut dist_mat = NamedMatrix::new(names).unwrap();
     dist_mat.set_by_name("0", "1", 1.0).unwrap();
     dist_mat.set_by_name("0", "2", 1.0).unwrap();
     dist_mat.set_by_name("1", "2", 1.0).unwrap();
@@ -226,7 +226,7 @@ fn test_internal_indices_simple() {
         "C".to_string(),
         "D".to_string(),
     ];
-    let mut dist_mat = NamedMatrix::new(names);
+    let mut dist_mat = NamedMatrix::new(names).unwrap();
     // Distances:
     // A-B: 1.0 (Intra)
     // C-D: 1.0 (Intra)
