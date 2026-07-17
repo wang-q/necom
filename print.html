@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7458c5db.js";
+            window.path_to_searchindex_js = "searchindex-4e9a4215.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-912da857.js"></script>
+        <script src="toc-87187837.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -1174,7 +1174,6 @@ neighbor &lt; input.infile
 <li><code>distance</code>: Compute distances between nodes.</li>
 <li><code>label</code>: Extract labels/names from the tree.</li>
 <li><code>stat</code>: Print tree statistics (node count, leaf count, balance indices, etc.).</li>
-<li><code>support</code>: Assign bootstrap support values.</li>
 </ul>
 </li>
 <li><strong>Manipulation</strong>: Modify tree structure.
@@ -1207,8 +1206,6 @@ neighbor &lt; input.infile
 <p>Extract labels (names) from the tree.</p>
 <h3 id="stat"><a class="header" href="#stat">stat</a></h3>
 <p>Print tree statistics.</p>
-<h3 id="support"><a class="header" href="#support">support</a></h3>
-<p>Assign bootstrap support values to a target tree based on replicate trees.</p>
 <hr>
 <h2 id="manipulation-commands"><a class="header" href="#manipulation-commands">Manipulation Commands</a></h2>
 <h3 id="order"><a class="header" href="#order">order</a></h3>
@@ -1296,6 +1293,11 @@ neighbor &lt; input.infile
 <li><code>partition</code>: Evaluate clustering partitions (external and internal metrics).</li>
 </ul>
 </li>
+<li><strong>Branch support</strong>:
+<ul>
+<li><code>replicate</code>: Assign support values from replicate trees.</li>
+</ul>
+</li>
 </ul>
 <hr>
 <h2 id="tree-comparison"><a class="header" href="#tree-comparison">Tree Comparison</a></h2>
@@ -1307,18 +1309,84 @@ neighbor &lt; input.infile
 <p>Evaluate clustering partition quality. Supports external comparison to a reference partition (ARI, AMI, V-Measure, FMI, NMI, Jaccard, etc.) and internal evaluation using a distance matrix, tree, or coordinate matrix (Silhouette, Dunn, Davies-Bouldin, Calinski-Harabasz, etc.). Batch mode evaluates multiple partitions from parameter scans.</p>
 <p>See <a href="#necom-eval-partition"><code>docs/eval-partition.md</code></a> for detailed metric definitions and the selection guide.</p>
 <hr>
+<h2 id="branch-support"><a class="header" href="#branch-support">Branch Support</a></h2>
+<h3 id="replicate"><a class="header" href="#replicate">replicate</a></h3>
+<p>Assign support values to internal nodes of a target tree based on replicate trees (e.g., from bootstrap or jackknife resampling). Outputs the annotated tree (Newick). All trees must share the same leaf set.</p>
+<hr>
 <h2 id="branch-length-handling-1"><a class="header" href="#branch-length-handling-1">Branch Length Handling</a></h2>
 <p><code>necom eval compare</code> treats non-finite branch lengths (<code>NaN</code>, positive/negative infinity), negative values, and zero values as <code>0.0</code> during computation. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.</p>
 <hr>
 <h2 id="planned-subcommands-1"><a class="header" href="#planned-subcommands-1">Planned Subcommands</a></h2>
+<p>The following subcommands are under design (see <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a>). Their CLI surface is not yet finalized; the descriptions below reflect the current design direction, not commitments.</p>
+<h3 id="tree"><a class="header" href="#tree">tree</a></h3>
+<p>Multi-dimensional evaluation of a single phylogenetic tree. The tree is the positional primary input; a partition (<code>--part</code>), reference tree (<code>--ref</code>), trait map (<code>--traits</code>), or original distance matrix (<code>--dist</code>) may be supplied as auxiliary context.</p>
+<p>Four evaluation dimensions:</p>
 <ul>
-<li><code>tree</code>: Multi-dimensional tree evaluation (geometry, taxonomy, evolution). See <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a> §4 for the design.</li>
+<li><strong>Geometry</strong>: Silhouette, Diameter, AvgDist, MinInterDist. Branches on whether the partition corresponds to tree clades — O(N) for clade groups (e.g., <code>necom cut</code> output), O(N²) for arbitrary partitions (e.g., dbscan/mcl output).</li>
+<li><strong>Trait</strong>: Purity, Entropy, DominantTrait — consistency with external labels (taxonomy, geography, phenotype).</li>
+<li><strong>Phylo</strong>: Local RF to reference tree, Monophyly Check, ConflictScore.</li>
+<li><strong>Fit</strong>: Cophenetic Correlation against an original distance matrix.</li>
 </ul>
+<h3 id="quartet-future-candidate"><a class="header" href="#quartet-future-candidate">quartet (future candidate)</a></h3>
+<p>Quartet-based consistency or support values for branches. <strong>Not yet designed; the namespace is not reserved.</strong> Boundary: if the goal is to <em>infer</em> a new tree from quartets, it belongs to <code>nwk</code>; if the goal is to <em>assess</em> branch support of a given tree, it belongs to <code>eval</code>.</p>
+<hr>
+<h2 id="overlapping-features-and-boundaries"><a class="header" href="#overlapping-features-and-boundaries">Overlapping Features and Boundaries</a></h2>
+<p>Several planned and existing subcommands address superficially similar questions. This section clarifies the boundaries to help choose the right command.</p>
+<h3 id="eval-tree-vs-eval-partition---tree"><a class="header" href="#eval-tree-vs-eval-partition---tree"><code>eval tree</code> vs <code>eval partition --tree</code></a></h3>
+<p>Both can compute Silhouette from tree distances — in fact <code>eval tree</code> reuses the same <code>silhouette_score</code> implementation as <code>eval partition</code> via the <code>TreeDistance</code> adapter. The difference is the <strong>primary subject</strong> and the <strong>scope of metrics</strong>:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">Aspect</th><th style="text-align: left"><code>eval partition --tree</code></th><th style="text-align: left"><code>eval tree --part</code></th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">Primary input</td><td style="text-align: left">Partition (groups are the subject)</td><td style="text-align: left">Tree (tree is the subject)</td></tr>
+<tr><td style="text-align: left">Tree role</td><td style="text-align: left">Distance source (auxiliary)</td><td style="text-align: left">Evaluation target (primary)</td></tr>
+<tr><td style="text-align: left">Grouping role</td><td style="text-align: left">Evaluation subject (primary)</td><td style="text-align: left">Auxiliary context</td></tr>
+<tr><td style="text-align: left">Silhouette</td><td style="text-align: left">Yes</td><td style="text-align: left">Yes (same implementation)</td></tr>
+<tr><td style="text-align: left">Clade-aware optimization</td><td style="text-align: left">No</td><td style="text-align: left">Yes (O(N) for clade groups)</td></tr>
+<tr><td style="text-align: left">External metrics (ARI, AMI, V-Measure, …)</td><td style="text-align: left">Yes (<code>--other</code>)</td><td style="text-align: left">No</td></tr>
+<tr><td style="text-align: left">Coordinate metrics (DBI, CH, …)</td><td style="text-align: left">Yes (<code>--coords</code>)</td><td style="text-align: left">No</td></tr>
+<tr><td style="text-align: left">Cophenetic fit to original matrix</td><td style="text-align: left">No</td><td style="text-align: left">Yes (<code>--dist</code>)</td></tr>
+<tr><td style="text-align: left">Trait purity / entropy</td><td style="text-align: left">No</td><td style="text-align: left">Yes (<code>--traits</code>)</td></tr>
+<tr><td style="text-align: left">Reference tree comparison</td><td style="text-align: left">No</td><td style="text-align: left">Yes (<code>--ref</code>)</td></tr>
+<tr><td style="text-align: left">Batch mode (<code>--input-format long</code>)</td><td style="text-align: left">Yes</td><td style="text-align: left">No</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Rule of thumb</strong>: If the question is “how good is this clustering?”, use <code>eval partition</code>. If the question is “how good is this tree, possibly in the context of some grouping?”, use <code>eval tree</code>.</p>
+<h3 id="eval-tree---ref-vs-eval-compare"><a class="header" href="#eval-tree---ref-vs-eval-compare"><code>eval tree --ref</code> vs <code>eval compare</code></a></h3>
+<p>Both compute Robinson-Foulds distances, but at different scopes and for different purposes:</p>
+<ul>
+<li><code>eval compare</code>: <strong>Global</strong> tree-to-tree topology comparison. Takes two trees (or two sets of trees), computes RF/WRF/KF on the full leaf sets. No grouping concept. Supports batch cross-comparison between files.</li>
+<li><code>eval tree --ref</code>: <strong>Local</strong> comparison in the context of a partition. The reference tree (typically a species tree) provides biological ground truth. Computes Local RF (cluster subtree vs reference subset) and Monophyly Check (do cluster members form a clade on the reference?). Requires leaf-set intersection pruning as a prerequisite, because gene trees usually sample only a subset of the species tree’s taxa.</li>
+</ul>
+<p><strong>Rule of thumb</strong>: If comparing two trees as a whole, use <code>eval compare</code>. If assessing whether a gene tree’s clusters are consistent with a species tree, use <code>eval tree --ref</code>.</p>
+<h3 id="eval-quartet-vs-eval-compare-both-planned-or-partially-implemented"><a class="header" href="#eval-quartet-vs-eval-compare-both-planned-or-partially-implemented"><code>eval quartet</code> vs <code>eval compare</code> (both planned or partially implemented)</a></h3>
+<ul>
+<li><code>eval compare</code>: Topology-based (split-set symmetric difference). Pure structural comparison of whole trees.</li>
+<li><code>eval quartet</code> (future): Quartet-based, can incorporate sequence alignment. Assesses branch-level support rather than overall distance.</li>
+</ul>
+<p><strong>Rule of thumb</strong>: <code>eval compare</code> answers “how different are these two trees?”; <code>eval quartet</code> answers “how well-supported is each branch of this tree?”.</p>
+<h3 id="eval-replicate-vs-eval-compare"><a class="header" href="#eval-replicate-vs-eval-compare"><code>eval replicate</code> vs <code>eval compare</code></a></h3>
+<ul>
+<li><code>eval compare</code>: Pairwise comparison of given trees. Outputs TSV with RF/WRF/KF distances — a <strong>global</strong> tree-to-tree difference measure.</li>
+<li><code>eval replicate</code>: Assigns <strong>branch-level</strong> support values to a target tree from replicate trees. Outputs the annotated tree (Newick), not a distance table.</li>
+</ul>
+<p><strong>Rule of thumb</strong>: <code>eval compare</code> measures whole-tree topological difference; <code>eval replicate</code> measures per-branch support from replicates.</p>
+<h3 id="parameter-naming---part-vs---tree"><a class="header" href="#parameter-naming---part-vs---tree">Parameter naming: <code>--part</code> vs <code>--tree</code></a></h3>
+<p>The same option names appear under different subcommands with <strong>reversed roles</strong>, reflecting the primary-subject difference. This is intentional but can be confusing:</p>
+<ul>
+<li><code>eval tree --part &lt;FILE&gt;</code>: the tree is the positional primary; <code>--part</code> supplies an optional grouping to evaluate on the tree.</li>
+<li><code>eval partition --tree &lt;FILE&gt;</code>: the partition is the positional primary; <code>--tree</code> supplies an optional distance source for internal metrics.</li>
+</ul>
+<p>The option always refers to the <em>auxiliary</em> input. When in doubt, identify which input is the positional argument — that is the subject of the evaluation.</p>
 <hr>
 <h2 id="history"><a class="header" href="#history">History</a></h2>
 <ul>
 <li><code>eval partition</code> was migrated from <code>necom clust eval</code> (2026-07).</li>
 <li><code>eval compare</code> was migrated from <code>necom nwk compare</code> (2026-07).</li>
+<li><code>eval replicate</code> was migrated from <code>necom nwk support</code> (2026-07).</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="necom-eval-partition"><a class="header" href="#necom-eval-partition">necom eval partition</a></h1>
@@ -2578,38 +2646,6 @@ neighbor &lt; input.infile
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="support-1"><a href="#support-1" class="header">support</a></h1>
-<p>Assign bootstrap support values to internal nodes of a target tree based on replicate trees.</p>
-<p>Input:</p>
-<ul>
-<li>Target tree file (first positional argument).</li>
-<li>Replicate trees file (second positional argument), e.g., from bootstrap.</li>
-</ul>
-<p>Notes:</p>
-<ul>
-<li>Support values are written as internal node labels.</li>
-<li>All trees must share the same set of leaves.</li>
-<li>All replicate trees must have identical leaf sets to ensure valid support value calculation.</li>
-<li>The root node is not annotated; any existing root label is preserved.</li>
-<li><code>--percent</code> / <code>-p</code>: output support values as integer percentages (0–100), truncated toward zero.</li>
-<li><code>--override-root</code> / <code>-r</code>: override the root node label with its support value.</li>
-</ul>
-<p>Examples:</p>
-<ol>
-<li>
-<p>Attribute support values
-<code>necom nwk support target.nwk replicates.nwk</code></p>
-</li>
-<li>
-<p>Output support as percentages
-<code>necom nwk support target.nwk replicates.nwk --percent</code></p>
-</li>
-<li>
-<p>Override root label with support value
-<code>necom nwk support target.nwk replicates.nwk --override-root</code></p>
-</li>
-</ol>
-<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="to-dot-1"><a href="#to-dot-1" class="header">to-dot</a></h1>
 <p>Convert Newick trees to Graphviz DOT format for visualization.</p>
 <p>Input:</p>
@@ -2855,6 +2891,38 @@ neighbor &lt; input.infile
 <li>
 <p>Batch evaluation of scan results
 <code>necom eval partition partitions.tsv --input-format long --matrix dist.phy &gt; scores.tsv</code></p>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="replicate-1"><a href="#replicate-1" class="header">replicate</a></h1>
+<p>Assign support values to internal nodes of a target tree based on replicate trees.</p>
+<p>Input:</p>
+<ul>
+<li>Target tree file (first positional argument).</li>
+<li>Replicate trees file (second positional argument), e.g., from bootstrap or jackknife resampling.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>Support values are written as internal node labels.</li>
+<li>All trees must share the same set of leaves.</li>
+<li>All replicate trees must have identical leaf sets to ensure valid support value calculation.</li>
+<li>The root node is not annotated; any existing root label is preserved.</li>
+<li><code>--percent</code> / <code>-p</code>: output support values as integer percentages (0–100), truncated toward zero.</li>
+<li><code>--override-root</code> / <code>-r</code>: override the root node label with its support value.</li>
+</ul>
+<p>Examples:</p>
+<ol>
+<li>
+<p>Attribute support values
+<code>necom eval replicate target.nwk replicates.nwk</code></p>
+</li>
+<li>
+<p>Output support as percentages
+<code>necom eval replicate target.nwk replicates.nwk --percent</code></p>
+</li>
+<li>
+<p>Override root label with support value
+<code>necom eval replicate target.nwk replicates.nwk --override-root</code></p>
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
