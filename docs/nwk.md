@@ -61,7 +61,7 @@ necom nwk distance [OPTIONS] <infile>
     *   `parent`: Distance to the parent.
     *   `pairwise`: Pairwise distances among all selected nodes, including self-pairs and both (i,j) and (j,i) orderings.
     *   `lca`: Distances from each node in a pair to their Lowest Common Ancestor (LCA), for all selected-node pairs (including self-pairs).
-    *   `phylip`: Output a PHYLIP-format distance matrix for selected nodes. All selected nodes must be named; unnamed nodes cause an error.
+    *   `phylip`: Output a PHYLIP-format distance matrix for selected nodes. All selected nodes must be named and their names must not contain ASCII whitespace characters; unnamed nodes or names with whitespace cause an error.
 *   `-I`: Ignore internal nodes.
 *   `-L`: Ignore leaf nodes.
 *   `-n <name>` / `-l <file>` / `-x <regex>`: Restrict output to nodes matched by exact name, name-list file, or case-insensitive regex. When omitted, all selected nodes (respecting `-I`/`-L`) are reported.

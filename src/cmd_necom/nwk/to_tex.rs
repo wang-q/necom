@@ -92,19 +92,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     static FILE_TEMPLATE: &str = include_str!("../../assets/template.tex");
     let mut template = FILE_TEMPLATE.to_string();
 
-    {
-        // Section forest
-        let begin = template
-            .find("%FOREST_BEGIN")
-            .ok_or_else(|| anyhow::anyhow!("template marker %FOREST_BEGIN missing"))?;
-        let end = template
-            .find("%FOREST_END")
-            .ok_or_else(|| anyhow::anyhow!("template marker %FOREST_END missing"))?;
-        anyhow::ensure!(begin < end, "template markers %FOREST out of order");
-        let after_end = end + "%FOREST_END".len();
-        template.replace_range(begin..after_end, &out_string);
-    }
-
     let default_font = r#"\setmainfont{NotoSans}[
     Extension      = .ttf,
     UprightFont    = *-Regular,
@@ -114,9 +101,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 ]
 "#;
 
-    // Section style: always replace the marker region. With --no-default-style,
-    // keep the template's original content between the markers; otherwise inject
-    // the Noto Sans setup.
+    // Resolve style markers on the original template so user-provided Forest
+    // code cannot shadow them after the forest replacement.
     let style_begin = template
         .find("%STYLE_BEGIN")
         .ok_or_else(|| anyhow::anyhow!("template marker %STYLE_BEGIN missing"))?;
@@ -133,6 +119,20 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     } else {
         default_font.to_string()
     };
+
+    {
+        // Section forest
+        let begin = template
+            .find("%FOREST_BEGIN")
+            .ok_or_else(|| anyhow::anyhow!("template marker %FOREST_BEGIN missing"))?;
+        let end = template
+            .find("%FOREST_END")
+            .ok_or_else(|| anyhow::anyhow!("template marker %FOREST_END missing"))?;
+        anyhow::ensure!(begin < end, "template markers %FOREST out of order");
+        let after_end = end + "%FOREST_END".len();
+        template.replace_range(begin..after_end, &out_string);
+    }
+
     template.replace_range(style_begin..style_after_end, &style_replacement);
 
     writer.write_all(template.as_ref())?;

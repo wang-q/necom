@@ -114,3 +114,28 @@ fn test_nwk_support_override_root_label() {
         "root should get support value 1"
     );
 }
+
+#[test]
+fn test_nwk_support_rejects_mismatched_replicate_leaf_sets() {
+    let mut target_file = NamedTempFile::new().unwrap();
+    writeln!(target_file, "(A,B);").unwrap();
+
+    let mut replicates_file = NamedTempFile::new().unwrap();
+    writeln!(replicates_file, "(A,B);").unwrap();
+    writeln!(replicates_file, "(A,C);").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "support",
+            target_file.path().to_str().unwrap(),
+            replicates_file.path().to_str().unwrap(),
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("replicate tree 2 leaf set differs from first replicate"),
+        "expected clear error for mismatched replicate leaf sets, got stderr: {}",
+        stderr
+    );
+}

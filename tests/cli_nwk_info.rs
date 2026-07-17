@@ -774,6 +774,30 @@ fn command_distance_phylip_rejects_unnamed_nodes() {
     );
 }
 
+#[test]
+fn command_distance_phylip_rejects_whitespace_in_names() {
+    let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file, "('A B',C);").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "distance",
+            file.path().to_str().unwrap(),
+            "--mode",
+            "phylip",
+            "-n",
+            "A B",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("Phylip matrix requires node names without whitespace"),
+        "expected clear error for whitespace in names, got stderr: {}",
+        stderr
+    );
+}
+
 // ================================================================================================
 // Edge cases
 // ==============================================================================================

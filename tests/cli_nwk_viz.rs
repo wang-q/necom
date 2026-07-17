@@ -397,6 +397,24 @@ fn command_to_tex_forest_pass_through() {
 }
 
 #[test]
+fn command_to_tex_forest_pass_through_does_not_shadow_style_markers() {
+    // User-provided Forest code containing the style marker substring should not
+    // break the template's style replacement.
+    let forest = "[A[B][C]] %STYLE_BEGIN";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "to-tex", "stdin", "--forest", "--no-default-style"])
+        .stdin(forest)
+        .run();
+
+    assert!(stdout.contains(r"\begin{forest}"));
+    assert!(stdout.contains("[A[B][C]] %STYLE_BEGIN"));
+    assert!(stdout.contains(r"\end{forest}"));
+    // The template's original font setup must still be present; if the style
+    // replacement had been confused by the user Forest code, it would be lost.
+    assert!(stdout.contains("Fira Sans"));
+}
+
+#[test]
 fn command_to_tex_no_default_style() {
     let (stdout, _) = NecomCmd::new()
         .args(&[

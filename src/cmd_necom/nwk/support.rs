@@ -71,7 +71,25 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let leaf_map = support::build_leaf_map(&replicates[0])
         .map_err(|e| anyhow::anyhow!("build_leaf_map failed: {}", e))?;
 
-    // 3.5 Validate that every target tree shares the same leaf set as the replicates.
+    // 3.5 Validate that all replicate trees share the same leaf set.
+    let first_replicate_leaves = leaf_name_set(&replicates[0]);
+    for (i, rep) in replicates.iter().enumerate().skip(1) {
+        let rep_leaves = leaf_name_set(rep);
+        if rep_leaves != first_replicate_leaves {
+            let only_rep: Vec<_> =
+                rep_leaves.difference(&first_replicate_leaves).collect();
+            let only_first: Vec<_> =
+                first_replicate_leaves.difference(&rep_leaves).collect();
+            anyhow::bail!(
+                "replicate tree {} leaf set differs from first replicate: only in replicate {:?}, only in first {:?}",
+                i + 1,
+                only_rep,
+                only_first
+            );
+        }
+    }
+
+    // 3.6 Validate that every target tree shares the same leaf set as the replicates.
     let replicate_leaves: BTreeSet<String> =
         replicates.iter().flat_map(leaf_name_set).collect();
     for (i, target) in targets.iter().enumerate() {

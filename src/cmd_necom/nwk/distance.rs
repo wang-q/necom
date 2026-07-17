@@ -70,6 +70,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             if tree.get_node(id).map(|n| n.name.is_none()).unwrap_or(false) {
                 anyhow::bail!("Phylip matrix requires all selected nodes to be named");
             }
+            if let Some(name) = tree.get_node(id).and_then(|n| n.name.as_ref()) {
+                if name.contains(|c: char| c.is_ascii_whitespace()) {
+                    anyhow::bail!(
+                        "Phylip matrix requires node names without whitespace: '{}'",
+                        name
+                    );
+                }
+            }
         }
     }
 
