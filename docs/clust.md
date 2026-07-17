@@ -20,12 +20,6 @@ Commands are divided into three categories by input data type (consistent with `
 - **Advantages**: Robust to noise; handles complex network structures.
 - **Input**: Pairwise similarities `.tsv` (higher is better).
 - **Output**: `cluster` (default) or `pair` format, controlled by `--format`.
-- **CLI options**: `infile`, `--format {cluster|pair}`, `--rep {medoid|first}`, `--same <FLOAT>`, `--missing <FLOAT>`, `--inflation <FLOAT>`, `--prune <FLOAT>`, `--max-iter <N>`, `-o/--outfile`.
-  - `--inflation` default: `2.0` (higher values produce tighter, more clusters).
-  - `--prune` default: `1e-5` (matrix entries below this are set to zero).
-  - `--max-iter` default: `100`.
-  - `--rep` default: `medoid` (maximum sum of similarities to other members); `first` uses the alphabetically first member.
-  - `--same` default: `1.0`; `--missing` default: `0.0`.
 
 ### Connected Components (CC)
 
@@ -36,8 +30,6 @@ Commands are divided into three categories by input data type (consistent with `
 - **Advantages**: Extremely fast (linear complexity).
 - **Input**: Pairwise relations in TSV format (`name1  name2  weight`); the weight column is ignored.
 - **Output**: `cluster` (default) or `pair` format, controlled by `--format`.
-- **CLI options**: `infile`, `--format {cluster|pair}`, `-o/--outfile`.
-  - In `pair` format, the representative is the alphabetically first member of each component.
 
 ### K-Medoids
 
@@ -48,11 +40,6 @@ Commands are divided into three categories by input data type (consistent with `
 - **Advantages**: Robust to outliers; interpretable results because centers are real samples.
 - **Input**: Pairwise distances `.tsv` (lower is better).
 - **Output**: `cluster` (default) or `pair` format, controlled by `--format`.
-- **CLI options**: `infile`, `-k/--k <N>` (required), `--format {cluster|pair}`, `--rep {medoid|first}`, `--same <FLOAT>`, `--missing <FLOAT>`, `--runs <N>`, `--max-iter <N>`, `--seed <UINT>`, `-o/--outfile`.
-  - `--rep` default: `medoid` (minimum sum of distances to other members); `first` uses the alphabetically first member.
-  - `--runs` default: `10` (number of random initializations).
-  - `--max-iter` default: `100`.
-  - `--same` default: `0.0`; `--missing` default: `1.0`.
 
 ### DBSCAN
 
@@ -63,22 +50,7 @@ Commands are divided into three categories by input data type (consistent with `
 - **Advantages**: Does not require specifying the number of clusters K; identifies noise.
 - **Input**: Pairwise distances `.tsv` (lower is better).
 - **Output**: `cluster` (one cluster per line, first element is the representative) or `pair` (representative–member pairs).
-- **CLI options**: `infile`, `--format {cluster|pair}`, `--rep {medoid|first}`, `--same <FLOAT>`, `--missing <FLOAT>`, `--eps <FLOAT>`, `--min-points <N>`, `-o/--outfile`.
-  - `--eps` default: `0.05` (neighborhood radius).
-  - `--min-points` default: `4` (minimum points to form a dense region).
-  - `--rep` default: `medoid` (smallest sum of distances); `first` uses the alphabetically first member.
-  - `--same` default: `0.0`; `--missing` default: `1.0`.
 - **Unimplemented options**: Parameter scanning and scoring such as `--scan`, `--opt-eps`, `--min-pct` are not yet implemented; they may be provided later as subcommands of `necom clust dbscan` or standalone scripts.
-
-#### Usage Examples
-
-```bash
-# Basic clustering (pairwise distance input)
-necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 -o clusters.tsv
-
-# Output pair format for downstream evaluation
-necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.tsv
-```
 
 ### UPGMA
 
@@ -89,7 +61,6 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 - **Advantages**: Produces a hierarchical structure with branch heights carrying clear distance meaning.
 - **Input**: PHYLIP distance matrix (strict or relaxed).
 - **Output**: Newick tree.
-- **CLI options**: `infile`, `-o/--outfile`.
 
 ### NJ (Neighbor-Joining)
 
@@ -100,7 +71,6 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 - **Advantages**: Fast; robust to different evolutionary rates.
 - **Input**: PHYLIP distance matrix (strict or relaxed).
 - **Output**: Newick tree.
-- **CLI options**: `infile`, `-o/--outfile`.
 
 ### Hierarchical Clustering
 
@@ -111,7 +81,6 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 - **Value**: Provides a general hierarchical view (not limited to biological evolution); combined with `necom cut` it yields flexible groupings at different granularities.
 - **Input**: PHYLIP distance matrix (strict or relaxed).
 - **Output**: Newick tree.
-- **CLI options**: `infile`, `--method {single|complete|average|weighted|centroid|median|ward}` (default: `ward`), `-o/--outfile`.
 - **Details**: [Hierarchical Clustering Details](#hierarchical-clustering-details)
 
 ### Tree Cutting
@@ -163,6 +132,14 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
   - Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of `necom cut --height`.
 - Numeric format: unified six decimal places with trailing zeros removed; consistent with the convention in `nwk distance`.
 
+### Notes
+
+- `clust hier` only accepts **distance matrices** (smaller values mean higher similarity). Similarity matrices must be converted first, e.g., with `necom mat transform`.
+- `ward.D2` updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.
+- `ward.D2` theoretically assumes Euclidean or near-Euclidean distances; on general biological distances the statistical interpretation of "minimum variance" is weaker.
+- `centroid` and `median` linkage may produce non-monotonic merge heights (inversions); this is an algorithmic characteristic of these methods.
+- Ties are broken by alphabetical order to ensure deterministic output.
+
 ### Recommended Hier Workflow
 
 - Generate tree:
@@ -173,105 +150,6 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
   - Cut: `necom cut --height H` or TreeCluster-style thresholds/constraints.
   - Internal evaluation (no Ground Truth): `necom clust eval --matrix ...` (Silhouette) (currently available); `necom nwk eval` not yet implemented.
   - External evaluation (with Ground Truth): `necom clust eval` (ARI/AMI/V-Measure).
-
-### CLI Design
-
-#### Command Overview
-
-- Name: `necom clust hier` (visible alias `hclust`)
-- Purpose: Generate a hierarchical clustering tree (dendrogram) from a distance matrix, output as Newick for downstream `necom cut`.
-- Module: `clust`, alongside `k-medoids` and others.
-
-#### Input
-
-- Matrix file: PHYLIP distance matrix (standard or relaxed format).
-- Format conversion: If you have a pair TSV (`name1  name2  distance`), first convert it to PHYLIP with `necom mat to-phylip`; this unified entry reduces ambiguity and keeps the interface consistent with `clust upgma/nj`.
-- Distance/similarity conversion: `clust hier` only accepts **distance matrices** (smaller means more similar). If the input is a similarity matrix (e.g., BLAST Identity, Alignment Score), convert it first with `necom mat transform` (e.g., `--op inv-linear --max-val 100` or `--op log`).
-- Name source: Parsed automatically from input; no extra label file needed.
-
-#### Main Options
-
-- `--method {single|complete|average|weighted|centroid|median|ward}`: linkage/criterion selection (default `ward`). Naming aligns with SciPy `linkage`.
-- `--outfile/-o <path>`: output file path (default `stdout`, i.e., print to screen).
-
-#### Output
-
-- Default output: Newick dendrogram with branch lengths representing merge heights.
-- Numeric format: unified six decimal places, trailing zeros removed; consistent with the convention in `nwk distance`.
-
-#### Examples
-
-```bash
-# Convert pair TSV to PHYLIP first
-necom mat to-phylip pairs.tsv -o matrix.phy
-
-# Ward (PHYLIP input, default Newick output)
-necom clust hier matrix.phy --method ward > tree.nwk
-
-# Average/complete/single (PHYLIP input)
-necom clust hier matrix.phy --method average > tree.nwk
-```
-
-#### Notes
-
-- Distance prerequisite: Ward.D2 theoretically relies on Euclidean or near-Euclidean distances; usable on general biological distances, but the statistical interpretation of "minimum total within-group variance" becomes weaker.
-- Semantic differences:
-  - Hier merge heights are linkage/criterion costs; ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions).
-  - If you need "rooted, ultrametric, evolution-meaningful" branch lengths, use `clust upgma`; for general additive distances, use `clust nj`.
-- Stability: Ties are broken by alphabetical order of names to ensure determinism.
-- Implementation convention: `ward.D2` internally performs updates with "squared distances" and returns branch lengths in "distance units"; users do not need to provide or distinguish `D` from `D^2`.
-- Method characteristics:
-  - `centroid/median` may produce non-monotonic merge heights (inversion), which is an algorithmic characteristic; the output is still valid Newick, but the intuitive meaning of heights is slightly weaker than for `average/ward`.
-  - Leaf ordering: the `hier` command itself does not reorder leaves; for improved visualization readability, use `necom nwk order --num-descendants` (ladderize).
-
-### Mapping to and Differences from SciPy
-
-- Method mapping: Aligned with SciPy `linkage` `method` set; `ward` is equivalent to `ward.D2` (internally updates with squared distances); `average` is equivalent to UPGMA, `weighted` to WPGMA, and `centroid/median` to UPGMC/WPGMC.
-- Input differences: SciPy accepts a "condensed distance vector" or an observation matrix; necom uniformly uses PHYLIP distance matrices. To convert from pair TSV, use `necom mat to-phylip`.
-- Output differences: SciPy returns an `(n-1)×4` linkage matrix Z; necom outputs a Newick tree directly for `necom cut / to-dot / to-forest`. Average users do not need to care about Z; if SciPy interoperability is required, continue using Z with `fcluster/cophenet` on the Python side.
-- Leaf ordering: necom recommends `necom nwk order --num-descendants` (ladderize) for extremely high performance and usually sufficient visualization quality.
-- Flat clustering: SciPy's `fcluster` supports `criterion='distance'|'maxclust'|...`; in necom these correspond to `necom cut --height H` and `necom cut --k K`, respectively. Other criteria such as `monocrit/inconsistent` are not introduced for now.
-- Evaluation metrics: SciPy has `cophenet` (cophenetic correlation coefficient); necom plans to add the cophenetic correlation coefficient to `necom nwk eval` as a supplementary tree-quality metric (not yet implemented).
-
-#### User Tips
-
-- Beginner path (recommended): `mat to-phylip → clust hier --method ward → necom cut --height → clust eval → nwk visualization`
-- Interoperability and audit: If you need to verify the merging process step by step or perform further flat cutting/statistics in Python, use SciPy's linkage matrix and tools; on the necom side, keep Newick as the primary format to reduce cognitive load.
-
-#### Example Mappings
-
-- SciPy linkage (Ward):
-  - Python: `Z = linkage(y, method='ward', optimal_ordering=True)`
-  - necom: `necom mat to-phylip pairs.tsv -o matrix.phy` → `necom clust hier matrix.phy --method ward > tree.nwk` → `necom nwk order tree.nwk --num-descendants > ordered.nwk`
-- SciPy fcluster (cut by distance):
-  - Python: `labels = fcluster(Z, t=0.05, criterion='distance')`
-  - necom: `necom cut tree.nwk --height 0.05 > clusters.tsv`
-- SciPy fcluster (cut by cluster count):
-  - Python: `labels = fcluster(Z, t=20, criterion='maxclust')`
-  - necom: `necom cut tree.nwk --k 20 > clusters.tsv`
-- SciPy cophenet:
-  - Python: `c, dists = cophenet(Z, Y)`
-
-#### scikit-learn Mapping
-
-- AgglomerativeClustering (Ward):
-  - Python: `model = AgglomerativeClustering(linkage='ward').fit(X)`
-  - necom: `necom clust hier matrix.phy --method ward > tree.nwk` (distance matrix must be computed first)
-- AgglomerativeClustering (Average/Complete/Single):
-  - Python: `model = AgglomerativeClustering(linkage='average').fit(X)`
-  - necom: `necom clust hier matrix.phy --method average > tree.nwk`
-- Differences:
-  - scikit-learn focuses on directly outputting cluster labels (`labels_`); `necom` focuses on generating tree structure (Newick).
-  - To obtain labels in `necom`, use it together with `necom cut`.
-
-#### Toolchain Collaboration
-
-- Tree building: `necom clust hier` → generate dendrogram
-- Cutting: `necom cut --height H` → export groups
-- Evaluation:
-  - No Ground Truth: `necom clust eval --matrix` / `--tree` / `--coords` (currently available); `necom nwk eval` not yet implemented
-  - With Ground Truth: `necom clust eval` (ARI/AMI/V-Measure)
-- Visualization: `necom nwk to-dot/to-forest` → graphic/LaTeX display
 
 ## Evaluation and Analysis
 

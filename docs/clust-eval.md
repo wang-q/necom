@@ -1,6 +1,6 @@
 # necom clust eval
 
-`necom clust eval` provides general clustering quality evaluation and comparison. It supports **external validity** (compared to Ground Truth) and **internal validity** (based on the geometry/statistics of the data itself).
+This document describes the design philosophy, metrics, and selection guidance for `necom clust eval`. For command-line options and usage examples, see [`docs/help/clust/eval.md`](help/clust/eval.md).
 
 ## Design Philosophy
 
@@ -107,8 +107,6 @@ Clustering evaluation metrics usually fall into two categories: **external valid
   - **Disadvantages**: Not corrected for chance. With small samples or many clusters, scores tend to be high.
   - **Applicable**: When you need to analyze the source of clustering error (over-fragmentation vs. over-mixing).
 
----
-
 ### 2. Internal Validity
 *Used to evaluate the quality of a clustering result itself (compactness and separation) without Ground Truth.*
 
@@ -173,7 +171,7 @@ Clustering evaluation metrics usually fall into two categories: **external valid
   - **Principle**: Compactness index based on relative distances (distance to own centroid / distance to nearest other centroid).
   - **Range**: `[0, 1]`. **Larger is better**.
 
-### 3. Metric Selection Guide
+## Metric Selection Guide
 
 | Scenario | Recommended Metrics | Rationale |
 | :--- | :--- | :--- |
@@ -186,91 +184,7 @@ Clustering evaluation metrics usually fall into two categories: **external valid
 | **Without Ground Truth (coordinate compactness)** | PBM, Xie-Beni | Impose stricter penalties on cluster compactness. |
 | **Very large number of clusters** | AMI | More stable than ARI. |
 
-## Typical Workflows
+## See Also
 
-### Scenario A: With Ground Truth (External Evaluation)
-
-Compare algorithm-generated clustering results with known classifications:
-
-```bash
-# Compare result.tsv and truth.tsv
-necom clust eval result.tsv --truth truth.tsv
-# Output: ARI, AMI, NMI, FMI, V-Measure...
-```
-
-### Scenario B: Without Ground Truth (Internal Evaluation)
-
-#### 1. Using a Distance Matrix (Silhouette, Dunn, etc.)
-```bash
-# 1. Prepare distance matrix
-necom nwk distance tree.nwk --mode phylip > dist.mat
-
-# 2. Evaluate
-necom clust eval result.tsv --matrix dist.mat
-```
-
-#### 2. Directly Using a Tree File (no matrix generation needed)
-```bash
-# Compute distances directly from the tree (Patristic Distance)
-necom clust eval result.tsv --tree tree.nwk
-```
-
-#### 3. Using Coordinates / Vectors (Davies-Bouldin, CH, etc.)
-```bash
-# Input feature vectors
-necom clust eval result.tsv --coords vectors.tsv
-```
-
-### Scenario C: Batch Scanning and Evaluation
-
-Combine `necom cut --scan` to generate multiple threshold results and evaluate in batch.
-
-```bash
-# 1. Scan tree-cutting thresholds and output a long table (Group, Cluster, ID)
-necom cut tree.nwk --scan 0.01,1.0,0.01 --leaf-dist-min 0 > partitions.tsv
-
-# 2. Batch evaluate internal metrics (pass tree file directly)
-necom clust eval partitions.tsv --input-format long --tree tree.nwk > scores.tsv
-
-# 3. View results (find the threshold with the highest Silhouette)
-cat scores.tsv | sort -k2 -nr | head
-```
-
-## Input and Output Conventions
-
-### Input
-- **Single comparison mode**:
-  - **Partition 1 (`<p1>`)**: The first grouping file (TSV).
-  - **Other partition (`--other`)**: The second grouping file (TSV, optional, used for external evaluation; `--truth` is a synonym).
-  - If `--other` is provided, external metrics (ARI/AMI) are computed.
-  - Optional: `--no-singletons` excludes samples in singleton clusters from `--other` before evaluation (only effective for external evaluation).
-  - If `--other` is not provided but `--matrix/--tree/--coords` is provided, internal metrics are computed.
-  - Supports `cluster` / `pair` formats via `--input-format` (default: `pair`).
-
-- **Batch evaluation mode**:
-  - **Partition (`<p1>`)**: A long-table file containing multiple grouping schemes (TSV).
-  - Must specify `--input-format long`; `cluster` / `pair` are not supported in this mode.
-  - **Column definitions**:
-    1. `Group`: Grouping identifier (e.g., threshold, parameter).
-    2. `ClusterID`: Cluster ID.
-    3. `SampleID`: Sample ID.
-  - Data must be sorted or grouped by `Group` (the program processes block by block).
-  - Usually directly connected to the output of `necom cut --scan`.
-  - Supports metadata in `Group` in `Method=Value` format (e.g., `height=0.01`).
-
-### Output
-- **TSV format**, containing all computed metrics.
-- **Single mode (External)**:
-  - One header row + one data row.
-  - Column order: `ari`, `ami`, `homogeneity`, `completeness`, `v_measure`, `fmi`, `nmi`, `mi`, `ri`, `jaccard`, `precision`, `recall`.
-- **Single mode (Internal)**:
-  - Two rows: Metric Name + Value.
-  - If `--matrix`/`--tree` is provided, column order: `silhouette`, `dunn`, `c_index`, `gamma`, `tau`.
-  - If `--coords` is provided, column order: `davies_bouldin`, `calinski_harabasz`, `pbm`, `ball_hall`, `xie_beni`, `wemmert_gancarski`.
-- **Batch mode (Batch)**:
-  - One header row + multiple data rows (one row per group).
-  - The first column is `Group`.
-  - Subsequent columns depend on the provided parameters (if multiple parameter types are provided simultaneously, columns are concatenated in the following order):
-    1. With `--truth`: contains all External metrics.
-    2. With `--matrix`/`--tree`: contains all distance-based Internal metrics.
-    3. With `--coords`: contains all coordinate-based Internal metrics.
+* [`necom clust`](clust.md) for command overview, supported algorithms, and partition/matrix/coordinate format conventions.
+* [`docs/help/clust/eval.md`](help/clust/eval.md) for the command-line help text, including available options and usage examples.
