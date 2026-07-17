@@ -346,4 +346,34 @@ mod tests {
             assert_eq!(child.name.as_deref(), Some(*label));
         }
     }
+
+    #[test]
+    fn test_from_file_parse_error_includes_location() {
+        use std::io::Write;
+
+        let path = std::env::temp_dir().join("necom_test_bad_parse.nwk");
+        {
+            let mut f = std::fs::File::create(&path).unwrap();
+            f.write_all(b"((A,B);").unwrap();
+        }
+
+        let err = from_file(path.to_str().unwrap()).unwrap_err().to_string();
+        assert!(
+            err.contains("line"),
+            "error should contain line info: {}",
+            err
+        );
+        assert!(
+            err.contains("column"),
+            "error should contain column info: {}",
+            err
+        );
+        assert!(
+            err.contains("Snippet"),
+            "error should contain snippet: {}",
+            err
+        );
+
+        let _ = std::fs::remove_file(&path);
+    }
 }

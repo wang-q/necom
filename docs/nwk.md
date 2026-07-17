@@ -123,6 +123,7 @@ necom nwk order [OPTIONS] <infile>
 *   `--name-list <file>`: Sort by a given name list; applied before other sort options.
 *   `--deladderize` (`--dl`): Alternate sort direction at each level.
 *   If no sort option is provided, children are sorted in ascending alphanumeric order by default.
+*   Entries in `--name-list` that are not found among the leaf names are logged as warnings and skipped.
 
 When both `--alphanumeric` and `--num-descendants` are enabled, labels are sorted alphabetically first, then stably ladderized by number of descendants; the final order is primarily by number of descendants, with alphabetical order used as a tie-breaker within groups of the same size.
 
