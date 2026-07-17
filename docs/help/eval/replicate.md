@@ -1,9 +1,9 @@
-Assign bootstrap support values to internal nodes of a target tree based on replicate trees.
+Assign support values to internal nodes of a target tree based on replicate trees.
 
 Input:
 
 * Target tree file (first positional argument).
-* Replicate trees file (second positional argument), e.g., from bootstrap.
+* Replicate trees file (second positional argument), e.g., from bootstrap or jackknife resampling.
 
 Notes:
 
@@ -17,10 +17,10 @@ Notes:
 Examples:
 
 1. Attribute support values
-   `necom nwk support target.nwk replicates.nwk`
+   `necom eval replicate target.nwk replicates.nwk`
 
 2. Output support as percentages
-   `necom nwk support target.nwk replicates.nwk --percent`
+   `necom eval replicate target.nwk replicates.nwk --percent`
 
 3. Override root label with support value
-   `necom nwk support target.nwk replicates.nwk --override-root`
+   `necom eval replicate target.nwk replicates.nwk --override-root`

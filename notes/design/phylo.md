@@ -219,7 +219,7 @@ graph LR
     *   **功能**: 压缩树 (合并短枝/多叉化)
     *   **状态**: **仅通过 `subtree --condense` 提供；无计划实现独立 `condense` 子命令**
 
-*   **`nw_support`** $\to$ **`necom nwk support`**
+*   **`nw_support`** $\to$ **`necom eval replicate`**（由 `nwk support` 迁移）
     *   **功能**: 计算/显示支持率 (Bootstrap)
     *   **状态**: **已实现** (支持 target + replicates 输入, `--percent` 输出整数百分比并截断至零)
 

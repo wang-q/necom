@@ -7,7 +7,7 @@ use std::io::Write;
 use tempfile::NamedTempFile;
 
 #[test]
-fn test_nwk_support() {
+fn test_eval_replicate() {
     // 1. Create target tree
     let mut target_file = NamedTempFile::new().unwrap();
     writeln!(target_file, "((A,B),(C,D));").unwrap();
@@ -21,8 +21,8 @@ fn test_nwk_support() {
     // 3. Run command (absolute counts)
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "nwk",
-            "support",
+            "eval",
+            "replicate",
             target_file.path().to_str().unwrap(),
             replicates_file.path().to_str().unwrap(),
         ])
@@ -33,8 +33,8 @@ fn test_nwk_support() {
     // 4. Run command (percent)
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "nwk",
-            "support",
+            "eval",
+            "replicate",
             target_file.path().to_str().unwrap(),
             replicates_file.path().to_str().unwrap(),
             "--percent",
@@ -46,7 +46,7 @@ fn test_nwk_support() {
 }
 
 #[test]
-fn test_nwk_support_overwrites_internal_labels() {
+fn test_eval_replicate_overwrites_internal_labels() {
     // Target tree has an internal label "OldLabel" that should be overwritten.
     let mut target_file = NamedTempFile::new().unwrap();
     writeln!(target_file, "((A,B)OldLabel,(C,D));").unwrap();
@@ -56,8 +56,8 @@ fn test_nwk_support_overwrites_internal_labels() {
 
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "nwk",
-            "support",
+            "eval",
+            "replicate",
             target_file.path().to_str().unwrap(),
             replicates_file.path().to_str().unwrap(),
         ])
@@ -68,7 +68,7 @@ fn test_nwk_support_overwrites_internal_labels() {
 }
 
 #[test]
-fn test_nwk_support_preserves_root_label_by_default() {
+fn test_eval_replicate_preserves_root_label_by_default() {
     let mut target_file = NamedTempFile::new().unwrap();
     writeln!(target_file, "((A,B),(C,D))Root;").unwrap();
 
@@ -77,8 +77,8 @@ fn test_nwk_support_preserves_root_label_by_default() {
 
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "nwk",
-            "support",
+            "eval",
+            "replicate",
             target_file.path().to_str().unwrap(),
             replicates_file.path().to_str().unwrap(),
         ])
@@ -91,7 +91,7 @@ fn test_nwk_support_preserves_root_label_by_default() {
 }
 
 #[test]
-fn test_nwk_support_override_root_label() {
+fn test_eval_replicate_override_root_label() {
     let mut target_file = NamedTempFile::new().unwrap();
     writeln!(target_file, "((A,B),(C,D))Root;").unwrap();
 
@@ -100,8 +100,8 @@ fn test_nwk_support_override_root_label() {
 
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "nwk",
-            "support",
+            "eval",
+            "replicate",
             target_file.path().to_str().unwrap(),
             replicates_file.path().to_str().unwrap(),
             "--override-root",
@@ -116,7 +116,7 @@ fn test_nwk_support_override_root_label() {
 }
 
 #[test]
-fn test_nwk_support_rejects_mismatched_replicate_leaf_sets() {
+fn test_eval_replicate_rejects_mismatched_replicate_leaf_sets() {
     let mut target_file = NamedTempFile::new().unwrap();
     writeln!(target_file, "(A,B);").unwrap();
 
@@ -126,8 +126,8 @@ fn test_nwk_support_rejects_mismatched_replicate_leaf_sets() {
 
     let (_, stderr) = NecomCmd::new()
         .args(&[
-            "nwk",
-            "support",
+            "eval",
+            "replicate",
             target_file.path().to_str().unwrap(),
             replicates_file.path().to_str().unwrap(),
         ])

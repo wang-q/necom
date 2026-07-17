@@ -9,11 +9,11 @@ fn leaf_name_set(tree: &Tree) -> BTreeSet<String> {
     tree.get_leaf_names().into_iter().flatten().collect()
 }
 
-/// Build the clap subcommand for support.
+/// Build the clap subcommand for replicate.
 pub fn make_subcommand() -> Command {
-    Command::new("support")
-        .about("Assigns bootstrap support values to internal nodes")
-        .after_help(include_str!("../../../docs/help/nwk/support.md"))
+    Command::new("replicate")
+        .about("Assigns support values to internal nodes from replicate trees")
+        .after_help(include_str!("../../../docs/help/eval/replicate.md"))
         .arg(crate::cmd_necom::args::target_tree_arg("Target tree file"))
         .arg(
             Arg::new("replicates")
@@ -38,7 +38,7 @@ pub fn make_subcommand() -> Command {
         )
         .arg(crate::cmd_necom::args::outfile_arg())
 }
-/// Execute the support command.
+/// Execute the replicate command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let target_file = args
         .get_one::<String>("target")

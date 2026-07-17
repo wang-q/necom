@@ -49,11 +49,11 @@ fn check_support_and_length(
 }
 
 #[test]
-fn test_nwk_support_simple() {
+fn test_eval_replicate_simple() {
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "nwk",
-            "support",
+            "eval",
+            "replicate",
             "tests/newick/HRV.nwk",
             "tests/newick/HRV_20reps.nwk",
         ])
@@ -80,11 +80,11 @@ fn test_nwk_support_simple() {
 }
 
 #[test]
-fn test_nwk_support_percent() {
+fn test_eval_replicate_percent() {
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "nwk",
-            "support",
+            "eval",
+            "replicate",
             "tests/newick/HRV.nwk",
             "tests/newick/HRV_20reps.nwk",
             "--percent",
@@ -113,11 +113,11 @@ fn test_nwk_support_percent() {
 }
 
 #[test]
-fn test_nwk_support_multi() {
+fn test_eval_replicate_multi() {
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "nwk",
-            "support",
+            "eval",
+            "replicate",
             "tests/newick/3_HRV.nwk",
             "tests/newick/HRV_20reps.nwk",
         ])

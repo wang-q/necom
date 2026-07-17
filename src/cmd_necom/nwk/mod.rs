@@ -12,7 +12,6 @@ pub mod replace;
 pub mod reroot;
 pub mod stat;
 pub mod subtree;
-pub mod support;
 pub mod to_dot;
 pub mod to_forest;
 pub mod to_svg;
@@ -28,7 +27,7 @@ pub fn make_subcommand() -> Command {
 This suite of tools provides a comprehensive set of operations for phylogenetic trees in Newick format.
 
 Subcommand groups:
-* Information: stat / label / distance / support
+* Information: stat / label / distance
 * Manipulation: order / prune / rename / replace / reroot / subtree / topo
 * Visualization: comment / indent / to-dot / to-forest / to-svg / to-tex
 
@@ -50,7 +49,6 @@ Notes:
         .subcommand(reroot::make_subcommand())
         .subcommand(stat::make_subcommand())
         .subcommand(subtree::make_subcommand())
-        .subcommand(support::make_subcommand())
         .subcommand(to_dot::make_subcommand())
         .subcommand(to_forest::make_subcommand())
         .subcommand(to_svg::make_subcommand())
@@ -71,7 +69,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         Some(("reroot", sub_matches)) => reroot::execute(sub_matches),
         Some(("stat", sub_matches)) => stat::execute(sub_matches),
         Some(("subtree", sub_matches)) => subtree::execute(sub_matches),
-        Some(("support", sub_matches)) => support::execute(sub_matches),
         Some(("to-dot", sub_matches)) => to_dot::execute(sub_matches),
         Some(("to-forest", sub_matches)) => to_forest::execute(sub_matches),
         Some(("to-svg", sub_matches)) => to_svg::execute(sub_matches),

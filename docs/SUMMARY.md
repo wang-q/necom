@@ -50,7 +50,6 @@
 - [reroot](help/nwk/reroot.md)
 - [stat](help/nwk/stat.md)
 - [subtree](help/nwk/subtree.md)
-- [support](help/nwk/support.md)
 - [to-dot](help/nwk/to-dot.md)
 - [to-forest](help/nwk/to-forest.md)
 - [to-svg](help/nwk/to-svg.md)
@@ -61,6 +60,7 @@
 
 - [compare](help/eval/compare.md)
 - [partition](help/eval/partition.md)
+- [replicate](help/eval/replicate.md)
 
 ## Pipelines
 

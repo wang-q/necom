@@ -31,13 +31,13 @@ fn main() -> anyhow::Result<()> {
     * cut   - Cut a Newick tree into flat partitions
 
 * Evaluation:
-    * eval - Metrics: compare, partition
+    * eval - Metrics: compare, partition, replicate
 
 * Matrix:
     * mat   - Processing: compare, format, subset, to-pair, to-phylip, transform
 
 * Phylogeny:
-    * nwk   - Newick tools: stat, distance, reroot, prune, label, order, indent, comment, rename, replace, subtree, support, topo, to-dot, to-forest, to-svg, to-tex
+    * nwk   - Newick tools: stat, distance, reroot, prune, label, order, indent, comment, rename, replace, subtree, topo, to-dot, to-forest, to-svg, to-tex
 
 * Pipelines:
     * pl - Workflows: condense

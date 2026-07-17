@@ -10,7 +10,6 @@ Subcommands are grouped into three categories:
     *   `distance`: Compute distances between nodes.
     *   `label`: Extract labels/names from the tree.
     *   `stat`: Print tree statistics (node count, leaf count, balance indices, etc.).
-    *   `support`: Assign bootstrap support values.
 *   **Manipulation**: Modify tree structure.
     *   `order`: Reorder nodes (ladderize, alphabetical).
     *   `prune`: Remove nodes (and their descendants/ancestors).
@@ -42,10 +41,6 @@ Extract labels (names) from the tree.
 ### stat
 
 Print tree statistics.
-
-### support
-
-Assign bootstrap support values to a target tree based on replicate trees.
 
 ---
 
