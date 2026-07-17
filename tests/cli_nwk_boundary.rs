@@ -174,6 +174,10 @@ fn command_prune_duplicate_name_warning() {
 }
 
 #[test]
+#[cfg_attr(
+    target_os = "windows",
+    ignore = "deep recursion may overflow the small default Windows stack"
+)]
 fn command_deep_tree_indent_no_panic() {
     // A deeply nested cladogram should be parsed and serialized without panic.
     let deep_tree = "(".repeat(200) + "A" + &")".repeat(200) + ";";
@@ -186,6 +190,10 @@ fn command_deep_tree_indent_no_panic() {
 }
 
 #[test]
+#[cfg_attr(
+    target_os = "windows",
+    ignore = "deep recursion may overflow the small default Windows stack"
+)]
 fn command_deep_tree_to_svg_no_panic() {
     // A deeply nested cladogram should be rendered without panic.
     let deep_tree = "(".repeat(200) + "A" + &")".repeat(200) + ";";
