@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-21237feb.js";
+            window.path_to_searchindex_js = "searchindex-20449e9b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-58dbae52.js"></script>
@@ -1637,7 +1637,7 @@ neighbor &lt; input.infile
 <li><code>parent</code>: Distance to the parent.</li>
 <li><code>pairwise</code>: Pairwise distances among all selected nodes, including self-pairs and both (i,j) and (j,i) orderings.</li>
 <li><code>lca</code>: Distances from each node in a pair to their Lowest Common Ancestor (LCA), for all selected-node pairs (including self-pairs).</li>
-<li><code>phylip</code>: Output a PHYLIP-format distance matrix for selected nodes. All selected nodes must be named; unnamed nodes cause an error.</li>
+<li><code>phylip</code>: Output a PHYLIP-format distance matrix for selected nodes. All selected nodes must be named and their names must not contain ASCII whitespace characters; unnamed nodes or names with whitespace cause an error.</li>
 </ul>
 </li>
 <li><code>-I</code>: Ignore internal nodes.</li>
@@ -1672,8 +1672,9 @@ neighbor &lt; input.infile
 </code></pre>
 <ul>
 <li><code>-p, --percent</code>: Output support values as integer percentages (0–100), truncated toward zero.</li>
+<li><code>-r, --override-root</code>: Override the root node label with its support value.</li>
 <li>Overwrites existing internal node labels in the target tree.</li>
-<li>The root node is not annotated; any existing root label is preserved.</li>
+<li>The root node is not annotated by default; any existing root label is preserved.</li>
 </ul>
 <hr>
 <h2 id="manipulation-commands"><a class="header" href="#manipulation-commands">Manipulation Commands</a></h2>
@@ -1687,6 +1688,7 @@ neighbor &lt; input.infile
 <li><code>--name-list &lt;file&gt;</code>: Sort by a given name list; applied before other sort options.</li>
 <li><code>--deladderize</code> (<code>--dl</code>): Alternate sort direction at each level.</li>
 <li>If no sort option is provided, children are sorted in ascending alphanumeric order by default.</li>
+<li>Entries in <code>--name-list</code> that are not found among the leaf names are logged as warnings and skipped.</li>
 </ul>
 <p>When both <code>--alphanumeric</code> and <code>--num-descendants</code> are enabled, labels are sorted alphabetically first, then stably ladderized by number of descendants; the final order is primarily by number of descendants, with alphabetical order used as a tie-breaker within groups of the same size.</p>
 <h3 id="prune"><a class="header" href="#prune">prune</a></h3>
@@ -1803,7 +1805,7 @@ neighbor &lt; input.infile
 <li>If the input file contains multiple trees, only the first tree is processed.</li>
 <li><code>-b, --bl</code>: Include branch lengths.</li>
 <li><code>-o, --outfile &lt;file&gt;</code>: Output filename; `[stdout] for screen output.</li>
-<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, and comments are escaped or normalized for safe Forest output.</li>
+<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped or normalized for safe Forest output.</li>
 </ul>
 <h3 id="to-svg"><a class="header" href="#to-svg">to-svg</a></h3>
 <p>Convert a Newick tree to SVG format for visualization.</p>
@@ -1826,7 +1828,7 @@ neighbor &lt; input.infile
 <li><code>--forest</code>: Input is already Forest code.</li>
 <li><code>--no-default-style</code>: Skip default style definitions.</li>
 <li><code>-o, --outfile &lt;file&gt;</code>: Output filename; `[stdout] for screen output.</li>
-<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, and comments are escaped or normalized for safe LaTeX compilation.</li>
+<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped or normalized for safe LaTeX compilation.</li>
 </ul>
 <blockquote>
 <p>LaTeX output requires a locally installed <code>xelatex</code> or an engine such as <code>tectonic</code> to compile. By default the embedded style overrides the template fonts with <code>Noto Sans</code>; use <code>--no-default-style</code> to keep the template’s own font setup (<code>Fira Sans</code> / <code>Source Han Sans SC</code>).</p>
@@ -3070,6 +3072,7 @@ cat scores.tsv | sort -k2 -nr | head
 <li><code>--deladderize</code>: alternate sort direction at each level.</li>
 </ul>
 </li>
+<li>Entries in <code>--name-list</code> that are not found among the leaf names are logged as warnings and skipped.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -3306,8 +3309,10 @@ cat scores.tsv | sort -k2 -nr | head
 <ul>
 <li>Support values are written as internal node labels.</li>
 <li>All trees must share the same set of leaves.</li>
+<li>All replicate trees must have identical leaf sets to ensure valid support value calculation.</li>
 <li>The root node is not annotated; any existing root label is preserved.</li>
 <li><code>--percent</code> / <code>-p</code>: output support values as integer percentages (0–100), truncated toward zero.</li>
+<li><code>--override-root</code> / <code>-r</code>: override the root node label with its support value.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -3318,6 +3323,10 @@ cat scores.tsv | sort -k2 -nr | head
 <li>
 <p>Output support as percentages
 <code>necom nwk support target.nwk replicates.nwk --percent</code></p>
+</li>
+<li>
+<p>Override root label with support value
+<code>necom nwk support target.nwk replicates.nwk --override-root</code></p>
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -3359,7 +3368,7 @@ cat scores.tsv | sort -k2 -nr | head
 <li>Styles are stored in the comments of each node.</li>
 <li>Draws a cladogram by default.</li>
 <li>Use <code>--bl</code> to draw a phylogram with branch lengths.</li>
-<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, and comments are escaped or normalized for safe Forest output.</li>
+<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped or normalized for safe Forest output.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -3416,8 +3425,8 @@ cat scores.tsv | sort -k2 -nr | head
 <li>Styles are stored in the comments of each node.</li>
 <li>Draws a cladogram by default.</li>
 <li>Use <code>--bl</code> to draw a phylogram with branch lengths.</li>
-<li>Underscores (<code>_</code>) in names, labels, and comments are replaced with spaces.</li>
-<li>Other LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) in names, labels, and comments are escaped automatically.</li>
+<li>Underscores (<code>_</code>) in names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are replaced with spaces.</li>
+<li>Other LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) in names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped automatically.</li>
 <li>Requires a LaTeX installation with <code>fontspec</code>, <code>xeCJK</code> (for East Asian characters), and the <code>forest</code> package. Compilation can be done with <code>tectonic</code> or <code>latexmk -xelatex</code>.</li>
 <li>Use <code>--no-default-style</code> to keep the template’s original font setup instead of injecting the default <code>Noto Sans</code> configuration.</li>
 </ul>

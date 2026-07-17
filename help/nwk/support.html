@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-21237feb.js";
+            window.path_to_searchindex_js = "../../searchindex-20449e9b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-58dbae52.js"></script>
@@ -190,8 +190,10 @@
 <ul>
 <li>Support values are written as internal node labels.</li>
 <li>All trees must share the same set of leaves.</li>
+<li>All replicate trees must have identical leaf sets to ensure valid support value calculation.</li>
 <li>The root node is not annotated; any existing root label is preserved.</li>
 <li><code>--percent</code> / <code>-p</code>: output support values as integer percentages (0–100), truncated toward zero.</li>
+<li><code>--override-root</code> / <code>-r</code>: override the root node label with its support value.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -202,6 +204,10 @@
 <li>
 <p>Output support as percentages
 <code>necom nwk support target.nwk replicates.nwk --percent</code></p>
+</li>
+<li>
+<p>Override root label with support value
+<code>necom nwk support target.nwk replicates.nwk --override-root</code></p>
 </li>
 </ol>
 

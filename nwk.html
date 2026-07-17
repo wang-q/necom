@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-21237feb.js";
+            window.path_to_searchindex_js = "searchindex-20449e9b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-58dbae52.js"></script>
@@ -243,7 +243,7 @@
 <li><code>parent</code>: Distance to the parent.</li>
 <li><code>pairwise</code>: Pairwise distances among all selected nodes, including self-pairs and both (i,j) and (j,i) orderings.</li>
 <li><code>lca</code>: Distances from each node in a pair to their Lowest Common Ancestor (LCA), for all selected-node pairs (including self-pairs).</li>
-<li><code>phylip</code>: Output a PHYLIP-format distance matrix for selected nodes. All selected nodes must be named; unnamed nodes cause an error.</li>
+<li><code>phylip</code>: Output a PHYLIP-format distance matrix for selected nodes. All selected nodes must be named and their names must not contain ASCII whitespace characters; unnamed nodes or names with whitespace cause an error.</li>
 </ul>
 </li>
 <li><code>-I</code>: Ignore internal nodes.</li>
@@ -278,8 +278,9 @@
 </code></pre>
 <ul>
 <li><code>-p, --percent</code>: Output support values as integer percentages (0–100), truncated toward zero.</li>
+<li><code>-r, --override-root</code>: Override the root node label with its support value.</li>
 <li>Overwrites existing internal node labels in the target tree.</li>
-<li>The root node is not annotated; any existing root label is preserved.</li>
+<li>The root node is not annotated by default; any existing root label is preserved.</li>
 </ul>
 <hr>
 <h2 id="manipulation-commands"><a class="header" href="#manipulation-commands">Manipulation Commands</a></h2>
@@ -293,6 +294,7 @@
 <li><code>--name-list &lt;file&gt;</code>: Sort by a given name list; applied before other sort options.</li>
 <li><code>--deladderize</code> (<code>--dl</code>): Alternate sort direction at each level.</li>
 <li>If no sort option is provided, children are sorted in ascending alphanumeric order by default.</li>
+<li>Entries in <code>--name-list</code> that are not found among the leaf names are logged as warnings and skipped.</li>
 </ul>
 <p>When both <code>--alphanumeric</code> and <code>--num-descendants</code> are enabled, labels are sorted alphabetically first, then stably ladderized by number of descendants; the final order is primarily by number of descendants, with alphabetical order used as a tie-breaker within groups of the same size.</p>
 <h3 id="prune"><a class="header" href="#prune">prune</a></h3>
@@ -409,7 +411,7 @@
 <li>If the input file contains multiple trees, only the first tree is processed.</li>
 <li><code>-b, --bl</code>: Include branch lengths.</li>
 <li><code>-o, --outfile &lt;file&gt;</code>: Output filename; `[stdout] for screen output.</li>
-<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, and comments are escaped or normalized for safe Forest output.</li>
+<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped or normalized for safe Forest output.</li>
 </ul>
 <h3 id="to-svg"><a class="header" href="#to-svg">to-svg</a></h3>
 <p>Convert a Newick tree to SVG format for visualization.</p>
@@ -432,7 +434,7 @@
 <li><code>--forest</code>: Input is already Forest code.</li>
 <li><code>--no-default-style</code>: Skip default style definitions.</li>
 <li><code>-o, --outfile &lt;file&gt;</code>: Output filename; `[stdout] for screen output.</li>
-<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, and comments are escaped or normalized for safe LaTeX compilation.</li>
+<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped or normalized for safe LaTeX compilation.</li>
 </ul>
 <blockquote>
 <p>LaTeX output requires a locally installed <code>xelatex</code> or an engine such as <code>tectonic</code> to compile. By default the embedded style overrides the template fonts with <code>Noto Sans</code>; use <code>--no-default-style</code> to keep the template’s own font setup (<code>Fira Sans</code> / <code>Source Han Sans SC</code>).</p>
