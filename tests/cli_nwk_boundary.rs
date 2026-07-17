@@ -173,6 +173,11 @@ fn command_prune_duplicate_name_warning() {
     assert!(stdout.contains("A"));
 }
 
+// Windows uses a 1 MB default stack for the main thread of a new process,
+// while Rust test threads get 2 MB. The 200-level recursion in parsing plus
+// serialization produces large stack frames in debug builds and can overflow
+// the smaller Windows stack. Release builds pass because smaller stack frames
+// fit within the same limit, so this is only skipped on Windows in debug mode.
 #[test]
 #[cfg_attr(
     target_os = "windows",
@@ -189,6 +194,9 @@ fn command_deep_tree_indent_no_panic() {
     assert!(stdout.ends_with(";\n") || stdout.ends_with(';'));
 }
 
+// See the comment on `command_deep_tree_indent_no_panic` for why this is
+// ignored on Windows. The SVG layout itself is iterative; the recursion here
+// comes from parsing the deeply nested input.
 #[test]
 #[cfg_attr(
     target_os = "windows",
