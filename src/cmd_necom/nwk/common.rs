@@ -5,9 +5,11 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use anyhow::{anyhow, bail};
 use clap::ArgMatches;
 use necom::libs::phylo::node::{Node, NodeId};
+use necom::libs::phylo::tree::io::escape_nhx_value;
 use necom::libs::phylo::tree::stat::duplicate_names;
 use necom::libs::phylo::tree::Tree;
 use regex::RegexBuilder;
+use std::fmt::Write as _;
 
 /// Parse a `--lca` argument value as two comma-separated names.
 /// Returns `(&str, &str)` to avoid allocation; bails if the input does not
@@ -40,15 +42,23 @@ pub(crate) fn format_label_columns(
     }
     for column in columns {
         match column.as_str() {
-            "dup" => out.push_str(&format!("\t{}", name)),
-            "taxid" => out.push_str(&format!(
-                "\t{}",
-                node.get_property("T").map(|s| s.as_str()).unwrap_or("")
-            )),
-            "species" => out.push_str(&format!(
-                "\t{}",
-                node.get_property("S").map(|s| s.as_str()).unwrap_or("")
-            )),
+            "dup" => {
+                let _ = write!(out, "\t{}", name);
+            }
+            "taxid" => {
+                let _ = write!(
+                    out,
+                    "\t{}",
+                    node.get_property("T").map(|s| s.as_str()).unwrap_or("")
+                );
+            }
+            "species" => {
+                let _ = write!(
+                    out,
+                    "\t{}",
+                    node.get_property("S").map(|s| s.as_str()).unwrap_or("")
+                );
+            }
             "full" => {
                 let comment = node
                     .properties
@@ -61,14 +71,14 @@ pub(crate) fn format_label_columns(
                                 if v.is_empty() {
                                     format!(":{}", k)
                                 } else {
-                                    format!(":{}={}", k, v)
+                                    format!(":{}={}", k, escape_nhx_value(v))
                                 }
                             })
                             .collect();
                         format!("[&&NHX{}]", pairs.join(""))
                     })
                     .unwrap_or_default();
-                out.push_str(&format!("\t{}", comment));
+                let _ = write!(out, "\t{}", comment);
             }
             _ => bail!("unknown extra column: {}", column),
         }
@@ -313,5 +323,30 @@ mod tests {
         let node = Node::new(0);
         let cols = vec!["unknown".to_string()];
         assert!(format_label_columns(&node, "A", &cols).is_err());
+    }
+
+    #[test]
+    fn format_label_columns_full_escapes_nhx_values() {
+        let mut node = Node::new(0);
+        node.add_property("comment", "a]b\\c");
+        let cols = vec!["full".to_string()];
+        let out = format_label_columns(&node, "A", &cols).unwrap();
+        assert_eq!(out, "A\t[&&NHX:comment=a\\]b\\\\c]");
+    }
+
+    #[test]
+    fn format_label_columns_full_round_trips_through_parser() {
+        let mut node = Node::new(0);
+        node.add_property("comment", "a]b\\c");
+        let cols = vec!["full".to_string()];
+        let out = format_label_columns(&node, "A", &cols).unwrap();
+        let newick = format!("{};", out.replace('\t', ""));
+        let tree = Tree::from_newick(&newick).unwrap();
+        let root = tree.get_root().unwrap();
+        let parsed = tree.get_node(root).unwrap();
+        assert_eq!(
+            parsed.get_property("comment").map(|s| s.as_str()),
+            Some("a]b\\c")
+        );
     }
 }

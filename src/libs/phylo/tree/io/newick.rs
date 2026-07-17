@@ -144,7 +144,7 @@ fn quote_label(label: &str) -> String {
 ///
 /// Backslashes and closing square brackets must be escaped so that the
 /// generated Newick string can be re-parsed unambiguously.
-fn escape_nhx_value(value: &str) -> String {
+pub fn escape_nhx_value(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for c in value.chars() {
         match c {

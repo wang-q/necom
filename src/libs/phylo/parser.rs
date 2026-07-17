@@ -12,6 +12,7 @@ use nom::{
     IResult, Offset, Parser,
 };
 use std::collections::BTreeMap;
+use std::fmt::Write as _;
 
 /// Structural characters that terminate an unquoted Newick label.
 pub(crate) const NEWICK_RESERVED: &str = "():;,[]";
@@ -570,10 +571,10 @@ fn make_tree_error(input: &str, e: DetailedError) -> TreeError {
     for (_, kind) in e.errors.iter().rev() {
         match kind {
             DetailedErrorKind::Context(ctx) => {
-                msg.push_str(&format!("while parsing {}:\n", ctx));
+                let _ = writeln!(msg, "while parsing {}:", ctx);
             }
             DetailedErrorKind::Nom(k) => {
-                msg.push_str(&format!("  error: {:?}\n", k));
+                let _ = writeln!(msg, "  error: {:?}", k);
             }
         }
     }
