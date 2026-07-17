@@ -2,7 +2,11 @@
 
 `necom nwk` 提供完整的 Newick 格式系统发育树处理功能，包括解析、操作、分析和可视化。
 
-> **实现状态注记**：截至 2026-07-18，`necom nwk` 主体命令体系（stat/distance/indent/compare/comment/to-*/topo/label/reroot/prune/subtree/order/rename/replace/support）已实现；NHX 注释值对 Newick 结构字符（`:`、`=`、`;`、`,`、`]`、`\`）做完整转义以保证 round-trip；Forest/LaTeX 输出对 `dot`/`bar`/`rec`/`tri` 等可视化属性值也进行 LaTeX 特殊字符转义。`nwk condense`/`match`/`ed`/`gen`/`duration`、部分标准化统计指标（`colless_yule`/`pda`、`sackin_yule`/`pda`）以及 ASCII 树/随机树生成为规划中。
+> **实现状态注记**：截至 2026-07-18，`necom nwk` 主体命令体系（stat/distance/indent/compare/comment/to-*/topo/label/reroot/prune/subtree/order/rename/replace/support）已实现；NHX 注释值对 Newick 结构字符（`:`、`=`、`;`、`,`、`]`、`\`）做完整转义以保证 round-trip；Forest/LaTeX 输出对 `dot`/`bar`/`rec`/`tri` 等可视化属性值也进行 LaTeX 特殊字符转义。
+>
+> **未实现且无具体计划**：`nwk condense`（由 `subtree --condense` 提供，不计划独立子命令）；`match`/`ed`/`gen`/`duration`（来自 `newick_utils` 映射，见 §3）；`colless_yule`/`colless_pda`/`sackin_yule`/`sackin_pda` 标准化统计指标；`inorder` 遍历（仅适用二叉树，`necom` 支持多叉树故未实现）。
+>
+> **规划中**：`print_entity`（ASCII 树状图，用于终端调试展示）；`generate_random_tree`（Yule/Coalescent 模型，主要用于模拟研究，优先级较低）。
 >
 > **关联文档**：[eval.md](eval.md)（计划中的统一评估命令，其中 `eval tree` 子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
 

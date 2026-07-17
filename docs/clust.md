@@ -100,7 +100,7 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
 - **Synergy with existing necom capabilities**:
   - Tree building: `clust upgma` (rooted, ultrametric) and `clust nj` (additive, unrooted) already exist.
   - Cutting: tree-cut grouping via `necom cut`.
-  - Evaluation: `necom clust eval --matrix` / `--tree` / `--coords` (currently available); `necom nwk eval` not yet implemented.
+  - Evaluation: `necom clust eval --matrix` / `--tree` / `--coords` (currently available); `necom eval tree` not yet implemented.
 
 ### Relationship to UPGMA/NJ
 
@@ -148,7 +148,7 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
   - General hierarchical analysis or when `ward.D2` is needed: `clust hier --method ward.D2`.
 - Cut and evaluate:
   - Cut: `necom cut --height H` or TreeCluster-style thresholds/constraints.
-  - Internal evaluation (no Ground Truth): `necom clust eval --matrix ...` (Silhouette) (currently available); `necom nwk eval` not yet implemented.
+  - Internal evaluation (no Ground Truth): `necom clust eval --matrix ...` (Silhouette) (currently available); `necom eval tree` not yet implemented.
   - External evaluation (with Ground Truth): `necom clust eval` (ARI/AMI/V-Measure).
 
 ## Evaluation and Analysis
@@ -156,7 +156,7 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
 These commands do not produce clusters; they evaluate cluster or tree quality.
 
 - **Tree-based evaluation**
-  - **Command**: `necom nwk eval` (not yet implemented)
+  - **Command**: `necom eval tree` (not yet implemented)
   - **Positioning**: Multi-dimensional evaluation of tree structure.
   - **Capabilities**: Geometric compactness (Silhouette), taxonomic purity (Purity), evolutionary consistency (Discordance).
   - **Alternative**: Currently use `necom clust eval --matrix` / `--tree` / `--coords` for distance/tree/coordinate-based evaluation.
@@ -277,7 +277,7 @@ How to determine the number of clusters (K) or the best model complexity?
 - **BIC (Bayesian Information Criterion)** [Planned]:
   - In GMM, BIC trades off log-likelihood (goodness of fit) against the number of parameters (complexity).
   - `necom` could provide `clust gmm --scan-k 2..20`, automatically computing and outputting a BIC curve to help users choose the best K (usually the BIC minimum or elbow).
-- **Silhouette / Calinski-Harabasz** [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (`clust eval` already supports distance-matrix Silhouette; tree-based Silhouette is planned for `necom nwk eval` [planned]).
+- **Silhouette / Calinski-Harabasz** [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (`clust eval` already supports distance-matrix Silhouette; tree-based Silhouette is planned for `necom eval tree` [planned]).
 
 ## Large-Scale Data Strategy
 

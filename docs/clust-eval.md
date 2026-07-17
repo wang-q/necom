@@ -13,7 +13,7 @@ This document describes the design philosophy, metrics, and selection guidance f
     3.  **Decide**: The user selects the optimal parameters based on metrics (e.g., Silhouette peak, Elbow point).
 
 * **Complementary**:
-  * `necom nwk eval` [planned]: Focuses on consistency between tree structure and grouping (geometry/evolution).
+  * `necom eval tree` [planned]: Focuses on consistency between tree structure and grouping (geometry/evolution).
   * `necom clust eval`: Focuses on the statistical validity of partitions, supporting external (two-group comparison) and internal (single group + matrix/coordinates/tree) evaluation.
 * **Scenarios**:
   * **Algorithm comparison**: Compare result differences between MCL and K-Medoids on the same dataset.

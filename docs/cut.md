@@ -223,7 +223,7 @@ Evaluating clustering quality usually requires a reference standard (Ground Trut
   - Output: ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure, etc.
   - Use case: When the true classification of samples is known, or when you want to compare the difference between two cutting parameters.
 
-- **Tree-related metrics (`necom nwk eval` [planned])**:
+- **Tree-related metrics (`necom eval tree` [planned])**:
   - Input: tree file + clustering result.
   - Output: Parsimony score, Silhouette score (based on tree distance matrix), etc.
   - Use case: No true classification is available; assess compactness or separability of clusters on the tree structure.
@@ -254,7 +254,7 @@ necom clust hier matrix.phy --method ward > tree.nwk
 necom cut tree.nwk --height 0.05 > clusters.tsv
 
 # 3. Evaluate (compute Cophenetic correlation and Silhouette)
-# necom nwk eval tree.nwk --part clusters.tsv --metrics silhouette > sil.tsv (planned, not implemented)
+# necom eval tree tree.nwk --part clusters.tsv --metrics silhouette > sil.tsv (planned, not implemented)
 ```
 
 #### 3. SciPy-style Analysis (Inconsistency Coefficient)

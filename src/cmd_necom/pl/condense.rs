@@ -10,31 +10,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("condense")
         .about("Condenses subtrees based on taxonomy")
-        .after_help(
-            r###"
-* <taxon.tsv> is a tab-separated file without header, containing at least 2 columns:
-    node_name   taxonomic_term   [additional columns...]
-* The first column is the node name (matching leaf labels in the Newick file)
-* Use `--rank` to specify which column(s) to use for grouping (1-based index, default: 2)
-* Can specify multiple `--rank` values to condense at multiple levels
-* Monophyletic subtrees with the same taxonomic term will be condensed
-* Condensed nodes are named as {term}||{count}
-
-Examples:
-1. Condense by species (2nd column):
-   necom pl condense --taxon taxon.tsv tree.nwk
-
-2. Condense by genus (3rd column):
-   necom pl condense --taxon taxon.tsv --rank 3 tree.nwk
-
-3. Condense by multiple ranks:
-   necom pl condense --taxon taxon.tsv --rank 2 --rank 3 tree.nwk
-
-4. Output mapping file:
-   necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/pl/condense.md"))
         .arg(
             crate::cmd_necom::args::infile_arg_required_with_help(
                 "Input Newick filename. [stdin] for standard input",

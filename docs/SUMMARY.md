@@ -57,3 +57,7 @@
 - [to-svg](help/nwk/to-svg.md)
 - [to-tex](help/nwk/to-tex.md)
 - [topo](help/nwk/topo.md)
+
+## Pipelines
+
+- [condense](help/pl/condense.md)
