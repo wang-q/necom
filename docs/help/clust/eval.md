@@ -4,6 +4,13 @@ Input:
 
 * A partition file (`p1`).
 
+Output:
+
+* TSV with a header row.
+* External evaluation: one row of pair-based metrics (ARI, AMI, V-Measure, etc.).
+* Internal evaluation: one row per partition with Silhouette, Dunn, Davies-Bouldin, etc.
+* Batch mode (`--input-format long`): one row per `Group`, with the `Group` column preserved as the first column.
+
 Notes:
 
 1. External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, V-Measure, FMI, NMI, RI, Jaccard, Precision, and Recall.

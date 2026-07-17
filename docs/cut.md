@@ -244,18 +244,8 @@ necom nwk subtree input.nwk -l cluster1.names > cluster1.nwk
 ```
 
 #### 2. Hierarchical Clustering (hclust) Integration
-Starting from a distance matrix, generate a tree with hclust, then cut and evaluate.
 
-```bash
-# 1. Generate hierarchical clustering tree
-necom clust hier matrix.phy --method ward > tree.nwk
-
-# 2. Cut (by height threshold)
-necom cut tree.nwk --height 0.05 > clusters.tsv
-
-# 3. Evaluate (compute Cophenetic correlation and Silhouette)
-# necom eval tree tree.nwk --part clusters.tsv --metrics silhouette > sil.tsv (planned, not implemented)
-```
+Starting from a distance matrix, generate a tree with `necom clust hier`, cut it, and evaluate. A complete worked example (hier → cut --scan → clust eval) is in [`docs/clust.md`](clust.md#scenario-b-hierarchical-clustering-parameter-scanning-and-evaluation-workflow).
 
 #### 3. SciPy-style Analysis (Inconsistency Coefficient)
 For trees with uneven evolutionary rates, the inconsistency coefficient can find more natural cluster boundaries.

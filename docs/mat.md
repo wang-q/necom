@@ -21,7 +21,7 @@ Distance matrices and Newick trees do not carry genomic coordinates. If other `n
 
 ## Supported Formats and Data Structures
 
-`necom` uses three internal matrix structures for clustering and distance analysis, and supports two external distance matrix file formats: `PHYLIP` and `Pairwise`.
+`necom` supports two external distance matrix file formats: `PHYLIP` and `Pairwise`. (Internal matrix data structures are documented in [`notes/design/mat-impl.md`](../notes/design/mat-impl.md).)
 
 ### 1. PHYLIP Distance Matrix (Dense)
 
@@ -62,29 +62,6 @@ Sparse or list-form distance data, suitable for storing graph structures or only
 `necom` provides mutual conversion between matrix and `Pairwise` list:
 - **Matrix to Pair (`necom mat to-pair`)**: flatten a `PHYLIP` matrix into a `Pairwise` list.
 - **Pair to Matrix (`necom mat to-phylip`)**: assemble a `Pairwise` list back into a `PHYLIP` matrix, supporting `--missing` and `--same` parameters.
-
-### 3. Internal Matrix Structures
-
-`necom` defines three core matrix structures in `src/libs/pairmat/`.
-
-#### ScoringMatrix
-
-- **Purpose**: sparse or on-demand scoring/distance matrix.
-- **Underlying storage**: `HashMap<(usize, usize), T>`.
-- **Characteristics**: sparse storage, only explicitly set values are kept; supports default values for diagonal and off-diagonal elements; logically symmetric (`get(i,j)` is equivalent to `get(j,i)`).
-
-#### CondensedMatrix
-
-- **Purpose**: efficient hierarchical clustering (e.g., `clust hier`) supporting larger-scale data.
-- **Underlying storage**: `Vec<f32>`, only the upper triangle (excluding the diagonal) is stored, memory footprint is $N(N-1)/2$.
-- **Index mapping**: for $(i, j)$ with $i < j$ → $k = N \cdot i - i(i+1)/2 + (j - i - 1)$.
-- **Characteristics**: enforced symmetry, diagonal assumed to be 0, no name mapping stored, purely numerical computation.
-
-#### NamedMatrix
-
-- **Purpose**: dense distance matrix with row and column names (e.g., `PHYLIP` in-memory representation).
-- **Underlying storage**: `IndexMap` (name index) + `CondensedMatrix` + optional diagonal vector.
-- **Characteristics**: combined wrapper that accesses the underlying `CondensedMatrix` through name indexing; supports optional diagonal storage (required by `mat transform --normalize`); about 200MB when $N=10,000$.
 
 ## Subcommands in Detail
 

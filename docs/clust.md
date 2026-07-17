@@ -210,48 +210,7 @@ necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
 
 ## Planned
 
-GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap.
-
-## Not Recommended / No Plans
-
-These algorithms are classic but have limitations in large-scale biological data scenarios, so they are not being introduced as core features.
-
-- **K-Means**
-  - **Reason**: Fast, but assumes clusters are spherical with equal variance, and centroids are usually not real samples, lacking biological interpretability (e.g., they cannot directly serve as representative sequences).
-  - **Alternative**: `K-Medoids` (already implemented), where medoids must be real samples and arbitrary distance matrices are supported, making it more suitable for biological sequence analysis.
-
-- **Bisecting K-Means**
-  - **Principle**: Top-down divisive clustering. Initially all points form one cluster; the cluster with the largest SSE is selected and split by K-Means until K clusters are reached.
-  - **Reason**: Although it produces a tree structure (binary tree), it inherits K-Means limitations (requires Euclidean distances; centroids are not real samples). Biological tree building usually prefers bottom-up agglomerative methods such as UPGMA/NJ.
-
-- **Affinity Propagation (AP)**
-  - **Principle**: Message-passing mechanism in which all points compete to become exemplars. Does not require specifying the cluster count, but has high computational complexity.
-  - **Reason**: Time and space complexity are high ($O(N^2)$), making it difficult to handle large-scale biological sequence data (e.g., >10k sequences).
-  - **Alternative**: For small datasets seeking representatives, use `K-Medoids`; for automatic cluster count, use `DBSCAN` or `MCL`.
-
-- **Spectral Clustering**
-  - **Principle**: Uses eigenvectors of the Laplacian matrix for dimensionality reduction, then performs K-Means clustering in the low-dimensional space. Essentially seeks the graph's minimum normalized cut (Normalized Cut).
-  - **Reason**: Constructing the Laplacian matrix and eigendecomposition is computationally expensive ($O(N^3)$).
-  - **Alternative**: `MCL` usually provides similar or better results for biological network clustering and scales better.
-
-- **Mean Shift**
-  - **Principle**: Density-based hill-climbing algorithm. Points are repeatedly shifted toward the density center (mean shift) of their neighborhood until they converge to local density peaks (modes).
-  - **Reason**: High computational complexity and the bandwidth parameter is hard to choose adaptively.
-  - **Alternative**: `DBSCAN` or `GMM` usually covers its density-estimation needs.
-
-- **OPTICS**
-  - **Principle**: Produces a reachability plot by ordering data points according to reachability distances, capturing all possible density levels in a single run. Solves DBSCAN's sensitivity to a global `eps`.
-  - **Reason**: Its core idea (hierarchical density clustering) has been better inherited and automated by **HDBSCAN**; OPTICS results (reachability plots) require complex post-processing to obtain clear clusters.
-  - **Alternative**: Use the more modern, lower-parameter, and more automated `HDBSCAN`.
-
-- **Biclustering**
-  - **Reason**: Simultaneously clusters rows and columns (e.g., Spectral Co-Clustering), mainly used for specific matrix-subblock mining scenarios such as gene expression profiling. This differs substantially from necom's current focus on "sample grouping".
-  - **Alternative**: If features (columns) need to be clustered, transpose the matrix and use standard clustering; if co-expression modules are needed, use dedicated expression-profiling tools (e.g., WGCNA).
-
-- **BIRCH**
-  - **Principle**: Incremental clustering based on a Clustering Feature tree (CF Tree). Builds a highly compressed tree in a single scan; tree nodes store cluster statistics (sum, square sum), making it ideal for very large datasets.
-  - **Reason**: Strongly relies on Euclidean-space statistical properties (computing centroids and radii), not suitable for complex distance measures of biological sequences (e.g., edit distance); also restricts cluster shapes.
-  - **Alternative**: For large-scale vectors, MiniBatch K-Means is more general; for large-scale sequences, use `MCL` (graph clustering) or `CD-HIT/MMseqs2` (greedy clustering).
+GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Algorithms considered but not adopted (K-Means, Spectral, OPTICS, BIRCH, etc.) are documented in [`notes/design/clust-impl.md`](../notes/design/clust-impl.md).
 
 ## Detailed Algorithm Descriptions
 
@@ -375,34 +334,16 @@ Wide-table format; each line represents a cluster containing all its members.
   ```
 
 #### Long Format (batch, `--format long`)
-A dedicated format for batch evaluation. `--input-format long` is only accepted by `necom clust eval`; `necom cut`'s `--format` only supports `cluster`/`pair`, but in `--scan` mode it automatically outputs the long format.
-- **Structure**: `Group <tab> ClusterID <tab> Item`
-- **Group column**: Identifies different parameter combinations or cutting methods. The format is usually `Method=Value` (e.g., `height=0.5`).
-  - `necom clust eval` preserves this column as the identifier in evaluation results.
-- **Example**:
-  ```text
-  height=0.1	1	GeneA
-  height=0.1	2	GeneC
-  height=0.2	1	GeneA
-  height=0.2	1	GeneC
-  ```
+
+A dedicated TSV format (`Group\tClusterID\tItem`) for batch evaluation, auto-emitted by `necom cut --scan` and consumed by `necom clust eval --input-format long`. See [`docs/cut.md`](cut.md#output-format-in-scan-mode) for the full specification.
 
 ### 2. Distance Matrix
 
 Used by `clust hier`, `nj`, `upgma`, and `eval --matrix`.
 
 #### PHYLIP Format (relaxed)
-- **Structure**:
-  - First line: sample count $N$.
-  - Next $N$ lines: `Name <space> Dist1 <space> Dist2 ...`
-- **Characteristics**: Standard bioinformatics format. `necom` supports a "relaxed" format with arbitrary whitespace between names and data.
-- **Example**:
-  ```text
-  3
-  A  0.0 0.1 0.5
-  B  0.1 0.0 0.5
-  C  0.5 0.5 0.0
-  ```
+
+`necom` accepts a relaxed PHYLIP format (arbitrary whitespace, optional header). See [`docs/mat.md`](mat.md#1-phylip-distance-matrix-dense) for full structure, strict vs relaxed variants, and lower-triangular form.
 
 ### 3. Coordinates / Feature Vectors
 
