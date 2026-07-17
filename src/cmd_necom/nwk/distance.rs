@@ -8,44 +8,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("distance")
         .about("Calculates distances between nodes")
-        .after_help(
-            r###"
-Calculates distances between nodes or generates distance matrices.
-
-Notes:
-* Modes:
-    * `root`: Distance from each node to the root.
-      Output: Node \t Distance
-    * `parent`: Distance from each node to its parent.
-      Output: Node \t Distance
-    * `pairwise`: Distance between every pair of selected nodes, including self-pairs and both (i,j) and (j,i) orderings.
-      Output: Node1 \t Node2 \t Distance
-    * `lca`: Distance from each node in a pair to their Lowest Common Ancestor (LCA), for all selected-node pairs (including self-pairs).
-      Output: Node1 \t Node2 \t Dist1 \t Dist2
-    * `phylip`: A Phylip-formatted distance matrix for the selected nodes.
-
-* The `-I` and `-L` options filter out internal or leaf nodes.
-* Use `-n` / `-l` / `-x` to restrict the reported nodes to a name, name-list file, or regex.
-* When no name-based filter is given, all selected nodes (respecting `-I`/`-L`) are reported.
-* Input must be a valid Newick file.
-
-Examples:
-1. Distances to root (default):
-   necom nwk distance tree.nwk
-
-2. Pairwise distances:
-   necom nwk distance tree.nwk --mode pairwise
-
-3. Generate Phylip matrix:
-   necom nwk distance tree.nwk --mode phylip > matrix.phy
-
-4. Distances to parent for leaves only:
-   necom nwk distance tree.nwk --mode parent -I
-
-5. Distance to root for selected nodes only:
-   necom nwk distance tree.nwk --mode root -n Homo -n Pan
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/distance.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::mode_arg(
             "root",

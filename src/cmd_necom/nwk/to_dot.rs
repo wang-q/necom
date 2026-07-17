@@ -7,21 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("to-dot")
         .about("Converts Newick trees to Graphviz DOT format")
-        .after_help(
-            r###"
-Convert Newick trees to Graphviz DOT format for visualization.
-
-Examples:
-1. Convert to DOT:
-   necom nwk to-dot tests/newick/catarrhini.nwk
-
-2. Save to file:
-   necom nwk to-dot tests/newick/catarrhini.nwk -o tree.dot
-
-3. Create an image (requires Graphviz installed):
-   necom nwk to-dot tests/newick/catarrhini.nwk | dot -Tpng -o tree.png
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/to-dot.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::outfile_arg())
 }

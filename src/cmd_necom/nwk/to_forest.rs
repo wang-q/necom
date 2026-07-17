@@ -8,30 +8,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("to-forest")
         .about("Converts Newick trees to raw LaTeX Forest code")
-        .after_help(
-            r###"
-Convert Newick trees to raw LaTeX Forest code.
-
-This command is designed for manually modifying the generated Forest code.
-
-Notes:
-* Styles are stored in the comments of each node
-* Drawing a cladogram by default
-* Set `--bl` to draw a phylogenetic tree
-* LaTeX special characters (`{ } \ # $ % & ~ ^`) and underscores in node names,
-  labels, and comments are escaped or normalized for safe Forest output.
-
-Examples:
-1. Convert to Forest code:
-   necom nwk to-forest tests/newick/catarrhini.nwk
-
-2. Convert with branch lengths:
-   necom nwk to-forest tests/newick/catarrhini.nwk --bl
-
-3. Save to file:
-   necom nwk to-forest tests/newick/catarrhini.nwk -o forest.tex
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/to-forest.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::bl_arg())
         .arg(crate::cmd_necom::args::outfile_arg())

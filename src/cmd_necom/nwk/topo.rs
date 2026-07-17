@@ -7,28 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("topo")
         .about("Manipulates tree topology and attributes")
-        .after_help(
-            r###"
-Modifies tree topology by optionally removing branch lengths, comments, or labels.
-
-Notes:
-* By default, branch lengths and comments are REMOVED.
-* Use `--bl` to KEEP branch lengths.
-* Use `--comment` to KEEP comments.
-* Use `-I` to REMOVE internal labels.
-* Use `-L` to REMOVE leaf labels.
-
-Examples:
-1. Topology only (remove lengths and comments):
-   necom nwk topo tree.nwk
-
-2. Keep branch lengths but remove comments:
-   necom nwk topo tree.nwk --bl
-
-3. Remove internal node labels (topology only):
-   necom nwk topo tree.nwk -I
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/topo.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::bl_arg())
         .arg(

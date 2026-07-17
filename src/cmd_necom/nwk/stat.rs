@@ -7,37 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("stat")
         .about("Prints statistics about trees")
-        .after_help(
-            r###"
-Prints information about the trees in the input.
-
-Notes:
-* Input format:
-    * Newick trees filename or `stdin`.
-
-* Output format:
-    * Key-value pairs (TSV, default):
-      Type	cladogram
-      nodes	18
-      leaves	11
-      rooted	Yes
-      ...
-      cherries	5
-      sackin	46
-      colless	9
-
-    * Tab-separated values (--style line):
-      Type	nodes	leaves	rooted	dichotomies	leaf labels	internal labels	cherries	sackin	colless
-      cladogram	18	11	Yes	5	11	0	5	46	9
-
-Examples:
-1. Default statistics:
-   necom nwk stat data/catarrhini.nwk
-
-2. Output to file:
-   necom nwk stat data/catarrhini.nwk -o stats.tsv
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/stat.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::outfile_arg())
         .arg(

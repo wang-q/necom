@@ -8,48 +8,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("reroot")
         .about("Reroots a tree at a specified node or the longest branch")
-        .after_help(
-            r###"
-Reroots a phylogenetic tree on a specific branch or node.
-
-Notes:
-* Target Selection:
-    * Default: If NO nodes are specified, reroots at the midpoint of the longest branch.
-    * Specified Nodes (`--node` / `-n`):
-        * Reroots on the edge leading to the Lowest Common Ancestor (LCA) of specified nodes.
-        * Treats specified nodes as the "ingroup" and the rest as the "outgroup".
-        * The new root is placed at the midpoint of the parent edge of the LCA.
-    * Lax Mode (`--lax` / `-l`):
-        * If the LCA of specified nodes is already the root, use the *unspecified* nodes (complement) as the ingroup.
-        * Useful for defining an outgroup by exclusion.
-
-* Operations:
-    * Reroot (Default): Creates a bifurcating root at the target edge.
-    * Deroot (`--deroot` / `-d`): Splices out the ingroup to create a multifurcating root.
-
-* Technical Details:
-    * Support Values (`--support-as-labels`):
-        * Shifts internal node labels along the rerooting path to maintain split associations.
-        * Necessary because rerooting changes edge directions.
-    * Topology:
-        * The original root's parent edge is merged.
-        * Degree-2 nodes created during the process are removed.
-
-Examples:
-1. Reroot at the longest branch (default):
-   necom nwk reroot input.nwk
-
-2. Reroot at a specific node (ingroup):
-   necom nwk reroot input.nwk -n Homo
-
-3. Reroot at the LCA of multiple nodes:
-   necom nwk reroot input.nwk -n Homo -n Pan
-
-4. Reroot and preserve support values (internal node labels):
-   necom nwk reroot input.nwk -n Homo --support-as-labels
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/reroot.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::node_arg())
         .arg(crate::cmd_necom::args::outfile_arg())

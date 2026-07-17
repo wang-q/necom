@@ -8,44 +8,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("label")
         .about("Extracts labels from a Newick file")
-        .after_help(
-            r###"
-Extracts the tree's labels.
-
-Notes:
-* By default, prints all labels that occur in the tree, in the same order as
-  in the Newick, one per line. Empty labels produce no output.
-* The `--tab` option prints labels on a single line, separated by tabs.
-* The `-I` and `-L` options filter out internal or leaf nodes.
-* Selection options (`-n`, `-l`, `-x`) can be combined.
-* With `-D`, descendants of selected internal nodes are also included.
-* Clade check (`-M`) verifies if the selected nodes form a clade with at least
-  two nodes. It checks terminal nodes against the selection.
-* Warning: Duplicate node names may affect selection/clade checks.
-* Extra columns (`-c`) details:
-    * `dup`: duplicate the node name
-    * `taxid`: `:T=` field in comment
-    * `species`: `:S=` field in comment
-    * `full`: full comment
-
-Examples:
-1. List all labels:
-   necom nwk label tree.nwk
-
-2. Count leaves:
-   necom nwk label tree.nwk -I | wc -l
-
-3. List specific nodes:
-   necom nwk label tree.nwk -n Human -n Chimp
-
-4. List labels matching regex:
-   necom nwk label tree.nwk -x "^Homo"
-
-5. Check clade:
-   necom nwk label tree.nwk -n Human -n Chimp -M
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/label.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::internal_arg())
         .arg(crate::cmd_necom::args::leaf_arg())

@@ -8,29 +8,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("prune")
         .about("Removes nodes from a Newick file")
-        .after_help(
-            r###"
-Removes nodes from the Newick tree based on provided labels or patterns.
-
-Notes:
-* Target nodes can be specified by name (`--node`), name-list (`--name-list`), or regex (`--regex`).
-* With `--invert`, specified nodes (along with their ancestors and descendants) are kept, and everything else is removed.
-* Topology changes:
-    * If a node removal leaves its parent with only one child, the parent is collapsed (spliced out).
-    * Internal nodes that lose all children are also removed.
-
-Examples:
-1. Remove specific nodes by name:
-   necom nwk prune input.nwk -n Homo -n Pan
-
-2. Remove nodes using a list in a file:
-   necom nwk prune input.nwk -l remove.txt
-
-3. Keep a clade (e.g., Hominidae) and remove everything else (Invert mode):
-   necom nwk prune input.nwk -i -n Hominidae
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/prune.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::node_arg())
         .arg(crate::cmd_necom::args::name_list_arg())

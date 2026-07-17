@@ -7,24 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("to-svg")
         .about("Converts Newick trees to SVG format")
-        .after_help(
-            r###"
-Convert Newick trees to SVG format for visualization.
-
-Notes:
-* Automatically draws a phylogram if branch lengths are present, otherwise a cladogram
-* Underscore `_` in names will be replaced as spaces " "
-* Default styles match the LaTeX Forest template (grey branches, black dots)
-* Scale bar is drawn in phylogram mode
-
-Examples:
-1. Convert to SVG:
-   necom nwk to-svg tests/newick/catarrhini.nwk -o tree.svg
-
-2. Custom width and spacing:
-   necom nwk to-svg tests/newick/catarrhini.nwk -w 1200 -v 30 -o tree.svg
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/to-svg.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(
             Arg::new("width")

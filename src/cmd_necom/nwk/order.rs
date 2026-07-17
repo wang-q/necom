@@ -8,38 +8,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("order")
         .about("Orders nodes in a Newick file")
-        .after_help(
-            r###"
-Sorts the children of each node without changing the topology.
-
-Notes:
-* Traverses the entire tree in a breadth-first order.
-* `--alphanumeric` and `--num-descendants` can be enabled at the same time; sorted first by `--alphanumeric` and then by `--num-descendants`.
-* `--name-list` is processed before `--alphanumeric` and `--num-descendants`.
-* Sort orders:
-    * `--name-list`: By a list of names in the file, one name per line.
-    * `--alphanumeric`/`--alphanumeric-rev`: By alphanumeric order of labels.
-    * `--num-descendants`/`--num-descendants-rev`: By number of descendants (ladderize).
-    * `--deladderize`: Alternate sort direction at each level.
-
-Examples:
-1. Sort by number of descendants (ladderize):
-   necom nwk order tree.nwk --num-descendants
-
-2. Sort by alphanumeric order of labels:
-   necom nwk order tree.nwk --alphanumeric
-
-3. Sort by a list of names:
-   necom nwk order tree.nwk --name-list names.txt
-
-4. Sort by alphanumeric order, then by number of descendants (reverse):
-   necom nwk order tree.nwk --alphanumeric --num-descendants-rev
-
-5. De-ladderize (alternate sort direction):
-   necom nwk order tree.nwk --deladderize
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/order.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(
             Arg::new("num_descendants")
@@ -53,7 +22,10 @@ Examples:
                 .action(ArgAction::SetTrue)
                 .help("By number of descendants, reversely"),
         )
-        .group(ArgGroup::new("number-of-descendants").args(["num_descendants", "num_descendants_rev"]))
+        .group(
+            ArgGroup::new("number-of-descendants")
+                .args(["num_descendants", "num_descendants_rev"]),
+        )
         .arg(
             Arg::new("alphanumeric")
                 .long("alphanumeric")
@@ -66,7 +38,10 @@ Examples:
                 .action(ArgAction::SetTrue)
                 .help("By alphanumeric order of labels, reversely"),
         )
-        .group(ArgGroup::new("alphanumeric-order").args(["alphanumeric", "alphanumeric_rev"]))
+        .group(
+            ArgGroup::new("alphanumeric-order")
+                .args(["alphanumeric", "alphanumeric_rev"]),
+        )
         .arg(
             Arg::new("deladderize")
                 .long("deladderize")

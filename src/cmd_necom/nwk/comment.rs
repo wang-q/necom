@@ -8,42 +8,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("comment")
         .about("Adds comments to node(s) in a Newick file")
-        .after_help(
-            r###"
-* Comments are in the NHX-like format
-    * :key=value
-
-* For nodes with names, set `--node` to the name
-* For nodes without names (e.g., internal nodes), set `--lca` to a combination
-  of two node names, separated by commas
-    * `--lca A,B`
-
-* Set `--string` to add a free-form string as the `comment` property
-
-* The following options are used for visualization
-    * `--color`, `--label` and `--comment-text` take 1 argument
-    * `--dot`, `--bar` and `--rec` take 1 or 0 argument
-
-* Predefined colors for `--color`, `--dot` and `--bar`
-    * {red}{RGB}{188,36,46}
-    * {black}{RGB}{26,25,25}
-    * {grey}{RGB}{129,130,132}
-    * {green}{RGB}{32,128,108}
-    * {purple}{RGB}{160,90,150}
-* Colors for background rectangles `--rec`
-    * {LemonChiffon}{RGB}{251, 248, 204}
-    * {ChampagnePink}{RGB}{253, 228, 207}
-    * {TeaRose}{RGB}{255, 207, 210}
-    * {PinkLavender}{RGB}{241, 192, 232}
-    * {Mauve}{RGB}{207, 186, 240}
-    * {JordyBlue}{RGB}{163, 196, 243}
-    * {NonPhotoBlue}{RGB}{144, 219, 244}
-    * {ElectricBlue}{RGB}{142, 236, 245}
-    * {Aquamarine}{RGB}{152, 245, 225}
-    * {Celadon}{RGB}{185, 251, 192}
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/comment.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::node_arg())
         .arg(crate::cmd_necom::args::lca_arg())

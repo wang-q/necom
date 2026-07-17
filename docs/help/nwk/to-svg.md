@@ -1,0 +1,21 @@
+Convert a Newick tree to SVG format for visualization.
+
+Input:
+
+* A Newick tree file.
+* If the file contains multiple trees, only the first tree is processed.
+
+Notes:
+
+* Automatically draws a phylogram if branch lengths are present; otherwise draws a cladogram.
+* Underscores (`_`) in names are replaced with spaces.
+* Default styles match the LaTeX Forest template (grey branches, black dots).
+* A scale bar is drawn in phylogram mode.
+
+Examples:
+
+1. Convert to SVG
+   `necom nwk to-svg tree.nwk -o tree.svg`
+
+2. Custom width and spacing
+   `necom nwk to-svg tree.nwk -w 1200 -v 30 -o tree.svg`

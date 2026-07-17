@@ -7,27 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("indent")
         .about("Formats Newick trees with indentation")
-        .after_help(
-            r###"
-Re-formats the Newick tree, making structure more clear.
-
-Notes:
-* By default, prints the input tree indented with two spaces ("  ").
-* The default output is valid Newick.
-* Use `--compact` to remove all indentation (output single line).
-* Using non-whitespace characters for `--text` may result in invalid Newick.
-
-Examples:
-1. Default indentation:
-   necom nwk indent tests/newick/catarrhini.nwk
-
-2. Compact output (remove indentation):
-   necom nwk indent tests/newick/catarrhini.nwk --compact
-
-3. Indent with visual guides (NOT valid Newick):
-   necom nwk indent tests/newick/catarrhini.nwk --text ".   "
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/indent.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(
             Arg::new("text")

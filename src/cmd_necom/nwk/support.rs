@@ -13,24 +13,7 @@ fn leaf_name_set(tree: &Tree) -> BTreeSet<String> {
 pub fn make_subcommand() -> Command {
     Command::new("support")
         .about("Assigns bootstrap support values to internal nodes")
-        .after_help(
-            r###"
-Attributes bootstrap support values to a target tree based on a set of replicate trees.
-
-Notes:
-* The first argument is the target tree (to which support values are attributed).
-* The second argument is the replicate trees (e.g., from bootstrap).
-* Support values are written as internal node labels.
-* Assumes that all trees have the same set of leaves.
-
-Examples:
-1. Attribute support values:
-   necom nwk support target.nwk replicates.nwk
-
-2. Output support as percentages:
-   necom nwk support target.nwk replicates.nwk --percent
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/support.md"))
         .arg(crate::cmd_necom::args::target_tree_arg("Target tree file"))
         .arg(
             Arg::new("replicates")

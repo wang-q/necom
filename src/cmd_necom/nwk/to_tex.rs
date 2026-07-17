@@ -10,34 +10,7 @@ use std::io::Read;
 pub fn make_subcommand() -> Command {
     Command::new("to-tex")
         .about("Converts Newick trees to a full LaTeX document")
-        .after_help(
-            r###"
-Convert Newick trees to a full LaTeX document.
-
-Notes:
-* Styles are stored in the comments of each node
-* Drawing a cladogram by default
-* Set `--bl` to draw a phylogenetic tree
-* Underscore `_` is a control character in LaTeX
-  * All `_`s in names, labels and comments will be replaced as spaces " "
-* Other LaTeX special characters (`{ } \ # $ % & ~ ^`) in names, labels and comments are escaped automatically
-* To compile the .tex files to pdf, you need LaTeX or Tectonic
-  * `XeLaTeX` and `latexmk` for compiling unicode .tex
-  * `xeCJK` package for East Asian characters
-  * `Forest` package for drawing trees
-
-Examples:
-1. Generate LaTeX file:
-   necom nwk to-tex tests/newick/catarrhini.nwk -o tree.tex
-
-2. Compile with Tectonic (recommended):
-   tectonic tree.tex
-
-3. Compile with Latexmk:
-   latexmk -xelatex tree.tex
-   latexmk -c tree.tex
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/to-tex.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::bl_arg())
         .arg(

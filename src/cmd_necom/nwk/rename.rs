@@ -8,35 +8,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("rename")
         .about("Renames nodes in a Newick file")
-        .after_help(
-            r###"
-Renames nodes in the Newick tree.
-
-Notes:
-* For nodes with names, set `--node` to the name.
-* For nodes without names (e.g., internal nodes), set `--lca` to a combination
-  of two node names, separated by commas.
-* The sum of nodes supplied by `--node` and `--lca` should be equal to the number of `--rename`.
-* Do not use `--node` and `--lca` alternately.
-
-* This command is not designed to replace names in large batches, but for modifying small amounts
-  of data, and therefore does not provide the ability to read a mapping file.
-    * `necom nwk replace` does this kind of jobs.
-    * Or use other tools, such as `sed` or `perl`, to accomplish such tasks.
-
-Examples:
-1. Rename a named node:
-   necom nwk rename tests/newick/catarrhini.nwk --node Homo --rename Human
-
-2. Rename an internal node via LCA (Hominini is LCA of Homo and Pan):
-   necom nwk rename tests/newick/catarrhini.nwk --lca Homo,Pan --rename CladeX
-
-3. Rename multiple nodes:
-   necom nwk rename tests/newick/catarrhini.nwk \
-       --node Homo --rename Human \
-       --lca Homo,Pan --rename CladeX
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/rename.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::node_arg())
         .arg(crate::cmd_necom::args::lca_arg())

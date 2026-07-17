@@ -7,34 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("replace")
         .about("Replaces node names or comments in a Newick file")
-        .after_help(
-            r###"
-Replaces node names or appends annotations in a Newick file using a TSV file.
-
-Notes:
-* `--replace-tsv` is a tab-separated file with 2 or more columns:
-  `<original_name> <replacement> [additional_annotations...]`
-* The behavior of the 2nd column (`<replacement>`) depends on `--mode`:
-    * `label` (default): Replaces the node name. Empty string removes the name.
-    * `taxid`:           Appends as NCBI TaxID (`:T=<replacement>`) in NHX.
-    * `species`:         Appends as species name (`:S=<replacement>`) in NHX.
-    * `asis`:            Appends as comments/properties. Values containing `=` are parsed as `key=value` pairs; bare values are stored as keys with empty values.
-* Columns 3+ are ALWAYS appended to the node's comments/properties.
-  Key-value pairs (e.g., `color=red`) are stored as properties.
-  Simple tags (e.g., `highlight`) are stored as keys with empty values.
-
-Examples:
-1. Basic renaming of nodes:
-   necom nwk replace input.nwk --replace-tsv names.tsv > output.nwk
-
-2. Add species and color annotations:
-   necom nwk replace input.nwk --replace-tsv annotations.tsv --mode species
-
-3. Remove node names (2nd column is empty):
-   necom nwk replace input.nwk --replace-tsv remove.tsv
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/replace.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::replace_tsv_arg())
         .arg(crate::cmd_necom::args::internal_arg())

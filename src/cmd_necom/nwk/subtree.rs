@@ -7,42 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("subtree")
         .about("Extracts a subtree")
-        .after_help(
-            r###"
-Extracts a subtree (clade) rooted at the lowest common ancestor (LCA) of all
-provided nodes.
-
-Notes:
-* Node selection:
-    * `-n`: Select nodes by exact name.
-    * `-l`: Select nodes from a name-list file.
-    * `-x`: Select nodes by regular expression.
-    * If no selection is provided, no output is generated.
-* Clade check (`-M`):
-    * Ensures the selected nodes form a clade with at least two terminal nodes.
-    * Useful to verify if a group is a clade.
-* Condense (`--condense`):
-    * Instead of extracting the subtree, it replaces the subtree with a single
-      node in the original tree.
-    * The new node inherits the edge length of the subtree root.
-    * Added annotations: `member=<count>` and `tri=white`.
-    * `<count>` is the number of named nodes matched by `-n/-l/-x`
-      (including descendants expanded by `-D`).
-
-Examples:
-1. Extract subtree for Human and Chimp:
-   necom nwk subtree tree.nwk -n Human -n Chimp
-
-2. Extract subtree for all nodes matching "Homo":
-   necom nwk subtree tree.nwk -x "^Homo"
-
-3. Condense the Hominini clade (LCA of Homo and Pan) into a single node "Hominini":
-   necom nwk subtree tree.nwk -n Homo -n Pan --condense Hominini
-
-4. Check if a group is a clade (prints nothing if not):
-   necom nwk subtree tree.nwk -n Human -n Chimp -n Gorilla -M
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/subtree.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
         .arg(crate::cmd_necom::args::node_arg())
         .arg(crate::cmd_necom::args::name_list_arg())
