@@ -58,7 +58,7 @@ fn create_expected_clusters(groups: Vec<Vec<&str>>) -> Vec<HashSet<String>> {
 #[test]
 fn test_nwk_cut_k() {
     let (stdout, stderr) = NecomCmd::new()
-        .args(&["clust", "cut", "tests/newick/abcde.nwk", "--k", "2"])
+        .args(&["cut", "tests/newick/abcde.nwk", "--k", "2"])
         .run();
 
     if !stderr.is_empty() {
@@ -86,13 +86,7 @@ fn test_nwk_cut_leaf_dist_max() {
     // Result: {A, B}, {C}.
 
     let (stdout, stderr) = NecomCmd::new()
-        .args(&[
-            "clust",
-            "cut",
-            "tests/newick/abcde.nwk",
-            "--leaf-dist-max",
-            "1.5",
-        ])
+        .args(&["cut", "tests/newick/abcde.nwk", "--leaf-dist-max", "1.5"])
         .run();
 
     if !stderr.is_empty() {
@@ -112,13 +106,7 @@ fn test_nwk_cut_max_edge() {
     // Cut at max-edge 0.5 -> All edges cut. {A}, {B}, {C}.
 
     let (stdout, _) = NecomCmd::new()
-        .args(&[
-            "clust",
-            "cut",
-            "tests/newick/abcde.nwk",
-            "--max-edge",
-            "0.5",
-        ])
+        .args(&["cut", "tests/newick/abcde.nwk", "--max-edge", "0.5"])
         .run();
 
     let lines: Vec<&str> = stdout.lines().collect();
@@ -139,7 +127,6 @@ fn test_nwk_cut_pair_rep() {
     // Cluster {C}: C(1). -> C.
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "clust",
             "cut",
             "tests/newick/abcde.nwk",
             "--k",
@@ -164,7 +151,6 @@ fn test_nwk_cut_pair_rep() {
     // Same result.
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "clust",
             "cut",
             "tests/newick/abcde.nwk",
             "--k",
@@ -198,7 +184,7 @@ fn test_nwk_cut_cluster_rep() {
     // But we can verify that output format is correct (rep first).
 
     let (stdout, _) = NecomCmd::new()
-        .args(&["clust", "cut", "tests/newick/abcde.nwk", "--k", "2"])
+        .args(&["cut", "tests/newick/abcde.nwk", "--k", "2"])
         .run();
     let lines: Vec<_> = stdout.lines().collect();
     // A\tB -> A is rep.
@@ -209,7 +195,6 @@ fn test_nwk_cut_cluster_rep() {
 fn test_nwk_cut_height_pair() {
     let (stdout, _stderr) = NecomCmd::new()
         .args(&[
-            "clust",
             "cut",
             "tests/newick/abcde.nwk",
             "--height",
@@ -236,13 +221,7 @@ fn test_nwk_cut_height_pair() {
 #[test]
 fn test_nwk_cut_root_dist() {
     let (stdout, _stderr) = NecomCmd::new()
-        .args(&[
-            "clust",
-            "cut",
-            "tests/newick/abcde.nwk",
-            "--root-dist",
-            "0.5",
-        ])
+        .args(&["cut", "tests/newick/abcde.nwk", "--root-dist", "0.5"])
         .run();
 
     // Root dist 0.5 -> {A,B}, {C}.
@@ -259,13 +238,7 @@ fn test_nwk_cut_root_dist() {
 #[test]
 fn test_nwk_cut_max_clade() {
     let (stdout, _stderr) = NecomCmd::new()
-        .args(&[
-            "clust",
-            "cut",
-            "tests/newick/abcde.nwk",
-            "--max-clade",
-            "2.5",
-        ])
+        .args(&["cut", "tests/newick/abcde.nwk", "--max-clade", "2.5"])
         .run();
 
     // Max clade 2.5 -> {A,B} (diam 2), {C} (diam 0).
@@ -301,7 +274,7 @@ fn test_avg_clade() {
     // 1. Max clade 0.8 -> Split ((A,B),C) because 1.0 > 0.8
     // Expect: {A,B}, {C} (2 clusters)
     let (out_max, _) = NecomCmd::new()
-        .args(&["clust", "cut", nwk_file, "--max-clade", "0.8"])
+        .args(&["cut", nwk_file, "--max-clade", "0.8"])
         .run();
     let clusters_max = parse_clusters(&out_max);
     assert_eq!(clusters_max.len(), 2, "Max clade should split");
@@ -309,7 +282,7 @@ fn test_avg_clade() {
     // 2. Avg clade 0.8 -> Keep ((A,B),C) because 0.733 < 0.8
     // Expect: {A,B,C} (1 cluster)
     let (out_avg, _) = NecomCmd::new()
-        .args(&["clust", "cut", nwk_file, "--avg-clade", "0.8"])
+        .args(&["cut", nwk_file, "--avg-clade", "0.8"])
         .run();
     let clusters_avg = parse_clusters(&out_avg);
     assert_eq!(clusters_avg.len(), 1, "Avg clade should keep");
@@ -335,7 +308,6 @@ fn test_scan_height() {
 
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "clust",
             "cut",
             nwk_file,
             "--height",
@@ -443,11 +415,11 @@ fn test_scipy_workflow() {
     ]);
 
     let (cut_out, stderr) = NecomCmd::new()
-        .args(&["clust", "cut", nwk_file, "--height", "0.3"])
+        .args(&["cut", nwk_file, "--height", "0.3"])
         .run();
 
     if cut_out.trim().is_empty() {
-        eprintln!("clust cut height=0.3 failed. Stderr: {}", stderr);
+        eprintln!("cut height=0.3 failed. Stderr: {}", stderr);
     }
 
     let actual_dist_0_6 = parse_clusters(&cut_out);
@@ -469,9 +441,7 @@ fn test_scipy_workflow() {
         vec!["21", "22", "23", "24", "25", "26", "27", "28", "29"],
     ]);
 
-    let (cut_out_k4, _) = NecomCmd::new()
-        .args(&["clust", "cut", nwk_file, "--k", "4"])
-        .run();
+    let (cut_out_k4, _) = NecomCmd::new().args(&["cut", nwk_file, "--k", "4"]).run();
 
     let actual_maxclust_4 = parse_clusters(&cut_out_k4);
     assert_eq!(
@@ -512,9 +482,7 @@ fn test_scipy_workflow() {
         vec!["24"],
     ]);
 
-    let (cut_out_k8, _) = NecomCmd::new()
-        .args(&["clust", "cut", nwk_file, "--k", "8"])
-        .run();
+    let (cut_out_k8, _) = NecomCmd::new().args(&["cut", nwk_file, "--k", "8"]).run();
 
     let actual_maxclust_8 = parse_clusters(&cut_out_k8);
     assert_eq!(
@@ -547,7 +515,7 @@ fn test_scipy_workflow() {
     ]);
 
     let (cut_out_inc, _stderr) = NecomCmd::new()
-        .args(&["clust", "cut", nwk_file, "--inconsistent", "0.8"])
+        .args(&["cut", nwk_file, "--inconsistent", "0.8"])
         .run();
 
     let actual_inc_0_8 = parse_clusters(&cut_out_inc);
@@ -574,7 +542,6 @@ fn test_cut_support_filter() {
     // Result: 1 cluster {A,B,C}.
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "clust",
             "cut",
             nwk_file,
             "--max-clade",
@@ -602,15 +569,7 @@ fn test_cut_support_filter() {
     // C is singleton.
     // Result: {A,B}, {C}.
     let (stdout, _) = NecomCmd::new()
-        .args(&[
-            "clust",
-            "cut",
-            nwk_file,
-            "--max-clade",
-            "0.5",
-            "--support",
-            "95",
-        ])
+        .args(&["cut", nwk_file, "--max-clade", "0.5", "--support", "95"])
         .run();
 
     let mut out_lines: Vec<&str> = stdout.lines().collect();
@@ -634,7 +593,7 @@ fn test_cut_empty_tree_input() {
     fs::write(nwk_file, "").expect("Failed to write empty nwk");
 
     let (_, stderr) = NecomCmd::new()
-        .args(&["clust", "cut", nwk_file, "--k", "2"])
+        .args(&["cut", nwk_file, "--k", "2"])
         .run_fail();
 
     assert!(
@@ -653,7 +612,7 @@ fn test_cut_multitree_input_rejected() {
     fs::write(nwk_file, "(A,B);\n(C,D);\n").expect("Failed to write multi-tree nwk");
 
     let (_, stderr) = NecomCmd::new()
-        .args(&["clust", "cut", nwk_file, "--k", "2"])
+        .args(&["cut", nwk_file, "--k", "2"])
         .run_fail();
 
     assert!(
@@ -669,7 +628,6 @@ fn test_cut_multitree_input_rejected() {
 fn test_cut_scan_with_dynamic_hybrid_rejected() {
     let (_, stderr) = NecomCmd::new()
         .args(&[
-            "clust",
             "cut",
             "tests/newick/abcde.nwk",
             "--dynamic-hybrid",
@@ -692,13 +650,7 @@ fn test_cut_scan_with_dynamic_hybrid_rejected() {
 #[test]
 fn test_cut_missing_matrix_for_dynamic_hybrid() {
     let (_, stderr) = NecomCmd::new()
-        .args(&[
-            "clust",
-            "cut",
-            "tests/newick/abcde.nwk",
-            "--dynamic-hybrid",
-            "1",
-        ])
+        .args(&["cut", "tests/newick/abcde.nwk", "--dynamic-hybrid", "1"])
         .run_fail();
 
     assert!(

@@ -1,5 +1,4 @@
 pub mod cc;
-pub mod cut;
 pub mod dbscan;
 pub mod eval;
 pub mod hier;
@@ -17,7 +16,7 @@ pub fn make_subcommand() -> Command {
             r###"Subcommand groups:
 
 * Tree: hier, nj, upgma
-* Flat: cc, cut, dbscan, k-medoids, mcl
+* Flat: cc, dbscan, k-medoids, mcl
 * Eval: eval
 
 "###,
@@ -25,7 +24,6 @@ pub fn make_subcommand() -> Command {
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(cc::make_subcommand())
-        .subcommand(cut::make_subcommand())
         .subcommand(dbscan::make_subcommand())
         .subcommand(eval::make_subcommand())
         .subcommand(hier::make_subcommand())
@@ -38,7 +36,6 @@ pub fn make_subcommand() -> Command {
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     match args.subcommand() {
         Some(("cc", sub_matches)) => cc::execute(sub_matches),
-        Some(("cut", sub_matches)) => cut::execute(sub_matches),
         Some(("dbscan", sub_matches)) => dbscan::execute(sub_matches),
         Some(("eval", sub_matches)) => eval::execute(sub_matches),
         Some(("hier", sub_matches)) => hier::execute(sub_matches),

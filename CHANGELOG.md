@@ -2,6 +2,10 @@
 
 ## Unreleased - ReleaseDate
 
+### Breaking Changes
+
+*   Promoted `necom clust cut` to a top-level command `necom cut`. The old `clust cut` subcommand path is no longer available.
+
 ## 0.3.0 - 2026-07-15
 
 ### Breaking Changes
@@ -24,7 +28,7 @@
 
 ### Documentation
 
-*   Rewrote user-facing docs (`docs/*.md`) for `clust`, `clust cut`, `clust eval`, `mat`, `mat transform`, `nwk`, and `pl` to match current CLI options and behavior.
+*   Rewrote user-facing docs (`docs/*.md`) for `clust`, `cut`, `clust eval`, `mat`, `mat transform`, `nwk`, and `pl` to match current CLI options and behavior.
 *   Added `docs/pl.md` for the `necom pl condense` pipeline.
 *   Reworked `README.md` with the project name origin, a docs index, and the nightly toolchain note.
 

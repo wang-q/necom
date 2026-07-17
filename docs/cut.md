@@ -1,6 +1,6 @@
-# necom clust cut
+# necom cut
 
-`necom clust cut` cuts a Newick tree (phylogenetic or hierarchical clustering tree) into flat clustering partitions.
+`necom cut` cuts a Newick tree (phylogenetic or hierarchical clustering tree) into flat clustering partitions.
 
 Unlike `necom clust` (which builds clusters from data), `cut` focuses on "deriving groups from an existing tree structure." It supports multiple biological and statistical cutting rules and provides stable, reusable tabular output.
 
@@ -10,7 +10,7 @@ This document describes the command's algorithm patterns, parameter-selection gu
 
 In practice, we often already have a tree (phylogenetic or hierarchical clustering tree) and want to cut its leaves into different groups (partitions) at some threshold. Cutting rules can vary: by height, by number of clusters, by maximum within-cluster distance (diameter), requiring monophyly (clade), etc.
 
-`necom clust cut` aims to provide a comprehensive, efficient, and standardized cutting toolkit:
+`necom cut` aims to provide a comprehensive, efficient, and standardized cutting toolkit:
 
 - **Algorithm core**:
   Implements basic cuts by cluster count (`--k`) and height (`--height`), with logic consistent with `SciPy.cluster.hierarchy` and R `cutree`; it also fully ports TreeCluster's biological-constraint algorithms (e.g., `--max-clade`, `--med-clade`), optimized for phylogenetic trees.
@@ -22,7 +22,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 
 ## Supported Modes and Algorithms
 
-`necom clust cut` provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below.
+`necom cut` provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below.
 
 ### 1. Cut by Cluster Count (`--k <K>`)
 
@@ -209,7 +209,7 @@ To keep commands focused and orthogonal, we recommend the following "generate-ev
 
 ### 1. Generate
 
-Use `necom clust cut`:
+Use `necom cut`:
 - It only "cuts"; it does not "evaluate."
 - Supports multiple strategies (k, height, max_clade, etc.) and parameter scanning.
 - Outputs standard TSV format.
@@ -233,10 +233,10 @@ Evaluating clustering quality usually requires a reference standard (Ground Trut
 #### 1. Classic Phylogenetic Analysis
 ```bash
 # 1. Scan different parameters to generate multiple clustering results
-# necom clust cut input.nwk --max-clade 0.10 --scan 0.01,0.10,0.01 > partitions.tsv
+# necom cut input.nwk --max-clade 0.10 --scan 0.01,0.10,0.01 > partitions.tsv
 
 # 2. Select the best threshold and generate final clusters
-necom clust cut input.nwk --max-clade 0.05 > final_cluster.tsv
+necom cut input.nwk --max-clade 0.05 > final_cluster.tsv
 
 # 3. Extract the subtree corresponding to the first cluster in final_cluster.tsv
 head -1 final_cluster.tsv | tr '\t' '\n' > cluster1.names
@@ -251,7 +251,7 @@ Starting from a distance matrix, generate a tree with hclust, then cut and evalu
 necom clust hier matrix.phy --method ward > tree.nwk
 
 # 2. Cut (by height threshold)
-necom clust cut tree.nwk --height 0.05 > clusters.tsv
+necom cut tree.nwk --height 0.05 > clusters.tsv
 
 # 3. Evaluate (compute Cophenetic correlation and Silhouette)
 # necom nwk eval tree.nwk --part clusters.tsv --metrics silhouette > sil.tsv (planned, not implemented)
@@ -262,7 +262,7 @@ For trees with uneven evolutionary rates, the inconsistency coefficient can find
 
 ```bash
 # Cut using inconsistency coefficient (default depth=2)
-necom clust cut tree.nwk --inconsistent 1.5 > clusters.tsv
+necom cut tree.nwk --inconsistent 1.5 > clusters.tsv
 ```
 
 ## Choosing Threshold / Cluster Count: Scanning and Criteria
@@ -279,7 +279,7 @@ When unsure about `K` or `t`, use `--scan` for parameter scanning.
 `necom` provides explicit scanning capability: applicable to all numeric-parameter methods (e.g., `--k`, `--height`, `--max-clade`, `--inconsistent`).
 
 **Usage**:
-`necom clust cut ... --scan <start>,<end>,<step>`
+`necom cut ... --scan <start>,<end>,<step>`
 (Note: scanning only targets the **main threshold parameter** of the method. For `--inconsistent`, it scans the coefficient threshold `T`, while depth `--deep` remains fixed at the user-specified or default value.)
 
 **Output summary table**:
@@ -305,47 +305,26 @@ When `--scan` is enabled, the `--format` option is ignored. Output behavior is a
 Example:
 ```bash
 # 1. Output only the detailed partition table (for downstream analysis or evaluation)
-necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 > partitions.tsv
+necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 > partitions.tsv
 
 # 2. Save statistics at the same time (for quick inspection)
-necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv
+necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv
 ```
 
 ### Integration with `necom clust eval`
 
-`necom clust cut` and `necom clust eval` work together seamlessly through the Long format, supporting two evaluation modes:
+`necom cut` and `necom clust eval` work together through the Long format, supporting two evaluation modes:
 
-#### 1. Batch Internal Evaluation
-No Ground Truth is needed; use a distance matrix or coordinates to evaluate all thresholds generated by scanning.
+* **Batch internal evaluation**: pipe scan output to `necom clust eval --input-format long` with `--matrix`, `--tree`, or `--coords` to score every threshold without Ground Truth.
+* **Targeted external evaluation**: first use `--scan` to locate promising threshold ranges, then generate partitions for selected thresholds and compare them to Ground Truth with `necom clust eval --other`.
 
-```bash
-# Generate partitions for all thresholds and pipe directly to eval for Silhouette evaluation
-necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 | \
-    necom clust eval - --input-format long --matrix dist.phy > evaluation.tsv
-```
-
-#### 2. Targeted External Evaluation
-If you have Ground Truth, evaluating all thresholds is usually unnecessary (computationally expensive and not needed). The recommended workflow is:
-
-1. First use `--scan` to quickly locate a few meaningful candidate threshold ranges (e.g., near the elbow).
-2. Run `necom clust cut` once for each candidate threshold to generate partitions, then use `necom clust eval` to compute external consistency metrics such as ARI/AMI/V-Measure.
-
-Example:
-
-```bash
-# 1) Scan thresholds and view the summary trend first
-necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 > scan.tsv
-
-# 2) Generate partition for the selected threshold
-necom clust cut tree.nwk --max-clade 0.12 > pred.tsv
-
-# 3) Compare with ground truth (Partition vs Partition)
-necom clust eval pred.tsv --other truth.tsv -o eval.tsv
-```
+Concrete command examples are kept in `docs/clust.md` to avoid duplication.
 
 ### Threshold-Selection Strategy Reference
 
-When unsure about the best threshold, use `--scan` to generate data and refer to the following two common strategies for decision-making:
+A brief summary of these strategies also appears in `docs/clust.md`. The following sections provide more detail.
+
+When unsure about the best threshold, use `--scan` to generate data and refer to the following common strategies for decision-making:
 
 #### Strategy 1: Maximize Non-Singleton Clusters
 
@@ -361,7 +340,7 @@ This is a general strategy in data analysis.
   - **Flat plateau phase**: Cluster count changes stabilize.
   - **Elbow point**: The point where the curve changes from "steep" to "flat," usually corresponding to the data's inherent natural structure.
 - **Operation**:
-  1. Run scan: `necom clust cut ... --scan ... > scan.tsv`
+  1. Run scan: `necom cut ... --scan ... > scan.tsv`
   2. Observe the rate of change: if cluster count changes sharply when the threshold increases from $T_1$ to $T_2$ but flattens from $T_2$ to $T_3$, then $T_2$ may be the best cut point.
   3. Visualization: Import `scan.tsv` into plotting tools to assist judgment.
 
@@ -372,14 +351,14 @@ This is the most rigorous strategy, using `necom clust eval` to compute clusteri
 - **Operation**: Use together with `necom clust eval`.
   ```bash
   # Generate detailed list of all candidate partitions
-  necom clust cut ... --scan ... > partitions.tsv
+  necom cut ... --scan ... > partitions.tsv
   # Batch evaluation
   necom clust eval partitions.tsv --input-format long --matrix dist.phy
   ```
 
 ## Existing Tool References
 
-The design of `necom clust cut` draws on best practices from multiple fields:
+The design of `necom cut` draws on best practices from multiple fields:
 
 - **SciPy (`scipy.cluster.hierarchy`)**:
   - Provides the `fcluster` function, supporting cuts by height (`distance`), cluster count (`maxclust`), and inconsistency coefficient (`inconsistent`).

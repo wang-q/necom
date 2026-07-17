@@ -42,13 +42,13 @@ Notes:
 Examples:
 
 1. Cut into 5 clusters
-   `necom clust cut tree.nwk --k 5`
+   `necom cut tree.nwk --k 5`
 
 2. Cut at height 0.5
-   `necom clust cut tree.nwk --height 0.5`
+   `necom cut tree.nwk --height 0.5`
 
 3. Dynamic Tree Cut with min cluster size 20
-   `necom clust cut tree.nwk --dynamic-tree 20`
+   `necom cut tree.nwk --dynamic-tree 20`
 
 4. Scan thresholds and save statistics
-   `necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv`
+   `necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv`

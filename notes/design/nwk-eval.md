@@ -117,7 +117,7 @@ necom nwk eval tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 - **代码复用与协同**：
   - **距离计算**：
     - 基础：复用 `Tree::get_distance` (来自 [libs/phylo/tree/mod.rs](../../../src/libs/phylo/tree/mod.rs)，CLI 入口为 [distance.rs](../../../src/cmd_necom/nwk/distance.rs))。
-    - 优化：对于 `avg_clade` (AvgDist) 和 `max_clade` (Diameter)，直接复用 `libs/phylo/tree/stat.rs` 中的 $O(N)$ 自底向上聚合算法（已在 `necom clust cut` 中验证）。
+    - 优化：对于 `avg_clade` (AvgDist) 和 `max_clade` (Diameter)，直接复用 `libs/phylo/tree/stat.rs` 中的 $O(N)$ 自底向上聚合算法（已在 `necom cut` 中验证）。
   - **拓扑比较**：
     - RF 距离：核心逻辑在 [libs/phylo/cmp.rs](../../../src/libs/phylo/cmp.rs)（`TreeComparison` trait 提供 `robinson_foulds`/`weighted_robinson_foulds`/`kuhner_felsenstein`），CLI 入口为 [cmp.rs](../../../src/cmd_necom/nwk/cmp.rs)。
   - **单系性检查**：

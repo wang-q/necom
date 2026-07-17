@@ -82,7 +82,7 @@
     - **necom 优化**: `necom` 采用全程平方距离运算（Internal Squared Euclidean），仅在最终输出时开方。这避免了中间步骤的精度损失和 `sqrt` 开销，使得 Ward 方法的性能与 Average 方法完全持平（而在许多其他库中 Ward 通常更慢）。
 
 3.  **生态一致性**:
-    - **Flat Clustering**: `necom clust cut` 的设计与 SciPy `fcluster` 的 `criterion='distance'|'maxclust'` 保持概念一致。
+    - **Flat Clustering**: `necom cut` 的设计与 SciPy `fcluster` 的 `criterion='distance'|'maxclust'` 保持概念一致。
     - **Cophenetic Correlation**: 确认将 `cophenet` 引入 `necom nwk eval` [计划中]，作为衡量树对原始距离矩阵拟合优度的核心指标。
 
 4.  **Optimal Leaf Ordering (OLO)**:
@@ -235,7 +235,7 @@
 1.  **真实分布测试 (Blobs Test)**:
     - 目标：验证算法能否正确聚类具有明显几何结构的合成数据（Statistical Correctness）。
     - 计划：在 `tests/` 中添加集成测试，生成两个高斯分布的簇（Blob A 和 Blob B），计算距离矩阵，运行 `clust hier`，验证生成的 Newick 树是否将两个簇的点分在不同的主分支上。
-    - **注意**：由于 `necom clust cut` 命令已实现，该测试可以被激活。
+    - **注意**：由于 `necom cut` 命令已实现，该测试可以被激活。
 2.  **输入预处理文档 (已完成)**:
     - 目标：澄清输入要求。
     - 状态：已在 `docs/mat.md` 的 `necom mat transform` 小节和 `docs/clust.md` 的 Hierarchical Clustering 详细说明中更新，并增强了 `necom mat transform` 功能（支持对角线归一化），确保用户能正确地将相似度转换为距离。

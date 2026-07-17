@@ -17,7 +17,6 @@ fn test_dynamic_tree_cut_basic() {
 
     let (stdout, stderr) = NecomCmd::new()
         .args(&[
-            "clust",
             "cut",
             tree_file.to_str().unwrap(),
             "--dynamic-tree",
@@ -62,7 +61,6 @@ fn test_dynamic_tree_cut_unassigned() {
 
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "clust",
             "cut",
             tree_file.to_str().unwrap(),
             "--dynamic-tree",

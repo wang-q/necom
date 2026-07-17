@@ -7,7 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("cut")
         .about("Cuts a tree into clusters")
-        .after_help(include_str!("../../../docs/help/clust/cut.md"))
+        .after_help(include_str!("../../docs/help/cut.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input Newick file",
         ))

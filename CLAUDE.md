@@ -110,6 +110,7 @@
 这个 `necom` clone 已被精简为聚焦聚类、距离矩阵与系统发育树的工具集。它仅保留以下命令：
 
 - `necom clust` — 聚类算法与评估
+- `necom cut` — Newick 树切割为扁平分区
 - `necom mat` — 距离矩阵处理
 - `necom nwk` — Newick 树操作与可视化
 - `necom pl condense` — 基于分类学的树压缩流程
@@ -145,6 +146,7 @@ cargo test
 - **`src/lib.rs`** - 库入口，导出模块。
 - **`src/cmd_necom/`** - 命令实现模块。当前仅保留：
     - `clust` (Clustering)
+    - `cut` (Tree cutting)
     - `mat` (Matrix)
     - `nwk` (Phylogeny/Newick)
     - `pl` (Pipelines，仅 `condense` 子命令)

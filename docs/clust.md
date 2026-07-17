@@ -108,7 +108,7 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 - **Command**: `necom clust hier` (alias `hclust`)
 - **Characteristics**: General hierarchical clustering supporting `single`, `complete`, `average`, `weighted`, `centroid`, `median`, `ward`.
 - **Implementation status**: Implemented with $O(N^2)$ NN-chain optimization.
-- **Value**: Provides a general hierarchical view (not limited to biological evolution); combined with `clust cut` it yields flexible groupings at different granularities.
+- **Value**: Provides a general hierarchical view (not limited to biological evolution); combined with `necom cut` it yields flexible groupings at different granularities.
 - **Input**: PHYLIP distance matrix (strict or relaxed).
 - **Output**: Newick tree.
 - **CLI options**: `infile`, `--method {single|complete|average|weighted|centroid|median|ward}` (default: `ward`), `-o/--outfile`.
@@ -116,51 +116,13 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 
 ### Tree Cutting
 
-- **Principle**: Splits an existing Newick tree (phylogenetic or hierarchical clustering tree) into flat clustering partitions according to specified rules. Supports multiple cutting strategies such as number of clusters (`--k`), height (`--height`), within-cluster diameter (`--max-clade`), dynamic cutting (`--dynamic-tree`/`--dynamic-hybrid`), etc.
-- **Command**: `necom clust cut`
-- **Characteristics**: Derives groups from an existing tree without rebuilding the clustering; supports parameter scanning (`--scan`) and representative selection (`--rep`). `--support` filters low-support branches; internal node names that cannot be parsed as numbers are treated as support 100.0 (fully trusted and not filtered) by default.
-- **Use cases**: Existing tree structures (from `clust hier`, `clust upgma`, `clust nj`, or external tools) that need to be cut and evaluated at different thresholds.
+The `necom cut` command splits an existing Newick tree (phylogenetic or hierarchical clustering tree) into flat partitions according to distance, topological, or statistical criteria. It is documented separately in [`docs/cut.md`](cut.md) because it operates on trees rather than running a clustering algorithm.
 
-#### Supported Cutting Methods
-
-| Method | Flag | Description | Complexity |
-| :--- | :--- | :--- | :--- |
-| Cluster count | `--k` | Top-down split into K clusters by node height | $O(N \log N)$ |
-| Height | `--height` | Cut edges whose node height > H | $O(N)$ |
-| Root distance | `--root-dist` | Cut paths whose cumulative length from root > D | $O(N)$ |
-| Max clade | `--max-clade` | TreeCluster-style max pairwise distance <= T | $O(N)$ |
-| Avg clade | `--avg-clade` | TreeCluster-style avg pairwise distance <= T | $O(N)$ |
-| Med clade | `--med-clade` | TreeCluster-style median pairwise distance <= T | $O(N^2 \log N)$ |
-| Sum branch | `--sum-branch` | TreeCluster-style total branch length (PD) <= T | $O(N)$ |
-| Leaf distance | `--leaf-dist-*` | Cut by max/min/avg distance from cluster root to leaves | $O(N)$ |
-| Max edge | `--max-edge` | Cut edges longer than T (single linkage) | $O(N)$ |
-| Inconsistent | `--inconsistent` | SciPy-style inconsistency coefficient <= T | $O(N)$ |
-| Dynamic tree | `--dynamic-tree` | Adaptive top-down recursive cut | $O(N)$ |
-| Hybrid | `--dynamic-hybrid` | Dynamic Tree + PAM reassignment | $O(N^2)$ |
-
-#### Threshold Selection Strategies
-
-When unsure about the best threshold, use `--scan <start>,<end>,<step>` to generate candidate partitions and inspect the summary statistics (`--stats-out`). Common strategies:
-
-* **Maximize non-singleton clusters**: choose the threshold with the largest number of clusters containing >1 member.
-* **Elbow rule**: find the point where cluster count stops decreasing sharply as the threshold relaxes.
-* **Evaluation-metric based**: pipe scan output to `necom clust eval --input-format long` and pick the threshold optimizing Silhouette, ARI, etc.
-
-#### Integration with `clust eval`
-
-```bash
-# Scan and evaluate internal metrics in one pipeline
-necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 | \
-    necom clust eval - --input-format long --matrix dist.phy > evaluation.tsv
-
-# Pick a threshold and compare with ground truth
-necom clust cut tree.nwk --max-clade 0.12 > pred.tsv
-necom clust eval pred.tsv --other truth.tsv -o eval.tsv
-```
+Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or external tools can be passed directly to `necom cut`. The resulting partitions can be evaluated with `necom clust eval`.
 
 ## Hierarchical Clustering Details
 
-`necom clust hier` (alias `hclust`) provides general hierarchical clustering (dendrogram) generation, supporting `single/complete/average/ward.D2` and other methods, outputting Newick format for downstream `clust cut`.
+`necom clust hier` (alias `hclust`) provides general hierarchical clustering (dendrogram) generation, supporting `single/complete/average/ward.D2` and other methods, outputting Newick format for downstream `necom cut`.
 
 ### Background and Positioning
 
@@ -168,12 +130,12 @@ necom clust eval pred.tsv --other truth.tsv -o eval.tsv
 - **Goal**: Statistically meaningful dendrograms (merge heights express the cost of the linkage criterion), without enforcing "evolution/molecular-clock" semantics.
 - **Synergy with existing necom capabilities**:
   - Tree building: `clust upgma` (rooted, ultrametric) and `clust nj` (additive, unrooted) already exist.
-  - Cutting: tree-cut grouping via `clust cut`.
+  - Cutting: tree-cut grouping via `necom cut`.
   - Evaluation: `necom clust eval --matrix` / `--tree` / `--coords` (currently available); `necom nwk eval` not yet implemented.
 
 ### Relationship to UPGMA/NJ
 
-- Commonalities: All take a distance matrix as input and output a tree-like structure; all can be combined with `clust cut` to obtain flat groupings.
+- Commonalities: All take a distance matrix as input and output a tree-like structure; all can be combined with `necom cut` to obtain flat groupings.
 - Relationship to UPGMA:
   - R `hclust(method="average")` is equivalent to "average linkage"; UPGMA is a specialized version under the "ultrametric (molecular clock)" assumption, producing a rooted, strictly ultrametric tree whose branch lengths have "time/evolution" meaning.
   - Conclusion: The linkage updates are identical, but the semantics differ; UPGMA leans toward phylogenetic scenarios, while `clust hier` leans toward statistical clustering.
@@ -198,7 +160,7 @@ necom clust eval pred.tsv --other truth.tsv -o eval.tsv
   - Internal node height is half the merge distance (`height = distance / 2`), and branch length from child to parent is `parent_height - child_height`.
   - Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.
   - Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).
-  - Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of `clust cut --height`.
+  - Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of `necom cut --height`.
 - Numeric format: unified six decimal places with trailing zeros removed; consistent with the convention in `nwk distance`.
 
 ### Recommended Hier Workflow
@@ -208,7 +170,7 @@ necom clust eval pred.tsv --other truth.tsv -o eval.tsv
   - General additive-distance scenarios: `clust nj`.
   - General hierarchical analysis or when `ward.D2` is needed: `clust hier --method ward.D2`.
 - Cut and evaluate:
-  - Cut: `necom clust cut --height H` or TreeCluster-style thresholds/constraints.
+  - Cut: `necom cut --height H` or TreeCluster-style thresholds/constraints.
   - Internal evaluation (no Ground Truth): `necom clust eval --matrix ...` (Silhouette) (currently available); `necom nwk eval` not yet implemented.
   - External evaluation (with Ground Truth): `necom clust eval` (ARI/AMI/V-Measure).
 
@@ -217,7 +179,7 @@ necom clust eval pred.tsv --other truth.tsv -o eval.tsv
 #### Command Overview
 
 - Name: `necom clust hier` (visible alias `hclust`)
-- Purpose: Generate a hierarchical clustering tree (dendrogram) from a distance matrix, output as Newick for downstream `clust cut`.
+- Purpose: Generate a hierarchical clustering tree (dendrogram) from a distance matrix, output as Newick for downstream `necom cut`.
 - Module: `clust`, alongside `k-medoids` and others.
 
 #### Input
@@ -266,14 +228,14 @@ necom clust hier matrix.phy --method average > tree.nwk
 
 - Method mapping: Aligned with SciPy `linkage` `method` set; `ward` is equivalent to `ward.D2` (internally updates with squared distances); `average` is equivalent to UPGMA, `weighted` to WPGMA, and `centroid/median` to UPGMC/WPGMC.
 - Input differences: SciPy accepts a "condensed distance vector" or an observation matrix; necom uniformly uses PHYLIP distance matrices. To convert from pair TSV, use `necom mat to-phylip`.
-- Output differences: SciPy returns an `(n-1)×4` linkage matrix Z; necom outputs a Newick tree directly for `clust cut / to-dot / to-forest`. Average users do not need to care about Z; if SciPy interoperability is required, continue using Z with `fcluster/cophenet` on the Python side.
+- Output differences: SciPy returns an `(n-1)×4` linkage matrix Z; necom outputs a Newick tree directly for `necom cut / to-dot / to-forest`. Average users do not need to care about Z; if SciPy interoperability is required, continue using Z with `fcluster/cophenet` on the Python side.
 - Leaf ordering: necom recommends `necom nwk order --num-descendants` (ladderize) for extremely high performance and usually sufficient visualization quality.
-- Flat clustering: SciPy's `fcluster` supports `criterion='distance'|'maxclust'|...`; in necom these correspond to `clust cut --height H` and `clust cut --k K`, respectively. Other criteria such as `monocrit/inconsistent` are not introduced for now.
+- Flat clustering: SciPy's `fcluster` supports `criterion='distance'|'maxclust'|...`; in necom these correspond to `necom cut --height H` and `necom cut --k K`, respectively. Other criteria such as `monocrit/inconsistent` are not introduced for now.
 - Evaluation metrics: SciPy has `cophenet` (cophenetic correlation coefficient); necom plans to add the cophenetic correlation coefficient to `necom nwk eval` as a supplementary tree-quality metric (not yet implemented).
 
 #### User Tips
 
-- Beginner path (recommended): `mat to-phylip → clust hier --method ward → clust cut --height → clust eval → nwk visualization`
+- Beginner path (recommended): `mat to-phylip → clust hier --method ward → necom cut --height → clust eval → nwk visualization`
 - Interoperability and audit: If you need to verify the merging process step by step or perform further flat cutting/statistics in Python, use SciPy's linkage matrix and tools; on the necom side, keep Newick as the primary format to reduce cognitive load.
 
 #### Example Mappings
@@ -283,10 +245,10 @@ necom clust hier matrix.phy --method average > tree.nwk
   - necom: `necom mat to-phylip pairs.tsv -o matrix.phy` → `necom clust hier matrix.phy --method ward > tree.nwk` → `necom nwk order tree.nwk --num-descendants > ordered.nwk`
 - SciPy fcluster (cut by distance):
   - Python: `labels = fcluster(Z, t=0.05, criterion='distance')`
-  - necom: `necom clust cut tree.nwk --height 0.05 > clusters.tsv`
+  - necom: `necom cut tree.nwk --height 0.05 > clusters.tsv`
 - SciPy fcluster (cut by cluster count):
   - Python: `labels = fcluster(Z, t=20, criterion='maxclust')`
-  - necom: `necom clust cut tree.nwk --k 20 > clusters.tsv`
+  - necom: `necom cut tree.nwk --k 20 > clusters.tsv`
 - SciPy cophenet:
   - Python: `c, dists = cophenet(Z, Y)`
 
@@ -300,12 +262,12 @@ necom clust hier matrix.phy --method average > tree.nwk
   - necom: `necom clust hier matrix.phy --method average > tree.nwk`
 - Differences:
   - scikit-learn focuses on directly outputting cluster labels (`labels_`); `necom` focuses on generating tree structure (Newick).
-  - To obtain labels in `necom`, use it together with `clust cut`.
+  - To obtain labels in `necom`, use it together with `necom cut`.
 
 #### Toolchain Collaboration
 
 - Tree building: `necom clust hier` → generate dendrogram
-- Cutting: `necom clust cut --height H` → export groups
+- Cutting: `necom cut --height H` → export groups
 - Evaluation:
   - No Ground Truth: `necom clust eval --matrix` / `--tree` / `--coords` (currently available); `necom nwk eval` not yet implemented
   - With Ground Truth: `necom clust eval` (ARI/AMI/V-Measure)
@@ -326,7 +288,7 @@ These commands do not produce clusters; they evaluate cluster or tree quality.
   - **Positioning**: General clustering quality evaluation (supports with/without Ground Truth).
   - **Capabilities**: ARI, AMI, V-Measure (external); Silhouette, Davies-Bouldin (internal).
 
-`necom` separates cluster generation from evaluation: generate candidates with `clust cut --scan`, then evaluate them in batch with `clust eval`, and finally select the best parameters manually.
+`necom` separates cluster generation from evaluation: generate candidates with `necom cut --scan`, then evaluate them in batch with `clust eval`, and finally select the best parameters manually.
 
 ### External Validity Metrics
 
@@ -364,7 +326,7 @@ necom clust eval result.tsv --other truth.tsv -o eval.tsv
 necom clust eval result.tsv --matrix dist.phy
 
 # Batch evaluation of scan results
-necom clust cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
+necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
     necom clust eval - --input-format long --matrix matrix.phy > evaluation.tsv
 ```
 
@@ -482,20 +444,20 @@ necom clust mcl pairs.tsv --inflation 2.0 > families.tsv
 
 ### Scenario B: Hierarchical Clustering Parameter Scanning and Evaluation Workflow
 
-Combine `clust cut` scanning with `clust eval` batch evaluation to find the best cutting threshold.
+Combine `necom cut` scanning with `clust eval` batch evaluation to find the best cutting threshold.
 
 ```bash
 # 1. Generate hierarchical clustering tree
 necom clust hier matrix.phy --method ward > tree.nwk
 
 # 2. Scan thresholds and evaluate internal metrics (Silhouette)
-# clust cut outputs a long table in scan mode, which can be piped directly to clust eval
-necom clust cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
+# necom cut outputs a long table in scan mode, which can be piped directly to clust eval
+necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
     necom clust eval - --input-format long --matrix matrix.phy > evaluation.tsv
 
 # 3. Analyze evaluation.tsv to choose the best threshold (e.g., maximum Silhouette)
 # Assume the best threshold is 0.45
-necom clust cut tree.nwk --height 0.45 > final_clusters.tsv
+necom cut tree.nwk --height 0.45 > final_clusters.tsv
 ```
 
 ## Input/Output Format Conventions
@@ -535,7 +497,7 @@ Wide-table format; each line represents a cluster containing all its members.
   ```
 
 #### Long Format (batch, `--format long`)
-A dedicated format for batch evaluation. `--input-format long` is only accepted by `necom clust eval`; `necom clust cut`'s `--format` only supports `cluster`/`pair`, but in `--scan` mode it automatically outputs the long format.
+A dedicated format for batch evaluation. `--input-format long` is only accepted by `necom clust eval`; `necom cut`'s `--format` only supports `cluster`/`pair`, but in `--scan` mode it automatically outputs the long format.
 - **Structure**: `Group <tab> ClusterID <tab> Item`
 - **Group column**: Identifies different parameter combinations or cutting methods. The format is usually `Method=Value` (e.g., `height=0.5`).
   - `necom clust eval` preserves this column as the identifier in evaluation results.

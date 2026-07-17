@@ -30,7 +30,6 @@ D 1.0 1.0 0.2 0.0
 
     let (stdout, stderr) = NecomCmd::new()
         .args(&[
-            "clust",
             "cut",
             tree_file.to_str().unwrap(),
             "--dynamic-hybrid",
@@ -86,7 +85,6 @@ E 0.5 0.5 1.0 1.0 0.0
 
     let (stdout, stderr) = NecomCmd::new()
         .args(&[
-            "clust",
             "cut",
             tree_file.to_str().unwrap(),
             "--dynamic-hybrid",

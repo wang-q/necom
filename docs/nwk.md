@@ -331,4 +331,4 @@ This normalization prevents invalid values from polluting sums, maxima, or dista
 ## Planned Subcommands
 
 *   `condense`: Tree condensation functionality is currently provided by `necom nwk subtree --condense`; no standalone `condense` subcommand is planned at this time.
-*   `eval`: Multi-dimensional tree evaluation framework (geometric, taxonomic, phylogenetic, trait consistency). Related metrics are referenced in the `necom clust eval` and `necom clust cut` documentation.
+*   `eval`: Multi-dimensional tree evaluation framework (geometric, taxonomic, phylogenetic, trait consistency). Related metrics are referenced in the `necom clust eval` and `necom cut` documentation.

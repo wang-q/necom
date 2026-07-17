@@ -206,7 +206,7 @@ necom clust boot data.tsv --dist correlation --method average --nboot 1000 -o bo
 
 - 向量距离计算 → `necom mat to-phylip` → `necom clust hier`：现有“向量→距离→树”的通路
 - `necom clust boot`：需要“可重采样的原始观测矩阵”，因此更适合直接吃 `data.tsv`，内部自算距离与树
-- `necom clust cut`：在 `boot` 给出簇置信度后，再做阈值切割与导出分区
+- `necom cut`：在 `boot` 给出簇置信度后，再做阈值切割与导出分区
 - `necom clust eval`：对不同切割/不同算法产生的分区做一致性比较（用 `--other`）
 
 ---

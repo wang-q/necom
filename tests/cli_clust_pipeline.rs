@@ -127,16 +127,16 @@ fn test_clust_pipeline_full() {
     assert!(stderr.is_empty(), "clust hier failed: {}", stderr);
     assert!(fs::metadata(&tree_file).is_ok(), "tree file not created");
 
-    // 5. Cut Tree (necom clust cut)
+    // 5. Cut Tree (necom cut)
     // We know there are 3 clusters, so use --k 3
     let (_stdout, stderr) = NecomCmd::new()
         .args(&[
-            "clust", "cut", &tree_file, "--k", "3", "--format",
+            "cut", &tree_file, "--k", "3", "--format",
             "pair", // Output: Rep \t Member (compatible with eval)
             "-o", &cut_file,
         ])
         .run();
-    assert!(stderr.is_empty(), "clust cut failed: {}", stderr);
+    assert!(stderr.is_empty(), "cut failed: {}", stderr);
     assert!(fs::metadata(&cut_file).is_ok(), "cut file not created");
 
     // 6. Evaluate (necom clust eval)

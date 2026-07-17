@@ -13,8 +13,10 @@ between clusters, matrix entries, and tree nodes.
 
 ## Features
 
-- **Clustering** (`necom clust`): hierarchical clustering, DBSCAN, K-medoids, MCL, connected components, tree cutting,
-  and evaluation metrics.
+- **Clustering** (`necom clust`): hierarchical clustering, DBSCAN, K-medoids, MCL, connected components, and evaluation
+  metrics.
+- **Tree cutting** (`necom cut`): split Newick trees into flat partitions by height, diameter, dynamic cut, and other
+  criteria.
 - **Matrix utilities** (`necom mat`): format conversion, subsetting, comparison, and mathematical transformations for
   distance matrices.
 - **Tree operations** (`necom nwk`): rerooting, pruning, renaming, subtree extraction, topology comparison, statistics,
@@ -74,6 +76,7 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 Extended documentation for each command is available in `docs/`:
 
 - [`docs/clust.md`](docs/clust.md) — clustering algorithms
+- [`docs/cut.md`](docs/cut.md) — tree cutting
 - [`docs/mat.md`](docs/mat.md) — matrix utilities
 - [`docs/nwk.md`](docs/nwk.md) — Newick tree operations
 - [`docs/pl.md`](docs/pl.md) — integrated pipelines

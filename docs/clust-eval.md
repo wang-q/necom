@@ -8,7 +8,7 @@
 
 *   **Python `clusteval`**: The `fit()` method internally performs Grid Search (trying different $k$ or $\epsilon$), computes internal metrics (e.g., Silhouette), and returns the optimal result.
 *   **`necom` workflow**:
-    1.  **Generate**: Use `necom clust cut --scan` to generate a series of candidate partitions (`necom clust dbscan`'s `--scan` is not yet implemented).
+    1.  **Generate**: Use `necom cut --scan` to generate a series of candidate partitions (`necom clust dbscan`'s `--scan` is not yet implemented).
     2.  **Evaluate**: Use `necom clust eval` to compute evaluation metrics for these candidates in batch.
     3.  **Decide**: The user selects the optimal parameters based on metrics (e.g., Silhouette peak, Elbow point).
 
@@ -223,11 +223,11 @@ necom clust eval result.tsv --coords vectors.tsv
 
 ### Scenario C: Batch Scanning and Evaluation
 
-Combine `clust cut --scan` to generate multiple threshold results and evaluate in batch.
+Combine `necom cut --scan` to generate multiple threshold results and evaluate in batch.
 
 ```bash
 # 1. Scan tree-cutting thresholds and output a long table (Group, Cluster, ID)
-necom clust cut tree.nwk --scan 0.01,1.0,0.01 --leaf-dist-min 0 > partitions.tsv
+necom cut tree.nwk --scan 0.01,1.0,0.01 --leaf-dist-min 0 > partitions.tsv
 
 # 2. Batch evaluate internal metrics (pass tree file directly)
 necom clust eval partitions.tsv --input-format long --tree tree.nwk > scores.tsv
@@ -255,7 +255,7 @@ cat scores.tsv | sort -k2 -nr | head
     2. `ClusterID`: Cluster ID.
     3. `SampleID`: Sample ID.
   - Data must be sorted or grouped by `Group` (the program processes block by block).
-  - Usually directly connected to the output of `necom clust cut --scan`.
+  - Usually directly connected to the output of `necom cut --scan`.
   - Supports metadata in `Group` in `Method=Value` format (e.g., `height=0.01`).
 
 ### Output
