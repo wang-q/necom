@@ -1,6 +1,6 @@
 use super::Tree;
 use crate::libs::phylo::node::NodeId;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 /// Check if `ancestor` is on the parent chain of `descendant`.
 fn is_ancestor_of(tree: &Tree, ancestor: NodeId, descendant: NodeId) -> bool {
@@ -16,6 +16,67 @@ fn is_ancestor_of(tree: &Tree, ancestor: NodeId, descendant: NodeId) -> bool {
         }
     }
     false
+}
+
+/// Validate basic tree invariants after destructive operations.
+///
+/// Checks that:
+/// * the root exists and is not deleted,
+/// * every non-deleted node is reachable from the root,
+/// * every non-root node has exactly one parent and appears in that parent's
+///   children list,
+/// * the root has no parent.
+fn validate_tree_integrity(tree: &Tree) -> anyhow::Result<()> {
+    let root = tree
+        .get_root()
+        .ok_or_else(|| anyhow::anyhow!("tree has no root"))?;
+    if tree.get_node(root).is_none() {
+        anyhow::bail!("root node {} is deleted", root);
+    }
+
+    // Reachability from root.
+    let mut reachable = HashSet::new();
+    let mut stack = vec![root];
+    while let Some(id) = stack.pop() {
+        if !reachable.insert(id) {
+            continue;
+        }
+        let Some(node) = tree.get_node(id) else {
+            anyhow::bail!("reachable node {} not found", id);
+        };
+        for &child in &node.children {
+            if tree.get_node(child).is_none() {
+                anyhow::bail!("node {} has deleted child {}", id, child);
+            }
+            stack.push(child);
+        }
+    }
+
+    for (id, node) in tree.nodes.iter().enumerate() {
+        if node.deleted {
+            continue;
+        }
+        if !reachable.contains(&id) {
+            anyhow::bail!("node {} is not reachable from root", id);
+        }
+        if id == root {
+            if node.parent.is_some() {
+                anyhow::bail!("root node {} has a parent", id);
+            }
+            continue;
+        }
+        let parent = node
+            .parent
+            .ok_or_else(|| anyhow::anyhow!("non-root node {} has no parent", id))?;
+        let parent_node = tree
+            .get_node(parent)
+            .ok_or_else(|| anyhow::anyhow!("parent {} of node {} is deleted", parent, id))?;
+        if !parent_node.children.contains(&id) {
+            anyhow::bail!("node {} is not listed as a child of parent {}", id, parent);
+        }
+    }
+
+    Ok(())
 }
 
 /// Add a child to a parent node.
@@ -131,7 +192,9 @@ pub fn remove_node(tree: &mut Tree, id: NodeId, recursive: bool) {
 }
 
 /// Collapse a node, removing it and connecting its children to its parent.
-/// Edge lengths are summed (parent->node + node->child).
+/// Edge lengths are summed (parent->node + node->child). Non-finite,
+/// negative, and zero lengths are normalized to 0.0 before summing, and sums
+/// that are not positive are stored as `None`.
 pub fn collapse_node(tree: &mut Tree, id: NodeId) -> anyhow::Result<()> {
     if tree.get_node(id).is_none() {
         anyhow::bail!("Node {} not found", id);
@@ -140,7 +203,8 @@ pub fn collapse_node(tree: &mut Tree, id: NodeId) -> anyhow::Result<()> {
         anyhow::bail!("Cannot collapse root node");
     }
 
-    // 1. Get info
+    // 1. Get info. `finite_length()` normalizes non-finite/negative/zero
+    // lengths to 0.0, matching the global branch-length semantics.
     let (parent_id, parent_has_len, parent_len) = {
         let node = tree
             .get_node(id)
@@ -404,7 +468,8 @@ pub fn remove_degree_two_nodes(tree: &mut Tree) -> anyhow::Result<()> {
 /// Both children of the root are removed and their children are promoted to be
 /// direct children of the root. Edge lengths from the root to each removed
 /// child are added to that child's descendants, matching the behavior of
-/// `collapse_node`.
+/// `collapse_node`. Non-finite, negative, and zero lengths are normalized to
+/// 0.0 before summing, and non-positive sums are stored as `None`.
 pub fn deroot(tree: &mut Tree) -> anyhow::Result<()> {
     let root = tree.root.ok_or_else(|| anyhow::anyhow!("Empty tree"))?;
     let children = tree
@@ -440,6 +505,8 @@ pub fn deroot(tree: &mut Tree) -> anyhow::Result<()> {
             for &grandchild_id in &grandchildren {
                 if let Some(grandchild) = tree.get_node_mut(grandchild_id) {
                     grandchild.parent = Some(root);
+                    // `finite_length()` normalizes non-finite/negative/zero
+                    // lengths to 0.0; non-positive sums become `None`.
                     let new_len = parent_len + grandchild.finite_length();
                     grandchild.length = if new_len > 0.0 { Some(new_len) } else { None };
                 }
@@ -586,7 +653,8 @@ pub fn reroot_at(
 
     tree.root = Some(new_root_id);
 
-    Ok(())
+    // Defensive: ensure the rerooted tree is still a valid rooted tree.
+    validate_tree_integrity(tree)
 }
 
 /// Prune nodes that match a predicate.
@@ -698,6 +766,24 @@ pub enum AnnotationMode {
     AsIs,
 }
 
+/// Returns the set of node names that appear more than once in the tree.
+fn duplicate_names(tree: &Tree) -> HashSet<String> {
+    let mut counts = HashMap::new();
+    for node in &tree.nodes {
+        if node.deleted {
+            continue;
+        }
+        if let Some(name) = &node.name {
+            *counts.entry(name.clone()).or_insert(0usize) += 1;
+        }
+    }
+    counts
+        .into_iter()
+        .filter(|(_, count)| *count > 1)
+        .map(|(name, _)| name)
+        .collect()
+}
+
 /// Replace node names or append NHX-style annotations from a mapping.
 pub fn replace_annotations(
     tree: &mut Tree,
@@ -706,10 +792,17 @@ pub fn replace_annotations(
     skip_internal: bool,
     skip_leaf: bool,
 ) -> anyhow::Result<()> {
+    let duplicates = duplicate_names(tree);
     for (original, replacements) in mapping {
         let Some(id) = tree.get_node_by_name(original) else {
             continue;
         };
+        if duplicates.contains(original) {
+            log::warn!(
+                "duplicate node name '{}' matched multiple nodes; replacing only the first match",
+                original
+            );
+        }
         let is_leaf = tree.get_node(id).map(|n| n.is_leaf()).unwrap_or(true);
         if skip_internal && !is_leaf {
             continue;
@@ -871,4 +964,40 @@ pub fn reroot_at_longest_branch(tree: &mut Tree, process_support: bool) -> anyho
         tree.remove_degree_two_nodes()?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::libs::phylo::tree::Tree;
+
+    #[test]
+    fn replace_annotations_handles_duplicate_names() {
+        // Two nodes named A; replace_annotations should match the first one
+        // and not panic. The visible result is that one A is renamed.
+        let mut tree = Tree::from_newick("((A,A),B);").unwrap();
+        replace_annotations(
+            &mut tree,
+            AnnotationMode::Label,
+            &[("A".to_string(), vec!["X".to_string()])],
+            false,
+            false,
+        )
+        .unwrap();
+        let names: Vec<_> = tree.get_names();
+        assert!(names.contains(&"X".to_string()));
+        assert!(names.contains(&"A".to_string()));
+        assert!(names.contains(&"B".to_string()));
+    }
+
+    #[test]
+    fn reroot_at_rejects_malformed_tree() {
+        // Manually corrupt a tree so a node has the wrong parent pointer.
+        // reroot_at should detect the invariant violation and return an error.
+        let mut tree = Tree::from_newick("((A,B),(C,D));").unwrap();
+        let a_id = tree.get_node_by_name("A").unwrap();
+        // Make A its own parent to break the tree.
+        tree.get_node_mut(a_id).unwrap().parent = Some(a_id);
+        assert!(reroot_at(&mut tree, a_id, false).is_err());
+    }
 }

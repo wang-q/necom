@@ -301,9 +301,22 @@ impl Tree {
         stat::is_rooted(self)
     }
 
-    /// Calculate the tree diameter (longest path between any two nodes).
-    pub fn diameter(&self) -> f64 {
+    /// Calculate the weighted tree diameter (longest path using branch lengths).
+    pub fn diameter_weighted(&self) -> f64 {
         stat::diameter(self, true)
+    }
+
+    /// Calculate the unweighted tree diameter (longest path by edge count).
+    pub fn diameter_unweighted(&self) -> f64 {
+        stat::diameter(self, false)
+    }
+
+    /// Calculate the tree diameter (longest path between any two nodes).
+    ///
+    /// This is an alias for [`Self::diameter_weighted`] for backward
+    /// compatibility.
+    pub fn diameter(&self) -> f64 {
+        self.diameter_weighted()
     }
 
     /// Return all node names in the tree.

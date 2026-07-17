@@ -119,43 +119,40 @@ fn collect_name_selection(
     let mut ids = BTreeSet::new();
 
     if args.try_contains_id(node_key).unwrap_or(false) {
-        for name in args
-            .get_many::<String>(node_key)
-            .ok_or_else(|| anyhow!("missing --{} values", node_key))?
-        {
-            if let Some(id) = id_of.get(name) {
-                warn_duplicate_name(&duplicates, name);
-                ids.insert(*id);
-            } else {
-                log::warn!("node not found: {}", name);
+        if let Some(names) = args.get_many::<String>(node_key) {
+            for name in names {
+                if let Some(id) = id_of.get(name) {
+                    warn_duplicate_name(&duplicates, name);
+                    ids.insert(*id);
+                } else {
+                    log::warn!("node not found: {}", name);
+                }
             }
         }
     }
 
     if args.try_contains_id(name_list_key).unwrap_or(false) {
-        let file = args
-            .get_one::<String>(name_list_key)
-            .ok_or_else(|| anyhow!("missing --{} value", name_list_key))?;
-        for name in necom::libs::io::read_names::<Vec<String>>(file)?.iter() {
-            if let Some(id) = id_of.get(name) {
-                warn_duplicate_name(&duplicates, name);
-                ids.insert(*id);
-            } else {
-                log::warn!("name-list node not found: {}", name);
+        if let Some(file) = args.get_one::<String>(name_list_key) {
+            for name in necom::libs::io::read_names::<Vec<String>>(file)?.iter() {
+                if let Some(id) = id_of.get(name) {
+                    warn_duplicate_name(&duplicates, name);
+                    ids.insert(*id);
+                } else {
+                    log::warn!("name-list node not found: {}", name);
+                }
             }
         }
     }
 
     if args.try_contains_id(regex_key).unwrap_or(false) {
-        for regex in args
-            .get_many::<String>(regex_key)
-            .ok_or_else(|| anyhow!("missing --{} values", regex_key))?
-        {
-            let re = RegexBuilder::new(regex).case_insensitive(true).build()?;
-            for (name, id) in id_of.iter() {
-                if re.is_match(name) {
-                    warn_duplicate_name(&duplicates, name);
-                    ids.insert(*id);
+        if let Some(regexes) = args.get_many::<String>(regex_key) {
+            for regex in regexes {
+                let re = RegexBuilder::new(regex).case_insensitive(true).build()?;
+                for (name, id) in id_of.iter() {
+                    if re.is_match(name) {
+                        warn_duplicate_name(&duplicates, name);
+                        ids.insert(*id);
+                    }
                 }
             }
         }

@@ -64,49 +64,18 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let trees = Tree::from_file(infile)?;
 
     if style == "line" {
-        writer.write_fmt(format_args!(
-            "Type\tnodes\tleaves\trooted\tdichotomies\tleaf labels\tinternal labels\tcherries\tsackin\tcolless\n"
-        ))?;
+        writer.write_fmt(format_args!("{}\n", stat::TreeSummary::tsv_header()))?;
     }
 
     for tree in trees {
         let s = stat::tree_summary(&tree);
-        let is_rooted = if s.is_rooted { "Yes" } else { "No" };
-        let sackin_str = match s.sackin {
-            Some(v) => v.to_string(),
-            None => "-".to_string(),
-        };
-        let colless_str = match s.colless {
-            Some(v) => v.to_string(),
-            None => "-".to_string(),
-        };
-        let tree_type = s.tree_type.as_str();
 
         if style == "line" {
-            writer.write_fmt(format_args!(
-                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
-                tree_type,
-                s.nodes,
-                s.leaves,
-                is_rooted,
-                s.dichotomies,
-                s.leaf_labels,
-                s.internal_labels,
-                s.cherries,
-                sackin_str,
-                colless_str
-            ))?;
+            writer.write_fmt(format_args!("{}\n", s.to_tsv_line()))?;
         } else {
-            writer.write_fmt(format_args!("Type\t{}\n", tree_type))?;
-            writer.write_fmt(format_args!("nodes\t{}\n", s.nodes))?;
-            writer.write_fmt(format_args!("leaves\t{}\n", s.leaves))?;
-            writer.write_fmt(format_args!("rooted\t{}\n", is_rooted))?;
-            writer.write_fmt(format_args!("dichotomies\t{}\n", s.dichotomies))?;
-            writer.write_fmt(format_args!("leaf labels\t{}\n", s.leaf_labels))?;
-            writer.write_fmt(format_args!("internal labels\t{}\n", s.internal_labels))?;
-            writer.write_fmt(format_args!("cherries\t{}\n", s.cherries))?;
-            writer.write_fmt(format_args!("sackin\t{}\n", sackin_str))?;
-            writer.write_fmt(format_args!("colless\t{}\n", colless_str))?;
+            for line in s.to_kv_lines() {
+                writer.write_fmt(format_args!("{}\n", line))?;
+            }
         }
     }
 

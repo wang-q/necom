@@ -308,6 +308,14 @@ fn test_diameter() {
 }
 
 #[test]
+fn test_diameter_unweighted() {
+    // ((A,B),(C,D)) - unweighted diameter is 4 edges between any two leaves
+    // across the root (e.g., A to C).
+    let tree = Tree::from_newick("((A,B),(C,D));").unwrap();
+    assert_eq!(tree.diameter_unweighted(), 4.0);
+}
+
+#[test]
 fn test_robinson_foulds() {
     // 3 leaves -> Unrooted RF is always 0 (star topology)
     let t1 = Tree::from_newick("((A,B),C);").unwrap();

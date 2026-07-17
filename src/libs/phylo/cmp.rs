@@ -17,8 +17,10 @@ pub trait TreeComparison {
     ///
     /// Returns a map from Split -> Branch Length.
     /// If the same normalized split is produced by multiple edges, their
-    /// lengths are summed. This is defensive for malformed trees and does not
-    /// change results for properly binary or multifurcating trees.
+    /// lengths are summed. This is required for root-invariant WRF/KF
+    /// distances when the rooted representation splits an unrooted internal
+    /// edge, and does not change results for properly binary or
+    /// multifurcating trees.
     /// Used for Weighted Robinson-Foulds and Kuhner-Felsenstein distances.
     fn get_splits_with_values(
         &self,

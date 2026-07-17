@@ -236,7 +236,10 @@ fn parse_length(input: &str) -> IResult<&str, Option<f64>, DetailedError<'_>> {
                 )),
                 |s: &str| -> Result<Option<f64>, String> {
                     let value = s.parse::<f64>().map_err(|e| e.to_string())?;
-                    if value < 0.0 || !value.is_finite() {
+                    // Zero, negative, and non-finite lengths are normalized to
+                    // None so that parsed trees match programmatically built
+                    // trees (Node::with_length also rejects zero).
+                    if value <= 0.0 || !value.is_finite() {
                         Ok(None)
                     } else {
                         Ok(Some(value))
@@ -867,6 +870,20 @@ mod tests {
             b.length, None,
             "negative branch length should be normalized to None"
         );
+    }
+
+    #[test]
+    fn test_parser_zero_length_normalized() {
+        // Zero branch lengths are normalized to None, matching Node::with_length.
+        let tree = Tree::from_newick("(A:0.0,B:0)R;").unwrap();
+        let root = tree.get_node(tree.get_root().unwrap()).unwrap();
+        for &child_id in &root.children {
+            let child = tree.get_node(child_id).unwrap();
+            assert_eq!(child.length, None, "{:?} should be None", child.name);
+        }
+
+        // Round-trip: zero lengths are omitted from output.
+        assert_eq!(tree.to_newick(), "(A,B)R;");
     }
 
     #[test]

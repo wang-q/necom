@@ -79,17 +79,42 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .get_one::<String>("mode")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: mode"))?;
 
-    // Select named nodes, applying -I/-L filters consistently with other commands.
+    // Select nodes, applying -I/-L filters consistently with other commands.
+    // When no name-based filter is given, include all selected nodes (not only
+    // named ones) so that internal/unnamed nodes can be reported too.
     let ids_pos = super::common::match_positions(&tree, args)?;
     let ids_name = super::common::match_names(&tree, args)?;
-    let ids: BTreeSet<usize> = ids_pos.intersection(&ids_name).cloned().collect();
+    let has_name_filter = args.try_contains_id("node").unwrap_or(false)
+        || args.try_contains_id("name_list").unwrap_or(false)
+        || args.try_contains_id("regex").unwrap_or(false);
+
+    let ids: BTreeSet<usize> = if has_name_filter {
+        ids_pos.intersection(&ids_name).cloned().collect()
+    } else {
+        ids_pos
+    };
 
     let mut id_of = BTreeMap::new();
     let name_id_map = tree.get_name_id();
-    for (name, id) in name_id_map {
-        if ids.contains(&id) {
-            id_of.insert(name, id);
-        }
+    let existing_names: std::collections::HashSet<&String> = name_id_map.keys().collect();
+    for &id in &ids {
+        let label = if let Some(name) =
+            name_id_map
+                .iter()
+                .find_map(|(n, &i)| if i == id { Some(n) } else { None })
+        {
+            name.clone()
+        } else {
+            // Synthetic label for unnamed nodes; ensure it does not collide.
+            let mut synthetic = format!("#{}", id);
+            let mut suffix = 1usize;
+            while existing_names.contains(&synthetic) {
+                synthetic = format!("#{}_{}", id, suffix);
+                suffix += 1;
+            }
+            synthetic
+        };
+        id_of.insert(label, id);
     }
 
     match mode.as_str() {

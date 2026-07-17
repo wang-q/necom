@@ -362,6 +362,62 @@ pub struct TreeSummary {
     pub tree_type: TreeType,
 }
 
+impl TreeSummary {
+    /// Return the TSV header used by `necom nwk stat --style line`.
+    pub fn tsv_header() -> &'static str {
+        "Type\tnodes\tleaves\trooted\tdichotomies\tleaf labels\tinternal labels\tcherries\tsackin\tcolless"
+    }
+
+    /// Return a single TSV data line for this summary.
+    pub fn to_tsv_line(&self) -> String {
+        let sackin_str = self
+            .sackin
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "-".to_string());
+        let colless_str = self
+            .colless
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "-".to_string());
+        format!(
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            self.tree_type.as_str(),
+            self.nodes,
+            self.leaves,
+            if self.is_rooted { "Yes" } else { "No" },
+            self.dichotomies,
+            self.leaf_labels,
+            self.internal_labels,
+            self.cherries,
+            sackin_str,
+            colless_str,
+        )
+    }
+
+    /// Return key-value pair lines for this summary.
+    pub fn to_kv_lines(&self) -> Vec<String> {
+        let sackin_str = self
+            .sackin
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "-".to_string());
+        let colless_str = self
+            .colless
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "-".to_string());
+        vec![
+            format!("Type\t{}", self.tree_type.as_str()),
+            format!("nodes\t{}", self.nodes),
+            format!("leaves\t{}", self.leaves),
+            format!("rooted\t{}", if self.is_rooted { "Yes" } else { "No" }),
+            format!("dichotomies\t{}", self.dichotomies),
+            format!("leaf labels\t{}", self.leaf_labels),
+            format!("internal labels\t{}", self.internal_labels),
+            format!("cherries\t{}", self.cherries),
+            format!("sackin\t{}", sackin_str),
+            format!("colless\t{}", colless_str),
+        ]
+    }
+}
+
 /// Compute the full `necom nwk stat` summary for `tree`.
 pub fn tree_summary(tree: &Tree) -> TreeSummary {
     let mut nodes = 0usize;

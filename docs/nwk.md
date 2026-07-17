@@ -298,9 +298,17 @@ necom nwk to-tex [OPTIONS] <infile>
 
 ---
 
+## Label Handling
+
+*   Unquoted labels are trimmed: leading and trailing whitespace is removed. Internal whitespace is preserved only when the label is quoted with single or double quotes.
+*   Labels containing Newick reserved characters (`( ) : ; , [ ]`) or whitespace must be quoted to round-trip correctly.
+*   Single quotes inside single-quoted labels are escaped by doubling (`''`), and double quotes inside double-quoted labels are escaped by doubling (`""`).
+
+---
+
 ## Branch Length Handling
 
-`necom nwk` treats non-finite branch lengths (`NaN`, positive/negative infinity) and negative values as `0.0` during computation and visualization. On input, such values are normalized to `None` (no length annotation); on output, `None` and zero (`0.0`) lengths are omitted so that cladograms remain unannotated. This applies to:
+`necom nwk` treats non-finite branch lengths (`NaN`, positive/negative infinity), negative values, and zero values as `0.0` during computation and visualization. On input, such values are normalized to `None` (no length annotation); on output, `None` and zero (`0.0`) lengths are omitted so that cladograms remain unannotated. This applies to:
 
 *   Statistics (`stat`) and distance calculations (`distance`).
 *   Tree comparison (`cmp`), including weighted Robinson-Foulds and Kuhner-Felsenstein distances.
