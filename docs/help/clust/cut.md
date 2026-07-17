@@ -1,8 +1,10 @@
-Cut a tree into clusters based on various criteria.
+Cut a Newick tree into flat clustering partitions.
 
 Input:
 
-* A Newick tree file.
+* A Newick tree file containing a single tree.
+* Branch lengths are used by distance/height-based methods.
+* Branch support values (optional) can be used as a non-crossable constraint via `--support`.
 
 Criteria:
 
@@ -23,16 +25,19 @@ Criteria:
 
 Output:
 
-* `--format cluster` (default): each line contains points of one cluster. The first point is the representative.
+* `--format cluster` (default): each line contains points of one cluster; the first point is the representative.
 * `--format pair`: each line contains a `(representative, member)` pair.
 
 Notes:
 
-* The representative point is determined by `--rep` (applies to both formats):
+* The representative is selected by `--rep`:
     * `root` (default): member closest to root (alphabetical tie-break).
-    * `medoid`: member with min sum of distances to others (alphabetical tie-break).
+    * `medoid`: member with the smallest sum of distances to other members.
     * `first`: alphabetically first member.
-* `--dynamic-hybrid` requires a `--matrix` distance file.
+* `--support <S>` treats edges with support `< S` as infinite length, forcing a cut. Nodes without explicit support default to `100.0`.
+* `--scan <start>,<end>,<step>` performs a parameter sweep. In scan mode, `--format` is ignored and output is always long format (`Group\tClusterID\tSampleID`).
+* `--stats-out <FILE>` writes scan summary statistics (`Group\tClusters\tSingletons\tNon-Singletons\tMaxSize`).
+* `--dynamic-hybrid` requires `--matrix`.
 
 Examples:
 
@@ -45,5 +50,5 @@ Examples:
 3. Dynamic Tree Cut with min cluster size 20
    `necom clust cut tree.nwk --dynamic-tree 20`
 
-4. Hybrid Cut with PAM
-   `necom clust cut tree.nwk --dynamic-hybrid 20 --matrix dist.phy`
+4. Scan thresholds and save statistics
+   `necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv`

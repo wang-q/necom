@@ -69,7 +69,6 @@ Commands are divided into three categories by input data type (consistent with `
   - `--rep` default: `medoid` (smallest sum of distances); `first` uses the alphabetically first member.
   - `--same` default: `0.0`; `--missing` default: `1.0`.
 - **Unimplemented options**: Parameter scanning and scoring such as `--scan`, `--opt-eps`, `--min-pct` are not yet implemented; they may be provided later as subcommands of `necom clust dbscan` or standalone scripts.
-- **Evaluation document**: [clust-eval.md](clust-eval.md)
 
 #### Usage Examples
 
@@ -121,7 +120,43 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 - **Command**: `necom clust cut`
 - **Characteristics**: Derives groups from an existing tree without rebuilding the clustering; supports parameter scanning (`--scan`) and representative selection (`--rep`). `--support` filters low-support branches; internal node names that cannot be parsed as numbers are treated as support 100.0 (fully trusted and not filtered) by default.
 - **Use cases**: Existing tree structures (from `clust hier`, `clust upgma`, `clust nj`, or external tools) that need to be cut and evaluated at different thresholds.
-- **Document**: [clust-cut.md](clust-cut.md)
+
+#### Supported Cutting Methods
+
+| Method | Flag | Description | Complexity |
+| :--- | :--- | :--- | :--- |
+| Cluster count | `--k` | Top-down split into K clusters by node height | $O(N \log N)$ |
+| Height | `--height` | Cut edges whose node height > H | $O(N)$ |
+| Root distance | `--root-dist` | Cut paths whose cumulative length from root > D | $O(N)$ |
+| Max clade | `--max-clade` | TreeCluster-style max pairwise distance <= T | $O(N)$ |
+| Avg clade | `--avg-clade` | TreeCluster-style avg pairwise distance <= T | $O(N)$ |
+| Med clade | `--med-clade` | TreeCluster-style median pairwise distance <= T | $O(N^2 \log N)$ |
+| Sum branch | `--sum-branch` | TreeCluster-style total branch length (PD) <= T | $O(N)$ |
+| Leaf distance | `--leaf-dist-*` | Cut by max/min/avg distance from cluster root to leaves | $O(N)$ |
+| Max edge | `--max-edge` | Cut edges longer than T (single linkage) | $O(N)$ |
+| Inconsistent | `--inconsistent` | SciPy-style inconsistency coefficient <= T | $O(N)$ |
+| Dynamic tree | `--dynamic-tree` | Adaptive top-down recursive cut | $O(N)$ |
+| Hybrid | `--dynamic-hybrid` | Dynamic Tree + PAM reassignment | $O(N^2)$ |
+
+#### Threshold Selection Strategies
+
+When unsure about the best threshold, use `--scan <start>,<end>,<step>` to generate candidate partitions and inspect the summary statistics (`--stats-out`). Common strategies:
+
+* **Maximize non-singleton clusters**: choose the threshold with the largest number of clusters containing >1 member.
+* **Elbow rule**: find the point where cluster count stops decreasing sharply as the threshold relaxes.
+* **Evaluation-metric based**: pipe scan output to `necom clust eval --input-format long` and pick the threshold optimizing Silhouette, ARI, etc.
+
+#### Integration with `clust eval`
+
+```bash
+# Scan and evaluate internal metrics in one pipeline
+necom clust cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 | \
+    necom clust eval - --input-format long --matrix dist.phy > evaluation.tsv
+
+# Pick a threshold and compare with ground truth
+necom clust cut tree.nwk --max-clade 0.12 > pred.tsv
+necom clust eval pred.tsv --other truth.tsv -o eval.tsv
+```
 
 ## Hierarchical Clustering Details
 
@@ -133,7 +168,7 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 - **Goal**: Statistically meaningful dendrograms (merge heights express the cost of the linkage criterion), without enforcing "evolution/molecular-clock" semantics.
 - **Synergy with existing necom capabilities**:
   - Tree building: `clust upgma` (rooted, ultrametric) and `clust nj` (additive, unrooted) already exist.
-  - Cutting: tree-cut grouping in [clust-cut.md](clust-cut.md).
+  - Cutting: tree-cut grouping via `clust cut`.
   - Evaluation: `necom clust eval --matrix` / `--tree` / `--coords` (currently available); `necom nwk eval` not yet implemented.
 
 ### Relationship to UPGMA/NJ
@@ -290,7 +325,48 @@ These commands do not produce clusters; they evaluate cluster or tree quality.
   - **Command**: `necom clust eval`
   - **Positioning**: General clustering quality evaluation (supports with/without Ground Truth).
   - **Capabilities**: ARI, AMI, V-Measure (external); Silhouette, Davies-Bouldin (internal).
-  - **Document**: [clust-eval.md](clust-eval.md)
+
+`necom` separates cluster generation from evaluation: generate candidates with `clust cut --scan`, then evaluate them in batch with `clust eval`, and finally select the best parameters manually.
+
+### External Validity Metrics
+
+*Compare a predicted partition to a reference partition.*
+
+| Metric | Range | Notes |
+| :--- | :--- | :--- |
+| ARI | [-1, 1] | Adjusted Rand Index; corrected for chance; 1 = perfect agreement. |
+| AMI | [0, 1] | Adjusted Mutual Information; robust with many clusters. |
+| NMI | [0, 1] | Normalized Mutual Information; not corrected for chance. |
+| V-Measure | [0, 1] | Harmonic mean of Homogeneity and Completeness. |
+| FMI | [0, 1] | Fowlkes-Mallows Index; geometric mean of Precision and Recall. |
+| RI | [0, 1] | Rand Index; not corrected for chance. |
+| Jaccard | [0, 1] | Pair-wise Jaccard similarity of same-cluster pairs. |
+| Precision / Recall | [0, 1] | Pair-wise precision and recall. |
+
+### Internal Validity Metrics
+
+*Evaluate a partition using the data geometry only.*
+
+| Type | Metrics | Required input |
+| :--- | :--- | :--- |
+| Distance-based | Silhouette, Dunn, C-Index, Gamma, Tau | `--matrix` or `--tree` |
+| Coordinate-based | Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski | `--coords` |
+
+Silhouette is the most commonly used distance-based metric: values near 1 indicate well-clustered samples, 0 indicate boundary samples, and negative values suggest possible mis-clustering.
+
+### Typical Workflows
+
+```bash
+# External evaluation (with ground truth)
+necom clust eval result.tsv --other truth.tsv -o eval.tsv
+
+# Internal evaluation with a distance matrix
+necom clust eval result.tsv --matrix dist.phy
+
+# Batch evaluation of scan results
+necom clust cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
+    necom clust eval - --input-format long --matrix matrix.phy > evaluation.tsv
+```
 
 ## Planned
 

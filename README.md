@@ -74,8 +74,6 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 Extended documentation for each command is available in `docs/`:
 
 - [`docs/clust.md`](docs/clust.md) — clustering algorithms
-- [`docs/clust-cut.md`](docs/clust-cut.md) — tree cutting
-- [`docs/clust-eval.md`](docs/clust-eval.md) — clustering evaluation
 - [`docs/mat.md`](docs/mat.md) — matrix utilities
 - [`docs/nwk.md`](docs/nwk.md) — Newick tree operations
 - [`docs/pl.md`](docs/pl.md) — integrated pipelines
