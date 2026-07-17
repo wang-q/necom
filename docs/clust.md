@@ -92,7 +92,7 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
 
 ## Hierarchical Clustering Details
 
-`necom clust hier` (alias `hclust`) provides general hierarchical clustering (dendrogram) generation, supporting `single/complete/average/ward.D2` and other methods, outputting Newick format for downstream `necom cut`.
+`necom clust hier` (alias `hclust`) provides general hierarchical clustering (dendrogram) generation, supporting `single/complete/average/ward` and other methods, outputting Newick format for downstream `necom cut`.
 
 ### Background and Positioning
 
@@ -116,7 +116,7 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
 ### Methods and Algorithm Essentials
 
 - `single/complete/average`: Standard linkage updates (Lance–Williams framework); merge height is the distance/cost corresponding to the linkage criterion.
-- `ward.D2`:
+- `ward`:
   - Concept: Minimizes the increase in within-cluster sum of squares (total within-group variance, SSE); commonly used and robust.
   - Update (squared-distance version, where n is cluster size):
     - Let the squared distance between merged cluster `u∪v` and a third cluster `w` be:
@@ -136,8 +136,8 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
 ### Notes
 
 - `clust hier` only accepts **distance matrices** (smaller values mean higher similarity). Similarity matrices must be converted first, e.g., with `necom mat transform`.
-- `ward.D2` updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.
-- `ward.D2` theoretically assumes Euclidean or near-Euclidean distances; on general biological distances the statistical interpretation of "minimum variance" is weaker.
+- `ward` updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.
+- `ward` theoretically assumes Euclidean or near-Euclidean distances; on general biological distances the statistical interpretation of "minimum variance" is weaker.
 - `centroid` and `median` linkage may produce non-monotonic merge heights (inversions); this is an algorithmic characteristic of these methods.
 - Ties are broken by alphabetical order to ensure deterministic output.
 
@@ -146,7 +146,7 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
 - Generate tree:
   - Near-molecular-clock/ultrametric scenarios: `clust upgma` outputs a rooted ultrametric tree.
   - General additive-distance scenarios: `clust nj`.
-  - General hierarchical analysis or when `ward.D2` is needed: `clust hier --method ward.D2`.
+  - General hierarchical analysis or when `ward` is needed: `clust hier --method ward`.
 - Cut and evaluate:
   - Cut: `necom cut --height H` or TreeCluster-style thresholds/constraints.
   - Internal evaluation (no Ground Truth): `necom eval partition --matrix ...` (Silhouette) (currently available); `necom eval tree` not yet implemented.

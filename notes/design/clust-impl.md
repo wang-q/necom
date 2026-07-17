@@ -83,7 +83,7 @@
 
 3.  **生态一致性**:
     - **Flat Clustering**: `necom cut` 的设计与 SciPy `fcluster` 的 `criterion='distance'|'maxclust'` 保持概念一致。
-    - **Cophenetic Correlation**: 确认将 `cophenet` 引入 `necom nwk eval` [计划中]，作为衡量树对原始距离矩阵拟合优度的核心指标。
+    - **Cophenetic Correlation**: 确认将 `cophenet` 引入 `necom eval tree` [计划中]，作为衡量树对原始距离矩阵拟合优度的核心指标。
 
 4.  **Optimal Leaf Ordering (OLO)**:
     - **背景**: 标准层次聚类算法生成的树，左右子树的顺序是任意的。这导致在绘制热图（Heatmap）时，相似的行/列可能不相邻，视觉效果杂乱。
@@ -95,11 +95,11 @@
     - **背景**: 如何量化生成的树是否真实反映了原始距离矩阵？
     - **SciPy 方案**: `scipy.cluster.hierarchy.cophenet`。
     - **原理**: 计算树上两点间的距离（cophenetic distance，即最近共同祖先的高度）与原始距离矩阵之间的 Pearson 相关系数。
-    - **necom 借鉴**: 在 `necom nwk eval` [计划中] 中实现此指标，帮助用户评估不同 Linkage 方法（如 UPGMA vs Ward）对数据的拟合优度。
+    - **necom 借鉴**: 在 `necom eval tree` [计划中] 中实现此指标，帮助用户评估不同 Linkage 方法（如 UPGMA vs Ward）对数据的拟合优度。
 
 6.  **Distance Metric Architecture**:
     - **背景**: SciPy/Scikit-learn 的距离计算模块架构清晰，支持稀疏矩阵和多种度量。
-    - **necom 借鉴**: 计划参考 `DistanceMetric` 类设计，统一距离计算接口（由 `necom mat` 与 `necom clust eval` 等命令复用），并在未来支持稀疏距离矩阵计算（Phase 3）。
+    - **necom 借鉴**: 计划参考 `DistanceMetric` 类设计，统一距离计算接口（由 `necom mat` 与 `necom eval partition` 等命令复用），并在未来支持稀疏距离矩阵计算（Phase 3）。
 
 ## 5. clust hier 实现规划与优化分析
 
@@ -249,8 +249,8 @@
 
 1. **基础图聚类**：已完成 MCL、CC、DBSCAN、K-Medoids。
 2. **系统发育构树**：已完成 UPGMA、NJ、Hierarchical Clustering (hier)。
-3. **评估体系**：`clust eval` (Partition) 已完成；树评估功能已纳入 `necom eval` 统一设计（见 [eval-planned.md](eval-planned.md)），尚未实现。
-4. **向量支持**：已完成。`libs/clust/feature.rs` 提供 `FeatureVector` 基础设施，被 `necom clust eval --coords`（Davies-Bouldin 指标）等内部评估逻辑复用。
+3. **评估体系**：`eval partition` 已完成（从 `clust eval` 迁移）；树评估功能已纳入 `necom eval` 统一设计（见 [eval-planned.md](eval-planned.md)），尚未实现。
+4. **向量支持**：已完成。`libs/clust/feature.rs` 提供 `FeatureVector` 基础设施，被 `necom eval partition --coords`（Davies-Bouldin 指标）等内部评估逻辑复用。
 5. **统计聚类**：引入 GMM 实现，支持 BIC 模型选择（计划中，详见 §8.1）。
 6. **层次聚类扩展**：实现 HDBSCAN（计划中，详见 §8.2）。
 7. **大规模网络社区发现**：实现 Louvain / Leiden 算法（计划中，详见 §8.3）。

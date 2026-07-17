@@ -216,7 +216,7 @@ Use `necom cut`:
 
 ### 2. Evaluate
 
-Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate `necom clust` commands; tree-topology comparison is also available via `necom nwk compare`:
+Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate `necom eval` commands; tree-topology comparison is also available via `necom eval compare`:
 
 - **General metrics (`necom eval partition`, `necom mat compare`)**:
   - Input: two clustering result TSVs (or one result + one reference); or two distance matrices for Cophenetic correlation.

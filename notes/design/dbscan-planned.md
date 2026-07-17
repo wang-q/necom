@@ -35,12 +35,12 @@
   - 对每个点 i：簇内平均距离 `a(i)`；到其它簇的最小平均距离 `b(i)`；`s(i) = (b-a)/max(a,b)`；总体取平均
 - DBIndex
   - 每簇散度（簇内到中心的平均距离）；簇间中心距；计算最大比值并平均
-- 位置建议：`libs::clust::metrics` 或 `libs::metrics`，供扫描与 `clust eval` 复用
+- 位置建议：`libs::clust::metrics` 或 `libs::metrics`，供扫描与 `eval partition` 复用
 
 ## 4. 互操作与职责分离
 
 - 算法侧（本命令）：负责 DBSCAN 聚类与扫描 TSV 输出
-- 评估侧（`clust eval`）：外部有效性（`ARI/AMI/V-Measure`）为主；内部有效性（`Silhouette/DBIndex`）作为补充
+- 评估侧（`eval partition`）：外部有效性（`ARI/AMI/V-Measure`）为主；内部有效性（`Silhouette/DBIndex`）作为补充
 - 与树工具协作：不直接涉及 `nwk`，但输出的 `cluster/pair` 可用于后续评估或可视化
 
 ## 5. 性能与边界

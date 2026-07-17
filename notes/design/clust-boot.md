@@ -132,7 +132,7 @@
 `necom clust boot` 负责“给一棵层次聚类树的每个簇打分（BP/AU/SI）”。
 
 - 与 `necom clust hier` 的关系：`hier` 只构树；`boot` 在“数据可重采样”的前提下，评估树上簇的统计稳定性
-- 与 `necom clust eval` 的关系：`eval` 比较两份分区/内部指标；`boot` 产出的是**单棵树**的簇置信度（外部一致性并非必要）
+- 与 `necom eval partition` 的关系：`eval partition` 比较两份分区/内部指标；`boot` 产出的是**单棵树**的簇置信度（外部一致性并非必要）
 
 ### 4.2 使用方式（草案）
 
@@ -162,7 +162,7 @@ necom clust boot [OPTIONS] <data.tsv>
 
 说明：
 
-- `--other` 这个命名在 `clust eval` 中用于“另一份分区”；在 `clust boot` 中不需要第二份输入文件，因此不复用该参数名。
+- `--other` 这个命名在 `eval partition` 中用于“另一份分区”；在 `clust boot` 中不需要第二份输入文件，因此不复用该参数名。
 - `pvclust` 的 `weight/store/parallel` 先不做强绑定；`necom` 侧更倾向于用 `--threads`（或继承全局线程设置）控制并行。
 
 ### 4.4 输出（草案）
@@ -207,7 +207,7 @@ necom clust boot data.tsv --dist correlation --method average --nboot 1000 -o bo
 - 向量距离计算 → `necom mat to-phylip` → `necom clust hier`：现有“向量→距离→树”的通路
 - `necom clust boot`：需要“可重采样的原始观测矩阵”，因此更适合直接吃 `data.tsv`，内部自算距离与树
 - `necom cut`：在 `boot` 给出簇置信度后，再做阈值切割与导出分区
-- `necom clust eval`：对不同切割/不同算法产生的分区做一致性比较（用 `--other`）
+- `necom eval partition`：对不同切割/不同算法产生的分区做一致性比较（用 `--other`）
 
 ---
 

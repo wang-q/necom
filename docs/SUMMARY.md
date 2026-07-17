@@ -9,6 +9,7 @@
 - [Matrix Processing](mat.md)
 - [Newick Trees](nwk.md)
 - [Pipelines](pl.md)
+- [Evaluation](eval.md)
 - [Partition Evaluation Deep Dive](eval-partition.md)
 
 # Command Reference

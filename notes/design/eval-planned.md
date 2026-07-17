@@ -28,6 +28,8 @@
 necom eval <subcommand>
 ```
 
+> §3.1（`eval compare`）与 §3.3（`eval partition`）已实现，用户文档见 [docs/eval.md](../../docs/eval.md) 与 [docs/help/eval/](../../docs/help/eval/)，故本节略过，仅保留尚未实现的子命令设计。
+
 ### 3.2 `necom eval tree`
 
 **定位**：评估单棵系统发育树的质量、拓扑拟合度及与外部生物学语境的一致性。
@@ -274,6 +276,8 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 - 当输出包含多类指标时，可用 `--metrics` 控制输出列，避免冗余。
 
 ## 7. 迁移计划
+
+> 阶段 2（迁移 `clust eval` → `eval partition`）与阶段 3（迁移 `nwk compare` → `eval compare`）均已完成（2026-07），故下文略过，仅保留未完成阶段的记录。
 
 ### 阶段 1：搭建 `necom eval` 框架
 
