@@ -3,6 +3,7 @@
 [![Build](https://github.com/wang-q/necom/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/necom/actions)
 [![codecov](https://codecov.io/gh/wang-q/necom/branch/master/graph/badge.svg)](https://codecov.io/gh/wang-q/necom)
 [![license](https://img.shields.io/github/license/wang-q/necom)](https://github.com//wang-q/necom)
+[![Documentation](https://img.shields.io/badge/docs-online-blue)](https://wang-q.github.io/necom/)
 
 `necom` is a command-line toolkit for **clustering**, **distance-matrix processing**, and **phylogenetic-tree
 manipulation**.
