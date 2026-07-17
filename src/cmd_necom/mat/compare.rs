@@ -5,27 +5,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("compare")
         .about("Compares two distance matrices")
-        .after_help(
-            r###"
-Compare two PHYLIP distance matrices and calculate similarity metrics.
-
-Methods:
-* all:       Calculate all metrics below
-* pearson:   Pearson correlation coefficient (-1 to 1)
-* spearman:  Spearman rank correlation (-1 to 1)
-* mae:       Mean absolute error
-* cosine:    Cosine similarity (-1 to 1)
-* jaccard:   Weighted Jaccard similarity (0 to 1)
-* euclid:    Euclidean distance
-
-Examples:
-1. Compare using Pearson correlation:
-   necom mat compare matrix1.phy matrix2.phy --method pearson
-
-2. Compare using multiple methods:
-   necom mat compare matrix1.phy matrix2.phy --method pearson,cosine,jaccard
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/mat/compare.md"))
         .arg(
             Arg::new("matrix1")
                 .required(true)

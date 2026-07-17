@@ -5,19 +5,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("subset")
         .about("Extracts a submatrix from a PHYLIP matrix using a list of names")
-        .after_help(
-            r###"
-Input formats:
-    * Matrix: PHYLIP distance matrix (full or lower-triangular)
-    * List: One name per line
-    * Empty lines and lines starting with '#' in the list file are ignored
-
-Examples:
-    1. Create a full submatrix:
-       necom mat subset input.phy list.txt -o output.phy
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/mat/subset.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input PHYLIP matrix file",
         ))

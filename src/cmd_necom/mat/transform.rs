@@ -4,42 +4,7 @@ use clap::{builder::PossibleValue, value_parser, Arg, ArgAction, ArgMatches, Com
 pub fn make_subcommand() -> Command {
     Command::new("transform")
         .about("Applies mathematical transformations to a matrix")
-        .after_help(
-            r###"
-Transform matrix values element-wise.
-Useful for converting similarity matrices to distance matrices.
-
-Operations:
-    * linear:     val = val * scale + offset
-    * inv-linear: off-diagonal val = max - val; diagonal set to 0 for a valid distance matrix
-    * log:        val = -ln(val)
-    * exp:        val = exp(-val)
-    * square:     val = val * val
-    * sqrt:       val = sqrt(val)
-
-Normalization:
-    If --normalize is set, values are normalized using diagonal elements before transformation:
-    x_norm(i, j) = x(i, j) / sqrt(x(i, i) * x(j, j))
-
-Examples:
-    1. Convert Identity (0-100) to Distance (0-1):
-       # Using linear: -0.01 * x + 1.0 = (100 - x) / 100
-       necom mat transform in.phy --op linear --scale -0.01 --offset 1.0
-
-    2. Convert Identity (0-100) to Distance (0-100):
-       necom mat transform in.phy --op inv-linear --max-val 100
-
-    3. Convert Similarity (0-1) to Distance (0-1):
-       necom mat transform in.phy --op inv-linear --max-val 1.0
-
-    4. Log transformation with normalization (e.g. for probability):
-       necom mat transform in.phy --op log --normalize
-
-Pairwise input:
-    When --input-format pair is used, --same and --missing control default
-    diagonal and missing-pair values, respectively.
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/mat/transform.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input PHYLIP matrix or pairwise TSV file",
         ))

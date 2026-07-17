@@ -121,44 +121,25 @@ Convert between PHYLIP formats and normalize them.
 Extract a submatrix based on a list of names.
 
 - **Purpose**: Extract specific species or gene families from a large matrix for fine-grained analysis.
-- **Input**:
-  - Matrix file.
-  - ID list file (one ID per line).
-- **Behavior**:
-  - Preserves matrix structure and automatically handles row/column indexing.
-  - If an ID in the list does not exist in the matrix, a warning is printed and it is skipped.
-  - Output matrix order matches the order in the ID list file (can be used to reorder a matrix).
+- **Input**: PHYLIP matrix and an ID list file (one ID per line).
+- **Output**: Full PHYLIP submatrix in the order of the ID list.
 
 #### `necom mat compare`
 
 Compute correlation or difference between two matrices.
 
 - **Purpose**: Evaluate consistency between distance calculation methods, or information loss before and after clustering (Cophenetic Correlation).
-- **Prerequisite**: Automatically uses the **intersection of common IDs** between the two matrices for comparison.
-- **Metrics (`--method`)**:
-  - **Correlation**: Pearson ($r$), Spearman ($\rho$, rank correlation), Cosine.
-  - **Similarity**: Weighted Jaccard similarity (0 to 1).
-  - **Distance/Error**: MAE (Mean Absolute Error), euclid (Euclidean distance).
-  - `all`: Compute all of the above metrics simultaneously.
-  - Default: `pearson`.
-  - Multiple methods can be requested as a comma-separated list (e.g., `pearson,cosine,jaccard`).
+- **Prerequisite**: Uses the intersection of common IDs between the two matrices.
+- **Metrics (`--method`)**: Pearson, Spearman, Cosine, Jaccard, MAE, Euclidean, or `all`. Default is `pearson`; multiple methods can be comma-separated.
 
 #### `necom mat transform`
 
 Apply mathematical transformations to matrix elements.
 
-- **Purpose**: Convert similarity matrices to distance matrices, or perform normalization, log transformations, etc.
-- **Operations (`--op`)**:
-  - `linear`: `val = val * scale + offset`
-  - `inv-linear`: off-diagonal `val = max - val`; diagonal is set to `0` to preserve a valid distance matrix (common transformation for similarity → distance)
-  - `log`: `val = -ln(val)` (off-diagonal `≤ 0` → `Inf`; diagonal `≤ 0` → `0`)
-  - `exp`: `val = exp(-val)`
-  - `square`: `val = val * val`
-  - `sqrt`: `val = sqrt(val)` (negative values produce `NaN`)
-- **Normalization (`--normalize`)**: Normalize based on diagonal elements: `x_norm(i, j) = x(i, j) / sqrt(x(i, i) * x(j, j))`.
-- **Parameters**: `--max-val` (maximum value for inv-linear, default 1.0), `--scale` (linear scale factor, default 1.0), `--offset` (linear offset, default 0.0), `--input-format` (input format: `phylip` or `pair`, default `phylip`), `--same`/`--missing` (default diagonal/missing values for `pair` input, default 0.0/1.0).
-
-> For detailed transformation scenarios and mathematical background, see [mat-transform.md](mat-transform.md).
+- **Purpose**: Convert similarity matrices to distance matrices, or perform normalization and log transformations.
+- **Operations (`--op`)**: `linear`, `inv-linear`, `log`, `exp`, `square`, `sqrt`.
+- **Normalization (`--normalize`)**: Normalize based on diagonal elements.
+- **See also**: [mat-transform.md](mat-transform.md) for detailed transformation scenarios.
 
 ## Recommended Workflows
 
