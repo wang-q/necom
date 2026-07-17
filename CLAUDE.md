@@ -50,7 +50,7 @@
 反例：在 `cmd_necom/foo.rs` 里实现距离计算函数 → 应迁到 `libs/`。
 正例：`cmd_necom/foo.rs` 只做 `let args = parse(matches); let result = libs::foo::run(args); println!("{result}")`。
 
-> 注："三次相似代码"原则针对的是重复代码的抽象提取，与本节的代码分层无关。
+> 注："三次相似代码"原则（同一模式出现三次后再抽象）针对的是重复代码的抽象提取，与本节的代码分层无关。
 
 ### 精准修改
 
@@ -89,7 +89,7 @@
 ### 必须遵守
 
 - 每个 PR / commit 跑 `cargo fmt` 和 `cargo clippy -- -D warnings`，clean 之后再提交
-- 公共 API (pub fn / pub struct / pub trait) 必须写 doc comment (英文，一行即可)
+- 公共 API (pub fn / pub struct / pub trait) 必须写英文 doc comment；一行即可，trait 定义或复杂不变量可例外
 - 不写冗余注释 — 如果函数名和类型签名已经说明了行为，不要画蛇添足
 - 用 `anyhow::Result<T>` 做函数返回值，`anyhow::bail!` / `anyhow::anyhow!` 构造错误
 
@@ -99,8 +99,7 @@
 - 不要为了"可能"的未来需求写抽象 — 三次相似代码出现之后再考虑提取
 - 不要写半成品实现 — stub / TODO 必须有明确的后续任务链接
 - 不要用 `unsafe`，除非有充分理由且用户同意
-- 不要写超过一行的 doc comment，除非是 trait 定义或复杂不变量
-- 不要反向兼容的 shim（rename `_vars`、re-export 旧类型等）
+- 不要写反向兼容的 shim（rename `_vars`、re-export 旧类型等）
 
 ## 项目概览
 
@@ -182,7 +181,7 @@ cargo test
 1.  **`make_subcommand`**: 定义命令行接口。
     -   返回 `clap::Command`。
     -   使用 `.about(...)` 设置简短描述 (第三人称单数)。
-    -   推荐使用 `.after_help(...)` 提供详细帮助信息。
+    - 推荐使用 `.after_help(include_str!("../../docs/help/<category>/<cmd>.md"))` 引入详细文档。
 2.  **`execute`**: 命令执行逻辑。
     -   接收 `&clap::ArgMatches`。
     -   返回 `anyhow::Result<()>`。
@@ -224,14 +223,41 @@ cargo test
 
 ## 帮助文本规范 (Help Text Style Guide)
 
-- **`about`**: Third-person singular (e.g., "Counts...", "Calculates...").
-- **`after_help`**: Uses raw string `r###"..."###`.
-    - **Description**: Detailed explanation.
+### Rust 实现规范 (Implementation)
+
+* **`about`**: 使用第三人称单数动词，简要描述操作。
+* **`after_help`**: 使用 `include_str!("../../docs/help/<category>/<cmd>.md")` 引入外部文档。
+* **Arguments**:
+    * **Input**: 命名为 `infile` (单文件) 或 `infiles` (多文件)。
+    * **Output**: 命名为 `outfile` (`-o`, `--outfile`)。
+
+### 文档内容规范 (Markdown Content)
+
+所有子命令的帮助文档 (`docs/help/<category>/<cmd>.md`) 必须遵循以下统一风格：
+
+1. **简述 (Description)**:
+    * 标题后紧跟简洁的功能描述，可以比 .about(...) 更详细，但不能超过两行。
+
+2. **分节结构**（按顺序）:
+    * **Behavior** (可选): 命令的核心行为说明。
+    * **Input**: 输入源说明（使用标准格式）。
+    * **Output** (如适用): 输出说明。
     - **Notes**: Bullet points starting with `*`.
-        - Standard note for text inputs: `* Reads from stdin if input file is 'stdin'`
-    - **Examples**: Numbered list (`1.`, `2.`) with code blocks indented by 3 spaces.
-- **Arguments**:
-    - **Input**: `infiles` (multiple) or `infile` (single).
-        - Help: `Input file(s) to process`.
-    - **Output**: `outfile` (`-o`, `--outfile`).
-        - Help: `Output filename. [stdout] for screen`.
+    * **Examples**: 使用示例。
+
+3. **节标题格式**:
+    * 使用 `Section Name:`（首字母大写，后跟冒号）。
+    * **不要**使用 Markdown 的 `##`。
+    * **不要**包含 `Usage:` 或 `Options:` 小节（由 `clap` 自动生成）。
+
+4. **内容格式**:
+    * **列表**: 使用 `* `（星号 + 1 个空格）引导无序列表。
+        * 子项使用 `    * `（4空格缩进 + 星号 + 1 个空格）。
+    * **代码示例**: 使用缩进（4空格）而非 ` ``` `。
+    * 例外：多行命令示例（如包含 `\` 换行的命令）可使用 ` ``` ` 代码块。
+    * **参数引用**: 使用反引号包裹，如 `` `--header` / `-H` ``。
+
+5. **示例 (Examples)**:
+    * 使用 `Examples:` 作为标题。
+    * 采用编号列表 (`1. `, `2. `)，末尾不要句号或冒号。
+    * 下一行命令示例（3 空格缩进, 用反引号包裹单行命令）。
