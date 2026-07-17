@@ -92,137 +92,84 @@ Sparse or list-form distance data, suitable for storing graph structures or only
 
 #### `necom mat to-phylip`
 
-Convert pairwise TSV to a PHYLIP matrix.
-
-- **Purpose**: Build a distance matrix from alignment results (e.g., `blast --outfmt 6`) for subsequent tree inference.
-- **Output**: Full PHYLIP distance matrix. All observed IDs are collected into a square matrix.
+Build a full PHYLIP distance matrix from a pairwise TSV (e.g., alignment output). Missing pairs can be filled with `--missing` and self-pairs with `--same`.
 
 #### `necom mat to-pair`
 
-Convert a PHYLIP matrix to pairwise TSV.
-
-- **Purpose**: Export a matrix as an edge list for graph clustering (e.g., `mcl`) or network visualization (Cytoscape).
-- **Output**: Three-column TSV (`A B distance`). Lower-triangular output including the diagonal.
+Flatten a PHYLIP matrix into a three-column pairwise TSV (`A B distance`), emitting the lower triangle including the diagonal.
 
 #### `necom mat format`
 
-Convert between PHYLIP formats and normalize them.
+Convert a PHYLIP matrix into another PHYLIP variant while preserving all distance values.
 
-- **Purpose**: Clean matrix formats to meet the requirements of specific software.
-- **Modes (`--format`)**:
-  - `full` (default): full matrix with long names preserved.
-  - `lower`: lower-triangular matrix without diagonal values to save disk space.
-  - `strict`: truncated names and fixed-width values for compatibility with the original PHYLIP toolkit.
+* `--format full` (default): full square matrix with original names.
+* `--format lower`: lower-triangular matrix without diagonal values.
+* `--format strict`: 10-character names and fixed-width values for compatibility with the original PHYLIP toolkit.
 
 ### Operations and Analysis
 
 #### `necom mat subset`
 
-Extract a submatrix based on a list of names.
-
-- **Purpose**: Extract specific species or gene families from a large matrix for fine-grained analysis.
-- **Input**: PHYLIP matrix and an ID list file (one ID per line).
-- **Output**: Full PHYLIP submatrix in the order of the ID list.
+Extract a PHYLIP submatrix in the order of a given ID list.
 
 #### `necom mat compare`
 
-Compute correlation or difference between two matrices.
+Compare two matrices on their common IDs using correlation, error, or distance metrics. Multiple `--method` values can be comma-separated.
 
-- **Purpose**: Evaluate consistency between distance calculation methods, or information loss before and after clustering (Cophenetic Correlation).
-- **Prerequisite**: Uses the intersection of common IDs between the two matrices.
-- **Metrics (`--method`)**: Pearson, Spearman, Cosine, Jaccard, MAE, Euclidean, or `all`. Default is `pearson`; multiple methods can be comma-separated.
+#### `necom mat transform`
 
-### `necom mat transform`
+Apply mathematical transformations to matrix elements. It is the main tool for converting a **Similarity Matrix** into a **Distance Matrix**, and also supports normalization and other numerical adjustments.
 
-The `necom mat transform` command applies mathematical transformations to values in a matrix.
+Clustering algorithms (UPGMA, NJ, Ward) and multidimensional scaling require a **Distance Matrix** with $D(x, x) = 0$, $D(x, y) \ge 0$, and smaller values indicating higher similarity. Upstream tools such as BLAST, MMseqs2, and Diamond usually output **Similarity**, where $S(x, x) = Max$ and larger values indicate higher similarity.
 
-It is the core tool for converting a **Similarity Matrix** into a **Distance Matrix**, and also supports normalization and other numerical adjustments.
+**Key options**:
 
-- **Purpose**: Convert similarity matrices to distance matrices, or perform normalization and log transformations.
-- **Operations (`--op`)**: `linear`, `inv-linear`, `log`, `exp`, `square`, `sqrt`.
-- **Normalization (`--normalize`)**: Normalize based on diagonal elements before applying the transformation.
-- **Input**: PHYLIP distance matrix or pairwise TSV file; use `--input-format pair` for pairwise TSV.
-
-Clustering algorithms (such as UPGMA, NJ, Ward) and multidimensional scaling (MDS) usually require a **Distance Matrix** or **Dissimilarity Matrix** that satisfies:
-
-- $D(x, x) = 0$
-- $D(x, y) \ge 0$
-- Smaller $D(x, y)$ indicates higher similarity
-
-However, upstream bioinformatics tools (such as BLAST, MMseqs2, Diamond) or statistical analyses usually output **Similarity**, which satisfies:
-
-- $S(x, x) = Max$ (e.g., 1.0 or 100)
-- Larger $S(x, y)$ indicates higher similarity
+* `--op`: `linear`, `inv-linear`, `log`, `exp`, `square`, `sqrt`.
+* `--normalize`: scale values by diagonal elements before transformation.
+* `--input-format pair`: read pairwise TSV instead of PHYLIP.
 
 #### Conversion Models
 
-`necom mat transform` supports the following common transformation modes:
+`necom mat transform` supports common similarity-to-distance conversions:
 
 ##### 1. Linear Inversion
 
-Applicable to similarities with a fixed upper bound (e.g., Identity, Percent Similarity).
+For similarities with a fixed upper bound:
 
 $$D = Max - S$$
 
-- **Scenario**: BLAST Identity (0–100) $\rightarrow$ $D = 100 - S$
-- **Scenario**: Fraction (0–1) $\rightarrow$ $D = 1 - S$
+Examples: BLAST identity (0–100) becomes $D = 100 - S$; fractions become $D = 1 - S$.
 
 ##### 2. Normalized Linear Inversion
 
-If $S$ has no fixed upper bound (e.g., Alignment Score), normalization is required first.
-
-Raw scores are usually affected by sequence length and cannot be directly compared (e.g., a score of 1000 for a long sequence may be less significant than a score of 100 for a short sequence). Normalization uses the diagonal (self-alignment score) to convert raw scores into relative similarity (0–1 range), giving subsequent distance transformations (e.g., $1-S$) a meaningful mathematical interpretation.
+For raw scores without a fixed upper bound, normalize by diagonal self-scores first:
 
 $$D = 1 - \frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}}$$
 
-Or simply:
-
-$$D = 1 - \frac{S(x, y)}{Max(S)}$$
+A simpler alternative uses the global maximum: $D = 1 - S(x, y) / Max(S)$.
 
 ##### 3. Logarithmic
 
-Applicable to probabilities or multiplicative models (similar to Jukes-Cantor correction).
+For probabilities or multiplicative models:
 
 $$D = -\ln(S)$$
 
-Or after normalization:
-
-$$D = -\ln(\frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}})$$
-
-- **Scenario**: Sequence identity probability $\rightarrow$ evolutionary distance
-
-#### Data Flow
-
-```mermaid
-flowchart LR
-    A[pair/phylip input] --> B{input format?}
-    B -->|pair| C[from_pair_scores<br/>--same/--missing]
-    B -->|phylip| D[from_relaxed_phylip<br/>sequence/value validation]
-    C --> E[NamedMatrix]
-    D --> E
-    E --> F[transform_matrix<br/>normalize? op]
-    F --> G[write_phylip_matrix<br/>precision=6]
-    G --> H[stdout/file]
-```
+After normalization: $D = -\ln(S(x, y) / \sqrt{S(x, x) \cdot S(y, y)})$. Useful for converting sequence identity probability to evolutionary distance.
 
 #### Notes
 
-- **Diagonal handling**:
-  - When `necom` reads a matrix, it usually ignores the diagonal (sets it to 0), but the `transform` command attempts to preserve diagonal information to support `--normalize`.
-  - If the input file lacks diagonal information (as in some PHYLIP variants), `--normalize` will not work correctly (treated as 0).
-- **Numerical stability**:
-  - The `log` operation is sensitive to 0 or negative values; off-diagonal values are set to `Inf` and diagonal values are set to 0.
-  - If the diagonal is 0 during normalization, the result will be 0.
+* Diagonal information is preserved so that `--normalize` can use self-scores. If the input lacks diagonal values, `--normalize` will not work correctly.
+* `log` of 0 or negative off-diagonal values produces `Inf`; non-positive diagonal values become `0`.
 
 #### Future Work
 
-The following transformations are not currently implemented but may be useful in the future:
+The following conversions are not yet implemented:
 
-- **Reciprocal**: $D = \frac{1}{S} - \frac{1}{Max}$. Can be approximated with `--op linear` plus an external script.
-- **Cosine Similarity**: $D = 1 - \cos(\theta)$
-- **Correlation**: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$
+* **Reciprocal**: $D = 1/S - 1/Max$ (can be approximated with `--op linear`).
+* **Cosine Similarity**: $D = 1 - \cos(\theta)$.
+* **Correlation**: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.
 
-For Cosine/Correlation distances, we recommend computing them in Python (SciPy) and exporting the result as a PHYLIP matrix.
+For Cosine/Correlation distances, compute them in Python (SciPy) and export as a PHYLIP matrix.
 
 ## Recommended Workflows
 
