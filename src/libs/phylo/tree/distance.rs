@@ -52,7 +52,12 @@ pub fn dist_pairwise<W: Write>(
     for (k1, v1) in id_of.iter() {
         for (k2, v2) in id_of.iter() {
             let dist = tree.node_distance(*v1, *v2)?;
-            writer.write_fmt(format_args!("{}\t{}\t{}\n", k1, k2, format_float(dist)))?;
+            writer.write_fmt(format_args!(
+                "{}\t{}\t{}\n",
+                k1,
+                k2,
+                format_float(dist)
+            ))?;
         }
     }
     Ok(())

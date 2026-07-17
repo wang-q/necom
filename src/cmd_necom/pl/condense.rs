@@ -108,7 +108,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let taxon_reader = necom::reader(&abs_taxon)
         .with_context(|| format!("Failed to open reader for {}", abs_taxon))?;
-    let taxon_table = necom::libs::phylo::read_taxonomy(taxon_reader, &ranks, &leaf_names)?;
+    let taxon_table =
+        necom::libs::phylo::read_taxonomy(taxon_reader, &ranks, &leaf_names)?;
     let taxon_map = taxon_table.taxon_map;
     let all_groups = taxon_table.all_groups;
 

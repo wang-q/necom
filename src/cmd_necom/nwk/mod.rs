@@ -1,8 +1,8 @@
 use clap::{ArgMatches, Command};
 
-pub mod cmp;
 pub mod comment;
 pub(crate) mod common;
+pub mod compare;
 pub mod distance;
 pub mod indent;
 pub mod label;
@@ -29,7 +29,7 @@ pub fn make_subcommand() -> Command {
 This suite of tools provides a comprehensive set of operations for phylogenetic trees in Newick format.
 
 Subcommand groups:
-* Information: stat / label / distance / support / cmp
+* Information: stat / label / distance / support / compare
 * Manipulation: order / prune / rename / replace / reroot / subtree / topo
 * Visualization: comment / indent / to-dot / to-forest / to-svg / to-tex
 
@@ -40,8 +40,8 @@ Notes:
         )
         .subcommand_required(true)
         .arg_required_else_help(true)
-        .subcommand(cmp::make_subcommand())
         .subcommand(comment::make_subcommand())
+        .subcommand(compare::make_subcommand())
         .subcommand(distance::make_subcommand())
         .subcommand(indent::make_subcommand())
         .subcommand(label::make_subcommand())
@@ -62,8 +62,8 @@ Notes:
 /// Execute the nwk command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     match args.subcommand() {
-        Some(("cmp", sub_matches)) => cmp::execute(sub_matches),
         Some(("comment", sub_matches)) => comment::execute(sub_matches),
+        Some(("compare", sub_matches)) => compare::execute(sub_matches),
         Some(("distance", sub_matches)) => distance::execute(sub_matches),
         Some(("indent", sub_matches)) => indent::execute(sub_matches),
         Some(("label", sub_matches)) => label::execute(sub_matches),

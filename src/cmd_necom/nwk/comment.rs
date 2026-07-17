@@ -85,7 +85,9 @@ pub fn make_subcommand() -> Command {
                 .long("rec")
                 .num_args(0..=1)
                 .default_missing_value("LemonChiffon")
-                .help("Place a rectangle in the background of the subtree; value as color"),
+                .help(
+                    "Place a rectangle in the background of the subtree; value as color",
+                ),
         )
         .arg(
             Arg::new("tri")
@@ -106,8 +108,8 @@ pub fn make_subcommand() -> Command {
 /// Execute the comment command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     let opt_string = args.get_one::<String>("string");
 
@@ -126,9 +128,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut trees = Tree::from_file(infile)?;
 
     for tree in &mut trees {
-        let ids: Vec<NodeId> = super::common::match_nodes_and_lca(tree, args, "node", "lca")?
-            .into_iter()
-            .collect();
+        let ids: Vec<NodeId> =
+            super::common::match_nodes_and_lca(tree, args, "node", "lca")?
+                .into_iter()
+                .collect();
 
         for id in &ids {
             if let Some(node) = tree.get_node_mut(*id) {

@@ -17,8 +17,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let infile = args.get_one::<String>("infile").unwrap();
     let opt_mode = args.get_one::<String>("mat_format").unwrap();
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
     let fmt = necom::libs::pairmat::MatrixFormat::from_mode(opt_mode)?;

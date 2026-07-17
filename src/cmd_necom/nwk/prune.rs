@@ -45,8 +45,8 @@ Examples:
 /// Execute the prune command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
     let infile = args
         .get_one::<String>("infile")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: infile"))?;
@@ -56,7 +56,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let target_ids = super::common::match_names(&tree, args)?;
 
         if args.get_flag("invert") && target_ids.is_empty() {
-            log::warn!("--invert set but no target nodes matched; entire tree will be pruned");
+            log::warn!(
+                "--invert set but no target nodes matched; entire tree will be pruned"
+            );
         }
 
         let to_remove: Vec<_> = if args.get_flag("invert") {

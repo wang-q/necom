@@ -65,9 +65,9 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
                     continue;
                 }
                 let key = (id.min(other), id.max(other));
-                sum_d += *dists
-                    .get(&key)
-                    .ok_or_else(|| anyhow!("missing distance for pair ({}, {})", key.0, key.1))?;
+                sum_d += *dists.get(&key).ok_or_else(|| {
+                    anyhow!("missing distance for pair ({}, {})", key.0, key.1)
+                })?;
             }
             r.insert(id, sum_d);
         }
@@ -81,9 +81,9 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
                 let id1 = active_nodes[i];
                 let id2 = active_nodes[j];
                 let key = (id1.min(id2), id1.max(id2));
-                let d = *dists
-                    .get(&key)
-                    .ok_or_else(|| anyhow::anyhow!("distance not found for pair {:?}", key))?;
+                let d = *dists.get(&key).ok_or_else(|| {
+                    anyhow::anyhow!("distance not found for pair {:?}", key)
+                })?;
                 let r1 = r[&id1];
                 let r2 = r[&id2];
 
@@ -101,9 +101,9 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
         let id1 = active_nodes[idx1];
         let id2 = active_nodes[idx2];
 
-        let d12 = *dists
-            .get(&(id1.min(id2), id1.max(id2)))
-            .ok_or_else(|| anyhow::anyhow!("distance not found for pair ({}, {})", id1, id2))?;
+        let d12 = *dists.get(&(id1.min(id2), id1.max(id2))).ok_or_else(|| {
+            anyhow::anyhow!("distance not found for pair ({}, {})", id1, id2)
+        })?;
         let r1 = r[&id1];
         let r2 = r[&id2];
 
@@ -136,12 +136,20 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
             let d1 = *dists
                 .get(&(id1.min(other_id), id1.max(other_id)))
                 .ok_or_else(|| {
-                    anyhow::anyhow!("distance not found for pair ({}, {})", id1, other_id)
+                    anyhow::anyhow!(
+                        "distance not found for pair ({}, {})",
+                        id1,
+                        other_id
+                    )
                 })?;
             let d2 = *dists
                 .get(&(id2.min(other_id), id2.max(other_id)))
                 .ok_or_else(|| {
-                    anyhow::anyhow!("distance not found for pair ({}, {})", id2, other_id)
+                    anyhow::anyhow!(
+                        "distance not found for pair ({}, {})",
+                        id2,
+                        other_id
+                    )
                 })?;
 
             let d_new = 0.5 * (d1 + d2 - d12);
@@ -167,9 +175,9 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
     if active_nodes.len() == 2 {
         let id1 = active_nodes[0];
         let id2 = active_nodes[1];
-        let d = *dists
-            .get(&(id1.min(id2), id1.max(id2)))
-            .ok_or_else(|| anyhow::anyhow!("distance not found for pair ({}, {})", id1, id2))?;
+        let d = *dists.get(&(id1.min(id2), id1.max(id2))).ok_or_else(|| {
+            anyhow::anyhow!("distance not found for pair ({}, {})", id1, id2)
+        })?;
 
         // Create a root node between them
         let root = tree.add_node();

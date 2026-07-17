@@ -187,7 +187,8 @@ mod tests {
     #[test]
     fn test_all_points_are_in_single_cluster_when_their_distance_is_zero() {
         let mut dbscan = Dbscan::new(1, 2);
-        let m = crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(2, 0, 1);
+        let m =
+            crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(2, 0, 1);
 
         let clustering = dbscan.perform_clustering(&m);
 
@@ -198,7 +199,8 @@ mod tests {
     #[test]
     fn test_points_are_correctly_clustered_based_on_their_distance() {
         let mut dbscan = Dbscan::new(1, 2);
-        let mut m = crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(5, 0, 100);
+        let mut m =
+            crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(5, 0, 100);
         m.set(0, 1, 1);
         m.set(0, 2, 9);
         m.set(0, 3, 9);
@@ -237,7 +239,8 @@ mod tests {
         // marked as visited, it is put into the cluster because it is not
         // yet a member of any other cluster.
         let mut dbscan = Dbscan::new(1, 3);
-        let mut m = crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(3, 0, 100);
+        let mut m =
+            crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(3, 0, 100);
         m.set(0, 1, 1);
         m.set(0, 2, 2);
         m.set(1, 2, 1);
@@ -252,7 +255,8 @@ mod tests {
     #[test]
     fn test_points_that_do_not_belong_to_any_cluster_are_none() {
         let mut dbscan = Dbscan::new(1, 2);
-        let m = crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(1, 0, 100);
+        let m =
+            crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(1, 0, 100);
 
         let clustering = dbscan.perform_clustering(&m);
 

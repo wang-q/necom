@@ -7,7 +7,7 @@
 Subcommands are grouped into three categories:
 
 *   **Information**: Extract information or statistics from trees.
-    *   `cmp`: Compare trees (RF, WRF, KF distances).
+    *   `compare`: Compare trees (RF, WRF, KF distances).
     *   `distance`: Compute distances between nodes.
     *   `label`: Extract labels/names from the tree.
     *   `stat`: Print tree statistics (node count, leaf count, balance indices, etc.).
@@ -32,12 +32,12 @@ Subcommands are grouped into three categories:
 
 ## Information Commands
 
-### cmp
+### compare
 
 Compare trees using Robinson-Foulds (RF) distance and its variants.
 
 ```bash
-necom nwk cmp [OPTIONS] <infile> [compare_file]
+necom nwk compare [OPTIONS] <infile> [compare_file]
 ```
 
 *   `[compare_file]`: Optional second tree file. If omitted, all trees in `<infile>` are compared pairwise.
@@ -315,7 +315,7 @@ necom nwk to-tex [OPTIONS] <infile>
 `necom nwk` treats non-finite branch lengths (`NaN`, positive/negative infinity), negative values, and zero values as `0.0` during computation and visualization. On input, such values are normalized to `None` (no length annotation); on output, `None` and zero (`0.0`) lengths are omitted so that cladograms remain unannotated. This applies to:
 
 *   Statistics (`stat`) and distance calculations (`distance`).
-*   Tree comparison (`cmp`), including weighted Robinson-Foulds and Kuhner-Felsenstein distances.
+*   Tree comparison (`compare`), including weighted Robinson-Foulds and Kuhner-Felsenstein distances.
 *   Tree operations such as `reroot`, collapse, and insert_parent.
 *   Visualization (`to-svg`, `to-dot`, `to-forest`, `to-tex`).
 

@@ -36,7 +36,10 @@ impl NamedMatrix {
     }
 
     /// Create from existing names and values (condensed upper triangle).
-    pub fn new_from_values(names: Vec<String>, values: Vec<f32>) -> anyhow::Result<Self> {
+    pub fn new_from_values(
+        names: Vec<String>,
+        values: Vec<f32>,
+    ) -> anyhow::Result<Self> {
         let size = names.len();
         let matrix = CondensedMatrix::from_vec(size, values)?;
 
@@ -171,7 +174,12 @@ impl NamedMatrix {
     /// assert_eq!(matrix.get_by_name("seq1", "seq2"), Some(0.5));
     /// assert!(matrix.set_by_name("seq1", "seq3", 0.5).is_err());  // Non-existent name
     /// ```
-    pub fn set_by_name(&mut self, name1: &str, name2: &str, value: f32) -> anyhow::Result<()> {
+    pub fn set_by_name(
+        &mut self,
+        name1: &str,
+        name2: &str,
+        value: f32,
+    ) -> anyhow::Result<()> {
         match (self.names.get(name1), self.names.get(name2)) {
             (Some(&i), Some(&j)) => {
                 self.set(i, j, value);
@@ -182,8 +190,13 @@ impl NamedMatrix {
         }
     }
 
-    pub fn from_pair_scores(infile: &str, same: f32, missing: f32) -> anyhow::Result<Self> {
-        let (scoring_matrix, index_name) = ScoringMatrix::from_pair_scores(infile, same, missing)?;
+    pub fn from_pair_scores(
+        infile: &str,
+        same: f32,
+        missing: f32,
+    ) -> anyhow::Result<Self> {
+        let (scoring_matrix, index_name) =
+            ScoringMatrix::from_pair_scores(infile, same, missing)?;
         let size = index_name.len();
 
         // Create NamedMatrix from ScoringMatrix
@@ -323,7 +336,9 @@ impl NamedMatrix {
         // Validate symmetry for full matrices.
         if layout == Layout::Full {
             for (i, (name, values)) in rows.iter().enumerate() {
-                for (j, &value) in values.iter().enumerate().skip(i + 1).take(size - i - 1) {
+                for (j, &value) in
+                    values.iter().enumerate().skip(i + 1).take(size - i - 1)
+                {
                     let expected = matrix.get(i, j);
                     if (value - expected).abs() > 1e-6 {
                         anyhow::bail!(

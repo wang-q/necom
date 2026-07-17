@@ -409,10 +409,12 @@ fn test_reroot_support_at_internal() {
         .copied()
         .expect("support label should move to the old root node");
     let support_node = tree.get_node(support_node_id).unwrap();
-    assert!(support_node
-        .children
-        .iter()
-        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("A")));
+    assert!(support_node.children.iter().any(|&id| tree
+        .get_node(id)
+        .unwrap()
+        .name
+        .as_deref()
+        == Some("A")));
 }
 
 #[test]
@@ -435,10 +437,12 @@ fn test_reroot_support_multiple_labels() {
         .expect("S1 support label should be preserved");
     let s1_node = tree.get_node(s1_node_id).unwrap();
     assert!(!s1_node.is_leaf());
-    assert!(s1_node
-        .children
-        .iter()
-        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("C")));
+    assert!(s1_node.children.iter().any(|&id| tree
+        .get_node(id)
+        .unwrap()
+        .name
+        .as_deref()
+        == Some("C")));
 }
 
 #[test]
@@ -1006,14 +1010,18 @@ fn test_reroot_support_root_child_leaf() {
     // S1 should still exist and keep its original support label.
     let s1_id = tree.get_node_by_name("S1").unwrap();
     let s1_node = tree.get_node(s1_id).unwrap();
-    assert!(s1_node
-        .children
-        .iter()
-        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("B")));
-    assert!(s1_node
-        .children
-        .iter()
-        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("C")));
+    assert!(s1_node.children.iter().any(|&id| tree
+        .get_node(id)
+        .unwrap()
+        .name
+        .as_deref()
+        == Some("B")));
+    assert!(s1_node.children.iter().any(|&id| tree
+        .get_node(id)
+        .unwrap()
+        .name
+        .as_deref()
+        == Some("C")));
 }
 
 #[test]
@@ -1031,10 +1039,12 @@ fn test_reroot_support_multifurcating_internal() {
     // S2 should now carry the old S1 label.
     let s2_id = tree.get_node_by_name("S1").unwrap();
     let s2_node = tree.get_node(s2_id).unwrap();
-    assert!(s2_node
-        .children
-        .iter()
-        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("A")));
+    assert!(s2_node.children.iter().any(|&id| tree
+        .get_node(id)
+        .unwrap()
+        .name
+        .as_deref()
+        == Some("A")));
 
     // S1 should now be a child of the new root, with no name, and still multifurcating.
     let root = tree.get_node(tree.get_root().unwrap()).unwrap();
@@ -1049,14 +1059,18 @@ fn test_reroot_support_multifurcating_internal() {
         .unwrap();
     let s1_node = tree.get_node(s1_id).unwrap();
     assert_eq!(s1_node.children.len(), 3);
-    assert!(s1_node
-        .children
-        .iter()
-        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("C")));
-    assert!(s1_node
-        .children
-        .iter()
-        .any(|&id| tree.get_node(id).unwrap().name.as_deref() == Some("D")));
+    assert!(s1_node.children.iter().any(|&id| tree
+        .get_node(id)
+        .unwrap()
+        .name
+        .as_deref()
+        == Some("C")));
+    assert!(s1_node.children.iter().any(|&id| tree
+        .get_node(id)
+        .unwrap()
+        .name
+        .as_deref()
+        == Some("D")));
 }
 
 #[test]

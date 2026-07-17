@@ -101,7 +101,9 @@ fn parse_cluster_format(lines: &[String]) -> anyhow::Result<LabelMap> {
 /// Load batch partitions from a file in Long format.
 /// Format: GroupID `tab` ClusterID `tab` SampleID
 /// Returns a list of (GroupID, LabelMap).
-pub fn load_batch_partitions<P: AsRef<Path>>(path: P) -> anyhow::Result<Vec<(String, LabelMap)>> {
+pub fn load_batch_partitions<P: AsRef<Path>>(
+    path: P,
+) -> anyhow::Result<Vec<(String, LabelMap)>> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
 

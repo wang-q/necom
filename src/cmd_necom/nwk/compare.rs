@@ -3,40 +3,11 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use necom::libs::phylo::tree::Tree;
 use std::io::Write;
 
-/// Build the clap subcommand for cmp.
+/// Build the clap subcommand for compare.
 pub fn make_subcommand() -> Command {
-    Command::new("cmp")
+    Command::new("compare")
         .about("Compares trees (RF, WRF, KF distances)")
-        .after_help(
-            r###"
-Compare trees using Robinson-Foulds (RF) distance and its variants.
-
-Notes:
-* Metrics:
-    * RF: Robinson-Foulds distance (Topological difference).
-    * WRF: Weighted Robinson-Foulds distance (Branch length difference).
-      Trivial splits (single-leaf branches) are excluded by default.
-    * KF: Kuhner-Felsenstein (Branch Score) distance.
-      Trivial splits are excluded by default.
-* Use `--include-trivial` to include single-leaf splits in WRF/KF calculations.
-
-* Input:
-    * One file: Compares all trees in the file against each other (Pairwise).
-    * Two files: Compares each tree in file1 against each tree in file2.
-
-* Output:
-    * TSV format: Tree1 \t Tree2 \t RF_Dist \t WRF_Dist \t KF_Dist
-
-* IDs are 1-based indices of the trees in the input files.
-
-Examples:
-1. Compare all trees in a file:
-   necom nwk cmp trees.nwk
-
-2. Compare trees between two files:
-   necom nwk cmp set1.nwk set2.nwk
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk/compare.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "First input filename (or stdin)",
         ))
@@ -54,7 +25,7 @@ Examples:
         )
         .arg(crate::cmd_necom::args::outfile_arg())
 }
-/// Execute the cmp command.
+/// Execute the compare command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // 1. Load first file
     let infile = args
@@ -77,8 +48,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // 3. Output writer
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     let include_trivial = args.get_flag("include_trivial");
 

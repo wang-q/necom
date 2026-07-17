@@ -68,9 +68,9 @@ fn validate_tree_integrity(tree: &Tree) -> anyhow::Result<()> {
         let parent = node
             .parent
             .ok_or_else(|| anyhow::anyhow!("non-root node {} has no parent", id))?;
-        let parent_node = tree
-            .get_node(parent)
-            .ok_or_else(|| anyhow::anyhow!("parent {} of node {} is deleted", parent, id))?;
+        let parent_node = tree.get_node(parent).ok_or_else(|| {
+            anyhow::anyhow!("parent {} of node {} is deleted", parent, id)
+        })?;
         if !parent_node.children.contains(&id) {
             anyhow::bail!("node {} is not listed as a child of parent {}", id, parent);
         }
@@ -81,7 +81,11 @@ fn validate_tree_integrity(tree: &Tree) -> anyhow::Result<()> {
 
 /// Add a child to a parent node.
 /// Updates both parent's `children` list and child's `parent` field.
-pub fn add_child(tree: &mut Tree, parent_id: NodeId, child_id: NodeId) -> anyhow::Result<()> {
+pub fn add_child(
+    tree: &mut Tree,
+    parent_id: NodeId,
+    child_id: NodeId,
+) -> anyhow::Result<()> {
     if parent_id == child_id {
         anyhow::bail!("Cannot add node as child of itself");
     }
@@ -94,9 +98,9 @@ pub fn add_child(tree: &mut Tree, parent_id: NodeId, child_id: NodeId) -> anyhow
 
     // Check if child already has a parent
     let child_parent = {
-        let child = tree
-            .get_node(child_id)
-            .ok_or_else(|| anyhow::anyhow!("Child node {} not found or deleted", child_id))?;
+        let child = tree.get_node(child_id).ok_or_else(|| {
+            anyhow::anyhow!("Child node {} not found or deleted", child_id)
+        })?;
         child.parent
     };
     if let Some(old_parent) = child_parent {
@@ -221,7 +225,9 @@ pub fn collapse_node(tree: &mut Tree, id: NodeId) -> anyhow::Result<()> {
         .map(|node| {
             node.children
                 .iter()
-                .filter_map(|&c| tree.get_node(c).map(|child| (c, child.finite_length())))
+                .filter_map(|&c| {
+                    tree.get_node(c).map(|child| (c, child.finite_length()))
+                })
                 .collect()
         })
         .unwrap_or_default();
@@ -373,7 +379,11 @@ pub fn insert_parent(tree: &mut Tree, id: NodeId) -> anyhow::Result<NodeId> {
 /// Returns an error if the nodes do not share the same parent, or if either
 /// node is not found. Restricting this to siblings prevents creating cycles
 /// when one node is an ancestor of the other.
-pub fn insert_parent_pair(tree: &mut Tree, id1: NodeId, id2: NodeId) -> anyhow::Result<NodeId> {
+pub fn insert_parent_pair(
+    tree: &mut Tree,
+    id1: NodeId,
+    id2: NodeId,
+) -> anyhow::Result<NodeId> {
     if id1 == id2 {
         anyhow::bail!("Cannot insert a common parent for the same node {}", id1);
     }
@@ -444,7 +454,8 @@ pub fn remove_degree_two_nodes(tree: &mut Tree) -> anyhow::Result<()> {
     // Collapsing a degree-2 node replaces it with its child in the parent's
     // children list, so the parent's degree is unchanged and no new degree-2
     // nodes are created.
-    let to_remove: Vec<NodeId> = tree.find_nodes(|n| n.parent.is_some() && n.children.len() == 1);
+    let to_remove: Vec<NodeId> =
+        tree.find_nodes(|n| n.parent.is_some() && n.children.len() == 1);
 
     for id in to_remove {
         // Skip nodes that may have been altered by a previous collapse
@@ -501,9 +512,9 @@ pub fn deroot(tree: &mut Tree) -> anyhow::Result<()> {
         } else {
             to_delete.push(child_id);
             let (parent_len, grandchildren) = {
-                let child = tree
-                    .get_node(child_id)
-                    .ok_or_else(|| anyhow::anyhow!("child node {} not found", child_id))?;
+                let child = tree.get_node(child_id).ok_or_else(|| {
+                    anyhow::anyhow!("child node {} not found", child_id)
+                })?;
                 (child.finite_length(), child.children.clone())
             };
             for &grandchild_id in &grandchildren {
@@ -906,9 +917,9 @@ pub fn reroot_at_lca(
         .ok_or_else(|| anyhow::anyhow!("tree has no root"))?;
 
     if old_root == sub_root_id && lax {
-        if let Some(comp_lca) =
-            crate::libs::phylo::tree::query::lax_complement_lca(tree, target_ids, old_root)
-        {
+        if let Some(comp_lca) = crate::libs::phylo::tree::query::lax_complement_lca(
+            tree, target_ids, old_root,
+        ) {
             sub_root_id = comp_lca;
         }
     }
@@ -926,7 +937,10 @@ pub fn reroot_at_lca(
 
 /// Reroot at the midpoint of the longest branch. No-op when the tree has no
 /// edges.
-pub fn reroot_at_longest_branch(tree: &mut Tree, process_support: bool) -> anyhow::Result<()> {
+pub fn reroot_at_longest_branch(
+    tree: &mut Tree,
+    process_support: bool,
+) -> anyhow::Result<()> {
     // Skip when no meaningful branch lengths exist (cladogram); otherwise
     // get_node_with_longest_edge would return an arbitrary node due to
     // tie-breaking, producing a meaningless reroot.
@@ -935,7 +949,9 @@ pub fn reroot_at_longest_branch(tree: &mut Tree, process_support: bool) -> anyho
         .iter()
         .any(|n| !n.deleted && n.length.map(|l| l > 0.0).unwrap_or(false));
     if !has_length {
-        log::debug!("reroot_at_longest_branch: tree has no positive branch lengths, skipping");
+        log::debug!(
+            "reroot_at_longest_branch: tree has no positive branch lengths, skipping"
+        );
         return Ok(());
     }
 
@@ -1012,7 +1028,8 @@ mod tests {
         let mut tree = Tree::from_newick("((A,A),B);").unwrap();
         let mut mapping = BTreeMap::new();
         mapping.insert("A".to_string(), vec!["X".to_string()]);
-        replace_annotations(&mut tree, AnnotationMode::Label, &mapping, false, false).unwrap();
+        replace_annotations(&mut tree, AnnotationMode::Label, &mapping, false, false)
+            .unwrap();
         let names: Vec<_> = tree.get_names();
         assert!(names.contains(&"X".to_string()));
         assert!(names.contains(&"A".to_string()));

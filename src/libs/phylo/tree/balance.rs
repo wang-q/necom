@@ -80,7 +80,8 @@ pub fn colless(tree: &Tree) -> Option<f64> {
                     // Colless index is only defined for strictly bifurcating trees.
                     return None;
                 }
-                let diff = (children_counts[0] as isize - children_counts[1] as isize).abs() as f64;
+                let diff = (children_counts[0] as isize - children_counts[1] as isize)
+                    .abs() as f64;
                 sum_diff += diff;
             }
         }
@@ -123,10 +124,12 @@ pub fn compute_avg_clade_distances(tree: &Tree) -> HashMap<NodeId, f64> {
 
                     for &child in &node.children {
                         if let Some(st) = stats.get(&child) {
-                            let len = tree.get_node(child).map_or(0.0, |n| n.finite_length());
+                            let len =
+                                tree.get_node(child).map_or(0.0, |n| n.finite_length());
                             let d_child_ext = st.d + st.n as f64 * len;
 
-                            let cross = n_total as f64 * d_child_ext + st.n as f64 * d_total;
+                            let cross =
+                                n_total as f64 * d_child_ext + st.n as f64 * d_total;
                             s_total += st.s + cross;
                             d_total += d_child_ext;
                             n_total += st.n;
@@ -206,7 +209,8 @@ pub fn calculate_inconsistency(
             let mean = sub_heights.iter().sum::<f64>() / n as f64;
             // Use sample variance (divisor n-1) to match SciPy/standard stats
             let divisor = if n > 1 { (n - 1) as f64 } else { 1.0 };
-            let variance = sub_heights.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / divisor;
+            let variance =
+                sub_heights.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / divisor;
             let std = variance.sqrt();
             if std.abs() < 1e-12 {
                 // All compared heights are identical; the z-score is zero by definition.

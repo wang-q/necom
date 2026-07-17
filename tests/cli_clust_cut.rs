@@ -11,7 +11,8 @@ fn parse_clusters(output: &str) -> Vec<HashSet<String>> {
         if line.trim().is_empty() {
             continue;
         }
-        let parts: Vec<String> = line.split_whitespace().map(|s| s.to_string()).collect();
+        let parts: Vec<String> =
+            line.split_whitespace().map(|s| s.to_string()).collect();
         let set: HashSet<String> = parts.into_iter().collect();
         clusters.push(set);
     }
@@ -352,7 +353,8 @@ fn test_scan_height() {
     assert_eq!(out_lines[0], "Group\tClusterID\tSampleID");
 
     // Verify stats file
-    let stats_content = fs::read_to_string(stats_file).expect("Failed to read stats file");
+    let stats_content =
+        fs::read_to_string(stats_file).expect("Failed to read stats file");
     let lines: Vec<&str> = stats_content.lines().collect();
 
     // Header + 3 rows
@@ -636,7 +638,8 @@ fn test_cut_empty_tree_input() {
         .run_fail();
 
     assert!(
-        stderr.to_lowercase().contains("no tree") || stderr.to_lowercase().contains("parse error"),
+        stderr.to_lowercase().contains("no tree")
+            || stderr.to_lowercase().contains("parse error"),
         "Expected 'no tree' or 'parse error', got: {}",
         stderr
     );
@@ -679,7 +682,8 @@ fn test_cut_scan_with_dynamic_hybrid_rejected() {
         .run_fail();
 
     assert!(
-        stderr.to_lowercase().contains("scan") && stderr.to_lowercase().contains("dynamic-hybrid"),
+        stderr.to_lowercase().contains("scan")
+            && stderr.to_lowercase().contains("dynamic-hybrid"),
         "Expected scan+dynamic-hybrid rejection, got: {}",
         stderr
     );
@@ -698,7 +702,8 @@ fn test_cut_missing_matrix_for_dynamic_hybrid() {
         .run_fail();
 
     assert!(
-        stderr.to_lowercase().contains("matrix") && stderr.to_lowercase().contains("required"),
+        stderr.to_lowercase().contains("matrix")
+            && stderr.to_lowercase().contains("required"),
         "Expected missing matrix error, got: {}",
         stderr
     );

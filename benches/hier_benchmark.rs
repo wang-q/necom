@@ -109,7 +109,11 @@ fn bench_hier(c: &mut Criterion) {
             method,
             |b, &m| {
                 b.iter(|| {
-                    linkage_with_algo(black_box(&matrix), black_box(m), black_box(Algorithm::Auto))
+                    linkage_with_algo(
+                        black_box(&matrix),
+                        black_box(m),
+                        black_box(Algorithm::Auto),
+                    )
                 })
             },
         );

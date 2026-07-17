@@ -319,7 +319,8 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
                                         if let Ok(lca) =
                                             tree.get_common_ancestor(m_node, medoid_node)
                                         {
-                                            let h = *node_heights.get(&lca).unwrap_or(&0.0);
+                                            let h =
+                                                *node_heights.get(&lca).unwrap_or(&0.0);
                                             if h > cut_height {
                                                 valid = false;
                                                 break;
@@ -371,7 +372,9 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
                     let mut valid = true;
                     if options.pam_respects_dendro {
                         if let Some(&medoid_node) = medoid_node_ids.get(&cid) {
-                            if let Ok(lca) = tree.get_common_ancestor(node_id, medoid_node) {
+                            if let Ok(lca) =
+                                tree.get_common_ancestor(node_id, medoid_node)
+                            {
                                 let h = *node_heights.get(&lca).unwrap_or(&0.0);
                                 if h > cut_height {
                                     valid = false;
@@ -413,7 +416,11 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
     })
 }
 
-fn calculate_core_scatter(members: &[usize], matrix: &NamedMatrix, min_cluster_size: usize) -> f64 {
+fn calculate_core_scatter(
+    members: &[usize],
+    matrix: &NamedMatrix,
+    min_cluster_size: usize,
+) -> f64 {
     let n = members.len();
     if n == 0 {
         return 0.0;
@@ -431,11 +438,13 @@ fn calculate_core_scatter(members: &[usize], matrix: &NamedMatrix, min_cluster_s
         point_avg_dists.push((sum / (n - 1).max(1) as f64, i));
     }
 
-    point_avg_dists.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+    point_avg_dists
+        .sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
     let base_core_size = (min_cluster_size as f64 / 2.0 + 1.0) as usize;
     let eff_core_size = if base_core_size < n {
-        (base_core_size as f64 + (n - base_core_size) as f64).sqrt() as usize + base_core_size
+        (base_core_size as f64 + (n - base_core_size) as f64).sqrt() as usize
+            + base_core_size
     } else {
         n
     };

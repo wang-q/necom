@@ -403,7 +403,8 @@ fn test_eval_malformed_pair_format() -> anyhow::Result<()> {
         "Expected failure for malformed pair format, but command succeeded"
     );
     assert!(
-        stderr.to_lowercase().contains("pair") || stderr.to_lowercase().contains("invalid"),
+        stderr.to_lowercase().contains("pair")
+            || stderr.to_lowercase().contains("invalid"),
         "Expected pair format error, got: {}",
         stderr
     );

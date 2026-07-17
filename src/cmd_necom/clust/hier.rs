@@ -49,8 +49,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
 
     // Parse method
-    let method = Method::from_str(method_str)
-        .map_err(|e| anyhow::anyhow!("invalid --clust-method '{}': {}", method_str, e))?;
+    let method = Method::from_str(method_str).map_err(|e| {
+        anyhow::anyhow!("invalid --clust-method '{}': {}", method_str, e)
+    })?;
 
     // Read matrix
     let matrix = NamedMatrix::from_relaxed_phylip(infile)?;
@@ -66,8 +67,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let newick = to_newick(&tree);
 
     // Write output
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
     writer.write_all((newick + "\n").as_ref())?;
 
     writer.flush()?;

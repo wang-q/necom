@@ -406,7 +406,9 @@ fn lgamma(x: f64) -> f64 {
         1.5056327351493116e-7,
     ];
     if x < 0.5 {
-        std::f64::consts::PI.ln() - (std::f64::consts::PI * x).sin().ln() - lgamma(1.0 - x)
+        std::f64::consts::PI.ln()
+            - (std::f64::consts::PI * x).sin().ln()
+            - lgamma(1.0 - x)
     } else {
         let x = x - 1.0;
         let mut sum = 0.999_999_999_999_809_9;

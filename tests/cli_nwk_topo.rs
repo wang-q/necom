@@ -16,7 +16,9 @@ fn command_topo_basic() {
     // Expected: ((((Gorilla,(Pan,Homo)Hominini)Homininae,Pongo)Hominidae,Hylobates),(((Macaca,Papio),Cercopithecus)Cercopithecinae,(Simias,Colobus)Colobinae)Cercopithecidae);
     // Note: The root edge length is also removed.
 
-    assert!(stdout.contains("((((Gorilla,(Pan,Homo)Hominini)Homininae,Pongo)Hominidae,Hylobates)"));
+    assert!(stdout.contains(
+        "((((Gorilla,(Pan,Homo)Hominini)Homininae,Pongo)Hominidae,Hylobates)"
+    ));
     assert!(!stdout.contains(":")); // No lengths
 }
 

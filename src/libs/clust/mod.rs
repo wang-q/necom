@@ -18,7 +18,9 @@ use std::io::BufRead;
 ///
 /// Returns `(names, components)` where `names[i]` is the i-th node's name and
 /// `components` is a Vec of Vecs of node indices (one Vec per component).
-pub fn connected_components<R: BufRead>(reader: R) -> Result<(Vec<String>, Vec<Vec<usize>>)> {
+pub fn connected_components<R: BufRead>(
+    reader: R,
+) -> Result<(Vec<String>, Vec<Vec<usize>>)> {
     let mut names = IndexSet::new();
     let mut graph = petgraph::graphmap::UnGraphMap::<_, ()>::new();
 

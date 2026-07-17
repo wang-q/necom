@@ -54,8 +54,8 @@ Examples:
 /// Execute the rename command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     let mut names = vec![];
     if args.contains_id("node") {
@@ -110,9 +110,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         // ids supplied by --node
         for (i, name) in names.iter().enumerate() {
             if let Some(id) = id_of.get(name) {
-                let rename = renames
-                    .get(i)
-                    .ok_or_else(|| anyhow::anyhow!("rename entry missing at index {}", i))?;
+                let rename = renames.get(i).ok_or_else(|| {
+                    anyhow::anyhow!("rename entry missing at index {}", i)
+                })?;
                 rename_of.insert(*id, rename.to_string());
             } else {
                 log::warn!("node not found: {}", name);
@@ -127,7 +127,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 (Some(id1), Some(id2)) => {
                     let x = tree.get_common_ancestor(*id1, *id2)?;
                     let rename = renames.get(len_names + i).ok_or_else(|| {
-                        anyhow::anyhow!("rename entry missing at index {}", len_names + i)
+                        anyhow::anyhow!(
+                            "rename entry missing at index {}",
+                            len_names + i
+                        )
                     })?;
                     rename_of.insert(x, rename.to_string());
                 }

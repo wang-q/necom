@@ -1,8 +1,8 @@
 use anyhow::Context;
 use clap::{Arg, ArgMatches, Command};
 use necom::libs::clust::eval::{
-    load_batch_partitions, load_partition, remove_singletons, run_batch, run_single, Coordinates,
-    DistanceMatrix, EvalTarget, PartitionFormat, TreeDistance,
+    load_batch_partitions, load_partition, remove_singletons, run_batch, run_single,
+    Coordinates, DistanceMatrix, EvalTarget, PartitionFormat, TreeDistance,
 };
 use necom::libs::pairmat::NamedMatrix;
 use necom::libs::phylo::tree::Tree;
@@ -66,8 +66,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         Err(e) => anyhow::bail!("Invalid format: {}", e),
     };
 
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     let remove_singletons_flag = args.get_flag("no_singletons");
 

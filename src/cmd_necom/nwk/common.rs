@@ -159,7 +159,10 @@ fn collect_name_selection(
 }
 
 /// Returns IDs of named nodes matching the name selection rules from CLI args.
-pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTreeSet<NodeId>> {
+pub(crate) fn match_names(
+    tree: &Tree,
+    args: &ArgMatches,
+) -> anyhow::Result<BTreeSet<NodeId>> {
     let mut ids = collect_name_selection(tree, args, "node", "name_list", "regex")?;
 
     // Default is printing all named nodes
@@ -191,7 +194,10 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
 }
 
 /// Returns IDs of nodes matching the position selection rules from CLI args.
-pub(crate) fn match_positions(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTreeSet<NodeId>> {
+pub(crate) fn match_positions(
+    tree: &Tree,
+    args: &ArgMatches,
+) -> anyhow::Result<BTreeSet<NodeId>> {
     let skip_internal = flag(args, "internal");
     let skip_leaf = flag(args, "leaf");
 

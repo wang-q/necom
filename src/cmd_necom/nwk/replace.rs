@@ -50,8 +50,8 @@ Examples:
 /// Execute the replace command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     let infile = args
         .get_one::<String>("infile")
@@ -78,7 +78,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut trees = Tree::from_file(infile)?;
 
     for tree in &mut trees {
-        tree.replace_annotations(annotation_mode, &replace_map, skip_internal, skip_leaf)?;
+        tree.replace_annotations(
+            annotation_mode,
+            &replace_map,
+            skip_internal,
+            skip_leaf,
+        )?;
 
         let out_string = tree.to_newick();
         writer.write_all((out_string + "\n").as_ref())?;

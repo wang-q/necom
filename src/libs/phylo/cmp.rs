@@ -68,11 +68,15 @@ pub trait TreeComparison {
 }
 
 /// Check leaf-set equality and build a sorted leaf_map for split comparison.
-fn check_leaves_and_build_map(t1: &Tree, t2: &Tree) -> anyhow::Result<BTreeMap<String, usize>> {
+fn check_leaves_and_build_map(
+    t1: &Tree,
+    t2: &Tree,
+) -> anyhow::Result<BTreeMap<String, usize>> {
     fn validate_leaves(tree: &Tree) -> anyhow::Result<BTreeSet<String>> {
         let mut names = BTreeSet::new();
         for name in tree.get_leaf_names() {
-            let name = name.ok_or_else(|| anyhow::anyhow!("tree contains an unnamed leaf"))?;
+            let name =
+                name.ok_or_else(|| anyhow::anyhow!("tree contains an unnamed leaf"))?;
             if !names.insert(name.clone()) {
                 anyhow::bail!("duplicate leaf name: {}", name);
             }

@@ -57,7 +57,9 @@ pub fn get_common_ancestor(tree: &Tree, a: NodeId, b: NodeId) -> anyhow::Result<
         }
     }
 
-    lca.ok_or_else(|| anyhow::anyhow!("Nodes are not in the same tree (no common ancestor)"))
+    lca.ok_or_else(|| {
+        anyhow::anyhow!("Nodes are not in the same tree (no common ancestor)")
+    })
 }
 
 /// Find the Lowest Common Ancestor (LCA) of multiple nodes.
@@ -154,9 +156,10 @@ pub fn is_monophyletic(tree: &Tree, nodes: &[NodeId]) -> bool {
     }
 
     // 2. Get all leaves under LCA
-    let lca_leaves: BTreeSet<NodeId> = crate::libs::phylo::tree::stat::get_leaves(tree, lca)
-        .into_iter()
-        .collect();
+    let lca_leaves: BTreeSet<NodeId> =
+        crate::libs::phylo::tree::stat::get_leaves(tree, lca)
+            .into_iter()
+            .collect();
 
     // 3. Get all leaves from input nodes
     let mut input_leaves = BTreeSet::new();

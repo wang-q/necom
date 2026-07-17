@@ -53,14 +53,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_min_points = *args.get_one::<usize>("min_points").unwrap();
 
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // 2. Load Matrix
 
     // Load matrix from pairwise distances
-    let (matrix, names) =
-        necom::libs::pairmat::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing)?;
+    let (matrix, names) = necom::libs::pairmat::ScoringMatrix::from_pair_scores(
+        infile,
+        opt_same,
+        opt_missing,
+    )?;
 
     // 3. Clustering
     let mut dbscan = necom::libs::clust::dbscan::Dbscan::new(opt_eps, opt_min_points);
@@ -69,13 +72,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // 4. Output
     let out = if opt_rep == "first" {
-        necom::libs::clust::format::format_flat_clusters(&mut clusters, &names, opt_format, |c| {
-            c.first().copied()
-        })?
+        necom::libs::clust::format::format_flat_clusters(
+            &mut clusters,
+            &names,
+            opt_format,
+            |c| c.first().copied(),
+        )?
     } else {
-        necom::libs::clust::format::format_flat_clusters(&mut clusters, &names, opt_format, |c| {
-            necom::libs::clust::medoid::find_medoid(&matrix, c, false)
-        })?
+        necom::libs::clust::format::format_flat_clusters(
+            &mut clusters,
+            &names,
+            opt_format,
+            |c| necom::libs::clust::medoid::find_medoid(&matrix, c, false),
+        )?
     };
     writer.write_all(out.as_bytes())?;
 

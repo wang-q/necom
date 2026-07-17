@@ -17,8 +17,8 @@ pub fn make_subcommand() -> Command {
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let infile = args.get_one::<String>("infile").unwrap();
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // Load matrix from PHYLIP format
     let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
@@ -28,7 +28,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for i in 0..matrix.size() {
         for j in 0..=i {
             let distance = matrix.get(i, j);
-            writer.write_fmt(format_args!("{}\t{}\t{}\n", names[j], names[i], distance))?;
+            writer
+                .write_fmt(format_args!("{}\t{}\t{}\n", names[j], names[i], distance))?;
         }
     }
 

@@ -63,8 +63,8 @@ Examples:
 /// Execute the distance command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     let infile = args
         .get_one::<String>("infile")
@@ -112,7 +112,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let mut id_of = BTreeMap::new();
     let name_id_map = tree.get_name_id();
-    let existing_names: std::collections::HashSet<&String> = name_id_map.keys().collect();
+    let existing_names: std::collections::HashSet<&String> =
+        name_id_map.keys().collect();
     for &id in &ids {
         let label = if let Some(name) =
             name_id_map

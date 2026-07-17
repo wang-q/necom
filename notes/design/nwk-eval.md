@@ -143,7 +143,7 @@ necom nwk eval tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 ### Phase 3：参考树对比
 - [ ] 在 `nwk eval` 中复用已有的 `phylo::cmp` 模块（已实现，见 §5）。
-- [ ] 接入 RF 距离（`necom nwk cmp` 已实现）与单系性检查（`is_monophyletic` 已实现）到 eval 输出。
+- [ ] 接入 RF 距离（`necom nwk compare` 已实现）与单系性检查（`is_monophyletic` 已实现）到 eval 输出。
 
 ### Phase 4：文档与高级功能
 - [ ] 完善文档，添加 Benchmark。

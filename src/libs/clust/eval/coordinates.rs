@@ -236,7 +236,8 @@ pub fn calinski_harabasz_score(partition: &LabelMap, coords: &Coordinates) -> f6
             f64::INFINITY // Perfect compact clusters
         }
     } else {
-        (bgss / (n_clusters as f64 - 1.0)) / (wgss / (n_samples as f64 - n_clusters as f64))
+        (bgss / (n_clusters as f64 - 1.0))
+            / (wgss / (n_samples as f64 - n_clusters as f64))
     }
 }
 

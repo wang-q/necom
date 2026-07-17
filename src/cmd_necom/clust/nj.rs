@@ -43,8 +43,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let tree = nj::nj(&matrix)?;
 
     // Output tree
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
     writer.write_all((tree.to_newick() + "\n").as_ref())?;
 
     writer.flush()?;

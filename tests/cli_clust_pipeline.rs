@@ -6,7 +6,10 @@ use std::fs;
 // Generates 3 well-separated clusters in 2D space.
 // Format: ID \t X,Y
 // Ground Truth: ID \t ClusterID
-fn generate_blobs(data_file: &str, truth_file: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn generate_blobs(
+    data_file: &str,
+    truth_file: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut data_out = String::new();
     let mut truth_out = String::new();
 
@@ -102,7 +105,8 @@ fn test_clust_pipeline_full() {
     // 2. Calculate Euclidean pairwise distances
     // Input: ID \t X,Y
     // Output: ID1 \t ID2 \t Dist
-    compute_pairwise_distances(&data_file, &dist_file).expect("Failed to compute distances");
+    compute_pairwise_distances(&data_file, &dist_file)
+        .expect("Failed to compute distances");
     assert!(fs::metadata(&dist_file).is_ok(), "dist file not created");
 
     // 3. Convert to PHYLIP Matrix (necom mat to-phylip)

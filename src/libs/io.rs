@@ -24,7 +24,9 @@ pub fn writer<P: AsRef<Path>>(outfile: P) -> anyhow::Result<Box<dyn Write>> {
 }
 
 /// Read lines from a file or stdin, skipping lines that fail to read.
-pub fn read_lines<P: AsRef<Path>>(path: P) -> anyhow::Result<impl Iterator<Item = String>> {
+pub fn read_lines<P: AsRef<Path>>(
+    path: P,
+) -> anyhow::Result<impl Iterator<Item = String>> {
     let reader = reader(path)?;
     Ok(reader.lines().map_while(Result::ok))
 }
@@ -55,7 +57,9 @@ pub fn read_names<C: FromIterator<String>>(file: &str) -> anyhow::Result<C> {
 ///
 /// Duplicate keys keep the first occurrence and warn. Lines with fewer than
 /// two columns are skipped with a warning.
-pub fn read_replace_tsv_overwrite(file: &str) -> anyhow::Result<BTreeMap<String, Vec<String>>> {
+pub fn read_replace_tsv_overwrite(
+    file: &str,
+) -> anyhow::Result<BTreeMap<String, Vec<String>>> {
     let mut map = BTreeMap::new();
     for line in read_lines(file)? {
         let parts: Vec<&str> = line.split('\t').collect();
@@ -64,7 +68,8 @@ pub fn read_replace_tsv_overwrite(file: &str) -> anyhow::Result<BTreeMap<String,
             continue;
         }
         let name = parts[0].to_string();
-        let replaces: Vec<String> = parts.iter().skip(1).map(|s| s.to_string()).collect();
+        let replaces: Vec<String> =
+            parts.iter().skip(1).map(|s| s.to_string()).collect();
         match map.entry(name) {
             std::collections::btree_map::Entry::Occupied(entry) => {
                 log::warn!(
@@ -122,7 +127,10 @@ fn clean_path(path: &Path) -> PathBuf {
                 } else if cleaned.components().count() == 1
                     && matches!(
                         cleaned.components().next(),
-                        Some(std::path::Component::Prefix(_) | std::path::Component::RootDir)
+                        Some(
+                            std::path::Component::Prefix(_)
+                                | std::path::Component::RootDir
+                        )
                     )
                 {
                     // Already at filesystem root or prefix; ignore `..`.

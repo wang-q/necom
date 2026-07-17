@@ -42,13 +42,19 @@ pub fn write_phylip_matrix<W: Write>(
             MatrixFormat::Full => {
                 writer.write_fmt(format_args!("{}", name))?;
                 for j in 0..size {
-                    writer.write_fmt(format_args!("\t{}", format_value(m.get(i, j), precision)))?;
+                    writer.write_fmt(format_args!(
+                        "\t{}",
+                        format_value(m.get(i, j), precision)
+                    ))?;
                 }
             }
             MatrixFormat::Lower => {
                 writer.write_fmt(format_args!("{}", name))?;
                 for j in 0..i {
-                    writer.write_fmt(format_args!("\t{}", format_value(m.get(i, j), precision)))?;
+                    writer.write_fmt(format_args!(
+                        "\t{}",
+                        format_value(m.get(i, j), precision)
+                    ))?;
                 }
             }
             MatrixFormat::Strict => {
@@ -124,8 +130,10 @@ pub fn extract_common_lower_triangle(
         anyhow::bail!("No common sequence names found between matrices");
     }
 
-    let mut values1 = Vec::with_capacity(common_names.len() * (common_names.len() - 1) / 2);
-    let mut values2 = Vec::with_capacity(common_names.len() * (common_names.len() - 1) / 2);
+    let mut values1 =
+        Vec::with_capacity(common_names.len() * (common_names.len() - 1) / 2);
+    let mut values2 =
+        Vec::with_capacity(common_names.len() * (common_names.len() - 1) / 2);
 
     for i in 0..common_names.len() {
         for j in 0..i {

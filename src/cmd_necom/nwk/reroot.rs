@@ -78,8 +78,8 @@ Examples:
 /// Execute the reroot command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
     let process_support = args.get_flag("support_as_labels");
     let deroot = args.get_flag("deroot");
     let lax = args.get_flag("lax");
@@ -122,11 +122,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
 
         if !ids.is_empty() {
-            necom::libs::phylo::tree::ops::reroot_at_lca(&mut tree, &ids, lax, process_support)?;
+            necom::libs::phylo::tree::ops::reroot_at_lca(
+                &mut tree,
+                &ids,
+                lax,
+                process_support,
+            )?;
         } else if user_specified {
             anyhow::bail!("none of the specified --node names were found in the tree");
         } else {
-            necom::libs::phylo::tree::ops::reroot_at_longest_branch(&mut tree, process_support)?;
+            necom::libs::phylo::tree::ops::reroot_at_longest_branch(
+                &mut tree,
+                process_support,
+            )?;
         }
     }
 

@@ -90,7 +90,11 @@ impl Tree {
     // --- Delegation to ops ---
 
     /// Add a child node under a parent.
-    pub fn add_child(&mut self, parent_id: NodeId, child_id: NodeId) -> anyhow::Result<()> {
+    pub fn add_child(
+        &mut self,
+        parent_id: NodeId,
+        child_id: NodeId,
+    ) -> anyhow::Result<()> {
         ops::add_child(self, parent_id, child_id)
     }
 
@@ -115,7 +119,11 @@ impl Tree {
     }
 
     /// Insert a common parent above two sibling nodes.
-    pub fn insert_parent_pair(&mut self, id1: NodeId, id2: NodeId) -> anyhow::Result<NodeId> {
+    pub fn insert_parent_pair(
+        &mut self,
+        id1: NodeId,
+        id2: NodeId,
+    ) -> anyhow::Result<NodeId> {
         ops::insert_parent_pair(self, id1, id2)
     }
 

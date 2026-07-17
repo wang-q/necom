@@ -59,8 +59,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let percent = args.get_flag("percent");
 
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // 1. Read Replicate Trees
     // We read replicates first to build the leaf map and counts, similar to nw_support logic
@@ -81,12 +81,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("build_leaf_map failed: {}", e))?;
 
     // 3.5 Validate that every target tree shares the same leaf set as the replicates.
-    let replicate_leaves: BTreeSet<String> = replicates.iter().flat_map(leaf_name_set).collect();
+    let replicate_leaves: BTreeSet<String> =
+        replicates.iter().flat_map(leaf_name_set).collect();
     for (i, target) in targets.iter().enumerate() {
         let target_leaves = leaf_name_set(target);
         if target_leaves != replicate_leaves {
-            let only_target: Vec<_> = target_leaves.difference(&replicate_leaves).collect();
-            let only_replicates: Vec<_> = replicate_leaves.difference(&target_leaves).collect();
+            let only_target: Vec<_> =
+                target_leaves.difference(&replicate_leaves).collect();
+            let only_replicates: Vec<_> =
+                replicate_leaves.difference(&target_leaves).collect();
             anyhow::bail!(
                 "target tree {} leaf set differs from replicate trees: only in target {:?}, only in replicates {:?}",
                 i + 1,

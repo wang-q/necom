@@ -13,11 +13,14 @@ pub use distance::{
     TreeDistance,
 };
 pub use format::{
-    coord_metric_values, distance_metric_values, external_metric_values, format_metrics_row,
-    COORD_METRIC_NAMES, DISTANCE_METRIC_NAMES, EXTERNAL_METRIC_NAMES,
+    coord_metric_values, distance_metric_values, external_metric_values,
+    format_metrics_row, COORD_METRIC_NAMES, DISTANCE_METRIC_NAMES,
+    EXTERNAL_METRIC_NAMES,
 };
 pub use pairwise::{evaluate, Metrics};
-pub use partition::{load_batch_partitions, load_partition, remove_singletons, PartitionFormat};
+pub use partition::{
+    load_batch_partitions, load_partition, remove_singletons, PartitionFormat,
+};
 
 use std::collections::HashMap;
 use std::io::Write;

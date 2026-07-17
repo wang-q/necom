@@ -7,7 +7,7 @@ use std::io::Write;
 use tempfile::Builder;
 
 #[test]
-fn command_nwk_cmp_single_file() {
+fn command_nwk_compare_single_file() {
     // Create a temporary Newick file with 2 different trees
     let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
     // Tree 1: ((A,B),(C,D)); -> Splits: {A,B} vs {C,D}
@@ -18,7 +18,7 @@ fn command_nwk_cmp_single_file() {
     writeln!(file, "((A,C),(B,D));").unwrap();
 
     let (stdout, _) = NecomCmd::new()
-        .args(&["nwk", "cmp", file.path().to_str().unwrap()])
+        .args(&["nwk", "compare", file.path().to_str().unwrap()])
         .run();
 
     // Expected output (pairwise, no self-comparisons or duplicate pairs):
@@ -34,12 +34,12 @@ fn command_nwk_cmp_single_file() {
 }
 
 #[test]
-fn command_nwk_cmp_single_file_one_tree_warns_and_prints_header_only() {
+fn command_nwk_compare_single_file_one_tree_warns_and_prints_header_only() {
     let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
     writeln!(file, "((A,B),(C,D));").unwrap();
 
     let (stdout, stderr) = NecomCmd::new()
-        .args(&["nwk", "cmp", file.path().to_str().unwrap()])
+        .args(&["nwk", "compare", file.path().to_str().unwrap()])
         .run();
 
     assert!(stdout.contains("Tree1\tTree2\tRF_Dist\tWRF_Dist\tKF_Dist"));
@@ -49,7 +49,7 @@ fn command_nwk_cmp_single_file_one_tree_warns_and_prints_header_only() {
 }
 
 #[test]
-fn command_nwk_cmp_two_files() {
+fn command_nwk_compare_two_files() {
     let mut file1 = Builder::new().suffix(".nwk").tempfile().unwrap();
     writeln!(file1, "((A,B),(C,D));").unwrap(); // Tree 1
 
@@ -60,7 +60,7 @@ fn command_nwk_cmp_two_files() {
     let (stdout, _) = NecomCmd::new()
         .args(&[
             "nwk",
-            "cmp",
+            "compare",
             file1.path().to_str().unwrap(),
             file2.path().to_str().unwrap(),
         ])
@@ -75,7 +75,7 @@ fn command_nwk_cmp_two_files() {
 }
 
 #[test]
-fn command_nwk_cmp_branch_lengths() {
+fn command_nwk_compare_branch_lengths() {
     let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
 
     // T1: Same topology, lengths 0.2
@@ -88,7 +88,7 @@ fn command_nwk_cmp_branch_lengths() {
     writeln!(file, "((A:0.1,C:0.1):0.2,(B:0.1,D:0.1):0.2);").unwrap();
 
     let (stdout, _) = NecomCmd::new()
-        .args(&["nwk", "cmp", file.path().to_str().unwrap()])
+        .args(&["nwk", "compare", file.path().to_str().unwrap()])
         .run();
 
     // T1 vs T2: RF=0, WRF=0.1, KF=0.1

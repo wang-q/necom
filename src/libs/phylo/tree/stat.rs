@@ -201,7 +201,9 @@ pub fn diameter(tree: &Tree, weighted: bool) -> f64 {
 
             for v in neighbors {
                 let weight = if weighted {
-                    if let (Some(v_node), Some(u_node)) = (tree.get_node(v), tree.get_node(u)) {
+                    if let (Some(v_node), Some(u_node)) =
+                        (tree.get_node(v), tree.get_node(u))
+                    {
                         if v_node.parent == Some(u) {
                             v_node.finite_length()
                         } else {
@@ -248,7 +250,8 @@ pub fn compute_node_heights(tree: &Tree) -> HashMap<NodeId, f64> {
                     let mut max_h = 0.0;
                     for &child in &node.children {
                         let child_h = *heights.get(&child).unwrap_or(&0.0);
-                        let edge_len = tree.get_node(child).map_or(0.0, |n| n.finite_length());
+                        let edge_len =
+                            tree.get_node(child).map_or(0.0, |n| n.finite_length());
                         let h = child_h + edge_len;
                         if h > max_h {
                             max_h = h;

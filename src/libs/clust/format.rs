@@ -34,7 +34,8 @@ where
         "cluster" => {
             for c in clusters {
                 let rep_idx = rep_fn(c);
-                let mut members: Vec<&str> = c.iter().map(|&idx| names[idx].as_str()).collect();
+                let mut members: Vec<&str> =
+                    c.iter().map(|&idx| names[idx].as_str()).collect();
                 if let Some(rep) = rep_idx {
                     // Move the representative to the first column.
                     if let Some(pos) = c.iter().position(|&idx| idx == rep) {

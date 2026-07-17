@@ -20,12 +20,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_same = *args.get_one::<f32>("same").unwrap();
     let opt_missing = *args.get_one::<f32>("missing").unwrap();
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // Load matrix from pairwise distances
-    let matrix =
-        necom::libs::pairmat::NamedMatrix::from_pair_scores(infile, opt_same, opt_missing)?;
+    let matrix = necom::libs::pairmat::NamedMatrix::from_pair_scores(
+        infile,
+        opt_same,
+        opt_missing,
+    )?;
 
     necom::libs::pairmat::write_phylip_matrix(
         &matrix,

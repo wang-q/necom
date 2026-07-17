@@ -73,8 +73,8 @@ Examples:
 /// Execute the subtree command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     let is_monophyly = args.get_flag("monophyly");
     let condense_name = args.get_one::<String>("condense");
@@ -130,7 +130,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             // Count named nodes in the selected set, matching the documented semantics.
             let member_count = ids
                 .iter()
-                .filter(|&&id| tree.get_node(id).map(|n| n.name.is_some()).unwrap_or(false))
+                .filter(|&&id| {
+                    tree.get_node(id).map(|n| n.name.is_some()).unwrap_or(false)
+                })
                 .count();
             tree.condense_subtree(sub_root_id, name, member_count)?;
 

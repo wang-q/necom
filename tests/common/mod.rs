@@ -55,8 +55,10 @@ impl NecomCmd {
     pub fn run_fail(self) -> (String, String) {
         let assert = self.assert().failure();
         let output = assert.get_output();
-        let stdout = String::from_utf8(output.stdout.clone()).expect("Invalid UTF-8 in stdout");
-        let stderr = String::from_utf8(output.stderr.clone()).expect("Invalid UTF-8 in stderr");
+        let stdout =
+            String::from_utf8(output.stdout.clone()).expect("Invalid UTF-8 in stdout");
+        let stderr =
+            String::from_utf8(output.stderr.clone()).expect("Invalid UTF-8 in stderr");
         (stdout, stderr)
     }
 }

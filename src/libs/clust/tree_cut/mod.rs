@@ -15,8 +15,8 @@ pub mod simple;
 
 pub use method::{build_method, Method, METHOD_NAMES};
 pub use partition::{
-    find_representative, format_clusters, format_scan_rows, partition_to_clusters, Cluster,
-    Partition, RepMode,
+    find_representative, format_clusters, format_scan_rows, partition_to_clusters,
+    Cluster, Partition, RepMode,
 };
 
 use dynamic::{cutree_dynamic_tree, DynamicTreeOptions};
@@ -66,8 +66,8 @@ pub fn build_dispatch(
     }
 
     if let Some(min_cluster_size) = dynamic_hybrid {
-        let dist_matrix =
-            matrix.ok_or_else(|| anyhow::anyhow!("--matrix is required for dynamic-hybrid"))?;
+        let dist_matrix = matrix
+            .ok_or_else(|| anyhow::anyhow!("--matrix is required for dynamic-hybrid"))?;
         return Ok(CutDispatch::DynamicHybrid(HybridOptions {
             min_cluster_size,
             dist_matrix,
@@ -98,7 +98,10 @@ pub fn build_dispatch(
 
 /// Execute the cut specified by `dispatch` on `tree`. Returns the resulting
 /// partition and the method name (for labeling).
-pub fn dispatch_cut(tree: &Tree, dispatch: CutDispatch) -> Result<(Partition, &'static str)> {
+pub fn dispatch_cut(
+    tree: &Tree,
+    dispatch: CutDispatch,
+) -> Result<(Partition, &'static str)> {
     match dispatch {
         CutDispatch::DynamicTree(opts) => {
             let p = cutree_dynamic_tree(tree, opts)?;
@@ -152,7 +155,10 @@ pub fn cut(tree: &Tree, method: Method) -> Result<Partition> {
 // --- Helpers ---
 
 /// Compute max distance from each node to its leaves
-pub(crate) fn compute_heights(tree: &Tree, root: NodeId) -> Result<HashMap<NodeId, f64>> {
+pub(crate) fn compute_heights(
+    tree: &Tree,
+    root: NodeId,
+) -> Result<HashMap<NodeId, f64>> {
     let mut heights = HashMap::new();
     let post_order = crate::libs::phylo::tree::traversal::postorder(tree, root);
 
@@ -181,7 +187,10 @@ pub(crate) fn compute_heights(tree: &Tree, root: NodeId) -> Result<HashMap<NodeI
 }
 
 /// Assign leaves to clusters based on cluster roots
-pub(crate) fn assign_clusters(tree: &Tree, cluster_roots: Vec<NodeId>) -> Result<Partition> {
+pub(crate) fn assign_clusters(
+    tree: &Tree,
+    cluster_roots: Vec<NodeId>,
+) -> Result<Partition> {
     let mut part = Partition::new();
     let mut cluster_id = 0;
 

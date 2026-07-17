@@ -184,7 +184,8 @@ pub fn format_clusters(clusters: &[Cluster], format: &str) -> anyhow::Result<Str
         "cluster" => {
             for c in clusters {
                 if let Some(rep_idx) = c.rep_index {
-                    let mut names: Vec<&str> = c.members.iter().map(|(_, n)| n.as_str()).collect();
+                    let mut names: Vec<&str> =
+                        c.members.iter().map(|(_, n)| n.as_str()).collect();
                     if rep_idx != 0 {
                         names.swap(0, rep_idx);
                         names[1..].sort();
@@ -213,7 +214,11 @@ pub fn format_clusters(clusters: &[Cluster], format: &str) -> anyhow::Result<Str
 
 /// Format a partition as scan-mode TSV rows.
 /// Each row is "group_label\tcluster_id\tmember_name", clusters ordered by ID.
-pub fn format_scan_rows(partition: &Partition, tree: &Tree, group_label: &str) -> String {
+pub fn format_scan_rows(
+    partition: &Partition,
+    tree: &Tree,
+    group_label: &str,
+) -> String {
     let clusters_map = partition.get_clusters();
     let mut cluster_ids: Vec<usize> = clusters_map.keys().copied().collect();
     cluster_ids.sort();
@@ -225,7 +230,8 @@ pub fn format_scan_rows(partition: &Partition, tree: &Tree, group_label: &str) -
             let mut member_names: Vec<String> = Vec::with_capacity(members.len());
             for &mid in members {
                 if let Some(node) = tree.get_node(mid) {
-                    let name = node.name.clone().unwrap_or_else(|| format!("Leaf_{}", mid));
+                    let name =
+                        node.name.clone().unwrap_or_else(|| format!("Leaf_{}", mid));
                     member_names.push(name);
                 }
             }
@@ -273,7 +279,8 @@ mod tests {
             members,
             rep_index: None,
         };
-        let idx = find_representative(&cluster, &tree, RepMode::Root, &root_dists).unwrap();
+        let idx =
+            find_representative(&cluster, &tree, RepMode::Root, &root_dists).unwrap();
         assert_eq!(cluster.members[idx].1, "B");
     }
 
@@ -289,7 +296,8 @@ mod tests {
             members,
             rep_index: None,
         };
-        let idx = find_representative(&cluster, &tree, RepMode::First, &root_dists).unwrap();
+        let idx =
+            find_representative(&cluster, &tree, RepMode::First, &root_dists).unwrap();
         // First member in the provided order, not alphabetical.
         assert_eq!(cluster.members[idx].1, "B");
     }

@@ -52,7 +52,8 @@ fn command_rename_mixed() {
 
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "nwk", "rename", "stdin", "-n", "A", "--rename", "A1", "-l", "A,B", "--rename", "AB",
+            "nwk", "rename", "stdin", "-n", "A", "--rename", "A1", "-l", "A,B",
+            "--rename", "AB",
         ])
         .stdin("((A,B),C);")
         .run();
@@ -108,7 +109,8 @@ fn command_rename_partial_match_warns_and_renames() {
     // still rename the valid one.
     let (stdout, stderr) = NecomCmd::new()
         .args(&[
-            "nwk", "rename", "stdin", "-n", "Missing", "--rename", "X", "-n", "A", "--rename", "A1",
+            "nwk", "rename", "stdin", "-n", "Missing", "--rename", "X", "-n", "A",
+            "--rename", "A1",
         ])
         .stdin("((A,B),C);")
         .run();

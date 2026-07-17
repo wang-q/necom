@@ -16,7 +16,9 @@ fn command_empty_stdin() {
         .stdin("")
         .run_fail();
 
-    assert!(stderr.contains("error") || stderr.contains("Error") || stderr.contains("parse"));
+    assert!(
+        stderr.contains("error") || stderr.contains("Error") || stderr.contains("parse")
+    );
 }
 
 #[test]
@@ -66,7 +68,9 @@ fn command_stat_empty_tree_file() {
         .stdin("   \n\n   ")
         .run_fail();
 
-    assert!(stderr.contains("error") || stderr.contains("Error") || stderr.contains("parse"));
+    assert!(
+        stderr.contains("error") || stderr.contains("Error") || stderr.contains("parse")
+    );
 }
 
 #[test]

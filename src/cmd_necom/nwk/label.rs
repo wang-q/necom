@@ -87,8 +87,8 @@ Examples:
 /// Execute the label command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     let infile = args
         .get_one::<String>("infile")
@@ -118,7 +118,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let root = tree.get_node(root_id).context("root node not found")?;
             if let Some(name) = &root.name {
                 if !name.is_empty() {
-                    let out_string = super::common::format_label_columns(root, name, &columns)?;
+                    let out_string =
+                        super::common::format_label_columns(root, name, &columns)?;
                     if tab_sep {
                         collected_labels.push(out_string);
                     } else {
@@ -153,7 +154,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let node = tree.get_node(*id).context("node not found")?;
             if let Some(x) = node.name.clone() {
                 if !x.is_empty() {
-                    let out_string = super::common::format_label_columns(node, &x, &columns)?;
+                    let out_string =
+                        super::common::format_label_columns(node, &x, &columns)?;
 
                     if tab_sep {
                         collected_labels.push(out_string);

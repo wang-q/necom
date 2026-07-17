@@ -145,7 +145,8 @@ fn test_transform_log_non_positive() {
     writeln!(tmp, "B -1.0 0.0").unwrap();
 
     let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
-    let transformed = super::transform_matrix(&matrix, "log", 1.0, 1.0, 0.0, false).unwrap();
+    let transformed =
+        super::transform_matrix(&matrix, "log", 1.0, 1.0, 0.0, false).unwrap();
 
     assert_eq!(transformed.get(0, 1), f32::INFINITY);
     assert_eq!(transformed.get(0, 0), 0.0);
@@ -162,7 +163,8 @@ fn test_transform_sqrt_negative() {
     writeln!(tmp, "B -1.0 -9.0").unwrap();
 
     let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
-    let transformed = super::transform_matrix(&matrix, "sqrt", 1.0, 1.0, 0.0, false).unwrap();
+    let transformed =
+        super::transform_matrix(&matrix, "sqrt", 1.0, 1.0, 0.0, false).unwrap();
 
     assert!(transformed.get(0, 1).is_nan());
     assert!(transformed.get(0, 0).is_nan());
@@ -213,7 +215,8 @@ fn test_transform_inv_linear_diagonal() {
     writeln!(tmp, "B 0.5 1.0").unwrap();
 
     let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
-    let transformed = super::transform_matrix(&matrix, "inv-linear", 1.0, 1.0, 0.0, false).unwrap();
+    let transformed =
+        super::transform_matrix(&matrix, "inv-linear", 1.0, 1.0, 0.0, false).unwrap();
 
     // Off-diagonal: 1.0 - 0.5 = 0.5
     assert_eq!(transformed.get(0, 1), 0.5);
@@ -241,7 +244,8 @@ fn test_from_pair_scores_duplicate_pair_uses_last_value() {
     writeln!(tmp, "A\tB\t0.1").unwrap();
     writeln!(tmp, "A\tB\t0.9").unwrap();
 
-    let matrix = NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
+    let matrix =
+        NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
     assert_eq!(matrix.get_by_name("A", "B"), Some(0.9));
 }
 
@@ -270,7 +274,8 @@ fn test_from_pair_scores_extra_columns() {
     // Pairwise line with extra columns beyond name1, name2, distance.
     writeln!(tmp, "A\tB\t0.5\textra\tdata").unwrap();
 
-    let matrix = NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
+    let matrix =
+        NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
     assert_eq!(matrix.get_by_name("A", "B"), Some(0.5));
 }
 

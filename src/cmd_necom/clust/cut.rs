@@ -179,7 +179,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let mut trees = Tree::from_file(infile)?;
     if trees.len() > 1 {
-        anyhow::bail!("Input file contains multiple trees. Only single tree input is supported.");
+        anyhow::bail!(
+            "Input file contains multiple trees. Only single tree input is supported."
+        );
     }
     if trees.is_empty() {
         anyhow::bail!("Input file contains no tree");
@@ -191,8 +193,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
     }
 
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // Options common to dynamic methods
     let deep_split = args.get_flag("deep_split");

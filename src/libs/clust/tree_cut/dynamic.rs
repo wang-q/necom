@@ -21,7 +21,10 @@ impl Default for DynamicTreeOptions {
 }
 
 /// Main entry point for dynamic tree cut
-pub fn cutree_dynamic_tree(tree: &Tree, options: DynamicTreeOptions) -> anyhow::Result<Partition> {
+pub fn cutree_dynamic_tree(
+    tree: &Tree,
+    options: DynamicTreeOptions,
+) -> anyhow::Result<Partition> {
     if tree.is_empty() {
         return Ok(Partition::new());
     }
@@ -90,7 +93,8 @@ pub fn cutree_dynamic_tree(tree: &Tree, options: DynamicTreeOptions) -> anyhow::
 
     for cid in sorted_cids {
         let indices = &clusters[&cid];
-        let cluster_heights: Vec<f64> = indices.iter().map(|&i| height_seq[i].1).collect();
+        let cluster_heights: Vec<f64> =
+            indices.iter().map(|&i| height_seq[i].1).collect();
 
         // Use a queue to handle deep split (iterative approach instead of recursion on data)
         // Initial segment is full range [0, len)
@@ -200,7 +204,11 @@ pub fn cutree_dynamic_tree(tree: &Tree, options: DynamicTreeOptions) -> anyhow::
 
 // --- Helpers ---
 
-fn compute_node_heights(tree: &Tree, node_id: NodeId, cache: &mut HashMap<NodeId, f64>) -> f64 {
+fn compute_node_heights(
+    tree: &Tree,
+    node_id: NodeId,
+    cache: &mut HashMap<NodeId, f64>,
+) -> f64 {
     if let Some(h) = cache.get(&node_id) {
         return *h;
     }
@@ -264,7 +272,10 @@ fn cutree_static(
 }
 
 /// Returns a list of [start, end) indices relative to input heights.
-fn process_individual_cluster(heights: &[f64], min_module_size: usize) -> Vec<(usize, usize)> {
+fn process_individual_cluster(
+    heights: &[f64],
+    min_module_size: usize,
+) -> Vec<(usize, usize)> {
     if heights.len() < min_module_size {
         return vec![(0, heights.len())]; // Return as is, let caller handle size check
     }
@@ -340,7 +351,8 @@ fn recursive_process(
     boundaries.push(n);
 
     let min_attach_size = 2 * min_module_size;
-    let mut segments: Vec<(usize, usize)> = boundaries.windows(2).map(|w| (w[0], w[1])).collect();
+    let mut segments: Vec<(usize, usize)> =
+        boundaries.windows(2).map(|w| (w[0], w[1])).collect();
 
     // Iterative merge pass
     let mut changed = true;

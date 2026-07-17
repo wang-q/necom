@@ -60,15 +60,20 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let max_iter = *args.get_one::<usize>("max_iter").unwrap();
     let outfile = crate::cmd_necom::args::get_outfile(args);
 
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // 2. Load Matrix
     let (sm, names): (necom::libs::pairmat::ScoringMatrix<f32>, Vec<String>) =
-        necom::libs::pairmat::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing)?;
+        necom::libs::pairmat::ScoringMatrix::from_pair_scores(
+            infile,
+            opt_same,
+            opt_missing,
+        )?;
 
     // 3. Clustering
-    let mut kmedoids = necom::libs::clust::k_medoids::KMedoids::new(opt_k, max_iter, runs);
+    let mut kmedoids =
+        necom::libs::clust::k_medoids::KMedoids::new(opt_k, max_iter, runs);
     if let Some(&seed) = args.get_one::<u64>("seed") {
         kmedoids = kmedoids.with_seed(seed);
     }
@@ -76,13 +81,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // 4. Output
     let out = if opt_rep == "first" {
-        necom::libs::clust::format::format_flat_clusters(&mut clusters, &names, opt_format, |c| {
-            c.first().copied()
-        })?
+        necom::libs::clust::format::format_flat_clusters(
+            &mut clusters,
+            &names,
+            opt_format,
+            |c| c.first().copied(),
+        )?
     } else {
-        necom::libs::clust::format::format_flat_clusters(&mut clusters, &names, opt_format, |c| {
-            necom::libs::clust::medoid::find_medoid(&sm, c, false)
-        })?
+        necom::libs::clust::format::format_flat_clusters(
+            &mut clusters,
+            &names,
+            opt_format,
+            |c| necom::libs::clust::medoid::find_medoid(&sm, c, false),
+        )?
     };
     writer.write_all(out.as_bytes())?;
 

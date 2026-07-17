@@ -379,7 +379,9 @@ fn parse_comment(
     context(
         "comment",
         map(opt(parse_plain_comment), |content: Option<&str>| {
-            content.and_then(|s| parse_nhx_content(s).or_else(|| parse_simple_properties(s)))
+            content.and_then(|s| {
+                parse_nhx_content(s).or_else(|| parse_simple_properties(s))
+            })
         }),
     )
     .parse(input)
@@ -463,13 +465,19 @@ pub fn parse_newick(input: &str) -> Result<Tree, TreeError> {
         Ok((_, (root_node, _))) => {
             let mut tree = Tree::new();
             let root_id = root_node.into_tree(&mut tree).map_err(|e| {
-                TreeError::LogicError(format!("failed to build tree from parsed nodes: {}", e))
+                TreeError::LogicError(format!(
+                    "failed to build tree from parsed nodes: {}",
+                    e
+                ))
             })?;
-            tree.set_root(root_id)
-                .map_err(|e| TreeError::LogicError(format!("failed to set root node: {}", e)))?;
+            tree.set_root(root_id).map_err(|e| {
+                TreeError::LogicError(format!("failed to set root node: {}", e))
+            })?;
             Ok(tree)
         }
-        Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) => Err(make_tree_error(input, e)),
+        Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) => {
+            Err(make_tree_error(input, e))
+        }
         Err(nom::Err::Incomplete(_)) => Err(TreeError::ParseError {
             message: "Incomplete input".to_string(),
             line: 0,
@@ -516,7 +524,10 @@ pub fn parse_newick_multi(input: &str) -> Result<Vec<Tree>, TreeError> {
             for root_node in trees_data.into_iter().flatten() {
                 let mut tree = Tree::new();
                 let root_id = root_node.into_tree(&mut tree).map_err(|e| {
-                    TreeError::LogicError(format!("failed to build tree from parsed nodes: {}", e))
+                    TreeError::LogicError(format!(
+                        "failed to build tree from parsed nodes: {}",
+                        e
+                    ))
                 })?;
                 tree.set_root(root_id).map_err(|e| {
                     TreeError::LogicError(format!("failed to set root node: {}", e))
@@ -535,7 +546,9 @@ pub fn parse_newick_multi(input: &str) -> Result<Vec<Tree>, TreeError> {
 
             Ok(trees)
         }
-        Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) => Err(make_tree_error(input, e)),
+        Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) => {
+            Err(make_tree_error(input, e))
+        }
         Err(nom::Err::Incomplete(_)) => Err(TreeError::ParseError {
             message: "Incomplete input".to_string(),
             line: 0,

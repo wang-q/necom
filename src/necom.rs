@@ -5,7 +5,8 @@ mod cmd_necom;
 fn main() -> anyhow::Result<()> {
     // Default to `info` level so progress/warning messages remain visible by default,
     // matching the previous `eprintln!` behavior. Users can override via RUST_LOG.
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
+        .init();
 
     let app = Command::new("necom")
         .version(crate_version!())
@@ -28,7 +29,7 @@ fn main() -> anyhow::Result<()> {
     * mat   - Processing: compare, format, subset, to-pair, to-phylip, transform
 
 * Phylogeny:
-    * nwk   - Newick tools: stat, distance, cmp, reroot, prune, label, order, indent, comment, rename, replace, subtree, support, topo, to-dot, to-forest, to-svg, to-tex
+    * nwk   - Newick tools: stat, distance, compare, reroot, prune, label, order, indent, comment, rename, replace, subtree, support, topo, to-dot, to-forest, to-svg, to-tex
 
 * Pipelines:
     * pl - Workflows: condense

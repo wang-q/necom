@@ -102,7 +102,10 @@ impl std::fmt::Display for FeatureVector {
 }
 
 /// Load feature vectors from a file, optionally binarizing values to 0.0/1.0.
-pub fn load_feature_vectors(infile: &str, is_bin: bool) -> anyhow::Result<Vec<FeatureVector>> {
+pub fn load_feature_vectors(
+    infile: &str,
+    is_bin: bool,
+) -> anyhow::Result<Vec<FeatureVector>> {
     let mut entries = vec![];
     let reader = crate::libs::io::reader(infile)?;
     for line in reader.lines() {

@@ -70,7 +70,8 @@ pub fn linkage_with_algo(
     algo: Algorithm,
 ) -> anyhow::Result<Vec<Step>> {
     // Create a mutable copy of the condensed matrix
-    let mut condensed = CondensedMatrix::from_vec(matrix.size(), matrix.values().to_vec())?;
+    let mut condensed =
+        CondensedMatrix::from_vec(matrix.size(), matrix.values().to_vec())?;
 
     Ok(linkage_core(&mut condensed, method, algo))
 }
@@ -83,7 +84,11 @@ pub fn linkage_inplace(mut matrix: CondensedMatrix, method: Method) -> Vec<Step>
     linkage_core(&mut matrix, method, Algorithm::Auto)
 }
 
-fn linkage_core(condensed: &mut CondensedMatrix, method: Method, algo: Algorithm) -> Vec<Step> {
+fn linkage_core(
+    condensed: &mut CondensedMatrix,
+    method: Method,
+    algo: Algorithm,
+) -> Vec<Step> {
     match algo {
         Algorithm::Primitive => linkage_primitive(condensed, method),
         Algorithm::NnChain => linkage_nn_chain(condensed, method),
@@ -213,7 +218,8 @@ fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step
                 let d_uk = condensed.get(u, k);
                 let d_vk = condensed.get(v, k);
 
-                let new_dist = lance_williams(method, d_uk, d_vk, d_uv, size1, size2, size[k]);
+                let new_dist =
+                    lance_williams(method, d_uk, d_vk, d_uv, size1, size2, size[k]);
 
                 condensed.set(u, k, new_dist);
             }
@@ -254,7 +260,8 @@ fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step
     // Internal nodes (steps) need remapping.
     // old_id = n + original_index
     // new_id = n + new_sorted_index
-    let mut id_map: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
+    let mut id_map: std::collections::HashMap<usize, usize> =
+        std::collections::HashMap::new();
     for i in 0..n {
         id_map.insert(i, i);
     }
@@ -328,7 +335,8 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
     }
 
     // Track height of each cluster (original ID -> height)
-    let mut heights: std::collections::HashMap<usize, f32> = std::collections::HashMap::new();
+    let mut heights: std::collections::HashMap<usize, f32> =
+        std::collections::HashMap::new();
     for i in 0..n {
         heights.insert(i, 0.0);
     }
@@ -463,7 +471,8 @@ fn linkage_primitive(condensed: &mut CondensedMatrix, method: Method) -> Vec<Ste
             let d_vk = condensed.get(v, k);
             let d_uv = min_dist;
 
-            let new_dist = lance_williams(method, d_uk, d_vk, d_uv, size1, size2, size[k]);
+            let new_dist =
+                lance_williams(method, d_uk, d_vk, d_uv, size1, size2, size[k]);
 
             condensed.set(u, k, new_dist);
         }
@@ -641,8 +650,10 @@ mod tests {
         m.set(3, 4, 1.0); // min
 
         // Test with Average linkage (Reducible)
-        let steps_prim = linkage_with_algo(&m, Method::Average, Algorithm::Primitive).unwrap();
-        let steps_nn = linkage_with_algo(&m, Method::Average, Algorithm::NnChain).unwrap();
+        let steps_prim =
+            linkage_with_algo(&m, Method::Average, Algorithm::Primitive).unwrap();
+        let steps_nn =
+            linkage_with_algo(&m, Method::Average, Algorithm::NnChain).unwrap();
 
         assert_eq!(steps_prim.len(), 4);
         assert_eq!(steps_nn.len(), 4);
@@ -723,8 +734,10 @@ mod tests {
             let m = create_random_matrix_local(size);
 
             // Test Average
-            let steps_prim = linkage_with_algo(&m, Method::Average, Algorithm::Primitive).unwrap();
-            let steps_nn = linkage_with_algo(&m, Method::Average, Algorithm::NnChain).unwrap();
+            let steps_prim =
+                linkage_with_algo(&m, Method::Average, Algorithm::Primitive).unwrap();
+            let steps_nn =
+                linkage_with_algo(&m, Method::Average, Algorithm::NnChain).unwrap();
 
             assert_eq!(steps_prim.len(), size - 1);
             assert_eq!(steps_nn.len(), size - 1);
@@ -744,9 +757,12 @@ mod tests {
             // Test Ward (which uses squared optimization)
             let steps_prim_ward =
                 linkage_with_algo(&m, Method::Ward, Algorithm::Primitive).unwrap();
-            let steps_nn_ward = linkage_with_algo(&m, Method::Ward, Algorithm::NnChain).unwrap();
+            let steps_nn_ward =
+                linkage_with_algo(&m, Method::Ward, Algorithm::NnChain).unwrap();
 
-            for (j, (s1, s2)) in steps_prim_ward.iter().zip(steps_nn_ward.iter()).enumerate() {
+            for (j, (s1, s2)) in
+                steps_prim_ward.iter().zip(steps_nn_ward.iter()).enumerate()
+            {
                 assert!(
                     (s1.distance - s2.distance).abs() < 1e-5,
                     "Iter {}, Size {}, Step {}: Ward distance mismatch {} vs {}",
@@ -894,10 +910,12 @@ mod tests {
         m.set(1, 2, 5.0);
         m.set(1, 3, 10.0);
 
-        let steps_centroid = linkage_with_algo(&m, Method::Centroid, Algorithm::NnChain).unwrap();
+        let steps_centroid =
+            linkage_with_algo(&m, Method::Centroid, Algorithm::NnChain).unwrap();
         assert_eq!(steps_centroid.len(), 3);
 
-        let steps_median = linkage_with_algo(&m, Method::Median, Algorithm::NnChain).unwrap();
+        let steps_median =
+            linkage_with_algo(&m, Method::Median, Algorithm::NnChain).unwrap();
         assert_eq!(steps_median.len(), 3);
     }
 
@@ -908,7 +926,8 @@ mod tests {
         let m = create_random_matrix_local(20);
 
         for method in [Method::Single, Method::Complete, Method::Average] {
-            let steps_prim = linkage_with_algo(&m, method, Algorithm::Primitive).unwrap();
+            let steps_prim =
+                linkage_with_algo(&m, method, Algorithm::Primitive).unwrap();
             let steps_nn = linkage_with_algo(&m, method, Algorithm::NnChain).unwrap();
             assert_eq!(steps_prim.len(), steps_nn.len());
             for (i, (s1, s2)) in steps_prim.iter().zip(steps_nn.iter()).enumerate() {

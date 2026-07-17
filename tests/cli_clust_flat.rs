@@ -11,7 +11,9 @@ fn command_clust_cc() {
         .run();
 
     assert_eq!(stdout.lines().count(), 7);
-    assert!(stdout.contains("A0A192CFC5_ECO25\tIBPA_ECOLI\tIBPA_ESCF3\nIBPA_ECOLI_GA_LV"));
+    assert!(
+        stdout.contains("A0A192CFC5_ECO25\tIBPA_ECOLI\tIBPA_ESCF3\nIBPA_ECOLI_GA_LV")
+    );
 }
 
 #[test]
@@ -90,10 +92,12 @@ fn command_clust_dbscan_pair() {
     // Each line contains a representative-member pair
     assert!(stdout.lines().count() > 0);
     assert!(
-        stdout.contains("IBPA_ECOLI\tIBPA_ECOLI\n") || stdout.contains("IBPA_ESCF3\tIBPA_ESCF3\n")
+        stdout.contains("IBPA_ECOLI\tIBPA_ECOLI\n")
+            || stdout.contains("IBPA_ESCF3\tIBPA_ESCF3\n")
     );
     assert!(
-        stdout.contains("IBPA_ECOLI\tIBPA_ESCF3\n") || stdout.contains("IBPA_ESCF3\tIBPA_ECOLI\n")
+        stdout.contains("IBPA_ECOLI\tIBPA_ESCF3\n")
+            || stdout.contains("IBPA_ESCF3\tIBPA_ECOLI\n")
     );
 }
 

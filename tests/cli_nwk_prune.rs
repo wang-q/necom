@@ -7,7 +7,8 @@ use std::io::Write;
 
 const ABCDE_NWK: &str = "((A,B),(C,D),E);";
 const CATARRHINI: &str = "(((Homo,Pan),Gorilla),Pongo);";
-const CATARRHINI_LABELED: &str = "(((Homo,Pan)Hominini,Gorilla)Homininae,Pongo)Hominidae;";
+const CATARRHINI_LABELED: &str =
+    "(((Homo,Pan)Hominini,Gorilla)Homininae,Pongo)Hominidae;";
 
 #[test]
 fn command_prune_remove_single_leaf() {
@@ -46,7 +47,8 @@ fn command_prune_remove_all_nodes_bug() {
     // Remove all nodes
     NecomCmd::new()
         .args(&[
-            "nwk", "prune", "stdin", "-n", "A", "-n", "B", "-n", "C", "-n", "D", "-n", "E",
+            "nwk", "prune", "stdin", "-n", "A", "-n", "B", "-n", "C", "-n", "D", "-n",
+            "E",
         ])
         .stdin(ABCDE_NWK)
         .run(); // Just ensure it doesn't crash

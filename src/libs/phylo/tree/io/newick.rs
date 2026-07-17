@@ -52,7 +52,13 @@ pub fn to_newick_subtree(tree: &Tree, root: NodeId, indent: &str) -> String {
     s
 }
 
-fn to_newick_recursive(tree: &Tree, node_id: NodeId, indent: &str, depth: usize, s: &mut String) {
+fn to_newick_recursive(
+    tree: &Tree,
+    node_id: NodeId,
+    indent: &str,
+    depth: usize,
+    s: &mut String,
+) {
     let Some(node) = tree.get_node(node_id) else {
         return;
     };

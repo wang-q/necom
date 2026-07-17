@@ -34,7 +34,11 @@ pub fn invert_arg_with_help(help: &'static str) -> Arg {
 }
 
 /// `--seed` argument (u64) with an optional default, short flag, and help text.
-pub fn seed_arg(default: Option<&'static str>, short: Option<char>, help: &'static str) -> Arg {
+pub fn seed_arg(
+    default: Option<&'static str>,
+    short: Option<char>,
+    help: &'static str,
+) -> Arg {
     let arg = Arg::new("seed")
         .long("seed")
         .num_args(1)
@@ -395,7 +399,9 @@ pub fn max_tree_height_arg() -> Arg {
         .long("max-tree-height")
         .num_args(1)
         .value_parser(clap::value_parser!(f64))
-        .help("Maximum joining height for dynamic tree cut (default: 99% of tree height)")
+        .help(
+            "Maximum joining height for dynamic tree cut (default: 99% of tree height)",
+        )
 }
 
 /// `--other` argument for external partition evaluation (alias: `--truth`).
@@ -409,10 +415,9 @@ pub fn other_partition_arg() -> Arg {
 
 /// `--tree` argument for internal evaluation using patristic distance.
 pub fn tree_arg() -> Arg {
-    Arg::new("tree")
-        .long("tree")
-        .num_args(1)
-        .help("Tree file (for internal evaluation: Silhouette, using patristic distance)")
+    Arg::new("tree").long("tree").num_args(1).help(
+        "Tree file (for internal evaluation: Silhouette, using patristic distance)",
+    )
 }
 
 /// `--coords` argument for internal evaluation using Davies-Bouldin.

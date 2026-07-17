@@ -66,18 +66,23 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_same = *args.get_one::<f32>("same").unwrap();
     let opt_missing = *args.get_one::<f32>("missing").unwrap();
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // Load and Transform
     let matrix = if format == "pair" {
-        necom::libs::pairmat::NamedMatrix::from_pair_scores(infile, opt_same, opt_missing)?
+        necom::libs::pairmat::NamedMatrix::from_pair_scores(
+            infile,
+            opt_same,
+            opt_missing,
+        )?
     } else {
         necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?
     };
 
-    let matrix =
-        necom::libs::pairmat::transform_matrix(&matrix, op, max_val, scale, offset, normalize)?;
+    let matrix = necom::libs::pairmat::transform_matrix(
+        &matrix, op, max_val, scale, offset, normalize,
+    )?;
 
     necom::libs::pairmat::write_phylip_matrix(
         &matrix,

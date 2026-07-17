@@ -32,7 +32,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         method.as_str()
     };
 
-    const VALID_METHODS: &[&str] = &["pearson", "spearman", "mae", "cosine", "jaccard", "euclid"];
+    const VALID_METHODS: &[&str] =
+        &["pearson", "spearman", "mae", "cosine", "jaccard", "euclid"];
     let requested_methods: Vec<&str> = methods
         .split(',')
         .map(str::trim)
@@ -45,8 +46,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer =
-        necom::writer(outfile).with_context(|| format!("Failed to open writer for {}", outfile))?;
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // Load matrices
     let matrix1 = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(matrix1_file)?;
@@ -75,7 +76,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             "spearman" => necom::libs::linalg::spearman_correlation(&values1, &values2),
             "mae" => necom::libs::linalg::mean_absolute_error(&values1, &values2),
             "cosine" => necom::libs::linalg::cosine_similarity(&values1, &values2),
-            "jaccard" => necom::libs::linalg::weighted_jaccard_similarity(&values1, &values2),
+            "jaccard" => {
+                necom::libs::linalg::weighted_jaccard_similarity(&values1, &values2)
+            }
             "euclid" => necom::libs::linalg::euclidean_distance(&values1, &values2),
             _ => anyhow::bail!("unknown method: {}", method),
         };

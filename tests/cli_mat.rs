@@ -6,15 +6,21 @@ use common::NecomCmd;
 
 /// Assert that a PHYLIP matrix row starting with `row_prefix` has value
 /// approximately equal to `expected` at column index `col_idx`.
-fn assert_row_value(stdout: &str, row_prefix: &str, col_idx: usize, expected: f32, tol: f32) {
+fn assert_row_value(
+    stdout: &str,
+    row_prefix: &str,
+    col_idx: usize,
+    expected: f32,
+    tol: f32,
+) {
     let line = stdout
         .lines()
         .find(|l| l.starts_with(row_prefix))
         .unwrap_or_else(|| panic!("missing row starting with '{}'", row_prefix));
     let parts: Vec<&str> = line.split('\t').collect();
-    let value: f32 = parts[col_idx]
-        .parse()
-        .unwrap_or_else(|e| panic!("failed to parse value at column {}: {}", col_idx, e));
+    let value: f32 = parts[col_idx].parse().unwrap_or_else(|e| {
+        panic!("failed to parse value at column {}: {}", col_idx, e)
+    });
     assert!(
         (value - expected).abs() < tol,
         "{}: expected {} got {}",
