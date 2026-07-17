@@ -7,7 +7,6 @@
 Subcommands are grouped into three categories:
 
 *   **Information**: Extract information or statistics from trees.
-    *   `compare`: Compare trees (RF, WRF, KF distances).
     *   `distance`: Compute distances between nodes.
     *   `label`: Extract labels/names from the tree.
     *   `stat`: Print tree statistics (node count, leaf count, balance indices, etc.).
@@ -31,10 +30,6 @@ Subcommands are grouped into three categories:
 ---
 
 ## Information Commands
-
-### compare
-
-Compare trees using Robinson-Foulds (RF) distance and its variants.
 
 ### distance
 
@@ -128,7 +123,6 @@ Wrap a Newick tree in a complete LaTeX document.
 `necom nwk` treats non-finite branch lengths (`NaN`, positive/negative infinity), negative values, and zero values as `0.0` during computation and visualization. On input, such values are normalized to `None` (no length annotation); on output, `None` and zero (`0.0`) lengths are omitted so that cladograms remain unannotated. This applies to:
 
 *   Statistics (`stat`) and distance calculations (`distance`).
-*   Tree comparison (`compare`), including weighted Robinson-Foulds and Kuhner-Felsenstein distances.
 *   Tree operations such as `reroot`, collapse, and insert_parent.
 *   Visualization (`to-svg`, `to-dot`, `to-forest`, `to-tex`).
 
@@ -145,4 +139,4 @@ This normalization prevents invalid values from polluting sums, maxima, or dista
 
 *   `condense`: Tree condensation functionality is currently provided by `necom nwk subtree --condense`; no standalone `condense` subcommand is planned at this time.
 *   `match`, `ed`, `gen`, `duration`: Mapped from `newick_utils` but not yet implemented in `necom nwk`; no concrete plan at this time.
-*   Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level command `necom eval` rather than an `nwk` subcommand. See [`notes/design/eval.md`](../notes/design/eval.md) for the design proposal; related metrics are also referenced in the `necom clust eval` and `necom cut` documentation.
+*   Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level command `necom eval`. The `compare` subcommand has been migrated to `necom eval compare`; see [`docs/eval.md`](eval.md). Further `eval` subcommands (partition, tree) remain in design — see [`notes/design/eval.md`](../notes/design/eval.md).

@@ -18,7 +18,7 @@ fn command_nwk_compare_single_file() {
     writeln!(file, "((A,C),(B,D));").unwrap();
 
     let (stdout, _) = NecomCmd::new()
-        .args(&["nwk", "compare", file.path().to_str().unwrap()])
+        .args(&["eval", "compare", file.path().to_str().unwrap()])
         .run();
 
     // Expected output (pairwise, no self-comparisons or duplicate pairs):
@@ -39,7 +39,7 @@ fn command_nwk_compare_single_file_one_tree_warns_and_prints_header_only() {
     writeln!(file, "((A,B),(C,D));").unwrap();
 
     let (stdout, stderr) = NecomCmd::new()
-        .args(&["nwk", "compare", file.path().to_str().unwrap()])
+        .args(&["eval", "compare", file.path().to_str().unwrap()])
         .run();
 
     assert!(stdout.contains("Tree1\tTree2\tRF_Dist\tWRF_Dist\tKF_Dist"));
@@ -59,7 +59,7 @@ fn command_nwk_compare_two_files() {
 
     let (stdout, _) = NecomCmd::new()
         .args(&[
-            "nwk",
+            "eval",
             "compare",
             file1.path().to_str().unwrap(),
             file2.path().to_str().unwrap(),
@@ -88,7 +88,7 @@ fn command_nwk_compare_branch_lengths() {
     writeln!(file, "((A:0.1,C:0.1):0.2,(B:0.1,D:0.1):0.2);").unwrap();
 
     let (stdout, _) = NecomCmd::new()
-        .args(&["nwk", "compare", file.path().to_str().unwrap()])
+        .args(&["eval", "compare", file.path().to_str().unwrap()])
         .run();
 
     // T1 vs T2: RF=0, WRF=0.1, KF=0.1
@@ -111,7 +111,7 @@ fn command_nwk_compare_rejects_duplicate_leaf_names() {
     writeln!(file, "((A,B),(C,D));").unwrap();
 
     let (_, stderr) = NecomCmd::new()
-        .args(&["nwk", "compare", file.path().to_str().unwrap()])
+        .args(&["eval", "compare", file.path().to_str().unwrap()])
         .run_fail();
 
     assert!(

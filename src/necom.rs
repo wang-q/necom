@@ -17,6 +17,7 @@ fn main() -> anyhow::Result<()> {
         .color(ColorChoice::Auto)
         .subcommand(cmd_necom::clust::make_subcommand())
         .subcommand(cmd_necom::cut::make_subcommand())
+        .subcommand(cmd_necom::eval::make_subcommand())
         .subcommand(cmd_necom::mat::make_subcommand())
         .subcommand(cmd_necom::nwk::make_subcommand())
         .subcommand(cmd_necom::pl::make_subcommand())
@@ -29,11 +30,14 @@ fn main() -> anyhow::Result<()> {
 * Tree cutting:
     * cut   - Cut a Newick tree into flat partitions
 
+* Evaluation:
+    * eval - Metrics: compare
+
 * Matrix:
     * mat   - Processing: compare, format, subset, to-pair, to-phylip, transform
 
 * Phylogeny:
-    * nwk   - Newick tools: stat, distance, compare, reroot, prune, label, order, indent, comment, rename, replace, subtree, support, topo, to-dot, to-forest, to-svg, to-tex
+    * nwk   - Newick tools: stat, distance, reroot, prune, label, order, indent, comment, rename, replace, subtree, support, topo, to-dot, to-forest, to-svg, to-tex
 
 * Pipelines:
     * pl - Workflows: condense
@@ -44,6 +48,7 @@ fn main() -> anyhow::Result<()> {
     match app.get_matches().subcommand() {
         Some(("clust", sub_matches)) => cmd_necom::clust::execute(sub_matches),
         Some(("cut", sub_matches)) => cmd_necom::cut::execute(sub_matches),
+        Some(("eval", sub_matches)) => cmd_necom::eval::execute(sub_matches),
         Some(("mat", sub_matches)) => cmd_necom::mat::execute(sub_matches),
         Some(("nwk", sub_matches)) => cmd_necom::nwk::execute(sub_matches),
         Some(("pl", sub_matches)) => cmd_necom::pl::execute(sub_matches),

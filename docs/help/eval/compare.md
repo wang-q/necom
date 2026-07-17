@@ -22,7 +22,7 @@ Notes:
 Examples:
 
 1. Compare all trees in a file
-   `necom nwk compare trees.nwk`
+   `necom eval compare trees.nwk`
 
 2. Compare trees between two files
-   `necom nwk compare set1.nwk set2.nwk`
+   `necom eval compare set1.nwk set2.nwk`

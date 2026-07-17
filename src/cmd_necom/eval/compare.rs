@@ -7,7 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("compare")
         .about("Compares trees (RF, WRF, KF distances)")
-        .after_help(include_str!("../../../docs/help/nwk/compare.md"))
+        .after_help(include_str!("../../../docs/help/eval/compare.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "First input filename (or stdin)",
         ))
