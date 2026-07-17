@@ -6,8 +6,10 @@ The `necom clust` module provides a collection of clustering algorithms for sequ
 
 Commands are divided into three categories by input data type (consistent with `necom clust --help`):
 1.  **Tree**: Build phylogenetic or hierarchical structures from a distance matrix (`hier`, `nj`, `upgma`).
-2.  **Flat**: Generate groups directly from graphs or vectors, or derive groups from an existing tree (`cc`, `cut`, `dbscan`, `k-medoids`, `mcl`).
+2.  **Flat**: Generate groups directly from graphs or vectors (`cc`, `dbscan`, `k-medoids`, `mcl`).
 3.  **Eval**: Assess the quality of clustering partitions (`eval`). See [Evaluation and Analysis](#evaluation-and-analysis) below.
+
+Flat partitions can also be derived from an existing tree using the separate `necom cut` command (see [`docs/cut.md`](cut.md)).
 
 ## Algorithm List
 
@@ -212,6 +214,10 @@ necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
 
 GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Algorithms considered but not adopted (K-Means, Spectral, OPTICS, BIRCH, etc.) are documented in [`notes/design/clust-impl.md`](../notes/design/clust-impl.md).
 
+### Bootstrap Support for Hierarchical Clustering [Planned]
+
+`necom clust boot` will compute multiscale-bootstrap BP/AU/SI support values (pvclust-style) for each internal node of a hierarchical clustering tree, quantifying the stability of clusters under feature resampling. Design details are in [`notes/design/clust-boot.md`](../notes/design/clust-boot.md).
+
 ### GMM (Gaussian Mixture Models) [Planned]
 
 Motivation for introducing GMM:
@@ -257,7 +263,7 @@ For large-scale data with $N > 20,000$, the memory ($O(N^2)$) and computation ($
 # 1. Fast clustering to select representatives (k=5000)
 necom clust k-medoids all_data.tsv --k 5000 --format pair > clusters.tsv
 
-# 2. Extract representative list
+# 2. Extract representative list (Unix `cut`, not `necom cut`)
 cut -f1 clusters.tsv | sort -u > representatives.list
 
 # 3. Extract sub-matrix for representatives

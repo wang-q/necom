@@ -216,11 +216,11 @@ Use `necom cut`:
 
 ### 2. Evaluate
 
-Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate `necom clust` or `necom nwk` commands:
+Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate `necom clust` commands; tree-topology comparison is also available via `necom nwk compare`:
 
-- **General metrics (`necom clust eval` / `compare`)**:
-  - Input: two clustering result TSVs (or one result + one reference).
-  - Output: ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure, etc.
+- **General metrics (`necom clust eval`, `necom mat compare`)**:
+  - Input: two clustering result TSVs (or one result + one reference); or two distance matrices for Cophenetic correlation.
+  - Output: ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure, etc.; or matrix similarity scores from `mat compare`.
   - Use case: When the true classification of samples is known, or when you want to compare the difference between two cutting parameters.
 
 - **Tree-related metrics (`necom eval tree` [planned])**:

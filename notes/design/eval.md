@@ -302,7 +302,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 ## 8. 与现有文档的关系
 
-- **原 `nwk-eval.md`**：其关于树评估的内容已合并到本文档 §4，原文件已删除。
+- 树评估相关内容（原 `nwk-eval.md`，已删除）已合并到本文档 §4。
 - **[clust-impl.md](clust-impl.md)**：其中提到的 `libs/clust/feature.rs`、Phase 7 真实分布验证等内容，将继续为 `eval partition` 提供底层支持。
 - **[clust-eval.md](../../docs/clust-eval.md)**：未来应迁移为 `docs/eval-partition.md` 或整合进 `docs/eval.md`。
 
