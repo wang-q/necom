@@ -4,7 +4,7 @@
 
 > **实现状态注记**：截至 2026-07-18，`necom nwk` 主体命令体系（stat/distance/indent/compare/comment/to-*/topo/label/reroot/prune/subtree/order/rename/replace/support）已实现；NHX 注释值对 Newick 结构字符（`:`、`=`、`;`、`,`、`]`、`\`）做完整转义以保证 round-trip；Forest/LaTeX 输出对 `dot`/`bar`/`rec`/`tri` 等可视化属性值也进行 LaTeX 特殊字符转义。`nwk condense`/`match`/`ed`/`gen`/`duration`、部分标准化统计指标（`colless_yule`/`pda`、`sackin_yule`/`pda`）以及 ASCII 树/随机树生成为规划中。
 >
-> **关联文档**：[nwk-eval.md](nwk-eval.md)（计划中的多维树评估框架，复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
+> **关联文档**：[eval.md](eval.md)（计划中的统一评估命令，其中 `eval tree` 子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
 
 ## 1. 架构设计
 

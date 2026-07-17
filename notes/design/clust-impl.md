@@ -1,7 +1,7 @@
 # clust 模块实现分析
 
 > **实现状态注记**：本文档记录 `necom clust` 模块的实现分析、优化路线与外部生态对比，从 `docs/clust.md` 剥离而来。
-> 截至 2026-07-16，Phase 1/2/5/6 及 Ward/Centroid 平方距离优化、In-place 接口已完成；Phase 3/4(Heap)/7 及 GMM/HDBSCAN 仍为规划。
+> 截至 2026-07-16，Phase 1/2/5/6 及 Ward/Centroid 平方距离优化、In-place 接口已完成；Phase 3/4(Heap)/7 及 GMM/HDBSCAN/Louvain/Leiden 仍为规划。
 
 ## 1. 内存数据布局
 
@@ -249,7 +249,34 @@
 
 1. **基础图聚类**：已完成 MCL、CC、DBSCAN、K-Medoids。
 2. **系统发育构树**：已完成 UPGMA、NJ、Hierarchical Clustering (hier)。
-3. **评估体系**：`clust eval` (Partition) 已完成；`nwk eval` (Tree) 设计完成（未实现，见 [nwk-eval.md](nwk-eval.md)）。
+3. **评估体系**：`clust eval` (Partition) 已完成；树评估功能已纳入 `necom eval` 统一设计（见 [eval.md](eval.md)），尚未实现。
 4. **向量支持**：已完成。`libs/clust/feature.rs` 提供 `FeatureVector` 基础设施，被 `necom clust eval --coords`（Davies-Bouldin 指标）等内部评估逻辑复用。
-5. **统计聚类**：引入 GMM 实现，支持 BIC 模型选择（计划中）。
-6. **层次聚类扩展**：实现 HDBSCAN（计划中）。
+5. **统计聚类**：引入 GMM 实现，支持 BIC 模型选择（计划中，详见 §8.1）。
+6. **层次聚类扩展**：实现 HDBSCAN（计划中，详见 §8.2）。
+7. **大规模网络社区发现**：实现 Louvain / Leiden 算法（计划中，详见 §8.3）。
+
+## 8. 计划中的算法
+
+> **实现状态注记**：本节列出尚未实现的聚类算法规划。当前 `necom clust` 已实现 hier/dbscan/mcl/k-medoids/cc/nj/upgma + cut/eval。截至 2026-07-16，GMM、HDBSCAN、Louvain/Leiden 仍为规划，未进入实现阶段。
+
+### 8.1 GMM (Gaussian Mixture Models)
+
+- **原理**：假设数据由 $K$ 个高斯分布混合而成。使用 EM（期望最大化）算法迭代估计每个高斯分量的参数（均值、协方差）及每个样本属于各分量的后验概率。
+- **命令**：`necom clust gmm`
+- **计划内容**：支持**软聚类**（概率输出）与 **BIC** 模型选择。
+- **价值**：适合**椭球形簇**与密度估计，解决 K-Means 仅适应球形簇的限制；BIC 可辅助确定最佳 K。
+
+### 8.2 HDBSCAN
+
+- **原理**：结合层次聚类与 DBSCAN。通过构建基于密度的层次树（Condensed Tree），并根据簇的稳定性（Stability）在不同层级自动提取最佳簇，无需全局 $\epsilon$。
+- **命令**：`necom clust hdbscan`
+- **scikit-learn 对应**：`HDBSCAN`
+- **计划内容**：层次化 DBSCAN，无需手动指定 `eps`。
+- **价值**：DBSCAN 的现代高级版，**自动适应不同密度的簇**，参数更少且更稳健。
+
+### 8.3 Louvain / Leiden
+
+- **原理**：基于模块度（Modularity）优化的社区发现算法。Louvain 贪心地最大化模块度；Leiden 改进了 Louvain 的局部合并策略，保证连通性并加速收敛。
+- **命令**：(待定)
+- **计划内容**：社区发现算法。
+- **价值**：比 MCL 更适合**超大规模网络**的层次化结构探索。
