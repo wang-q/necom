@@ -63,6 +63,7 @@ necom nwk distance [OPTIONS] <infile>
     *   `phylip`: Output a PHYLIP-format distance matrix for selected nodes.
 *   `-I`: Ignore internal nodes.
 *   `-L`: Ignore leaf nodes.
+*   `-n <name>` / `-l <file>` / `-x <regex>`: Restrict output to nodes matched by exact name, name-list file, or case-insensitive regex. When omitted, all selected nodes (respecting `-I`/`-L`) are reported.
 
 ### label
 
@@ -90,7 +91,7 @@ necom nwk stat [OPTIONS] <infile>
 ```
 
 *   `--style <col|line>`: Output format (key-value pairs or TSV lines).
-*   Statistics include: type (cladogram/phylogram/neither), node count, leaf count, rooted status, dichotomies, leaf labels, internal labels, cherries, Sackin index, Colless index.
+*   Statistics include: type (cladogram/phylogram/neither), node count, leaf count, rooted status, dichotomies, leaf labels, internal labels, edges with length, edges without length, cherries, Sackin index, Colless index.
 
 ### support
 

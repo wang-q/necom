@@ -365,7 +365,7 @@ pub struct TreeSummary {
 impl TreeSummary {
     /// Return the TSV header used by `necom nwk stat --style line`.
     pub fn tsv_header() -> &'static str {
-        "Type\tnodes\tleaves\trooted\tdichotomies\tleaf labels\tinternal labels\tcherries\tsackin\tcolless"
+        "Type\tnodes\tleaves\trooted\tdichotomies\tleaf labels\tinternal labels\tedges with length\tedges without length\tcherries\tsackin\tcolless"
     }
 
     /// Return a single TSV data line for this summary.
@@ -379,7 +379,7 @@ impl TreeSummary {
             .map(|v| v.to_string())
             .unwrap_or_else(|| "-".to_string());
         format!(
-            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             self.tree_type.as_str(),
             self.nodes,
             self.leaves,
@@ -387,6 +387,8 @@ impl TreeSummary {
             self.dichotomies,
             self.leaf_labels,
             self.internal_labels,
+            self.edges_with_length,
+            self.edges_without_length,
             self.cherries,
             sackin_str,
             colless_str,
@@ -411,6 +413,8 @@ impl TreeSummary {
             format!("dichotomies\t{}", self.dichotomies),
             format!("leaf labels\t{}", self.leaf_labels),
             format!("internal labels\t{}", self.internal_labels),
+            format!("edges with length\t{}", self.edges_with_length),
+            format!("edges without length\t{}", self.edges_without_length),
             format!("cherries\t{}", self.cherries),
             format!("sackin\t{}", sackin_str),
             format!("colless\t{}", colless_str),

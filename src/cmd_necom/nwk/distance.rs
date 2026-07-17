@@ -25,6 +25,8 @@ Notes:
     * `phylip`: A Phylip-formatted distance matrix for the selected nodes.
 
 * The `-I` and `-L` options filter out internal or leaf nodes.
+* Use `-n` / `-l` / `-x` to restrict the reported nodes to a name, name-list file, or regex.
+* When no name-based filter is given, all selected nodes (respecting `-I`/`-L`) are reported.
 * Input must be a valid Newick file.
 
 Examples:
@@ -39,6 +41,9 @@ Examples:
 
 4. Distances to parent for leaves only:
    necom nwk distance tree.nwk --mode parent -I
+
+5. Distance to root for selected nodes only:
+   necom nwk distance tree.nwk --mode root -n Homo -n Pan
 "###,
         )
         .arg(crate::cmd_necom::args::infile_arg_required())
@@ -49,6 +54,9 @@ Examples:
         ))
         .arg(crate::cmd_necom::args::internal_arg())
         .arg(crate::cmd_necom::args::leaf_arg())
+        .arg(crate::cmd_necom::args::node_arg())
+        .arg(crate::cmd_necom::args::name_list_arg())
+        .arg(crate::cmd_necom::args::regex_arg())
         .arg(crate::cmd_necom::args::outfile_arg())
 }
 

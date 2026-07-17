@@ -16,9 +16,11 @@ fn command_stat_basic() {
         .args(&["nwk", "stat", "tests/newick/hg38.7way.nwk"])
         .run();
 
-    assert_eq!(stdout.lines().count(), 10);
+    assert_eq!(stdout.lines().count(), 12);
     assert!(stdout.contains("leaf labels\t7"));
     assert!(stdout.contains("rooted\tYes"));
+    assert!(stdout.contains("edges with length\t"));
+    assert!(stdout.contains("edges without length\t"));
     assert!(stdout.contains("cherries\t"));
     assert!(stdout.contains("sackin\t"));
     assert!(stdout.contains("colless\t"));
@@ -37,6 +39,8 @@ fn command_stat_catarrhini() {
     assert!(stdout.contains("dichotomies\t9"));
     assert!(stdout.contains("leaf labels\t10"));
     assert!(stdout.contains("internal labels\t6"));
+    assert!(stdout.contains("edges with length\t18"));
+    assert!(stdout.contains("edges without length\t0"));
     assert!(stdout.contains("cherries\t"));
     assert!(stdout.contains("sackin\t"));
     assert!(stdout.contains("colless\t"));
@@ -54,10 +58,10 @@ fn command_stat_style_line() {
         ])
         .run();
 
-    assert!(stdout.contains("phylogram\t19\t10\tYes\t9\t10\t6"));
+    assert!(stdout.contains("phylogram\t19\t10\tYes\t9\t10\t6\t18\t0"));
     // Header check
     assert!(stdout.contains(
-        "Type\tnodes\tleaves\trooted\tdichotomies\tleaf labels\tinternal labels\tcherries\tsackin\tcolless"
+        "Type\tnodes\tleaves\trooted\tdichotomies\tleaf labels\tinternal labels\tedges with length\tedges without length\tcherries\tsackin\tcolless"
     ));
 }
 
@@ -72,24 +76,23 @@ fn command_stat_forest() {
 
     // Header
     assert!(lines[0].contains(
-        "Type\tnodes\tleaves\trooted\tdichotomies\tleaf labels\tinternal labels\tcherries\tsackin\tcolless"
+        "Type\tnodes\tleaves\trooted\tdichotomies\tleaf labels\tinternal labels\tedges with length\tedges without length\tcherries\tsackin\tcolless"
     ));
 
-    // Tree 1: Cladogram, 18 nodes, 11 leaves, No rooted, 5 dichotomies, 11 leaf labels, 0 inner labels
-    // 5 cherries (visual inspection of forest.nwk or just accept changes)
-    assert!(lines[1].contains("cladogram\t18\t11\tNo\t5\t11\t0"));
+    // Tree 1: Cladogram, 18 nodes, 11 leaves, No rooted, 5 dichotomies, 11 leaf labels, 0 inner labels, 0 edges with length, 17 without
+    assert!(lines[1].contains("cladogram\t18\t11\tNo\t5\t11\t0\t0\t17"));
 
-    // Tree 2: Cladogram, 13 nodes, 8 leaves, No rooted, 3 dichotomies, 8 leaf labels, 0 inner labels
-    assert!(lines[2].contains("cladogram\t13\t8\tNo\t3\t8\t0"));
+    // Tree 2: Cladogram, 13 nodes, 8 leaves, No rooted, 3 dichotomies, 8 leaf labels, 0 inner labels, 0 edges with length, 12 without
+    assert!(lines[2].contains("cladogram\t13\t8\tNo\t3\t8\t0\t0\t12"));
 
-    // Tree 3: Phylogram, 10 nodes, 6 leaves, No rooted, 3 dichotomies, 6 leaf labels, 0 inner labels
-    assert!(lines[3].contains("phylogram\t10\t6\tNo\t3\t6\t0"));
+    // Tree 3: Phylogram, 10 nodes, 6 leaves, No rooted, 3 dichotomies, 6 leaf labels, 0 inner labels, 9 edges with length, 0 without
+    assert!(lines[3].contains("phylogram\t10\t6\tNo\t3\t6\t0\t9\t0"));
 
-    // Tree 4: Phylogram, 19 nodes, 10 leaves, 9 dichotomies, 10 leaf labels, 6 inner labels
-    assert!(lines[4].contains("phylogram\t19\t10\tYes\t9\t10\t6"));
+    // Tree 4: Phylogram, 19 nodes, 10 leaves, 9 dichotomies, 10 leaf labels, 6 inner labels, 18 edges with length, 0 without
+    assert!(lines[4].contains("phylogram\t19\t10\tYes\t9\t10\t6\t18\t0"));
 
-    // Tree 5: Cladogram, 19 nodes, 10 leaves, 9 dichotomies, 10 leaf labels, 0 inner labels
-    assert!(lines[5].contains("cladogram\t19\t10\tYes\t9\t10\t0"));
+    // Tree 5: Cladogram, 19 nodes, 10 leaves, 9 dichotomies, 10 leaf labels, 0 inner labels, 0 edges with length, 18 without
+    assert!(lines[5].contains("cladogram\t19\t10\tYes\t9\t10\t0\t0\t18"));
 }
 
 #[test]
@@ -487,6 +490,107 @@ fn command_distance_phylip() {
     assert!(stdout.trim().starts_with("10"));
     assert!(stdout.contains("Homo"));
     assert!(stdout.contains(" 65.000000"));
+}
+
+#[test]
+fn command_distance_node_selection() {
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "distance",
+            "tests/newick/catarrhini.nwk",
+            "--mode",
+            "root",
+            "-n",
+            "Homo",
+        ])
+        .run();
+
+    assert_eq!(stdout.lines().count(), 1);
+    assert!(stdout.contains("Homo\t60"));
+}
+
+#[test]
+fn command_distance_node_selection_multiple() {
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "distance",
+            "tests/newick/catarrhini.nwk",
+            "--mode",
+            "root",
+            "-n",
+            "Homo",
+            "-n",
+            "Pan",
+        ])
+        .run();
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("Homo\t60"));
+    assert!(stdout.contains("Pan\t60"));
+}
+
+#[test]
+fn command_distance_name_list_selection() {
+    let mut temp_file = Builder::new().suffix(".txt").tempfile().unwrap();
+    writeln!(temp_file, "Homo").unwrap();
+    writeln!(temp_file, "Pan").unwrap();
+    let list_file = temp_file.path().to_str().unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "distance",
+            "tests/newick/catarrhini.nwk",
+            "--mode",
+            "root",
+            "-l",
+            list_file,
+        ])
+        .run();
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("Homo\t60"));
+    assert!(stdout.contains("Pan\t60"));
+}
+
+#[test]
+fn command_distance_regex_selection() {
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "distance",
+            "tests/newick/catarrhini.nwk",
+            "--mode",
+            "root",
+            "-x",
+            "^Homo$",
+        ])
+        .run();
+
+    assert_eq!(stdout.lines().count(), 1);
+    assert!(stdout.contains("Homo\t60"));
+    assert!(!stdout.contains("Hominini"));
+}
+
+#[test]
+fn command_distance_selection_with_internal_filter() {
+    // -n selects an internal node; -I filters it out, so output is empty.
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "distance",
+            "tests/newick/catarrhini.nwk",
+            "--mode",
+            "root",
+            "-n",
+            "Hominidae",
+            "-I",
+        ])
+        .run();
+
+    assert!(stdout.trim().is_empty());
 }
 
 #[test]

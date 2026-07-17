@@ -81,6 +81,26 @@ fn get_sort_key(name_map: &HashMap<NodeId, String>, id: NodeId) -> String {
     name_map.get(&id).cloned().unwrap_or_default()
 }
 
+/// Compute the number of descendants (including the node itself) for every node.
+fn compute_subtree_sizes(tree: &Tree, root: NodeId) -> HashMap<NodeId, usize> {
+    let mut size_map = HashMap::new();
+    for &id in &tree.postorder(root) {
+        let mut count = 0;
+        if let Some(node) = tree.get_node(id) {
+            if node.is_leaf() {
+                count = 1;
+            } else {
+                count = 1;
+                for child in &node.children {
+                    count += size_map.get(child).unwrap_or(&0);
+                }
+            }
+        }
+        size_map.insert(id, count);
+    }
+    size_map
+}
+
 /// Sort the children of each node by the number of descendants (also known as ladderize).
 ///
 /// # Arguments
@@ -110,24 +130,7 @@ pub fn ladderize(tree: &mut Tree, descending: bool) {
         return;
     };
     let ids = tree.levelorder(root);
-
-    let mut size_map: HashMap<NodeId, usize> = HashMap::new();
-
-    let post_ids = tree.postorder(root);
-    for &id in &post_ids {
-        let mut count = 0;
-        if let Some(node) = tree.get_node(id) {
-            if node.is_leaf() {
-                count = 1;
-            } else {
-                count = 1;
-                for child in &node.children {
-                    count += size_map.get(child).unwrap_or(&0);
-                }
-            }
-        }
-        size_map.insert(id, count);
-    }
+    let size_map = compute_subtree_sizes(tree, root);
 
     for id in ids {
         if let Some(node) = tree.get_node_mut(id) {
@@ -242,23 +245,8 @@ pub fn deladderize(tree: &mut Tree) {
         return;
     };
 
-    // 1. Calculate descendant counts (same as ladderize)
-    let mut size_map: HashMap<NodeId, usize> = HashMap::new();
-    let post_ids = tree.postorder(root);
-    for &id in &post_ids {
-        let mut count = 0;
-        if let Some(node) = tree.get_node(id) {
-            if node.is_leaf() {
-                count = 1;
-            } else {
-                count = 1;
-                for child in &node.children {
-                    count += size_map.get(child).unwrap_or(&0);
-                }
-            }
-        }
-        size_map.insert(id, count);
-    }
+    // 1. Calculate descendant counts (shared helper used by ladderize).
+    let size_map = compute_subtree_sizes(tree, root);
 
     // 2. Traversal with state
     let mut queue = std::collections::VecDeque::new();
@@ -346,6 +334,12 @@ where
 ///
 /// `to_remove` may include both leaves and internal nodes; removal is recursive
 /// (subtrees are detached with their parent).
+///
+/// # Note
+///
+/// This function calls `tree.compact()` before returning, so all previously
+/// held `NodeId`s are invalidated. Callers that need to keep using node IDs
+/// must do so before calling this function.
 pub fn prune_nodes(tree: &mut Tree, to_remove: Vec<NodeId>) -> anyhow::Result<()> {
     // 1. Snapshot internal nodes before pruning, so we can detect those that
     //    become leaves after removal.
@@ -393,6 +387,10 @@ pub fn prune_nodes(tree: &mut Tree, to_remove: Vec<NodeId>) -> anyhow::Result<()
             }
         }
     }
+
+    // 5. Remove soft-deleted nodes and reclaim arena slots. This invalidates
+    //    any NodeIds held outside this function.
+    tree.compact();
 
     Ok(())
 }

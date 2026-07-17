@@ -67,6 +67,8 @@ pub struct Tree {
 *   **分支长度规范化**: `Node::finite_length()` 将 `NaN`、正负无穷、负值与缺失长度统一视为 `0.0`；输出时 `0.0` 与缺失长度均被省略。`stat` 仅把正有限长度计为 "有长度" 边，`distance` 仅在分支长度之和绝对值超过 `1e-9` 时使用加权距离，否则回退到拓扑边数。
 *   **确定性输出**: 使用 `BTreeMap` 而非 `HashMap`，保证序列化输出顺序固定。
 *   **按需计算**: 不缓存中间状态（深度、距离等），按需计算以保持轻量。
+    *   `Tree::len()` 每次遍历 `nodes` 统计非 `deleted` 节点，为 O(n)；频繁调用时需注意开销。
+*   **软删除与 Compact**: `remove_node` 等操作仅标记 `deleted=true`（软删除），物理回收由 `compact()` 完成。`algo::prune_nodes` 在清理拓扑后会自动调用 `compact()`，因此返回后所有外部持有的 `NodeId` 均失效。
 
 ### 1.4 数据流与调用链
 
@@ -245,7 +247,7 @@ graph LR
     *   `Tree::new()`: 创建空树。
     *   `Tree::add_node()`, `Tree::add_child()`: 构建树结构。
     *   `Tree::get_node()`, `Tree::get_root()`: 访问节点。
-    *   `Tree::len()`: 节点总数。
+    *   `Tree::len()`: 节点总数（每次 O(n) 统计非软删除节点）。
 *   **解析**:
     *   `Tree::from_newick()`: 解析 Newick 字符串 (支持引号、注释、科学计数法)。
     *   `Tree::from_file()`: 从文件读取并解析 Newick。
@@ -267,12 +269,14 @@ graph LR
     *   `node_distance()`: 计算节点间距离；分支长度之和绝对值超过 `1e-9` 时使用加权距离，否则回退到拓扑边数。
     *   `get_subtree()`: 获取子树节点集合。
     *   `find_nodes()`, `get_node_by_name()`: 查找节点。
-    *   `get_height()`: 计算节点高度 (到最远叶子的距离)。
+    *   按名查找以第一次出现为准；存在重复节点名时，`get_node_by_name` 返回第一个匹配，`get_name_id`/`BTreeMap`  likewise 记录第一个匹配的 ID。
+*   `get_height()`: 计算节点高度 (到最远叶子的距离)。
     *   `is_monophyletic()`: 判断是否为单系群（数学定义：空集返回 false，单个节点返回 true）。
     *   `is_clade()`: 判断是否为演化支；要求至少两个节点且构成单系群。
 *   **修改**:
     *   `reroot_at()`: 重新定根 (支持边长重分配)。
     *   `prune_where()`: 剪枝 (删除匹配节点及其子孙)。
+    *   `algo::prune_nodes()`: 批量删除节点并清理后续产生的叶子内部节点与 degree-2 节点；返回前自动 `compact()`，外部 `NodeId` 失效。
     *   `remove_node()`: 软删除单个节点。
     *   `collapse_node()`: 压缩节点 (合并边长)。
     *   `compact()`: 物理删除软删除节点并重构树；调用后所有外部持有的 `NodeId` 均失效。

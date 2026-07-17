@@ -784,6 +784,25 @@ fn duplicate_names(tree: &Tree) -> HashSet<String> {
         .collect()
 }
 
+/// Append a single property entry parsed as `key=value` or a bare key.
+fn append_property_item(node: &mut crate::libs::phylo::node::Node, item: &str) {
+    if let Some((key, value)) = item.split_once('=') {
+        node.add_property(key, value);
+    } else {
+        node.add_property(item, "");
+    }
+}
+
+/// Append remaining non-empty replacement values as property entries.
+fn append_remaining_properties<'a>(
+    node: &mut crate::libs::phylo::node::Node,
+    values: impl Iterator<Item = &'a String>,
+) {
+    for item in values.filter(|s| !s.is_empty()) {
+        append_property_item(node, item);
+    }
+}
+
 /// Replace node names or append NHX-style annotations from a mapping.
 pub fn replace_annotations(
     tree: &mut Tree,
@@ -824,46 +843,22 @@ pub fn replace_annotations(
                         node.set_name(first);
                     }
                 }
-                for item in values.filter(|s| !s.is_empty()) {
-                    if let Some((key, value)) = item.split_once('=') {
-                        node.add_property(key, value);
-                    } else {
-                        node.add_property(item, "");
-                    }
-                }
+                append_remaining_properties(node, values);
             }
             AnnotationMode::TaxId => {
                 if let Some(first) = values.next().filter(|s| !s.is_empty()) {
                     node.add_property("T", first);
                 }
-                for item in values.filter(|s| !s.is_empty()) {
-                    if let Some((key, value)) = item.split_once('=') {
-                        node.add_property(key, value);
-                    } else {
-                        node.add_property(item, "");
-                    }
-                }
+                append_remaining_properties(node, values);
             }
             AnnotationMode::Species => {
                 if let Some(first) = values.next().filter(|s| !s.is_empty()) {
                     node.add_property("S", first);
                 }
-                for item in values.filter(|s| !s.is_empty()) {
-                    if let Some((key, value)) = item.split_once('=') {
-                        node.add_property(key, value);
-                    } else {
-                        node.add_property(item, "");
-                    }
-                }
+                append_remaining_properties(node, values);
             }
             AnnotationMode::AsIs => {
-                for item in values.filter(|s| !s.is_empty()) {
-                    if let Some((key, value)) = item.split_once('=') {
-                        node.add_property(key, value);
-                    } else {
-                        node.add_property(item, "");
-                    }
-                }
+                append_remaining_properties(node, values);
             }
         }
     }
