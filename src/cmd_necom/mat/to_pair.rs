@@ -6,30 +6,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("to-pair")
         .about("Converts a PHYLIP distance matrix to pairwise distances")
-        .after_help(
-            r###"
-This command converts a (relaxed lower-triangular) PHYLIP-format distance matrix
-to pairwise distances.
-
-Input format:
-* PHYLIP distance matrix (full or lower-triangular)
-* First line can be sequence count (optional)
-* Each line: sequence name followed by distances
-
-Output format:
-* Tab-separated values (TSV)
-* Three columns: name1, name2, distance
-* Lower-triangular output (including diagonal)
-
-Examples:
-1. Convert a PHYLIP matrix:
-   necom mat to-pair input.mat -o output.tsv
-
-2. Output to screen:
-   necom mat to-pair input.mat
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/mat/to-pair.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input file containing a PHYLIP distance matrix",
         ))

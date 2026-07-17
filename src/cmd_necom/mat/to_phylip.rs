@@ -5,17 +5,7 @@ use clap::{ArgMatches, Command};
 pub fn make_subcommand() -> Command {
     Command::new("to-phylip")
         .about("Converts pairwise distances to a phylip distance matrix")
-        .after_help(
-            r###"
-Input format:
-    * Tab-separated values (TSV)
-    * Three columns: name1, name2, distance
-
-Examples:
-    1. Convert pairwise distances to PHYLIP matrix:
-       necom mat to-phylip input.tsv -o output.phy
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/mat/to-phylip.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input file containing pairwise distances",
         ))

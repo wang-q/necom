@@ -92,20 +92,17 @@ Sparse or list-form distance data, suitable for storing graph structures or only
 
 #### `necom mat to-phylip`
 
-Convert Pairwise TSV to a PHYLIP matrix.
+Convert pairwise TSV to a PHYLIP matrix.
 
 - **Purpose**: Build a distance matrix from alignment results (e.g., `blast --outfmt 6`) for subsequent tree inference.
-- **Parameters**:
-  - `--same <FLOAT>`: Distance value for diagonal elements (self-to-self), default 0.
-  - `--missing <FLOAT>`: Distance value for missing pairs (e.g., unaligned sequences), default 1.0 (maximum distance).
-- **Note**: Automatically collects all observed IDs and constructs an $N \times N$ matrix.
+- **Output**: Full PHYLIP distance matrix. All observed IDs are collected into a square matrix.
 
 #### `necom mat to-pair`
 
-Convert a PHYLIP matrix to Pairwise TSV.
+Convert a PHYLIP matrix to pairwise TSV.
 
 - **Purpose**: Export a matrix as an edge list for graph clustering (e.g., `mcl`) or network visualization (Cytoscape).
-- **Output**: Three-column format `A B 0.123`. Usually only the lower or upper triangle is emitted to avoid duplication.
+- **Output**: Three-column TSV (`A B distance`). Lower-triangular output including the diagonal.
 
 #### `necom mat format`
 
@@ -113,9 +110,9 @@ Convert between PHYLIP formats and normalize them.
 
 - **Purpose**: Clean matrix formats to meet the requirements of specific software.
 - **Modes (`--format`)**:
-  - `full` (default): Output a standard $N \times N$ tab-separated matrix with full long names preserved.
-  - `lower`: Output a lower-triangular matrix without diagonal values (row `i` contains `i` values) to save disk space.
-  - `strict`: **Truncate names** to 10 characters, left-align and pad with spaces, and use fixed-width values. For compatibility with the original Phylip toolkit.
+  - `full` (default): full matrix with long names preserved.
+  - `lower`: lower-triangular matrix without diagonal values to save disk space.
+  - `strict`: truncated names and fixed-width values for compatibility with the original PHYLIP toolkit.
 
 ### Operations and Analysis
 
