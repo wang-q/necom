@@ -1,0 +1,59 @@
+# Summary
+
+[Introduction](README.md)
+
+# User Guide
+
+- [Clustering](clust.md)
+- [Tree Cutting](cut.md)
+- [Matrix Processing](mat.md)
+- [Newick Trees](nwk.md)
+- [Pipelines](pl.md)
+- [Clustering Evaluation Deep Dive](clust-eval.md)
+
+# Command Reference
+
+## Tree Cutting
+
+- [cut](help/cut.md)
+
+## Clustering
+
+- [cc](help/clust/cc.md)
+- [dbscan](help/clust/dbscan.md)
+- [eval](help/clust/eval.md)
+- [hier](help/clust/hier.md)
+- [k-medoids](help/clust/k-medoids.md)
+- [mcl](help/clust/mcl.md)
+- [nj](help/clust/nj.md)
+- [upgma](help/clust/upgma.md)
+
+## Matrix
+
+- [compare](help/mat/compare.md)
+- [format](help/mat/format.md)
+- [subset](help/mat/subset.md)
+- [to-pair](help/mat/to-pair.md)
+- [to-phylip](help/mat/to-phylip.md)
+- [transform](help/mat/transform.md)
+
+## Newick
+
+- [comment](help/nwk/comment.md)
+- [compare](help/nwk/compare.md)
+- [distance](help/nwk/distance.md)
+- [indent](help/nwk/indent.md)
+- [label](help/nwk/label.md)
+- [order](help/nwk/order.md)
+- [prune](help/nwk/prune.md)
+- [rename](help/nwk/rename.md)
+- [replace](help/nwk/replace.md)
+- [reroot](help/nwk/reroot.md)
+- [stat](help/nwk/stat.md)
+- [subtree](help/nwk/subtree.md)
+- [support](help/nwk/support.md)
+- [to-dot](help/nwk/to-dot.md)
+- [to-forest](help/nwk/to-forest.md)
+- [to-svg](help/nwk/to-svg.md)
+- [to-tex](help/nwk/to-tex.md)
+- [topo](help/nwk/topo.md)
