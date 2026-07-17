@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "../../searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-58dbae52.js"></script>
+        <script src="../../toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,9 @@
 <li>PHYLIP distance matrix or pairwise TSV file.</li>
 <li>Use <code>--input-format pair</code> to read pairwise TSV input; useful for processing data from STDIN.</li>
 </ul>
-<p>Operations:</p>
+<p>Notes:</p>
+<ul>
+<li>Available operations (<code>--op</code>):
 <ul>
 <li><code>linear</code>: <code>val = val * scale + offset</code>.</li>
 <li><code>inv-linear</code>: off-diagonal <code>val = max - val</code>; diagonal is set to <code>0</code>.</li>
@@ -195,8 +197,7 @@
 <li><code>square</code>: <code>val = val * val</code>.</li>
 <li><code>sqrt</code>: <code>val = sqrt(val)</code> (negative values produce <code>NaN</code>).</li>
 </ul>
-<p>Notes:</p>
-<ul>
+</li>
 <li>Useful for converting similarity matrices to distance matrices.</li>
 <li>Use <code>--normalize</code> to normalize based on diagonal elements before transformation: <code>x_norm(i, j) = x(i, j) / sqrt(x(i, i) * x(j, j))</code>.
 <ul>

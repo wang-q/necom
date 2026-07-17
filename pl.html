@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-58dbae52.js"></script>
+        <script src="toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,46 +186,8 @@
 <ul>
 <li><code>condense</code>: Condense monophyletic subtrees based on a taxonomy TSV file.</li>
 </ul>
-<h2 id="condense"><a class="header" href="#condense">condense</a></h2>
-<p>Condenses subtrees based on taxonomy.</p>
-<pre><code class="language-bash">necom pl condense [OPTIONS] --taxon &lt;taxon.tsv&gt; &lt;infile&gt;
-</code></pre>
-<h3 id="arguments"><a class="header" href="#arguments">Arguments</a></h3>
-<ul>
-<li><code>&lt;infile&gt;</code>: Input Newick filename. Use <code>stdin</code> for standard input.</li>
-</ul>
-<h3 id="options"><a class="header" href="#options">Options</a></h3>
-<ul>
-<li><code>--taxon &lt;taxon.tsv&gt;</code>: Path to the taxonomy TSV file (required).</li>
-<li><code>--rank &lt;N&gt;</code>: Column index(es) to use for grouping (1-based). Can be specified multiple times. Default: <code>2</code>.</li>
-<li><code>--map</code>: Write a mapping file <code>condensed.tsv</code> showing original node names and their condensed labels.</li>
-<li><code>-o, --outfile &lt;outfile&gt;</code>: Output filename. Use <code>stdout</code> for screen output.</li>
-</ul>
-<h3 id="input-formats"><a class="header" href="#input-formats">Input Formats</a></h3>
-<ul>
-<li><strong>Newick tree</strong> (<code>&lt;infile&gt;</code>): A tree whose leaf labels match the first column of the taxonomy file.</li>
-<li><strong>Taxonomy TSV</strong> (<code>--taxon</code>): A tab-separated file without header, containing at least two columns:
-<ul>
-<li>Column 1: node name (must match leaf labels in the Newick file).</li>
-<li>Column 2+: taxonomic terms (e.g., species, genus, family).</li>
-</ul>
-</li>
-</ul>
-<p>Monophyletic subtrees whose leaves share the same taxonomic term at the selected rank are collapsed into a single node named <code>{term}||{count}</code>, where <code>{count}</code> is the number of leaves in the condensed group. Condensed nodes carry <code>member=&lt;count&gt;</code> and <code>tri=white</code> comments for visualization.</p>
-<h3 id="examples"><a class="header" href="#examples">Examples</a></h3>
-<pre><code class="language-bash"># Condense by species (2nd column)
-necom pl condense --taxon taxon.tsv tree.nwk
-
-# Condense by genus (3rd column)
-necom pl condense --taxon taxon.tsv --rank 3 tree.nwk
-
-# Condense by multiple ranks
-necom pl condense --taxon taxon.tsv --rank 2 --rank 3 tree.nwk
-
-# Output mapping file
-necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk
-</code></pre>
-<h3 id="full-example-with-test-data"><a class="header" href="#full-example-with-test-data">Full Example with Test Data</a></h3>
+<p>For command-line options and usage examples, see <a href="help/pl/condense.html"><code>docs/help/pl/condense.md</code></a>.</p>
+<h2 id="full-example-with-test-data"><a class="header" href="#full-example-with-test-data">Full Example with Test Data</a></h2>
 <pre><code class="language-bash">necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
     tests/pipeline/minhash.reroot.newick
 </code></pre>
@@ -238,7 +200,7 @@ necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="clust-eval.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="eval.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -252,7 +214,7 @@ necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="clust-eval.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="eval.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

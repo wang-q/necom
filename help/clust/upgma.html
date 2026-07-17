@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "../../searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-58dbae52.js"></script>
+        <script src="../../toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -188,6 +188,12 @@
 <p>Output:</p>
 <ul>
 <li>A Newick tree.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>UPGMA assumes an ultrametric (molecular clock): all leaves are equidistant from the root.</li>
+<li>When the input distances violate ultrametricity, the tree is still produced but branch lengths may not reflect true evolutionary distances.</li>
+<li>For non-ultrametric data, consider <code>necom clust nj</code> (neighbor-joining) instead.</li>
 </ul>
 <p>Examples:</p>
 <ol>

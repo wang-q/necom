@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-58dbae52.js"></script>
+        <script src="toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -188,7 +188,7 @@
 <li><strong>Functionality</strong>: Format conversion, subset extraction, matrix comparison, and standardization.</li>
 <li><strong>Goal</strong>: Provide standard, efficient data interfaces for phylogenetics and statistical clustering.</li>
 </ul>
-<h2 id="supported-file-formats"><a class="header" href="#supported-file-formats">Supported File Formats</a></h2>
+<h2 id="scope"><a class="header" href="#scope">Scope</a></h2>
 <p><code>necom</code> currently focuses on clustering, distance matrix processing, and phylogenetic tree operations. Supported file formats are limited to those actually used by these commands.</p>
 <div class="table-wrapper">
 <table>
@@ -196,16 +196,16 @@
 <tr><th style="text-align: left">Format</th><th style="text-align: left">Description</th><th style="text-align: left">Command Docs</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: left">Distance</td><td style="text-align: left">Distance matrix structures such as <code>PHYLIP</code> and <code>Pairwise</code></td><td style="text-align: left"><a href="mat.html">mat.md</a>, <a href="clust.html">clust.md</a></td></tr>
+<tr><td style="text-align: left">Distance</td><td style="text-align: left">Distance matrix structures such as <code>PHYLIP</code> and <code>Pairwise</code></td><td style="text-align: left">this file, <a href="clust.html">clust.md</a></td></tr>
 <tr><td style="text-align: left">Newick</td><td style="text-align: left">Phylogenetic tree format</td><td style="text-align: left"><a href="nwk.html">nwk.md</a></td></tr>
 </tbody>
 </table>
 </div>
 <p>Distance matrices and Newick trees do not carry genomic coordinates. If other <code>necom</code> commands require coordinate-based input, this is documented separately in the corresponding command documentation.</p>
 <h2 id="supported-formats-and-data-structures"><a class="header" href="#supported-formats-and-data-structures">Supported Formats and Data Structures</a></h2>
-<p><code>necom</code> uses three internal matrix structures for clustering and distance analysis, and supports two external distance matrix file formats: <code>PHYLIP</code> and <code>Pairwise</code>.</p>
+<p><code>necom</code> supports two external distance matrix file formats: <code>PHYLIP</code> and <code>Pairwise</code>. (Internal matrix data structures are documented in <a href="../notes/design/mat-impl.html"><code>notes/design/mat-impl.md</code></a>.)</p>
 <h3 id="1-phylip-distance-matrix-dense"><a class="header" href="#1-phylip-distance-matrix-dense">1. PHYLIP Distance Matrix (Dense)</a></h3>
-<p>The <code>PHYLIP</code> distance matrix format is a common format in phylogenetic analysis. <code>necom</code> provides a series of tools for processing this format in <code>src/cmd_necom/mat</code> and <code>src/libs/pairmat/</code>.</p>
+<p>The <code>PHYLIP</code> distance matrix format is a common format in phylogenetic analysis. <code>necom</code> provides a series of tools for processing this format.</p>
 <p><code>necom</code> stores this internally using the <code>NamedMatrix</code> structure, backed by <code>CondensedMatrix</code> (a one-dimensional array storing the upper or lower triangle), with memory usage of approximately $O(N^2/2)$.</p>
 <p><code>necom</code> supports both Strict and Relaxed <code>PHYLIP</code> formats.</p>
 <p><strong>Relaxed PHYLIP (default input support)</strong>:</p>
@@ -245,145 +245,60 @@
 <li><strong>Matrix to Pair (<code>necom mat to-pair</code>)</strong>: flatten a <code>PHYLIP</code> matrix into a <code>Pairwise</code> list.</li>
 <li><strong>Pair to Matrix (<code>necom mat to-phylip</code>)</strong>: assemble a <code>Pairwise</code> list back into a <code>PHYLIP</code> matrix, supporting <code>--missing</code> and <code>--same</code> parameters.</li>
 </ul>
-<h3 id="3-internal-matrix-structures"><a class="header" href="#3-internal-matrix-structures">3. Internal Matrix Structures</a></h3>
-<p><code>necom</code> defines three core matrix structures in <code>src/libs/pairmat/</code>.</p>
-<h4 id="scoringmatrix"><a class="header" href="#scoringmatrix">ScoringMatrix</a></h4>
-<ul>
-<li><strong>Purpose</strong>: sparse or on-demand scoring/distance matrix.</li>
-<li><strong>Underlying storage</strong>: <code>HashMap&lt;(usize, usize), T&gt;</code>.</li>
-<li><strong>Characteristics</strong>: sparse storage, only explicitly set values are kept; supports default values for diagonal and off-diagonal elements; logically symmetric (<code>get(i,j)</code> is equivalent to <code>get(j,i)</code>).</li>
-</ul>
-<h4 id="condensedmatrix"><a class="header" href="#condensedmatrix">CondensedMatrix</a></h4>
-<ul>
-<li><strong>Purpose</strong>: efficient hierarchical clustering (e.g., <code>clust hier</code>) supporting larger-scale data.</li>
-<li><strong>Underlying storage</strong>: <code>Vec&lt;f32&gt;</code>, only the upper triangle (excluding the diagonal) is stored, memory footprint is $N(N-1)/2$.</li>
-<li><strong>Index mapping</strong>: for $(i, j)$ with $i &lt; j$ → $k = N \cdot i - i(i+1)/2 + (j - i - 1)$.</li>
-<li><strong>Characteristics</strong>: enforced symmetry, diagonal assumed to be 0, no name mapping stored, purely numerical computation.</li>
-</ul>
-<h4 id="namedmatrix"><a class="header" href="#namedmatrix">NamedMatrix</a></h4>
-<ul>
-<li><strong>Purpose</strong>: dense distance matrix with row and column names (e.g., <code>PHYLIP</code> in-memory representation).</li>
-<li><strong>Underlying storage</strong>: <code>IndexMap</code> (name index) + <code>CondensedMatrix</code> + optional diagonal vector.</li>
-<li><strong>Characteristics</strong>: combined wrapper that accesses the underlying <code>CondensedMatrix</code> through name indexing; supports optional diagonal storage (required by <code>mat transform --normalize</code>); about 200MB when $N=10,000$.</li>
-</ul>
 <h2 id="subcommands-in-detail"><a class="header" href="#subcommands-in-detail">Subcommands in Detail</a></h2>
 <h3 id="format-conversion"><a class="header" href="#format-conversion">Format Conversion</a></h3>
 <h4 id="necom-mat-to-phylip"><a class="header" href="#necom-mat-to-phylip"><code>necom mat to-phylip</code></a></h4>
-<p>Convert pairwise TSV to a PHYLIP matrix.</p>
-<ul>
-<li><strong>Purpose</strong>: Build a distance matrix from alignment results (e.g., <code>blast --outfmt 6</code>) for subsequent tree inference.</li>
-<li><strong>Output</strong>: Full PHYLIP distance matrix. All observed IDs are collected into a square matrix.</li>
-</ul>
+<p>Build a full PHYLIP distance matrix from a pairwise TSV (e.g., alignment output). Missing pairs can be filled with <code>--missing</code> and self-pairs with <code>--same</code>.</p>
 <h4 id="necom-mat-to-pair"><a class="header" href="#necom-mat-to-pair"><code>necom mat to-pair</code></a></h4>
-<p>Convert a PHYLIP matrix to pairwise TSV.</p>
-<ul>
-<li><strong>Purpose</strong>: Export a matrix as an edge list for graph clustering (e.g., <code>mcl</code>) or network visualization (Cytoscape).</li>
-<li><strong>Output</strong>: Three-column TSV (<code>A B distance</code>). Lower-triangular output including the diagonal.</li>
-</ul>
+<p>Flatten a PHYLIP matrix into a three-column pairwise TSV (<code>A B distance</code>), emitting the lower triangle including the diagonal.</p>
 <h4 id="necom-mat-format"><a class="header" href="#necom-mat-format"><code>necom mat format</code></a></h4>
-<p>Convert between PHYLIP formats and normalize them.</p>
+<p>Convert a PHYLIP matrix into another PHYLIP variant while preserving all distance values.</p>
 <ul>
-<li><strong>Purpose</strong>: Clean matrix formats to meet the requirements of specific software.</li>
-<li><strong>Modes (<code>--format</code>)</strong>:
-<ul>
-<li><code>full</code> (default): full matrix with long names preserved.</li>
-<li><code>lower</code>: lower-triangular matrix without diagonal values to save disk space.</li>
-<li><code>strict</code>: truncated names and fixed-width values for compatibility with the original PHYLIP toolkit.</li>
-</ul>
-</li>
+<li><code>--format full</code> (default): full square matrix with original names.</li>
+<li><code>--format lower</code>: lower-triangular matrix without diagonal values.</li>
+<li><code>--format strict</code>: 10-character names and fixed-width values for compatibility with the original PHYLIP toolkit.</li>
 </ul>
 <h3 id="operations-and-analysis"><a class="header" href="#operations-and-analysis">Operations and Analysis</a></h3>
 <h4 id="necom-mat-subset"><a class="header" href="#necom-mat-subset"><code>necom mat subset</code></a></h4>
-<p>Extract a submatrix based on a list of names.</p>
-<ul>
-<li><strong>Purpose</strong>: Extract specific species or gene families from a large matrix for fine-grained analysis.</li>
-<li><strong>Input</strong>: PHYLIP matrix and an ID list file (one ID per line).</li>
-<li><strong>Output</strong>: Full PHYLIP submatrix in the order of the ID list.</li>
-</ul>
+<p>Extract a PHYLIP submatrix in the order of a given ID list.</p>
 <h4 id="necom-mat-compare"><a class="header" href="#necom-mat-compare"><code>necom mat compare</code></a></h4>
-<p>Compute correlation or difference between two matrices.</p>
+<p>Compare two matrices on their common IDs using correlation, error, or distance metrics. Multiple <code>--method</code> values can be comma-separated.</p>
+<h4 id="necom-mat-transform"><a class="header" href="#necom-mat-transform"><code>necom mat transform</code></a></h4>
+<p>Apply mathematical transformations to matrix elements. It is the main tool for converting a <strong>Similarity Matrix</strong> into a <strong>Distance Matrix</strong>, and also supports normalization and other numerical adjustments.</p>
+<p>Clustering algorithms (UPGMA, NJ, Ward) and multidimensional scaling require a <strong>Distance Matrix</strong> with $D(x, x) = 0$, $D(x, y) \ge 0$, and smaller values indicating higher similarity. Upstream tools such as BLAST, MMseqs2, and Diamond usually output <strong>Similarity</strong>, where $S(x, x) = Max$ and larger values indicate higher similarity.</p>
+<p><strong>Key options</strong>:</p>
 <ul>
-<li><strong>Purpose</strong>: Evaluate consistency between distance calculation methods, or information loss before and after clustering (Cophenetic Correlation).</li>
-<li><strong>Prerequisite</strong>: Uses the intersection of common IDs between the two matrices.</li>
-<li><strong>Metrics (<code>--method</code>)</strong>: Pearson, Spearman, Cosine, Jaccard, MAE, Euclidean, or <code>all</code>. Default is <code>pearson</code>; multiple methods can be comma-separated.</li>
-</ul>
-<h3 id="necom-mat-transform"><a class="header" href="#necom-mat-transform"><code>necom mat transform</code></a></h3>
-<p>The <code>necom mat transform</code> command applies mathematical transformations to values in a matrix.</p>
-<p>It is the core tool for converting a <strong>Similarity Matrix</strong> into a <strong>Distance Matrix</strong>, and also supports normalization and other numerical adjustments.</p>
-<ul>
-<li><strong>Purpose</strong>: Convert similarity matrices to distance matrices, or perform normalization and log transformations.</li>
-<li><strong>Operations (<code>--op</code>)</strong>: <code>linear</code>, <code>inv-linear</code>, <code>log</code>, <code>exp</code>, <code>square</code>, <code>sqrt</code>.</li>
-<li><strong>Normalization (<code>--normalize</code>)</strong>: Normalize based on diagonal elements before applying the transformation.</li>
-<li><strong>Input</strong>: PHYLIP distance matrix or pairwise TSV file; use <code>--input-format pair</code> for pairwise TSV.</li>
-</ul>
-<p>Clustering algorithms (such as UPGMA, NJ, Ward) and multidimensional scaling (MDS) usually require a <strong>Distance Matrix</strong> or <strong>Dissimilarity Matrix</strong> that satisfies:</p>
-<ul>
-<li>$D(x, x) = 0$</li>
-<li>$D(x, y) \ge 0$</li>
-<li>Smaller $D(x, y)$ indicates higher similarity</li>
-</ul>
-<p>However, upstream bioinformatics tools (such as BLAST, MMseqs2, Diamond) or statistical analyses usually output <strong>Similarity</strong>, which satisfies:</p>
-<ul>
-<li>$S(x, x) = Max$ (e.g., 1.0 or 100)</li>
-<li>Larger $S(x, y)$ indicates higher similarity</li>
+<li><code>--op</code>: <code>linear</code>, <code>inv-linear</code>, <code>log</code>, <code>exp</code>, <code>square</code>, <code>sqrt</code>.</li>
+<li><code>--normalize</code>: scale values by diagonal elements before transformation.</li>
+<li><code>--input-format pair</code>: read pairwise TSV instead of PHYLIP.</li>
 </ul>
 <h4 id="conversion-models"><a class="header" href="#conversion-models">Conversion Models</a></h4>
-<p><code>necom mat transform</code> supports the following common transformation modes:</p>
+<p><code>necom mat transform</code> supports common similarity-to-distance conversions:</p>
 <h5 id="1-linear-inversion"><a class="header" href="#1-linear-inversion">1. Linear Inversion</a></h5>
-<p>Applicable to similarities with a fixed upper bound (e.g., Identity, Percent Similarity).</p>
+<p>For similarities with a fixed upper bound:</p>
 <p>$$D = Max - S$$</p>
-<ul>
-<li><strong>Scenario</strong>: BLAST Identity (0–100) $\rightarrow$ $D = 100 - S$</li>
-<li><strong>Scenario</strong>: Fraction (0–1) $\rightarrow$ $D = 1 - S$</li>
-</ul>
+<p>Examples: BLAST identity (0–100) becomes $D = 100 - S$; fractions become $D = 1 - S$.</p>
 <h5 id="2-normalized-linear-inversion"><a class="header" href="#2-normalized-linear-inversion">2. Normalized Linear Inversion</a></h5>
-<p>If $S$ has no fixed upper bound (e.g., Alignment Score), normalization is required first.</p>
-<p>Raw scores are usually affected by sequence length and cannot be directly compared (e.g., a score of 1000 for a long sequence may be less significant than a score of 100 for a short sequence). Normalization uses the diagonal (self-alignment score) to convert raw scores into relative similarity (0–1 range), giving subsequent distance transformations (e.g., $1-S$) a meaningful mathematical interpretation.</p>
+<p>For raw scores without a fixed upper bound, normalize by diagonal self-scores first:</p>
 <p>$$D = 1 - \frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}}$$</p>
-<p>Or simply:</p>
-<p>$$D = 1 - \frac{S(x, y)}{Max(S)}$$</p>
+<p>A simpler alternative uses the global maximum: $D = 1 - S(x, y) / Max(S)$.</p>
 <h5 id="3-logarithmic"><a class="header" href="#3-logarithmic">3. Logarithmic</a></h5>
-<p>Applicable to probabilities or multiplicative models (similar to Jukes-Cantor correction).</p>
+<p>For probabilities or multiplicative models:</p>
 <p>$$D = -\ln(S)$$</p>
-<p>Or after normalization:</p>
-<p>$$D = -\ln(\frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}})$$</p>
-<ul>
-<li><strong>Scenario</strong>: Sequence identity probability $\rightarrow$ evolutionary distance</li>
-</ul>
-<h4 id="data-flow"><a class="header" href="#data-flow">Data Flow</a></h4>
-<pre><code class="language-mermaid">flowchart LR
-    A[pair/phylip input] --&gt; B{input format?}
-    B --&gt;|pair| C[from_pair_scores&lt;br/&gt;--same/--missing]
-    B --&gt;|phylip| D[from_relaxed_phylip&lt;br/&gt;sequence/value validation]
-    C --&gt; E[NamedMatrix]
-    D --&gt; E
-    E --&gt; F[transform_matrix&lt;br/&gt;normalize? op]
-    F --&gt; G[write_phylip_matrix&lt;br/&gt;precision=6]
-    G --&gt; H[stdout/file]
-</code></pre>
+<p>After normalization: $D = -\ln(S(x, y) / \sqrt{S(x, x) \cdot S(y, y)})$. Useful for converting sequence identity probability to evolutionary distance.</p>
 <h4 id="notes"><a class="header" href="#notes">Notes</a></h4>
 <ul>
-<li><strong>Diagonal handling</strong>:
-<ul>
-<li>When <code>necom</code> reads a matrix, it usually ignores the diagonal (sets it to 0), but the <code>transform</code> command attempts to preserve diagonal information to support <code>--normalize</code>.</li>
-<li>If the input file lacks diagonal information (as in some PHYLIP variants), <code>--normalize</code> will not work correctly (treated as 0).</li>
-</ul>
-</li>
-<li><strong>Numerical stability</strong>:
-<ul>
-<li>The <code>log</code> operation is sensitive to 0 or negative values; off-diagonal values are set to <code>Inf</code> and diagonal values are set to 0.</li>
-<li>If the diagonal is 0 during normalization, the result will be 0.</li>
-</ul>
-</li>
+<li>Diagonal information is preserved so that <code>--normalize</code> can use self-scores. If the input lacks diagonal values, <code>--normalize</code> will not work correctly.</li>
+<li><code>log</code> of 0 or negative off-diagonal values produces <code>Inf</code>; non-positive diagonal values become <code>0</code>.</li>
 </ul>
 <h4 id="future-work"><a class="header" href="#future-work">Future Work</a></h4>
-<p>The following transformations are not currently implemented but may be useful in the future:</p>
+<p>The following conversions are not yet implemented:</p>
 <ul>
-<li><strong>Reciprocal</strong>: $D = \frac{1}{S} - \frac{1}{Max}$. Can be approximated with <code>--op linear</code> plus an external script.</li>
-<li><strong>Cosine Similarity</strong>: $D = 1 - \cos(\theta)$</li>
-<li><strong>Correlation</strong>: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$</li>
+<li><strong>Reciprocal</strong>: $D = 1/S - 1/Max$ (can be approximated with <code>--op linear</code>).</li>
+<li><strong>Cosine Similarity</strong>: $D = 1 - \cos(\theta)$.</li>
+<li><strong>Correlation</strong>: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.</li>
 </ul>
-<p>For Cosine/Correlation distances, we recommend computing them in Python (SciPy) and exporting the result as a PHYLIP matrix.</p>
+<p>For Cosine/Correlation distances, compute them in Python (SciPy) and export as a PHYLIP matrix.</p>
 <h2 id="recommended-workflows"><a class="header" href="#recommended-workflows">Recommended Workflows</a></h2>
 <h3 id="scenario-a-tree-inference-from-blast-results"><a class="header" href="#scenario-a-tree-inference-from-blast-results">Scenario A: Tree Inference from BLAST Results</a></h3>
 <pre><code class="language-bash"># 1. Parse BLAST results into pairwise distances (assuming distance = 1 - identity has already been computed)

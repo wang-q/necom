@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-58dbae52.js"></script>
+        <script src="toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -187,7 +187,6 @@
 <ul>
 <li><strong>Information</strong>: Extract information or statistics from trees.
 <ul>
-<li><code>compare</code>: Compare trees (RF, WRF, KF distances).</li>
 <li><code>distance</code>: Compute distances between nodes.</li>
 <li><code>label</code>: Extract labels/names from the tree.</li>
 <li><code>stat</code>: Print tree statistics (node count, leaf count, balance indices, etc.).</li>
@@ -218,227 +217,44 @@
 </ul>
 <hr>
 <h2 id="information-commands"><a class="header" href="#information-commands">Information Commands</a></h2>
-<h3 id="compare"><a class="header" href="#compare">compare</a></h3>
-<p>Compare trees using Robinson-Foulds (RF) distance and its variants.</p>
-<pre><code class="language-bash">necom nwk compare [OPTIONS] &lt;infile&gt; [compare_file]
-</code></pre>
-<ul>
-<li><code>[compare_file]</code>: Optional second tree file. If omitted, all trees in <code>&lt;infile&gt;</code> are compared pairwise.</li>
-<li><code>--include-trivial</code>: Include trivial splits (single-leaf branches) in WRF/KF calculations.</li>
-<li>Output columns: <code>Tree1</code>, <code>Tree2</code>, <code>RF_Dist</code>, <code>WRF_Dist</code>, <code>KF_Dist</code>.</li>
-<li>Single-file pairwise mode requires at least 2 trees. With only 1 tree, a warning is emitted and the output contains only the header.</li>
-</ul>
-<blockquote>
-<p><strong>RF (Robinson-Foulds)</strong>: Measures topological difference based on the number of splits that differ between two trees. Smaller values indicate greater similarity; 0 means identical. WRF is weighted RF, and KF is the Kuhner-Felsenstein branch-score distance.</p>
-</blockquote>
 <h3 id="distance"><a class="header" href="#distance">distance</a></h3>
-<p>Compute distances between nodes or generate a distance matrix.</p>
-<pre><code class="language-bash">necom nwk distance [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>If the input file contains multiple trees, only the first tree is processed.</li>
-<li><code>--mode &lt;mode&gt;</code>: Computation mode.
-<ul>
-<li><code>root</code> (default): Distance to the root.</li>
-<li><code>parent</code>: Distance to the parent.</li>
-<li><code>pairwise</code>: Pairwise distances among all selected nodes, including self-pairs and both (i,j) and (j,i) orderings.</li>
-<li><code>lca</code>: Distances from each node in a pair to their Lowest Common Ancestor (LCA), for all selected-node pairs (including self-pairs).</li>
-<li><code>phylip</code>: Output a PHYLIP-format distance matrix for selected nodes. All selected nodes must be named and their names must not contain ASCII whitespace characters; unnamed nodes or names with whitespace cause an error.</li>
-</ul>
-</li>
-<li><code>-I</code>: Ignore internal nodes.</li>
-<li><code>-L</code>: Ignore leaf nodes.</li>
-<li><code>-n &lt;name&gt;</code> / <code>-l &lt;file&gt;</code> / <code>-x &lt;regex&gt;</code>: Restrict output to nodes matched by exact name, name-list file, or case-insensitive regex. When omitted, all selected nodes (respecting <code>-I</code>/<code>-L</code>) are reported.</li>
-</ul>
+<p>Compute distances between nodes or generate a distance matrix. Use <code>--mode</code> to select root, parent, pairwise, lca, or phylip output.</p>
 <h3 id="label"><a class="header" href="#label">label</a></h3>
 <p>Extract labels (names) from the tree.</p>
-<pre><code class="language-bash">necom nwk label [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-I</code>: Skip internal node labels.</li>
-<li><code>-L</code>: Skip leaf node labels.</li>
-<li><code>-n &lt;name&gt;</code> / <code>-l &lt;file&gt;</code> / <code>-x &lt;regex&gt;</code>: Filter nodes by name, list, or regex.</li>
-<li><code>-D</code>: Include descendants of selected nodes.</li>
-<li><code>-M</code>: Clade check (output only when the selected nodes form a clade with at least two nodes).</li>
-<li><code>--tab</code>: Output tab-separated values (single line).</li>
-<li><code>-c &lt;col&gt;</code> / <code>--extra-column &lt;col&gt;</code>: Append extra columns (<code>dup</code>, <code>taxid</code>, <code>species</code>, <code>full</code>).</li>
-<li><code>--root</code>: Output only the root node label. When <code>--root</code> is given, other selection options (<code>-I</code>, <code>-L</code>, <code>-n</code>, <code>-x</code>, etc.) are ignored.</li>
-</ul>
 <h3 id="stat"><a class="header" href="#stat">stat</a></h3>
 <p>Print tree statistics.</p>
-<pre><code class="language-bash">necom nwk stat [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>--style &lt;col|line&gt;</code>: Output format (key-value pairs or TSV lines).</li>
-<li>Statistics include: type (cladogram/phylogram/neither), node count, leaf count, rooted status, dichotomies, leaf labels, internal labels, edges with length, edges without length, cherries, Sackin index, Colless index.</li>
-</ul>
 <h3 id="support"><a class="header" href="#support">support</a></h3>
 <p>Assign bootstrap support values to a target tree based on replicate trees.</p>
-<pre><code class="language-bash">necom nwk support [OPTIONS] &lt;target&gt; &lt;replicates&gt;
-</code></pre>
-<ul>
-<li><code>-p, --percent</code>: Output support values as integer percentages (0–100), truncated toward zero.</li>
-<li><code>-r, --override-root</code>: Override the root node label with its support value.</li>
-<li>Overwrites existing internal node labels in the target tree.</li>
-<li>The root node is not annotated by default; any existing root label is preserved.</li>
-</ul>
 <hr>
 <h2 id="manipulation-commands"><a class="header" href="#manipulation-commands">Manipulation Commands</a></h2>
 <h3 id="order"><a class="header" href="#order">order</a></h3>
-<p>Sort children of each node (rotate branches) without changing topology.</p>
-<pre><code class="language-bash">necom nwk order [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>--num-descendants</code> / <code>--num-descendants-rev</code>: Sort by number of descendants (ladderize).</li>
-<li><code>--alphanumeric</code> / <code>--alphanumeric-rev</code>: Sort labels alphanumerically.</li>
-<li><code>--name-list &lt;file&gt;</code>: Sort by a given name list; applied before other sort options.</li>
-<li><code>--deladderize</code> (<code>--dl</code>): Alternate sort direction at each level.</li>
-<li>If no sort option is provided, children are sorted in ascending alphanumeric order by default.</li>
-<li>Entries in <code>--name-list</code> that are not found among the leaf names are logged as warnings and skipped.</li>
-</ul>
-<p>When both <code>--alphanumeric</code> and <code>--num-descendants</code> are enabled, labels are sorted alphabetically first, then stably ladderized by number of descendants; the final order is primarily by number of descendants, with alphabetical order used as a tie-breaker within groups of the same size.</p>
+<p>Sort children of each node without changing topology.</p>
 <h3 id="prune"><a class="header" href="#prune">prune</a></h3>
-<p>Remove nodes from the tree.</p>
-<pre><code class="language-bash">necom nwk prune [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-n &lt;name&gt;</code> / <code>-l &lt;file&gt;</code> / <code>-x &lt;regex&gt;</code>: Select nodes to remove.</li>
-<li><code>-i, --invert</code>: Invert selection (keep selected nodes, remove the rest).</li>
-<li><code>-D</code>: Include descendants.</li>
-</ul>
+<p>Remove selected nodes from the tree.</p>
 <h3 id="rename"><a class="header" href="#rename">rename</a></h3>
 <p>Rename specified nodes.</p>
-<pre><code class="language-bash">necom nwk rename [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-n &lt;name&gt;</code>: Select node by name.</li>
-<li><code>-l &lt;name1,name2&gt;</code>: Select node by LCA of two names.</li>
-<li><code>--rename &lt;new_name&gt;</code>: New name(s), which must correspond one-to-one with <code>-n</code> or <code>-l</code> arguments.</li>
-</ul>
 <h3 id="replace"><a class="header" href="#replace">replace</a></h3>
-<p>Batch replace node names or comments using a TSV file.</p>
-<pre><code class="language-bash">necom nwk replace [OPTIONS] --replace-tsv &lt;replace.tsv&gt; &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>--replace-tsv &lt;replace.tsv&gt;</code>: Tab-separated file with format <code>Original &lt;TAB&gt; Replacement [TAB Extra...]</code>.</li>
-<li><code>-I, --internal</code>: Skip internal labels.</li>
-<li><code>-L, --leaf</code>: Skip leaf labels.</li>
-<li><code>--mode &lt;mode&gt;</code>:
-<ul>
-<li><code>label</code> (default): Replace node names.</li>
-<li><code>taxid</code>: Add as NCBI TaxID (<code>:T=</code>).</li>
-<li><code>species</code>: Add as species name (<code>:S=</code>).</li>
-<li><code>asis</code>: Append directly as comment/attribute. Values containing <code>=</code> are parsed as <code>key=value</code>; bare values are treated as keys with empty values.</li>
-</ul>
-</li>
-</ul>
+<p>Batch replace node names or append annotations from a TSV file. Use <code>--mode</code> to choose label, taxid, species, or asis replacement.</p>
 <h3 id="reroot"><a class="header" href="#reroot">reroot</a></h3>
-<p>Reroot the tree.</p>
-<pre><code class="language-bash">necom nwk reroot [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>If the input file contains multiple trees, only the first tree is processed.</li>
-<li>(Default): Root at the midpoint of the longest branch.</li>
-<li><code>-n &lt;node&gt;</code>: Root on the edge leading to the LCA of specified nodes (outgroup rooting).</li>
-<li><code>-l, --lax</code>: Lax mode (if the LCA is already the root, use its complement).</li>
-<li><code>-d, --deroot</code>: Deroot (produce a multifurcating root).</li>
-<li><code>--support-as-labels</code>: Treat support values as labels (rerooting will move labels).</li>
-<li>The default midpoint rerooting is a no-op when the tree has no positive branch lengths (cladogram).</li>
-</ul>
+<p>Reroot the tree. The default is midpoint rooting; use <code>-n</code> for outgroup rooting.</p>
 <h3 id="subtree"><a class="header" href="#subtree">subtree</a></h3>
-<p>Extract the subtree rooted at the LCA of selected nodes.</p>
-<pre><code class="language-bash">necom nwk subtree [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-n</code> / <code>-l</code> / <code>-x</code>: Select nodes.</li>
-<li><code>-D, --descendants</code>: Include all descendants of selected internal nodes.</li>
-<li><code>-M</code>: Clade check (output only when selected nodes form a clade with at least two nodes).</li>
-<li><code>-c &lt;N&gt;</code>: Context (expand upward by N levels). Default: <code>0</code>.</li>
-<li><code>-C, --condense &lt;name&gt;</code>: Condense the subtree to a single node.
-<ul>
-<li>The new node gets <code>member=&lt;count&gt;</code> and <code>tri=white</code> comments.</li>
-<li><code>&lt;count&gt;</code> is the number of named nodes matched by <code>-n/-l/-x</code>, including descendants expanded by <code>-D</code>.</li>
-</ul>
-</li>
-</ul>
+<p>Extract the subtree rooted at the LCA of selected nodes, or condense it into a single node with <code>--condense</code>.</p>
 <h3 id="topo"><a class="header" href="#topo">topo</a></h3>
-<p>Modify tree topology and properties.</p>
-<pre><code class="language-bash">necom nwk topo [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>By default removes branch lengths and comments, keeping only topology.</li>
-<li><code>-b, --bl</code>: Preserve branch lengths.</li>
-<li><code>-c, --comment</code>: Preserve comments.</li>
-<li><code>-I</code>: Remove internal labels.</li>
-<li><code>-L</code>: Remove leaf labels.</li>
-</ul>
+<p>Modify tree topology and properties, such as removing branch lengths or labels.</p>
 <hr>
 <h2 id="visualization-commands"><a class="header" href="#visualization-commands">Visualization Commands</a></h2>
 <h3 id="comment"><a class="header" href="#comment">comment</a></h3>
-<p>Add comments to nodes for visualization.</p>
-<pre><code class="language-bash">necom nwk comment [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-n &lt;name&gt;</code> / <code>--node &lt;name&gt;</code>: Select node(s) by exact name (can be repeated).</li>
-<li><code>--lca &lt;A,B&gt;</code>: Select an internal node by the lowest common ancestor (LCA) of two comma-separated names. Can be specified multiple times.</li>
-<li><code>--string &lt;str&gt;</code>: Add a free-text string comment (stored as the <code>string</code> attribute).</li>
-<li><code>--color</code>, <code>--label</code>, <code>--comment-text</code>: Add text attributes (<code>--comment-text</code> stores as the <code>comment</code> attribute, used for visualization).</li>
-<li><code>--dot</code>, <code>--bar</code>, <code>--rec</code>, <code>--tri</code>: Add shape attributes (used by <code>to-tex</code> / <code>to-forest</code>).</li>
-<li><code>--remove &lt;regex&gt;</code>: Remove comments matching the regex.</li>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; <code>[stdout]</code> for screen output.</li>
-</ul>
+<p>Add visualization comments or attributes to selected nodes.</p>
 <h3 id="indent"><a class="header" href="#indent">indent</a></h3>
-<p>Format a Newick tree with indentation or compactly.</p>
-<pre><code class="language-bash">necom nwk indent [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>--text &lt;str&gt;</code>: Indentation string (default <code>"  "</code>).</li>
-<li><code>-c, --compact</code>: Compact output (single line).</li>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; <code>[stdout]</code> for screen output.</li>
-</ul>
+<p>Format a Newick tree with indentation or compact output.</p>
 <h3 id="to-dot"><a class="header" href="#to-dot">to-dot</a></h3>
-<p>Convert a Newick tree to Graphviz DOT format.</p>
-<pre><code class="language-bash">necom nwk to-dot [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; <code>[stdout]</code> for screen output.</li>
-</ul>
+<p>Convert to Graphviz DOT format.</p>
 <h3 id="to-forest"><a class="header" href="#to-forest">to-forest</a></h3>
-<p>Convert a Newick tree to raw LaTeX Forest code.</p>
-<pre><code class="language-bash">necom nwk to-forest [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>If the input file contains multiple trees, only the first tree is processed.</li>
-<li><code>-b, --bl</code>: Include branch lengths.</li>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; `[stdout] for screen output.</li>
-<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped or normalized for safe Forest output.</li>
-</ul>
+<p>Convert to LaTeX Forest code.</p>
 <h3 id="to-svg"><a class="header" href="#to-svg">to-svg</a></h3>
-<p>Convert a Newick tree to SVG format for visualization.</p>
-<pre><code class="language-bash">necom nwk to-svg [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>If the input file contains multiple trees, only the first tree is processed.</li>
-<li>Draws a phylogram if branch lengths exist, otherwise a cladogram.</li>
-<li><code>-w, --width &lt;N&gt;</code>: Drawing-area width used as the branch-length scaling baseline in pixels (default 800). The final SVG width also includes margins for leaf labels.</li>
-<li><code>-v, --vskip &lt;N&gt;</code>: Vertical spacing between leaf nodes in pixels (default 20).</li>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; <code>[stdout]</code> for screen output.</li>
-</ul>
+<p>Convert to SVG format. Draws a phylogram when branch lengths exist; otherwise draws a cladogram.</p>
 <h3 id="to-tex"><a class="header" href="#to-tex">to-tex</a></h3>
-<p>Wrap a Newick tree in a complete LaTeX document (based on <code>to-forest</code>).</p>
-<pre><code class="language-bash">necom nwk to-tex [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>If the input file contains multiple trees, only the first tree is processed (unless <code>--forest</code> is used, in which case the input is passed through verbatim).</li>
-<li><code>-b, --bl</code>: Draw a phylogram (with branch lengths).</li>
-<li><code>--forest</code>: Input is already Forest code.</li>
-<li><code>--no-default-style</code>: Skip default style definitions.</li>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; `[stdout] for screen output.</li>
-<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped or normalized for safe LaTeX compilation.</li>
-</ul>
-<blockquote>
-<p>LaTeX output requires a locally installed <code>xelatex</code> or an engine such as <code>tectonic</code> to compile. By default the embedded style overrides the template fonts with <code>Noto Sans</code>; use <code>--no-default-style</code> to keep the template’s own font setup (<code>Fira Sans</code> / <code>Source Han Sans SC</code>).</p>
-</blockquote>
+<p>Wrap a Newick tree in a complete LaTeX document.</p>
 <hr>
 <h2 id="label-handling"><a class="header" href="#label-handling">Label Handling</a></h2>
 <ul>
@@ -452,7 +268,6 @@
 <p><code>necom nwk</code> treats non-finite branch lengths (<code>NaN</code>, positive/negative infinity), negative values, and zero values as <code>0.0</code> during computation and visualization. On input, such values are normalized to <code>None</code> (no length annotation); on output, <code>None</code> and zero (<code>0.0</code>) lengths are omitted so that cladograms remain unannotated. This applies to:</p>
 <ul>
 <li>Statistics (<code>stat</code>) and distance calculations (<code>distance</code>).</li>
-<li>Tree comparison (<code>compare</code>), including weighted Robinson-Foulds and Kuhner-Felsenstein distances.</li>
 <li>Tree operations such as <code>reroot</code>, collapse, and insert_parent.</li>
 <li>Visualization (<code>to-svg</code>, <code>to-dot</code>, <code>to-forest</code>, <code>to-tex</code>).</li>
 </ul>
@@ -466,7 +281,8 @@
 <h2 id="planned-subcommands"><a class="header" href="#planned-subcommands">Planned Subcommands</a></h2>
 <ul>
 <li><code>condense</code>: Tree condensation functionality is currently provided by <code>necom nwk subtree --condense</code>; no standalone <code>condense</code> subcommand is planned at this time.</li>
-<li><code>eval</code>: Multi-dimensional tree evaluation framework (geometric, taxonomic, phylogenetic, trait consistency). Related metrics are referenced in the <code>necom clust eval</code> and <code>necom cut</code> documentation.</li>
+<li><code>match</code>, <code>ed</code>, <code>gen</code>, <code>duration</code>: Mapped from <code>newick_utils</code> but not yet implemented in <code>necom nwk</code>; no concrete plan at this time.</li>
+<li>Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level command <code>necom eval</code>. The <code>compare</code> and <code>partition</code> subcommands have been migrated to <code>necom eval</code>; see <a href="eval.html"><code>docs/eval.md</code></a>. The <code>tree</code> subcommand remains in design — see <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a>.</li>
 </ul>
 
                     </main>

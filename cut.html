@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-58dbae52.js"></script>
+        <script src="toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -197,7 +197,7 @@ Implements basic cuts by cluster count (<code>--k</code>) and height (<code>--he
 <ul>
 <li><strong>High performance</strong>: Rust-based implementation with no external dependencies, handling large trees more efficiently.</li>
 <li><strong>Standardized</strong>: Unifies terminology differences across source algorithms (e.g., consistently using <code>--height</code>, <code>--single-linkage</code>), reducing cognitive load.</li>
-<li><strong>Composable</strong>: As part of the <code>necom</code> toolchain, it can directly cooperate with <code>clust eval</code> for clustering evaluation.</li>
+<li><strong>Composable</strong>: As part of the <code>necom</code> toolchain, it can directly cooperate with <code>eval partition</code> for clustering evaluation.</li>
 </ul>
 </li>
 </ul>
@@ -466,18 +466,18 @@ Applies to both <code>cluster</code> and <code>pair</code> formats:</p>
 <li>Outputs standard TSV format.</li>
 </ul>
 <h3 id="2-evaluate"><a class="header" href="#2-evaluate">2. Evaluate</a></h3>
-<p>Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate <code>necom clust</code> or <code>necom nwk</code> commands:</p>
+<p>Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate <code>necom eval</code> commands; tree-topology comparison is also available via <code>necom eval compare</code>:</p>
 <ul>
 <li>
-<p><strong>General metrics (<code>necom clust eval</code> / <code>compare</code>)</strong>:</p>
+<p><strong>General metrics (<code>necom eval partition</code>, <code>necom mat compare</code>)</strong>:</p>
 <ul>
-<li>Input: two clustering result TSVs (or one result + one reference).</li>
-<li>Output: ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure, etc.</li>
+<li>Input: two clustering result TSVs (or one result + one reference); or two distance matrices for Cophenetic correlation.</li>
+<li>Output: ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure, etc.; or matrix similarity scores from <code>mat compare</code>.</li>
 <li>Use case: When the true classification of samples is known, or when you want to compare the difference between two cutting parameters.</li>
 </ul>
 </li>
 <li>
-<p><strong>Tree-related metrics (<code>necom nwk eval</code> [planned])</strong>:</p>
+<p><strong>Tree-related metrics (<code>necom eval tree</code> [planned])</strong>:</p>
 <ul>
 <li>Input: tree file + clustering result.</li>
 <li>Output: Parsimony score, Silhouette score (based on tree distance matrix), etc.</li>
@@ -498,16 +498,7 @@ head -1 final_cluster.tsv | tr '\t' '\n' &gt; cluster1.names
 necom nwk subtree input.nwk -l cluster1.names &gt; cluster1.nwk
 </code></pre>
 <h4 id="2-hierarchical-clustering-hclust-integration"><a class="header" href="#2-hierarchical-clustering-hclust-integration">2. Hierarchical Clustering (hclust) Integration</a></h4>
-<p>Starting from a distance matrix, generate a tree with hclust, then cut and evaluate.</p>
-<pre><code class="language-bash"># 1. Generate hierarchical clustering tree
-necom clust hier matrix.phy --method ward &gt; tree.nwk
-
-# 2. Cut (by height threshold)
-necom cut tree.nwk --height 0.05 &gt; clusters.tsv
-
-# 3. Evaluate (compute Cophenetic correlation and Silhouette)
-# necom nwk eval tree.nwk --part clusters.tsv --metrics silhouette &gt; sil.tsv (planned, not implemented)
-</code></pre>
+<p>Starting from a distance matrix, generate a tree with <code>necom clust hier</code>, cut it, and evaluate. A complete worked example (hier → cut –scan → eval partition) is in <a href="clust.html#scenario-b-hierarchical-clustering-parameter-scanning-and-evaluation-workflow"><code>docs/clust.md</code></a>.</p>
 <h4 id="3-scipy-style-analysis-inconsistency-coefficient"><a class="header" href="#3-scipy-style-analysis-inconsistency-coefficient">3. SciPy-style Analysis (Inconsistency Coefficient)</a></h4>
 <p>For trees with uneven evolutionary rates, the inconsistency coefficient can find more natural cluster boundaries.</p>
 <pre><code class="language-bash"># Cut using inconsistency coefficient (default depth=2)
@@ -549,7 +540,7 @@ necom cut tree.nwk --inconsistent 1.5 &gt; clusters.tsv
 <ul>
 <li>Column definitions: <code>Group</code>, <code>ClusterID</code>, <code>SampleID</code>.</li>
 <li>The <code>Group</code> column is formatted as <code>Method=Value</code> (e.g., <code>height=0.5</code>, <code>max-clade=0.02</code>), making it easy to distinguish different cutting parameters.</li>
-<li>This format can be directly used as input for <code>necom clust eval --input-format long</code> for batch evaluation.</li>
+<li>This format can be directly used as input for <code>necom eval partition --input-format long</code> for batch evaluation.</li>
 </ul>
 </li>
 <li><strong>Statistics output (<code>--stats-out</code>)</strong>: If specified, writes the summary statistics table (threshold, cluster count, singleton count, non-singleton count, max cluster size) to that file.</li>
@@ -561,15 +552,14 @@ necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 &gt; partitions.tsv
 # 2. Save statistics at the same time (for quick inspection)
 necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv
 </code></pre>
-<h3 id="integration-with-necom-clust-eval"><a class="header" href="#integration-with-necom-clust-eval">Integration with <code>necom clust eval</code></a></h3>
-<p><code>necom cut</code> and <code>necom clust eval</code> work together through the Long format, supporting two evaluation modes:</p>
+<h3 id="integration-with-necom-eval-partition"><a class="header" href="#integration-with-necom-eval-partition">Integration with <code>necom eval partition</code></a></h3>
+<p><code>necom cut</code> and <code>necom eval partition</code> work together through the Long format, supporting two evaluation modes:</p>
 <ul>
-<li><strong>Batch internal evaluation</strong>: pipe scan output to <code>necom clust eval --input-format long</code> with <code>--matrix</code>, <code>--tree</code>, or <code>--coords</code> to score every threshold without Ground Truth.</li>
-<li><strong>Targeted external evaluation</strong>: first use <code>--scan</code> to locate promising threshold ranges, then generate partitions for selected thresholds and compare them to Ground Truth with <code>necom clust eval --other</code>.</li>
+<li><strong>Batch internal evaluation</strong>: pipe scan output to <code>necom eval partition --input-format long</code> with <code>--matrix</code>, <code>--tree</code>, or <code>--coords</code> to score every threshold without Ground Truth.</li>
+<li><strong>Targeted external evaluation</strong>: first use <code>--scan</code> to locate promising threshold ranges, then generate partitions for selected thresholds and compare them to Ground Truth with <code>necom eval partition --other</code>.</li>
 </ul>
 <p>Concrete command examples are kept in <code>docs/clust.md</code> to avoid duplication.</p>
 <h3 id="threshold-selection-strategy-reference"><a class="header" href="#threshold-selection-strategy-reference">Threshold-Selection Strategy Reference</a></h3>
-<p>A brief summary of these strategies also appears in <code>docs/clust.md</code>. The following sections provide more detail.</p>
 <p>When unsure about the best threshold, use <code>--scan</code> to generate data and refer to the following common strategies for decision-making:</p>
 <h4 id="strategy-1-maximize-non-singleton-clusters"><a class="header" href="#strategy-1-maximize-non-singleton-clusters">Strategy 1: Maximize Non-Singleton Clusters</a></h4>
 <ul>
@@ -596,14 +586,14 @@ necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-o
 </li>
 </ul>
 <h4 id="strategy-3-evaluation-metric-based"><a class="header" href="#strategy-3-evaluation-metric-based">Strategy 3: Evaluation-Metric Based</a></h4>
-<p>This is the most rigorous strategy, using <code>necom clust eval</code> to compute clustering quality metrics.</p>
+<p>This is the most rigorous strategy, using <code>necom eval partition</code> to compute clustering quality metrics.</p>
 <ul>
 <li><strong>Principle</strong>: Directly compute internal validity (e.g., Silhouette) or external consistency (e.g., ARI, if Ground Truth is available) of the partition.</li>
-<li><strong>Operation</strong>: Use together with <code>necom clust eval</code>.
+<li><strong>Operation</strong>: Use together with <code>necom eval partition</code>.
 <pre><code class="language-bash"># Generate detailed list of all candidate partitions
 necom cut ... --scan ... &gt; partitions.tsv
 # Batch evaluation
-necom clust eval partitions.tsv --input-format long --matrix dist.phy
+necom eval partition partitions.tsv --input-format long --matrix dist.phy
 </code></pre>
 </li>
 </ul>

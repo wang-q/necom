@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "../../searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-58dbae52.js"></script>
+        <script src="../../toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -193,6 +193,10 @@
 <p>Notes:</p>
 <ul>
 <li>The input must contain similarities, not distances.</li>
+<li><code>--prune &lt;V&gt;</code>: pruning threshold; matrix entries smaller than this are set to zero (default: <code>1e-5</code>).</li>
+<li><code>--max-iter &lt;N&gt;</code>: maximum number of iterations (default: <code>100</code>).</li>
+<li><code>--same &lt;V&gt;</code>: default score of identical element pairs (default: <code>1.0</code>).</li>
+<li><code>--missing &lt;V&gt;</code>: default score of missing pairs (default: <code>0.0</code>).</li>
 <li>The representative point is selected by <code>--rep</code>:
 <ul>
 <li><code>medoid</code> (default): point with maximum sum of similarities to other cluster members.</li>
@@ -200,10 +204,7 @@
 </ul>
 </li>
 <li>In <code>cluster</code> format, the representative is placed first; in <code>pair</code> format, it is the first column.</li>
-</ul>
-<p>Reference:</p>
-<ul>
-<li>Stijn van Dongen, Graph Clustering by Flow Simulation. PhD thesis, University of Utrecht, May 2000.</li>
+<li>Reference: Stijn van Dongen, Graph Clustering by Flow Simulation. PhD thesis, University of Utrecht, May 2000.</li>
 </ul>
 <p>Examples:</p>
 <ol>

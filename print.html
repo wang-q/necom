@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-58dbae52.js"></script>
+        <script src="toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -252,12 +252,12 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <h1 id="necom-clust"><a class="header" href="#necom-clust">necom clust</a></h1>
 <h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
 <p>The <code>necom clust</code> module provides a collection of clustering algorithms for sequences, genomic features, and general data. These tools are designed to handle the distance matrices, similarity networks, and feature vectors commonly encountered in bioinformatics.</p>
-<p>Commands are divided into three categories by input data type (consistent with <code>necom clust --help</code>):</p>
+<p>Commands are divided into two categories by input data type (consistent with <code>necom clust --help</code>):</p>
 <ol>
 <li><strong>Tree</strong>: Build phylogenetic or hierarchical structures from a distance matrix (<code>hier</code>, <code>nj</code>, <code>upgma</code>).</li>
-<li><strong>Flat</strong>: Generate groups directly from graphs or vectors, or derive groups from an existing tree (<code>cc</code>, <code>cut</code>, <code>dbscan</code>, <code>k-medoids</code>, <code>mcl</code>).</li>
-<li><strong>Eval</strong>: Assess the quality of clustering partitions (<code>eval</code>). See <a href="#evaluation-and-analysis">Evaluation and Analysis</a> below.</li>
+<li><strong>Flat</strong>: Generate groups directly from graphs or vectors (<code>cc</code>, <code>dbscan</code>, <code>k-medoids</code>, <code>mcl</code>).</li>
 </ol>
+<p>Flat partitions can also be derived from an existing tree using the separate <code>necom cut</code> command (see <a href="#necom-cut"><code>docs/cut.md</code></a>).</p>
 <h2 id="algorithm-list"><a class="header" href="#algorithm-list">Algorithm List</a></h2>
 <h3 id="mcl-markov-cluster-algorithm"><a class="header" href="#mcl-markov-cluster-algorithm">MCL (Markov Cluster Algorithm)</a></h3>
 <ul>
@@ -268,15 +268,6 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <li><strong>Advantages</strong>: Robust to noise; handles complex network structures.</li>
 <li><strong>Input</strong>: Pairwise similarities <code>.tsv</code> (higher is better).</li>
 <li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
-<li><strong>CLI options</strong>: <code>infile</code>, <code>--format {cluster|pair}</code>, <code>--rep {medoid|first}</code>, <code>--same &lt;FLOAT&gt;</code>, <code>--missing &lt;FLOAT&gt;</code>, <code>--inflation &lt;FLOAT&gt;</code>, <code>--prune &lt;FLOAT&gt;</code>, <code>--max-iter &lt;N&gt;</code>, <code>-o/--outfile</code>.
-<ul>
-<li><code>--inflation</code> default: <code>2.0</code> (higher values produce tighter, more clusters).</li>
-<li><code>--prune</code> default: <code>1e-5</code> (matrix entries below this are set to zero).</li>
-<li><code>--max-iter</code> default: <code>100</code>.</li>
-<li><code>--rep</code> default: <code>medoid</code> (maximum sum of similarities to other members); <code>first</code> uses the alphabetically first member.</li>
-<li><code>--same</code> default: <code>1.0</code>; <code>--missing</code> default: <code>0.0</code>.</li>
-</ul>
-</li>
 </ul>
 <h3 id="connected-components-cc"><a class="header" href="#connected-components-cc">Connected Components (CC)</a></h3>
 <ul>
@@ -287,11 +278,6 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <li><strong>Advantages</strong>: Extremely fast (linear complexity).</li>
 <li><strong>Input</strong>: Pairwise relations in TSV format (<code>name1  name2  weight</code>); the weight column is ignored.</li>
 <li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
-<li><strong>CLI options</strong>: <code>infile</code>, <code>--format {cluster|pair}</code>, <code>-o/--outfile</code>.
-<ul>
-<li>In <code>pair</code> format, the representative is the alphabetically first member of each component.</li>
-</ul>
-</li>
 </ul>
 <h3 id="k-medoids"><a class="header" href="#k-medoids">K-Medoids</a></h3>
 <ul>
@@ -302,14 +288,6 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <li><strong>Advantages</strong>: Robust to outliers; interpretable results because centers are real samples.</li>
 <li><strong>Input</strong>: Pairwise distances <code>.tsv</code> (lower is better).</li>
 <li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
-<li><strong>CLI options</strong>: <code>infile</code>, <code>-k/--k &lt;N&gt;</code> (required), <code>--format {cluster|pair}</code>, <code>--rep {medoid|first}</code>, <code>--same &lt;FLOAT&gt;</code>, <code>--missing &lt;FLOAT&gt;</code>, <code>--runs &lt;N&gt;</code>, <code>--max-iter &lt;N&gt;</code>, <code>--seed &lt;UINT&gt;</code>, <code>-o/--outfile</code>.
-<ul>
-<li><code>--rep</code> default: <code>medoid</code> (minimum sum of distances to other members); <code>first</code> uses the alphabetically first member.</li>
-<li><code>--runs</code> default: <code>10</code> (number of random initializations).</li>
-<li><code>--max-iter</code> default: <code>100</code>.</li>
-<li><code>--same</code> default: <code>0.0</code>; <code>--missing</code> default: <code>1.0</code>.</li>
-</ul>
-</li>
 </ul>
 <h3 id="dbscan"><a class="header" href="#dbscan">DBSCAN</a></h3>
 <ul>
@@ -320,23 +298,8 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <li><strong>Advantages</strong>: Does not require specifying the number of clusters K; identifies noise.</li>
 <li><strong>Input</strong>: Pairwise distances <code>.tsv</code> (lower is better).</li>
 <li><strong>Output</strong>: <code>cluster</code> (one cluster per line, first element is the representative) or <code>pair</code> (representative–member pairs).</li>
-<li><strong>CLI options</strong>: <code>infile</code>, <code>--format {cluster|pair}</code>, <code>--rep {medoid|first}</code>, <code>--same &lt;FLOAT&gt;</code>, <code>--missing &lt;FLOAT&gt;</code>, <code>--eps &lt;FLOAT&gt;</code>, <code>--min-points &lt;N&gt;</code>, <code>-o/--outfile</code>.
-<ul>
-<li><code>--eps</code> default: <code>0.05</code> (neighborhood radius).</li>
-<li><code>--min-points</code> default: <code>4</code> (minimum points to form a dense region).</li>
-<li><code>--rep</code> default: <code>medoid</code> (smallest sum of distances); <code>first</code> uses the alphabetically first member.</li>
-<li><code>--same</code> default: <code>0.0</code>; <code>--missing</code> default: <code>1.0</code>.</li>
+<li><strong>Unimplemented options</strong>: Parameter scanning and scoring such as <code>--scan</code>, <code>--opt-eps</code>, <code>--min-pct</code> are not yet implemented; planning details are in <a href="../notes/design/dbscan-planned.html"><code>notes/design/dbscan-planned.md</code></a>. They may be provided later as subcommands of <code>necom clust dbscan</code> or standalone scripts.</li>
 </ul>
-</li>
-<li><strong>Unimplemented options</strong>: Parameter scanning and scoring such as <code>--scan</code>, <code>--opt-eps</code>, <code>--min-pct</code> are not yet implemented; they may be provided later as subcommands of <code>necom clust dbscan</code> or standalone scripts.</li>
-</ul>
-<h4 id="usage-examples"><a class="header" href="#usage-examples">Usage Examples</a></h4>
-<pre><code class="language-bash"># Basic clustering (pairwise distance input)
-necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 -o clusters.tsv
-
-# Output pair format for downstream evaluation
-necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.tsv
-</code></pre>
 <h3 id="upgma"><a class="header" href="#upgma">UPGMA</a></h3>
 <ul>
 <li><strong>Principle</strong>: Unweighted Pair Group Method with Arithmetic Mean. A bottom-up hierarchical clustering that repeatedly merges the two closest clusters; distances between the new cluster and all others are computed as arithmetic averages of all member-to-member distances. Assumes a constant evolutionary rate (molecular clock).</li>
@@ -346,7 +309,6 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 <li><strong>Advantages</strong>: Produces a hierarchical structure with branch heights carrying clear distance meaning.</li>
 <li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
 <li><strong>Output</strong>: Newick tree.</li>
-<li><strong>CLI options</strong>: <code>infile</code>, <code>-o/--outfile</code>.</li>
 </ul>
 <h3 id="nj-neighbor-joining"><a class="header" href="#nj-neighbor-joining">NJ (Neighbor-Joining)</a></h3>
 <ul>
@@ -357,7 +319,6 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 <li><strong>Advantages</strong>: Fast; robust to different evolutionary rates.</li>
 <li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
 <li><strong>Output</strong>: Newick tree.</li>
-<li><strong>CLI options</strong>: <code>infile</code>, <code>-o/--outfile</code>.</li>
 </ul>
 <h3 id="hierarchical-clustering"><a class="header" href="#hierarchical-clustering">Hierarchical Clustering</a></h3>
 <ul>
@@ -368,14 +329,13 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 <li><strong>Value</strong>: Provides a general hierarchical view (not limited to biological evolution); combined with <code>necom cut</code> it yields flexible groupings at different granularities.</li>
 <li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
 <li><strong>Output</strong>: Newick tree.</li>
-<li><strong>CLI options</strong>: <code>infile</code>, <code>--method {single|complete|average|weighted|centroid|median|ward}</code> (default: <code>ward</code>), <code>-o/--outfile</code>.</li>
 <li><strong>Details</strong>: <a href="#hierarchical-clustering-details">Hierarchical Clustering Details</a></li>
 </ul>
 <h3 id="tree-cutting"><a class="header" href="#tree-cutting">Tree Cutting</a></h3>
 <p>The <code>necom cut</code> command splits an existing Newick tree (phylogenetic or hierarchical clustering tree) into flat partitions according to distance, topological, or statistical criteria. It is documented separately in <a href="#necom-cut"><code>docs/cut.md</code></a> because it operates on trees rather than running a clustering algorithm.</p>
-<p>Trees built by <code>necom clust hier</code>, <code>necom clust upgma</code>, <code>necom clust nj</code>, or external tools can be passed directly to <code>necom cut</code>. The resulting partitions can be evaluated with <code>necom clust eval</code>.</p>
+<p>Trees built by <code>necom clust hier</code>, <code>necom clust upgma</code>, <code>necom clust nj</code>, or external tools can be passed directly to <code>necom cut</code>. The resulting partitions can be evaluated with <code>necom eval partition</code>.</p>
 <h2 id="hierarchical-clustering-details"><a class="header" href="#hierarchical-clustering-details">Hierarchical Clustering Details</a></h2>
-<p><code>necom clust hier</code> (alias <code>hclust</code>) provides general hierarchical clustering (dendrogram) generation, supporting <code>single/complete/average/ward.D2</code> and other methods, outputting Newick format for downstream <code>necom cut</code>.</p>
+<p><code>necom clust hier</code> (alias <code>hclust</code>) provides general hierarchical clustering (dendrogram) generation, supporting <code>single/complete/average/ward</code> and other methods, outputting Newick format for downstream <code>necom cut</code>.</p>
 <h3 id="background-and-positioning"><a class="header" href="#background-and-positioning">Background and Positioning</a></h3>
 <ul>
 <li><strong>Module</strong>: <code>clust</code>, alongside <code>k-medoids</code>, <code>mcl</code>, etc.</li>
@@ -384,7 +344,7 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 <ul>
 <li>Tree building: <code>clust upgma</code> (rooted, ultrametric) and <code>clust nj</code> (additive, unrooted) already exist.</li>
 <li>Cutting: tree-cut grouping via <code>necom cut</code>.</li>
-<li>Evaluation: <code>necom clust eval --matrix</code> / <code>--tree</code> / <code>--coords</code> (currently available); <code>necom nwk eval</code> not yet implemented.</li>
+<li>Evaluation: <code>necom eval partition --matrix</code> / <code>--tree</code> / <code>--coords</code> (currently available); <code>necom eval tree</code> not yet implemented.</li>
 </ul>
 </li>
 </ul>
@@ -407,7 +367,7 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 <h3 id="methods-and-algorithm-essentials"><a class="header" href="#methods-and-algorithm-essentials">Methods and Algorithm Essentials</a></h3>
 <ul>
 <li><code>single/complete/average</code>: Standard linkage updates (Lance–Williams framework); merge height is the distance/cost corresponding to the linkage criterion.</li>
-<li><code>ward.D2</code>:
+<li><code>ward</code>:
 <ul>
 <li>Concept: Minimizes the increase in within-cluster sum of squares (total within-group variance, SSE); commonly used and robust.</li>
 <li>Update (squared-distance version, where n is cluster size):
@@ -433,282 +393,37 @@ necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.ou
 </li>
 <li>Numeric format: unified six decimal places with trailing zeros removed; consistent with the convention in <code>nwk distance</code>.</li>
 </ul>
+<h3 id="notes"><a class="header" href="#notes">Notes</a></h3>
+<ul>
+<li><code>clust hier</code> only accepts <strong>distance matrices</strong> (smaller values mean higher similarity). Similarity matrices must be converted first, e.g., with <code>necom mat transform</code>.</li>
+<li><code>ward</code> updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.</li>
+<li><code>ward</code> theoretically assumes Euclidean or near-Euclidean distances; on general biological distances the statistical interpretation of “minimum variance” is weaker.</li>
+<li><code>centroid</code> and <code>median</code> linkage may produce non-monotonic merge heights (inversions); this is an algorithmic characteristic of these methods.</li>
+<li>Ties are broken by alphabetical order to ensure deterministic output.</li>
+</ul>
 <h3 id="recommended-hier-workflow"><a class="header" href="#recommended-hier-workflow">Recommended Hier Workflow</a></h3>
 <ul>
 <li>Generate tree:
 <ul>
 <li>Near-molecular-clock/ultrametric scenarios: <code>clust upgma</code> outputs a rooted ultrametric tree.</li>
 <li>General additive-distance scenarios: <code>clust nj</code>.</li>
-<li>General hierarchical analysis or when <code>ward.D2</code> is needed: <code>clust hier --method ward.D2</code>.</li>
+<li>General hierarchical analysis or when <code>ward</code> is needed: <code>clust hier --method ward</code>.</li>
 </ul>
 </li>
 <li>Cut and evaluate:
 <ul>
 <li>Cut: <code>necom cut --height H</code> or TreeCluster-style thresholds/constraints.</li>
-<li>Internal evaluation (no Ground Truth): <code>necom clust eval --matrix ...</code> (Silhouette) (currently available); <code>necom nwk eval</code> not yet implemented.</li>
-<li>External evaluation (with Ground Truth): <code>necom clust eval</code> (ARI/AMI/V-Measure).</li>
+<li>Internal evaluation (no Ground Truth): <code>necom eval partition --matrix ...</code> (Silhouette) (currently available); <code>necom eval tree</code> not yet implemented.</li>
+<li>External evaluation (with Ground Truth): <code>necom eval partition</code> (ARI/AMI/V-Measure).</li>
 </ul>
 </li>
 </ul>
-<h3 id="cli-design"><a class="header" href="#cli-design">CLI Design</a></h3>
-<h4 id="command-overview"><a class="header" href="#command-overview">Command Overview</a></h4>
-<ul>
-<li>Name: <code>necom clust hier</code> (visible alias <code>hclust</code>)</li>
-<li>Purpose: Generate a hierarchical clustering tree (dendrogram) from a distance matrix, output as Newick for downstream <code>necom cut</code>.</li>
-<li>Module: <code>clust</code>, alongside <code>k-medoids</code> and others.</li>
-</ul>
-<h4 id="input"><a class="header" href="#input">Input</a></h4>
-<ul>
-<li>Matrix file: PHYLIP distance matrix (standard or relaxed format).</li>
-<li>Format conversion: If you have a pair TSV (<code>name1  name2  distance</code>), first convert it to PHYLIP with <code>necom mat to-phylip</code>; this unified entry reduces ambiguity and keeps the interface consistent with <code>clust upgma/nj</code>.</li>
-<li>Distance/similarity conversion: <code>clust hier</code> only accepts <strong>distance matrices</strong> (smaller means more similar). If the input is a similarity matrix (e.g., BLAST Identity, Alignment Score), convert it first with <code>necom mat transform</code> (e.g., <code>--op inv-linear --max-val 100</code> or <code>--op log</code>).</li>
-<li>Name source: Parsed automatically from input; no extra label file needed.</li>
-</ul>
-<h4 id="main-options"><a class="header" href="#main-options">Main Options</a></h4>
-<ul>
-<li><code>--method {single|complete|average|weighted|centroid|median|ward}</code>: linkage/criterion selection (default <code>ward</code>). Naming aligns with SciPy <code>linkage</code>.</li>
-<li><code>--outfile/-o &lt;path&gt;</code>: output file path (default <code>stdout</code>, i.e., print to screen).</li>
-</ul>
-<h4 id="output"><a class="header" href="#output">Output</a></h4>
-<ul>
-<li>Default output: Newick dendrogram with branch lengths representing merge heights.</li>
-<li>Numeric format: unified six decimal places, trailing zeros removed; consistent with the convention in <code>nwk distance</code>.</li>
-</ul>
-<h4 id="examples-1"><a class="header" href="#examples-1">Examples</a></h4>
-<pre><code class="language-bash"># Convert pair TSV to PHYLIP first
-necom mat to-phylip pairs.tsv -o matrix.phy
-
-# Ward (PHYLIP input, default Newick output)
-necom clust hier matrix.phy --method ward &gt; tree.nwk
-
-# Average/complete/single (PHYLIP input)
-necom clust hier matrix.phy --method average &gt; tree.nwk
-</code></pre>
-<h4 id="notes"><a class="header" href="#notes">Notes</a></h4>
-<ul>
-<li>Distance prerequisite: Ward.D2 theoretically relies on Euclidean or near-Euclidean distances; usable on general biological distances, but the statistical interpretation of “minimum total within-group variance” becomes weaker.</li>
-<li>Semantic differences:
-<ul>
-<li>Hier merge heights are linkage/criterion costs; ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions).</li>
-<li>If you need “rooted, ultrametric, evolution-meaningful” branch lengths, use <code>clust upgma</code>; for general additive distances, use <code>clust nj</code>.</li>
-</ul>
-</li>
-<li>Stability: Ties are broken by alphabetical order of names to ensure determinism.</li>
-<li>Implementation convention: <code>ward.D2</code> internally performs updates with “squared distances” and returns branch lengths in “distance units”; users do not need to provide or distinguish <code>D</code> from <code>D^2</code>.</li>
-<li>Method characteristics:
-<ul>
-<li><code>centroid/median</code> may produce non-monotonic merge heights (inversion), which is an algorithmic characteristic; the output is still valid Newick, but the intuitive meaning of heights is slightly weaker than for <code>average/ward</code>.</li>
-<li>Leaf ordering: the <code>hier</code> command itself does not reorder leaves; for improved visualization readability, use <code>necom nwk order --num-descendants</code> (ladderize).</li>
-</ul>
-</li>
-</ul>
-<h3 id="mapping-to-and-differences-from-scipy"><a class="header" href="#mapping-to-and-differences-from-scipy">Mapping to and Differences from SciPy</a></h3>
-<ul>
-<li>Method mapping: Aligned with SciPy <code>linkage</code> <code>method</code> set; <code>ward</code> is equivalent to <code>ward.D2</code> (internally updates with squared distances); <code>average</code> is equivalent to UPGMA, <code>weighted</code> to WPGMA, and <code>centroid/median</code> to UPGMC/WPGMC.</li>
-<li>Input differences: SciPy accepts a “condensed distance vector” or an observation matrix; necom uniformly uses PHYLIP distance matrices. To convert from pair TSV, use <code>necom mat to-phylip</code>.</li>
-<li>Output differences: SciPy returns an <code>(n-1)×4</code> linkage matrix Z; necom outputs a Newick tree directly for <code>necom cut / to-dot / to-forest</code>. Average users do not need to care about Z; if SciPy interoperability is required, continue using Z with <code>fcluster/cophenet</code> on the Python side.</li>
-<li>Leaf ordering: necom recommends <code>necom nwk order --num-descendants</code> (ladderize) for extremely high performance and usually sufficient visualization quality.</li>
-<li>Flat clustering: SciPy’s <code>fcluster</code> supports <code>criterion='distance'|'maxclust'|...</code>; in necom these correspond to <code>necom cut --height H</code> and <code>necom cut --k K</code>, respectively. Other criteria such as <code>monocrit/inconsistent</code> are not introduced for now.</li>
-<li>Evaluation metrics: SciPy has <code>cophenet</code> (cophenetic correlation coefficient); necom plans to add the cophenetic correlation coefficient to <code>necom nwk eval</code> as a supplementary tree-quality metric (not yet implemented).</li>
-</ul>
-<h4 id="user-tips"><a class="header" href="#user-tips">User Tips</a></h4>
-<ul>
-<li>Beginner path (recommended): <code>mat to-phylip → clust hier --method ward → necom cut --height → clust eval → nwk visualization</code></li>
-<li>Interoperability and audit: If you need to verify the merging process step by step or perform further flat cutting/statistics in Python, use SciPy’s linkage matrix and tools; on the necom side, keep Newick as the primary format to reduce cognitive load.</li>
-</ul>
-<h4 id="example-mappings"><a class="header" href="#example-mappings">Example Mappings</a></h4>
-<ul>
-<li>SciPy linkage (Ward):
-<ul>
-<li>Python: <code>Z = linkage(y, method='ward', optimal_ordering=True)</code></li>
-<li>necom: <code>necom mat to-phylip pairs.tsv -o matrix.phy</code> → <code>necom clust hier matrix.phy --method ward &gt; tree.nwk</code> → <code>necom nwk order tree.nwk --num-descendants &gt; ordered.nwk</code></li>
-</ul>
-</li>
-<li>SciPy fcluster (cut by distance):
-<ul>
-<li>Python: <code>labels = fcluster(Z, t=0.05, criterion='distance')</code></li>
-<li>necom: <code>necom cut tree.nwk --height 0.05 &gt; clusters.tsv</code></li>
-</ul>
-</li>
-<li>SciPy fcluster (cut by cluster count):
-<ul>
-<li>Python: <code>labels = fcluster(Z, t=20, criterion='maxclust')</code></li>
-<li>necom: <code>necom cut tree.nwk --k 20 &gt; clusters.tsv</code></li>
-</ul>
-</li>
-<li>SciPy cophenet:
-<ul>
-<li>Python: <code>c, dists = cophenet(Z, Y)</code></li>
-</ul>
-</li>
-</ul>
-<h4 id="scikit-learn-mapping"><a class="header" href="#scikit-learn-mapping">scikit-learn Mapping</a></h4>
-<ul>
-<li>AgglomerativeClustering (Ward):
-<ul>
-<li>Python: <code>model = AgglomerativeClustering(linkage='ward').fit(X)</code></li>
-<li>necom: <code>necom clust hier matrix.phy --method ward &gt; tree.nwk</code> (distance matrix must be computed first)</li>
-</ul>
-</li>
-<li>AgglomerativeClustering (Average/Complete/Single):
-<ul>
-<li>Python: <code>model = AgglomerativeClustering(linkage='average').fit(X)</code></li>
-<li>necom: <code>necom clust hier matrix.phy --method average &gt; tree.nwk</code></li>
-</ul>
-</li>
-<li>Differences:
-<ul>
-<li>scikit-learn focuses on directly outputting cluster labels (<code>labels_</code>); <code>necom</code> focuses on generating tree structure (Newick).</li>
-<li>To obtain labels in <code>necom</code>, use it together with <code>necom cut</code>.</li>
-</ul>
-</li>
-</ul>
-<h4 id="toolchain-collaboration"><a class="header" href="#toolchain-collaboration">Toolchain Collaboration</a></h4>
-<ul>
-<li>Tree building: <code>necom clust hier</code> → generate dendrogram</li>
-<li>Cutting: <code>necom cut --height H</code> → export groups</li>
-<li>Evaluation:
-<ul>
-<li>No Ground Truth: <code>necom clust eval --matrix</code> / <code>--tree</code> / <code>--coords</code> (currently available); <code>necom nwk eval</code> not yet implemented</li>
-<li>With Ground Truth: <code>necom clust eval</code> (ARI/AMI/V-Measure)</li>
-</ul>
-</li>
-<li>Visualization: <code>necom nwk to-dot/to-forest</code> → graphic/LaTeX display</li>
-</ul>
-<h2 id="evaluation-and-analysis"><a class="header" href="#evaluation-and-analysis">Evaluation and Analysis</a></h2>
-<p>These commands do not produce clusters; they evaluate cluster or tree quality.</p>
-<ul>
-<li>
-<p><strong>Tree-based evaluation</strong></p>
-<ul>
-<li><strong>Command</strong>: <code>necom nwk eval</code> (not yet implemented)</li>
-<li><strong>Positioning</strong>: Multi-dimensional evaluation of tree structure.</li>
-<li><strong>Capabilities</strong>: Geometric compactness (Silhouette), taxonomic purity (Purity), evolutionary consistency (Discordance).</li>
-<li><strong>Alternative</strong>: Currently use <code>necom clust eval --matrix</code> / <code>--tree</code> / <code>--coords</code> for distance/tree/coordinate-based evaluation.</li>
-</ul>
-</li>
-<li>
-<p><strong>Partition-based evaluation</strong></p>
-<ul>
-<li><strong>Command</strong>: <code>necom clust eval</code></li>
-<li><strong>Positioning</strong>: General clustering quality evaluation (supports with/without Ground Truth).</li>
-<li><strong>Capabilities</strong>: ARI, AMI, V-Measure (external); Silhouette, Davies-Bouldin (internal).</li>
-</ul>
-</li>
-</ul>
-<p><code>necom</code> separates cluster generation from evaluation: generate candidates with <code>necom cut --scan</code>, then evaluate them in batch with <code>clust eval</code>, and finally select the best parameters manually.</p>
-<h3 id="external-validity-metrics"><a class="header" href="#external-validity-metrics">External Validity Metrics</a></h3>
-<p><em>Compare a predicted partition to a reference partition.</em></p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th style="text-align: left">Metric</th><th style="text-align: left">Range</th><th style="text-align: left">Notes</th></tr>
-</thead>
-<tbody>
-<tr><td style="text-align: left">ARI</td><td style="text-align: left">[-1, 1]</td><td style="text-align: left">Adjusted Rand Index; corrected for chance; 1 = perfect agreement.</td></tr>
-<tr><td style="text-align: left">AMI</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Adjusted Mutual Information; robust with many clusters.</td></tr>
-<tr><td style="text-align: left">NMI</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Normalized Mutual Information; not corrected for chance.</td></tr>
-<tr><td style="text-align: left">V-Measure</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Harmonic mean of Homogeneity and Completeness.</td></tr>
-<tr><td style="text-align: left">FMI</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Fowlkes-Mallows Index; geometric mean of Precision and Recall.</td></tr>
-<tr><td style="text-align: left">RI</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Rand Index; not corrected for chance.</td></tr>
-<tr><td style="text-align: left">Jaccard</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Pair-wise Jaccard similarity of same-cluster pairs.</td></tr>
-<tr><td style="text-align: left">Precision / Recall</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Pair-wise precision and recall.</td></tr>
-</tbody>
-</table>
-</div>
-<h3 id="internal-validity-metrics"><a class="header" href="#internal-validity-metrics">Internal Validity Metrics</a></h3>
-<p><em>Evaluate a partition using the data geometry only.</em></p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th style="text-align: left">Type</th><th style="text-align: left">Metrics</th><th style="text-align: left">Required input</th></tr>
-</thead>
-<tbody>
-<tr><td style="text-align: left">Distance-based</td><td style="text-align: left">Silhouette, Dunn, C-Index, Gamma, Tau</td><td style="text-align: left"><code>--matrix</code> or <code>--tree</code></td></tr>
-<tr><td style="text-align: left">Coordinate-based</td><td style="text-align: left">Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski</td><td style="text-align: left"><code>--coords</code></td></tr>
-</tbody>
-</table>
-</div>
-<p>Silhouette is the most commonly used distance-based metric: values near 1 indicate well-clustered samples, 0 indicate boundary samples, and negative values suggest possible mis-clustering.</p>
-<h3 id="typical-workflows"><a class="header" href="#typical-workflows">Typical Workflows</a></h3>
-<pre><code class="language-bash"># External evaluation (with ground truth)
-necom clust eval result.tsv --other truth.tsv -o eval.tsv
-
-# Internal evaluation with a distance matrix
-necom clust eval result.tsv --matrix dist.phy
-
-# Batch evaluation of scan results
-necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
-    necom clust eval - --input-format long --matrix matrix.phy &gt; evaluation.tsv
-</code></pre>
+<h2 id="evaluation"><a class="header" href="#evaluation">Evaluation</a></h2>
+<p>Partition evaluation has moved to <a href="#necom-eval"><code>necom eval partition</code></a>. See <a href="#necom-eval"><code>docs/eval.md</code></a> for the overview and <a href="#necom-eval-partition"><code>docs/eval-partition.md</code></a> for detailed metric definitions.</p>
 <h2 id="planned"><a class="header" href="#planned">Planned</a></h2>
-<p>GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap.</p>
-<h2 id="not-recommended--no-plans"><a class="header" href="#not-recommended--no-plans">Not Recommended / No Plans</a></h2>
-<p>These algorithms are classic but have limitations in large-scale biological data scenarios, so they are not being introduced as core features.</p>
-<ul>
-<li>
-<p><strong>K-Means</strong></p>
-<ul>
-<li><strong>Reason</strong>: Fast, but assumes clusters are spherical with equal variance, and centroids are usually not real samples, lacking biological interpretability (e.g., they cannot directly serve as representative sequences).</li>
-<li><strong>Alternative</strong>: <code>K-Medoids</code> (already implemented), where medoids must be real samples and arbitrary distance matrices are supported, making it more suitable for biological sequence analysis.</li>
-</ul>
-</li>
-<li>
-<p><strong>Bisecting K-Means</strong></p>
-<ul>
-<li><strong>Principle</strong>: Top-down divisive clustering. Initially all points form one cluster; the cluster with the largest SSE is selected and split by K-Means until K clusters are reached.</li>
-<li><strong>Reason</strong>: Although it produces a tree structure (binary tree), it inherits K-Means limitations (requires Euclidean distances; centroids are not real samples). Biological tree building usually prefers bottom-up agglomerative methods such as UPGMA/NJ.</li>
-</ul>
-</li>
-<li>
-<p><strong>Affinity Propagation (AP)</strong></p>
-<ul>
-<li><strong>Principle</strong>: Message-passing mechanism in which all points compete to become exemplars. Does not require specifying the cluster count, but has high computational complexity.</li>
-<li><strong>Reason</strong>: Time and space complexity are high ($O(N^2)$), making it difficult to handle large-scale biological sequence data (e.g., &gt;10k sequences).</li>
-<li><strong>Alternative</strong>: For small datasets seeking representatives, use <code>K-Medoids</code>; for automatic cluster count, use <code>DBSCAN</code> or <code>MCL</code>.</li>
-</ul>
-</li>
-<li>
-<p><strong>Spectral Clustering</strong></p>
-<ul>
-<li><strong>Principle</strong>: Uses eigenvectors of the Laplacian matrix for dimensionality reduction, then performs K-Means clustering in the low-dimensional space. Essentially seeks the graph’s minimum normalized cut (Normalized Cut).</li>
-<li><strong>Reason</strong>: Constructing the Laplacian matrix and eigendecomposition is computationally expensive ($O(N^3)$).</li>
-<li><strong>Alternative</strong>: <code>MCL</code> usually provides similar or better results for biological network clustering and scales better.</li>
-</ul>
-</li>
-<li>
-<p><strong>Mean Shift</strong></p>
-<ul>
-<li><strong>Principle</strong>: Density-based hill-climbing algorithm. Points are repeatedly shifted toward the density center (mean shift) of their neighborhood until they converge to local density peaks (modes).</li>
-<li><strong>Reason</strong>: High computational complexity and the bandwidth parameter is hard to choose adaptively.</li>
-<li><strong>Alternative</strong>: <code>DBSCAN</code> or <code>GMM</code> usually covers its density-estimation needs.</li>
-</ul>
-</li>
-<li>
-<p><strong>OPTICS</strong></p>
-<ul>
-<li><strong>Principle</strong>: Produces a reachability plot by ordering data points according to reachability distances, capturing all possible density levels in a single run. Solves DBSCAN’s sensitivity to a global <code>eps</code>.</li>
-<li><strong>Reason</strong>: Its core idea (hierarchical density clustering) has been better inherited and automated by <strong>HDBSCAN</strong>; OPTICS results (reachability plots) require complex post-processing to obtain clear clusters.</li>
-<li><strong>Alternative</strong>: Use the more modern, lower-parameter, and more automated <code>HDBSCAN</code>.</li>
-</ul>
-</li>
-<li>
-<p><strong>Biclustering</strong></p>
-<ul>
-<li><strong>Reason</strong>: Simultaneously clusters rows and columns (e.g., Spectral Co-Clustering), mainly used for specific matrix-subblock mining scenarios such as gene expression profiling. This differs substantially from necom’s current focus on “sample grouping”.</li>
-<li><strong>Alternative</strong>: If features (columns) need to be clustered, transpose the matrix and use standard clustering; if co-expression modules are needed, use dedicated expression-profiling tools (e.g., WGCNA).</li>
-</ul>
-</li>
-<li>
-<p><strong>BIRCH</strong></p>
-<ul>
-<li><strong>Principle</strong>: Incremental clustering based on a Clustering Feature tree (CF Tree). Builds a highly compressed tree in a single scan; tree nodes store cluster statistics (sum, square sum), making it ideal for very large datasets.</li>
-<li><strong>Reason</strong>: Strongly relies on Euclidean-space statistical properties (computing centroids and radii), not suitable for complex distance measures of biological sequences (e.g., edit distance); also restricts cluster shapes.</li>
-<li><strong>Alternative</strong>: For large-scale vectors, MiniBatch K-Means is more general; for large-scale sequences, use <code>MCL</code> (graph clustering) or <code>CD-HIT/MMseqs2</code> (greedy clustering).</li>
-</ul>
-</li>
-</ul>
-<h2 id="detailed-algorithm-descriptions"><a class="header" href="#detailed-algorithm-descriptions">Detailed Algorithm Descriptions</a></h2>
+<p>GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Algorithms considered but not adopted (K-Means, Spectral, OPTICS, BIRCH, etc.) are documented in <a href="../notes/design/clust-impl.html"><code>notes/design/clust-impl.md</code></a>.</p>
+<h3 id="bootstrap-support-for-hierarchical-clustering-planned"><a class="header" href="#bootstrap-support-for-hierarchical-clustering-planned">Bootstrap Support for Hierarchical Clustering [Planned]</a></h3>
+<p><code>necom clust boot</code> will compute multiscale-bootstrap BP/AU/SI support values (pvclust-style) for each internal node of a hierarchical clustering tree, quantifying the stability of clusters under feature resampling. Design details are in <a href="../notes/design/clust-boot.html"><code>notes/design/clust-boot.md</code></a>.</p>
 <h3 id="gmm-gaussian-mixture-models-planned"><a class="header" href="#gmm-gaussian-mixture-models-planned">GMM (Gaussian Mixture Models) [Planned]</a></h3>
 <p>Motivation for introducing GMM:</p>
 <ul>
@@ -731,7 +446,7 @@ necom clust gmm input.tsv --k 5 --cov full &gt; clusters.tsv
 <li><code>necom</code> could provide <code>clust gmm --scan-k 2..20</code>, automatically computing and outputting a BIC curve to help users choose the best K (usually the BIC minimum or elbow).</li>
 </ul>
 </li>
-<li><strong>Silhouette / Calinski-Harabasz</strong> [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (<code>clust eval</code> already supports distance-matrix Silhouette; tree-based Silhouette is planned for <code>necom nwk eval</code> [planned]).</li>
+<li><strong>Silhouette / Calinski-Harabasz</strong> [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (<code>eval partition</code> already supports distance-matrix Silhouette; tree-based Silhouette is planned for <code>necom eval tree</code> [planned]).</li>
 </ul>
 <h2 id="large-scale-data-strategy"><a class="header" href="#large-scale-data-strategy">Large-Scale Data Strategy</a></h2>
 <p>For large-scale data with $N &gt; 20,000$, the memory ($O(N^2)$) and computation ($O(N^2)$) costs of fully connected hierarchical clustering increase sharply.</p>
@@ -752,7 +467,7 @@ necom clust gmm input.tsv --k 5 --cov full &gt; clusters.tsv
 <pre><code class="language-bash"># 1. Fast clustering to select representatives (k=5000)
 necom clust k-medoids all_data.tsv --k 5000 --format pair &gt; clusters.tsv
 
-# 2. Extract representative list
+# 2. Extract representative list (Unix `cut`, not `necom cut`)
 cut -f1 clusters.tsv | sort -u &gt; representatives.list
 
 # 3. Extract sub-matrix for representatives
@@ -768,14 +483,14 @@ necom clust hier sub_matrix.phy --method ward &gt; backbone.nwk
 necom clust mcl pairs.tsv --inflation 2.0 &gt; families.tsv
 </code></pre>
 <h3 id="scenario-b-hierarchical-clustering-parameter-scanning-and-evaluation-workflow"><a class="header" href="#scenario-b-hierarchical-clustering-parameter-scanning-and-evaluation-workflow">Scenario B: Hierarchical Clustering Parameter Scanning and Evaluation Workflow</a></h3>
-<p>Combine <code>necom cut</code> scanning with <code>clust eval</code> batch evaluation to find the best cutting threshold.</p>
+<p>Combine <code>necom cut</code> scanning with <code>eval partition</code> batch evaluation to find the best cutting threshold.</p>
 <pre><code class="language-bash"># 1. Generate hierarchical clustering tree
 necom clust hier matrix.phy --method ward &gt; tree.nwk
 
 # 2. Scan thresholds and evaluate internal metrics (Silhouette)
-# necom cut outputs a long table in scan mode, which can be piped directly to clust eval
+# necom cut outputs a long table in scan mode, which can be piped directly to eval partition
 necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
-    necom clust eval - --input-format long --matrix matrix.phy &gt; evaluation.tsv
+    necom eval partition - --input-format long --matrix matrix.phy &gt; evaluation.tsv
 
 # 3. Analyze evaluation.tsv to choose the best threshold (e.g., maximum Silhouette)
 # Assume the best threshold is 0.45
@@ -816,43 +531,13 @@ GeneC
 </li>
 </ul>
 <h4 id="long-format-batch---format-long"><a class="header" href="#long-format-batch---format-long">Long Format (batch, <code>--format long</code>)</a></h4>
-<p>A dedicated format for batch evaluation. <code>--input-format long</code> is only accepted by <code>necom clust eval</code>; <code>necom cut</code>’s <code>--format</code> only supports <code>cluster</code>/<code>pair</code>, but in <code>--scan</code> mode it automatically outputs the long format.</p>
-<ul>
-<li><strong>Structure</strong>: <code>Group &lt;tab&gt; ClusterID &lt;tab&gt; Item</code></li>
-<li><strong>Group column</strong>: Identifies different parameter combinations or cutting methods. The format is usually <code>Method=Value</code> (e.g., <code>height=0.5</code>).
-<ul>
-<li><code>necom clust eval</code> preserves this column as the identifier in evaluation results.</li>
-</ul>
-</li>
-<li><strong>Example</strong>:
-<pre><code class="language-text">height=0.1	1	GeneA
-height=0.1	2	GeneC
-height=0.2	1	GeneA
-height=0.2	1	GeneC
-</code></pre>
-</li>
-</ul>
+<p>A dedicated TSV format (<code>Group\tClusterID\tItem</code>) for batch evaluation, auto-emitted by <code>necom cut --scan</code> and consumed by <code>necom eval partition --input-format long</code>. See <a href="#output-format-in-scan-mode"><code>docs/cut.md</code></a> for the full specification.</p>
 <h3 id="2-distance-matrix"><a class="header" href="#2-distance-matrix">2. Distance Matrix</a></h3>
 <p>Used by <code>clust hier</code>, <code>nj</code>, <code>upgma</code>, and <code>eval --matrix</code>.</p>
 <h4 id="phylip-format-relaxed"><a class="header" href="#phylip-format-relaxed">PHYLIP Format (relaxed)</a></h4>
-<ul>
-<li><strong>Structure</strong>:
-<ul>
-<li>First line: sample count $N$.</li>
-<li>Next $N$ lines: <code>Name &lt;space&gt; Dist1 &lt;space&gt; Dist2 ...</code></li>
-</ul>
-</li>
-<li><strong>Characteristics</strong>: Standard bioinformatics format. <code>necom</code> supports a “relaxed” format with arbitrary whitespace between names and data.</li>
-<li><strong>Example</strong>:
-<pre><code class="language-text">3
-A  0.0 0.1 0.5
-B  0.1 0.0 0.5
-C  0.5 0.5 0.0
-</code></pre>
-</li>
-</ul>
+<p><code>necom</code> accepts a relaxed PHYLIP format (arbitrary whitespace, optional header). See <a href="#1-phylip-distance-matrix-dense"><code>docs/mat.md</code></a> for full structure, strict vs relaxed variants, and lower-triangular form.</p>
 <h3 id="3-coordinates--feature-vectors"><a class="header" href="#3-coordinates--feature-vectors">3. Coordinates / Feature Vectors</a></h3>
-<p>Used by <code>clust eval --coords</code> (Davies-Bouldin Index) or future <code>kmeans/gmm</code>.</p>
+<p>Used by <code>eval partition --coords</code> (Davies-Bouldin Index) or future <code>kmeans/gmm</code>.</p>
 <h4 id="featurevector-format"><a class="header" href="#featurevector-format">FeatureVector Format</a></h4>
 <ul>
 <li><strong>Structure</strong>: <code>Name &lt;tab&gt; Val1,Val2,Val3...</code></li>
@@ -882,7 +567,7 @@ Implements basic cuts by cluster count (<code>--k</code>) and height (<code>--he
 <ul>
 <li><strong>High performance</strong>: Rust-based implementation with no external dependencies, handling large trees more efficiently.</li>
 <li><strong>Standardized</strong>: Unifies terminology differences across source algorithms (e.g., consistently using <code>--height</code>, <code>--single-linkage</code>), reducing cognitive load.</li>
-<li><strong>Composable</strong>: As part of the <code>necom</code> toolchain, it can directly cooperate with <code>clust eval</code> for clustering evaluation.</li>
+<li><strong>Composable</strong>: As part of the <code>necom</code> toolchain, it can directly cooperate with <code>eval partition</code> for clustering evaluation.</li>
 </ul>
 </li>
 </ul>
@@ -1107,13 +792,13 @@ Implements basic cuts by cluster count (<code>--k</code>) and height (<code>--he
 <li><strong>Effect</strong>: Any clustering attempt that crosses a low-support edge will fail because the distance/height exceeds the limit, thereby forcing a cut at low-support positions.</li>
 </ul>
 <h2 id="input-and-output"><a class="header" href="#input-and-output">Input and Output</a></h2>
-<h3 id="input-1"><a class="header" href="#input-1">Input</a></h3>
+<h3 id="input"><a class="header" href="#input">Input</a></h3>
 <ul>
 <li><strong>Input tree</strong>: Newick format (single tree).</li>
 <li><strong>Branch lengths</strong>: Used for distance/height-related methods (e.g., root distance, max pairwise distance).</li>
 <li><strong>Branch support (optional)</strong>: If nodes/edges carry support values (e.g., bootstrap), they can be used as a “non-crossable” constraint.</li>
 </ul>
-<h3 id="output-1"><a class="header" href="#output-1">Output</a></h3>
+<h3 id="output"><a class="header" href="#output">Output</a></h3>
 <p>Output follows the same conventions as <code>necom clust dbscan</code> for interoperability with existing tools:</p>
 <ul>
 <li><code>cluster</code> format: Each line contains all points of one cluster; the first point is the representative.</li>
@@ -1151,18 +836,18 @@ Applies to both <code>cluster</code> and <code>pair</code> formats:</p>
 <li>Outputs standard TSV format.</li>
 </ul>
 <h3 id="2-evaluate"><a class="header" href="#2-evaluate">2. Evaluate</a></h3>
-<p>Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate <code>necom clust</code> or <code>necom nwk</code> commands:</p>
+<p>Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate <code>necom eval</code> commands; tree-topology comparison is also available via <code>necom eval compare</code>:</p>
 <ul>
 <li>
-<p><strong>General metrics (<code>necom clust eval</code> / <code>compare</code>)</strong>:</p>
+<p><strong>General metrics (<code>necom eval partition</code>, <code>necom mat compare</code>)</strong>:</p>
 <ul>
-<li>Input: two clustering result TSVs (or one result + one reference).</li>
-<li>Output: ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure, etc.</li>
+<li>Input: two clustering result TSVs (or one result + one reference); or two distance matrices for Cophenetic correlation.</li>
+<li>Output: ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure, etc.; or matrix similarity scores from <code>mat compare</code>.</li>
 <li>Use case: When the true classification of samples is known, or when you want to compare the difference between two cutting parameters.</li>
 </ul>
 </li>
 <li>
-<p><strong>Tree-related metrics (<code>necom nwk eval</code> [planned])</strong>:</p>
+<p><strong>Tree-related metrics (<code>necom eval tree</code> [planned])</strong>:</p>
 <ul>
 <li>Input: tree file + clustering result.</li>
 <li>Output: Parsimony score, Silhouette score (based on tree distance matrix), etc.</li>
@@ -1183,16 +868,7 @@ head -1 final_cluster.tsv | tr '\t' '\n' &gt; cluster1.names
 necom nwk subtree input.nwk -l cluster1.names &gt; cluster1.nwk
 </code></pre>
 <h4 id="2-hierarchical-clustering-hclust-integration"><a class="header" href="#2-hierarchical-clustering-hclust-integration">2. Hierarchical Clustering (hclust) Integration</a></h4>
-<p>Starting from a distance matrix, generate a tree with hclust, then cut and evaluate.</p>
-<pre><code class="language-bash"># 1. Generate hierarchical clustering tree
-necom clust hier matrix.phy --method ward &gt; tree.nwk
-
-# 2. Cut (by height threshold)
-necom cut tree.nwk --height 0.05 &gt; clusters.tsv
-
-# 3. Evaluate (compute Cophenetic correlation and Silhouette)
-# necom nwk eval tree.nwk --part clusters.tsv --metrics silhouette &gt; sil.tsv (planned, not implemented)
-</code></pre>
+<p>Starting from a distance matrix, generate a tree with <code>necom clust hier</code>, cut it, and evaluate. A complete worked example (hier → cut –scan → eval partition) is in <a href="#scenario-b-hierarchical-clustering-parameter-scanning-and-evaluation-workflow"><code>docs/clust.md</code></a>.</p>
 <h4 id="3-scipy-style-analysis-inconsistency-coefficient"><a class="header" href="#3-scipy-style-analysis-inconsistency-coefficient">3. SciPy-style Analysis (Inconsistency Coefficient)</a></h4>
 <p>For trees with uneven evolutionary rates, the inconsistency coefficient can find more natural cluster boundaries.</p>
 <pre><code class="language-bash"># Cut using inconsistency coefficient (default depth=2)
@@ -1234,7 +910,7 @@ necom cut tree.nwk --inconsistent 1.5 &gt; clusters.tsv
 <ul>
 <li>Column definitions: <code>Group</code>, <code>ClusterID</code>, <code>SampleID</code>.</li>
 <li>The <code>Group</code> column is formatted as <code>Method=Value</code> (e.g., <code>height=0.5</code>, <code>max-clade=0.02</code>), making it easy to distinguish different cutting parameters.</li>
-<li>This format can be directly used as input for <code>necom clust eval --input-format long</code> for batch evaluation.</li>
+<li>This format can be directly used as input for <code>necom eval partition --input-format long</code> for batch evaluation.</li>
 </ul>
 </li>
 <li><strong>Statistics output (<code>--stats-out</code>)</strong>: If specified, writes the summary statistics table (threshold, cluster count, singleton count, non-singleton count, max cluster size) to that file.</li>
@@ -1246,15 +922,14 @@ necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 &gt; partitions.tsv
 # 2. Save statistics at the same time (for quick inspection)
 necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv
 </code></pre>
-<h3 id="integration-with-necom-clust-eval"><a class="header" href="#integration-with-necom-clust-eval">Integration with <code>necom clust eval</code></a></h3>
-<p><code>necom cut</code> and <code>necom clust eval</code> work together through the Long format, supporting two evaluation modes:</p>
+<h3 id="integration-with-necom-eval-partition"><a class="header" href="#integration-with-necom-eval-partition">Integration with <code>necom eval partition</code></a></h3>
+<p><code>necom cut</code> and <code>necom eval partition</code> work together through the Long format, supporting two evaluation modes:</p>
 <ul>
-<li><strong>Batch internal evaluation</strong>: pipe scan output to <code>necom clust eval --input-format long</code> with <code>--matrix</code>, <code>--tree</code>, or <code>--coords</code> to score every threshold without Ground Truth.</li>
-<li><strong>Targeted external evaluation</strong>: first use <code>--scan</code> to locate promising threshold ranges, then generate partitions for selected thresholds and compare them to Ground Truth with <code>necom clust eval --other</code>.</li>
+<li><strong>Batch internal evaluation</strong>: pipe scan output to <code>necom eval partition --input-format long</code> with <code>--matrix</code>, <code>--tree</code>, or <code>--coords</code> to score every threshold without Ground Truth.</li>
+<li><strong>Targeted external evaluation</strong>: first use <code>--scan</code> to locate promising threshold ranges, then generate partitions for selected thresholds and compare them to Ground Truth with <code>necom eval partition --other</code>.</li>
 </ul>
 <p>Concrete command examples are kept in <code>docs/clust.md</code> to avoid duplication.</p>
 <h3 id="threshold-selection-strategy-reference"><a class="header" href="#threshold-selection-strategy-reference">Threshold-Selection Strategy Reference</a></h3>
-<p>A brief summary of these strategies also appears in <code>docs/clust.md</code>. The following sections provide more detail.</p>
 <p>When unsure about the best threshold, use <code>--scan</code> to generate data and refer to the following common strategies for decision-making:</p>
 <h4 id="strategy-1-maximize-non-singleton-clusters"><a class="header" href="#strategy-1-maximize-non-singleton-clusters">Strategy 1: Maximize Non-Singleton Clusters</a></h4>
 <ul>
@@ -1281,14 +956,14 @@ necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-o
 </li>
 </ul>
 <h4 id="strategy-3-evaluation-metric-based"><a class="header" href="#strategy-3-evaluation-metric-based">Strategy 3: Evaluation-Metric Based</a></h4>
-<p>This is the most rigorous strategy, using <code>necom clust eval</code> to compute clustering quality metrics.</p>
+<p>This is the most rigorous strategy, using <code>necom eval partition</code> to compute clustering quality metrics.</p>
 <ul>
 <li><strong>Principle</strong>: Directly compute internal validity (e.g., Silhouette) or external consistency (e.g., ARI, if Ground Truth is available) of the partition.</li>
-<li><strong>Operation</strong>: Use together with <code>necom clust eval</code>.
+<li><strong>Operation</strong>: Use together with <code>necom eval partition</code>.
 <pre><code class="language-bash"># Generate detailed list of all candidate partitions
 necom cut ... --scan ... &gt; partitions.tsv
 # Batch evaluation
-necom clust eval partitions.tsv --input-format long --matrix dist.phy
+necom eval partition partitions.tsv --input-format long --matrix dist.phy
 </code></pre>
 </li>
 </ul>
@@ -1334,7 +1009,7 @@ necom clust eval partitions.tsv --input-format long --matrix dist.phy
 <li><strong>Functionality</strong>: Format conversion, subset extraction, matrix comparison, and standardization.</li>
 <li><strong>Goal</strong>: Provide standard, efficient data interfaces for phylogenetics and statistical clustering.</li>
 </ul>
-<h2 id="supported-file-formats"><a class="header" href="#supported-file-formats">Supported File Formats</a></h2>
+<h2 id="scope"><a class="header" href="#scope">Scope</a></h2>
 <p><code>necom</code> currently focuses on clustering, distance matrix processing, and phylogenetic tree operations. Supported file formats are limited to those actually used by these commands.</p>
 <div class="table-wrapper">
 <table>
@@ -1342,16 +1017,16 @@ necom clust eval partitions.tsv --input-format long --matrix dist.phy
 <tr><th style="text-align: left">Format</th><th style="text-align: left">Description</th><th style="text-align: left">Command Docs</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: left">Distance</td><td style="text-align: left">Distance matrix structures such as <code>PHYLIP</code> and <code>Pairwise</code></td><td style="text-align: left"><a href="#necom-mat">mat.md</a>, <a href="#necom-clust">clust.md</a></td></tr>
+<tr><td style="text-align: left">Distance</td><td style="text-align: left">Distance matrix structures such as <code>PHYLIP</code> and <code>Pairwise</code></td><td style="text-align: left">this file, <a href="#necom-clust">clust.md</a></td></tr>
 <tr><td style="text-align: left">Newick</td><td style="text-align: left">Phylogenetic tree format</td><td style="text-align: left"><a href="#necom-nwk">nwk.md</a></td></tr>
 </tbody>
 </table>
 </div>
 <p>Distance matrices and Newick trees do not carry genomic coordinates. If other <code>necom</code> commands require coordinate-based input, this is documented separately in the corresponding command documentation.</p>
 <h2 id="supported-formats-and-data-structures"><a class="header" href="#supported-formats-and-data-structures">Supported Formats and Data Structures</a></h2>
-<p><code>necom</code> uses three internal matrix structures for clustering and distance analysis, and supports two external distance matrix file formats: <code>PHYLIP</code> and <code>Pairwise</code>.</p>
+<p><code>necom</code> supports two external distance matrix file formats: <code>PHYLIP</code> and <code>Pairwise</code>. (Internal matrix data structures are documented in <a href="../notes/design/mat-impl.html"><code>notes/design/mat-impl.md</code></a>.)</p>
 <h3 id="1-phylip-distance-matrix-dense"><a class="header" href="#1-phylip-distance-matrix-dense">1. PHYLIP Distance Matrix (Dense)</a></h3>
-<p>The <code>PHYLIP</code> distance matrix format is a common format in phylogenetic analysis. <code>necom</code> provides a series of tools for processing this format in <code>src/cmd_necom/mat</code> and <code>src/libs/pairmat/</code>.</p>
+<p>The <code>PHYLIP</code> distance matrix format is a common format in phylogenetic analysis. <code>necom</code> provides a series of tools for processing this format.</p>
 <p><code>necom</code> stores this internally using the <code>NamedMatrix</code> structure, backed by <code>CondensedMatrix</code> (a one-dimensional array storing the upper or lower triangle), with memory usage of approximately $O(N^2/2)$.</p>
 <p><code>necom</code> supports both Strict and Relaxed <code>PHYLIP</code> formats.</p>
 <p><strong>Relaxed PHYLIP (default input support)</strong>:</p>
@@ -1391,145 +1066,60 @@ necom clust eval partitions.tsv --input-format long --matrix dist.phy
 <li><strong>Matrix to Pair (<code>necom mat to-pair</code>)</strong>: flatten a <code>PHYLIP</code> matrix into a <code>Pairwise</code> list.</li>
 <li><strong>Pair to Matrix (<code>necom mat to-phylip</code>)</strong>: assemble a <code>Pairwise</code> list back into a <code>PHYLIP</code> matrix, supporting <code>--missing</code> and <code>--same</code> parameters.</li>
 </ul>
-<h3 id="3-internal-matrix-structures"><a class="header" href="#3-internal-matrix-structures">3. Internal Matrix Structures</a></h3>
-<p><code>necom</code> defines three core matrix structures in <code>src/libs/pairmat/</code>.</p>
-<h4 id="scoringmatrix"><a class="header" href="#scoringmatrix">ScoringMatrix</a></h4>
-<ul>
-<li><strong>Purpose</strong>: sparse or on-demand scoring/distance matrix.</li>
-<li><strong>Underlying storage</strong>: <code>HashMap&lt;(usize, usize), T&gt;</code>.</li>
-<li><strong>Characteristics</strong>: sparse storage, only explicitly set values are kept; supports default values for diagonal and off-diagonal elements; logically symmetric (<code>get(i,j)</code> is equivalent to <code>get(j,i)</code>).</li>
-</ul>
-<h4 id="condensedmatrix"><a class="header" href="#condensedmatrix">CondensedMatrix</a></h4>
-<ul>
-<li><strong>Purpose</strong>: efficient hierarchical clustering (e.g., <code>clust hier</code>) supporting larger-scale data.</li>
-<li><strong>Underlying storage</strong>: <code>Vec&lt;f32&gt;</code>, only the upper triangle (excluding the diagonal) is stored, memory footprint is $N(N-1)/2$.</li>
-<li><strong>Index mapping</strong>: for $(i, j)$ with $i &lt; j$ → $k = N \cdot i - i(i+1)/2 + (j - i - 1)$.</li>
-<li><strong>Characteristics</strong>: enforced symmetry, diagonal assumed to be 0, no name mapping stored, purely numerical computation.</li>
-</ul>
-<h4 id="namedmatrix"><a class="header" href="#namedmatrix">NamedMatrix</a></h4>
-<ul>
-<li><strong>Purpose</strong>: dense distance matrix with row and column names (e.g., <code>PHYLIP</code> in-memory representation).</li>
-<li><strong>Underlying storage</strong>: <code>IndexMap</code> (name index) + <code>CondensedMatrix</code> + optional diagonal vector.</li>
-<li><strong>Characteristics</strong>: combined wrapper that accesses the underlying <code>CondensedMatrix</code> through name indexing; supports optional diagonal storage (required by <code>mat transform --normalize</code>); about 200MB when $N=10,000$.</li>
-</ul>
 <h2 id="subcommands-in-detail"><a class="header" href="#subcommands-in-detail">Subcommands in Detail</a></h2>
 <h3 id="format-conversion"><a class="header" href="#format-conversion">Format Conversion</a></h3>
 <h4 id="necom-mat-to-phylip"><a class="header" href="#necom-mat-to-phylip"><code>necom mat to-phylip</code></a></h4>
-<p>Convert pairwise TSV to a PHYLIP matrix.</p>
-<ul>
-<li><strong>Purpose</strong>: Build a distance matrix from alignment results (e.g., <code>blast --outfmt 6</code>) for subsequent tree inference.</li>
-<li><strong>Output</strong>: Full PHYLIP distance matrix. All observed IDs are collected into a square matrix.</li>
-</ul>
+<p>Build a full PHYLIP distance matrix from a pairwise TSV (e.g., alignment output). Missing pairs can be filled with <code>--missing</code> and self-pairs with <code>--same</code>.</p>
 <h4 id="necom-mat-to-pair"><a class="header" href="#necom-mat-to-pair"><code>necom mat to-pair</code></a></h4>
-<p>Convert a PHYLIP matrix to pairwise TSV.</p>
-<ul>
-<li><strong>Purpose</strong>: Export a matrix as an edge list for graph clustering (e.g., <code>mcl</code>) or network visualization (Cytoscape).</li>
-<li><strong>Output</strong>: Three-column TSV (<code>A B distance</code>). Lower-triangular output including the diagonal.</li>
-</ul>
+<p>Flatten a PHYLIP matrix into a three-column pairwise TSV (<code>A B distance</code>), emitting the lower triangle including the diagonal.</p>
 <h4 id="necom-mat-format"><a class="header" href="#necom-mat-format"><code>necom mat format</code></a></h4>
-<p>Convert between PHYLIP formats and normalize them.</p>
+<p>Convert a PHYLIP matrix into another PHYLIP variant while preserving all distance values.</p>
 <ul>
-<li><strong>Purpose</strong>: Clean matrix formats to meet the requirements of specific software.</li>
-<li><strong>Modes (<code>--format</code>)</strong>:
-<ul>
-<li><code>full</code> (default): full matrix with long names preserved.</li>
-<li><code>lower</code>: lower-triangular matrix without diagonal values to save disk space.</li>
-<li><code>strict</code>: truncated names and fixed-width values for compatibility with the original PHYLIP toolkit.</li>
-</ul>
-</li>
+<li><code>--format full</code> (default): full square matrix with original names.</li>
+<li><code>--format lower</code>: lower-triangular matrix without diagonal values.</li>
+<li><code>--format strict</code>: 10-character names and fixed-width values for compatibility with the original PHYLIP toolkit.</li>
 </ul>
 <h3 id="operations-and-analysis"><a class="header" href="#operations-and-analysis">Operations and Analysis</a></h3>
 <h4 id="necom-mat-subset"><a class="header" href="#necom-mat-subset"><code>necom mat subset</code></a></h4>
-<p>Extract a submatrix based on a list of names.</p>
-<ul>
-<li><strong>Purpose</strong>: Extract specific species or gene families from a large matrix for fine-grained analysis.</li>
-<li><strong>Input</strong>: PHYLIP matrix and an ID list file (one ID per line).</li>
-<li><strong>Output</strong>: Full PHYLIP submatrix in the order of the ID list.</li>
-</ul>
+<p>Extract a PHYLIP submatrix in the order of a given ID list.</p>
 <h4 id="necom-mat-compare"><a class="header" href="#necom-mat-compare"><code>necom mat compare</code></a></h4>
-<p>Compute correlation or difference between two matrices.</p>
+<p>Compare two matrices on their common IDs using correlation, error, or distance metrics. Multiple <code>--method</code> values can be comma-separated.</p>
+<h4 id="necom-mat-transform"><a class="header" href="#necom-mat-transform"><code>necom mat transform</code></a></h4>
+<p>Apply mathematical transformations to matrix elements. It is the main tool for converting a <strong>Similarity Matrix</strong> into a <strong>Distance Matrix</strong>, and also supports normalization and other numerical adjustments.</p>
+<p>Clustering algorithms (UPGMA, NJ, Ward) and multidimensional scaling require a <strong>Distance Matrix</strong> with $D(x, x) = 0$, $D(x, y) \ge 0$, and smaller values indicating higher similarity. Upstream tools such as BLAST, MMseqs2, and Diamond usually output <strong>Similarity</strong>, where $S(x, x) = Max$ and larger values indicate higher similarity.</p>
+<p><strong>Key options</strong>:</p>
 <ul>
-<li><strong>Purpose</strong>: Evaluate consistency between distance calculation methods, or information loss before and after clustering (Cophenetic Correlation).</li>
-<li><strong>Prerequisite</strong>: Uses the intersection of common IDs between the two matrices.</li>
-<li><strong>Metrics (<code>--method</code>)</strong>: Pearson, Spearman, Cosine, Jaccard, MAE, Euclidean, or <code>all</code>. Default is <code>pearson</code>; multiple methods can be comma-separated.</li>
-</ul>
-<h3 id="necom-mat-transform"><a class="header" href="#necom-mat-transform"><code>necom mat transform</code></a></h3>
-<p>The <code>necom mat transform</code> command applies mathematical transformations to values in a matrix.</p>
-<p>It is the core tool for converting a <strong>Similarity Matrix</strong> into a <strong>Distance Matrix</strong>, and also supports normalization and other numerical adjustments.</p>
-<ul>
-<li><strong>Purpose</strong>: Convert similarity matrices to distance matrices, or perform normalization and log transformations.</li>
-<li><strong>Operations (<code>--op</code>)</strong>: <code>linear</code>, <code>inv-linear</code>, <code>log</code>, <code>exp</code>, <code>square</code>, <code>sqrt</code>.</li>
-<li><strong>Normalization (<code>--normalize</code>)</strong>: Normalize based on diagonal elements before applying the transformation.</li>
-<li><strong>Input</strong>: PHYLIP distance matrix or pairwise TSV file; use <code>--input-format pair</code> for pairwise TSV.</li>
-</ul>
-<p>Clustering algorithms (such as UPGMA, NJ, Ward) and multidimensional scaling (MDS) usually require a <strong>Distance Matrix</strong> or <strong>Dissimilarity Matrix</strong> that satisfies:</p>
-<ul>
-<li>$D(x, x) = 0$</li>
-<li>$D(x, y) \ge 0$</li>
-<li>Smaller $D(x, y)$ indicates higher similarity</li>
-</ul>
-<p>However, upstream bioinformatics tools (such as BLAST, MMseqs2, Diamond) or statistical analyses usually output <strong>Similarity</strong>, which satisfies:</p>
-<ul>
-<li>$S(x, x) = Max$ (e.g., 1.0 or 100)</li>
-<li>Larger $S(x, y)$ indicates higher similarity</li>
+<li><code>--op</code>: <code>linear</code>, <code>inv-linear</code>, <code>log</code>, <code>exp</code>, <code>square</code>, <code>sqrt</code>.</li>
+<li><code>--normalize</code>: scale values by diagonal elements before transformation.</li>
+<li><code>--input-format pair</code>: read pairwise TSV instead of PHYLIP.</li>
 </ul>
 <h4 id="conversion-models"><a class="header" href="#conversion-models">Conversion Models</a></h4>
-<p><code>necom mat transform</code> supports the following common transformation modes:</p>
+<p><code>necom mat transform</code> supports common similarity-to-distance conversions:</p>
 <h5 id="1-linear-inversion"><a class="header" href="#1-linear-inversion">1. Linear Inversion</a></h5>
-<p>Applicable to similarities with a fixed upper bound (e.g., Identity, Percent Similarity).</p>
+<p>For similarities with a fixed upper bound:</p>
 <p>$$D = Max - S$$</p>
-<ul>
-<li><strong>Scenario</strong>: BLAST Identity (0–100) $\rightarrow$ $D = 100 - S$</li>
-<li><strong>Scenario</strong>: Fraction (0–1) $\rightarrow$ $D = 1 - S$</li>
-</ul>
+<p>Examples: BLAST identity (0–100) becomes $D = 100 - S$; fractions become $D = 1 - S$.</p>
 <h5 id="2-normalized-linear-inversion"><a class="header" href="#2-normalized-linear-inversion">2. Normalized Linear Inversion</a></h5>
-<p>If $S$ has no fixed upper bound (e.g., Alignment Score), normalization is required first.</p>
-<p>Raw scores are usually affected by sequence length and cannot be directly compared (e.g., a score of 1000 for a long sequence may be less significant than a score of 100 for a short sequence). Normalization uses the diagonal (self-alignment score) to convert raw scores into relative similarity (0–1 range), giving subsequent distance transformations (e.g., $1-S$) a meaningful mathematical interpretation.</p>
+<p>For raw scores without a fixed upper bound, normalize by diagonal self-scores first:</p>
 <p>$$D = 1 - \frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}}$$</p>
-<p>Or simply:</p>
-<p>$$D = 1 - \frac{S(x, y)}{Max(S)}$$</p>
+<p>A simpler alternative uses the global maximum: $D = 1 - S(x, y) / Max(S)$.</p>
 <h5 id="3-logarithmic"><a class="header" href="#3-logarithmic">3. Logarithmic</a></h5>
-<p>Applicable to probabilities or multiplicative models (similar to Jukes-Cantor correction).</p>
+<p>For probabilities or multiplicative models:</p>
 <p>$$D = -\ln(S)$$</p>
-<p>Or after normalization:</p>
-<p>$$D = -\ln(\frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}})$$</p>
-<ul>
-<li><strong>Scenario</strong>: Sequence identity probability $\rightarrow$ evolutionary distance</li>
-</ul>
-<h4 id="data-flow"><a class="header" href="#data-flow">Data Flow</a></h4>
-<pre><code class="language-mermaid">flowchart LR
-    A[pair/phylip input] --&gt; B{input format?}
-    B --&gt;|pair| C[from_pair_scores&lt;br/&gt;--same/--missing]
-    B --&gt;|phylip| D[from_relaxed_phylip&lt;br/&gt;sequence/value validation]
-    C --&gt; E[NamedMatrix]
-    D --&gt; E
-    E --&gt; F[transform_matrix&lt;br/&gt;normalize? op]
-    F --&gt; G[write_phylip_matrix&lt;br/&gt;precision=6]
-    G --&gt; H[stdout/file]
-</code></pre>
+<p>After normalization: $D = -\ln(S(x, y) / \sqrt{S(x, x) \cdot S(y, y)})$. Useful for converting sequence identity probability to evolutionary distance.</p>
 <h4 id="notes-1"><a class="header" href="#notes-1">Notes</a></h4>
 <ul>
-<li><strong>Diagonal handling</strong>:
-<ul>
-<li>When <code>necom</code> reads a matrix, it usually ignores the diagonal (sets it to 0), but the <code>transform</code> command attempts to preserve diagonal information to support <code>--normalize</code>.</li>
-<li>If the input file lacks diagonal information (as in some PHYLIP variants), <code>--normalize</code> will not work correctly (treated as 0).</li>
-</ul>
-</li>
-<li><strong>Numerical stability</strong>:
-<ul>
-<li>The <code>log</code> operation is sensitive to 0 or negative values; off-diagonal values are set to <code>Inf</code> and diagonal values are set to 0.</li>
-<li>If the diagonal is 0 during normalization, the result will be 0.</li>
-</ul>
-</li>
+<li>Diagonal information is preserved so that <code>--normalize</code> can use self-scores. If the input lacks diagonal values, <code>--normalize</code> will not work correctly.</li>
+<li><code>log</code> of 0 or negative off-diagonal values produces <code>Inf</code>; non-positive diagonal values become <code>0</code>.</li>
 </ul>
 <h4 id="future-work"><a class="header" href="#future-work">Future Work</a></h4>
-<p>The following transformations are not currently implemented but may be useful in the future:</p>
+<p>The following conversions are not yet implemented:</p>
 <ul>
-<li><strong>Reciprocal</strong>: $D = \frac{1}{S} - \frac{1}{Max}$. Can be approximated with <code>--op linear</code> plus an external script.</li>
-<li><strong>Cosine Similarity</strong>: $D = 1 - \cos(\theta)$</li>
-<li><strong>Correlation</strong>: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$</li>
+<li><strong>Reciprocal</strong>: $D = 1/S - 1/Max$ (can be approximated with <code>--op linear</code>).</li>
+<li><strong>Cosine Similarity</strong>: $D = 1 - \cos(\theta)$.</li>
+<li><strong>Correlation</strong>: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.</li>
 </ul>
-<p>For Cosine/Correlation distances, we recommend computing them in Python (SciPy) and exporting the result as a PHYLIP matrix.</p>
+<p>For Cosine/Correlation distances, compute them in Python (SciPy) and export as a PHYLIP matrix.</p>
 <h2 id="recommended-workflows-1"><a class="header" href="#recommended-workflows-1">Recommended Workflows</a></h2>
 <h3 id="scenario-a-tree-inference-from-blast-results"><a class="header" href="#scenario-a-tree-inference-from-blast-results">Scenario A: Tree Inference from BLAST Results</a></h3>
 <pre><code class="language-bash"># 1. Parse BLAST results into pairwise distances (assuming distance = 1 - identity has already been computed)
@@ -1581,7 +1171,6 @@ neighbor &lt; input.infile
 <ul>
 <li><strong>Information</strong>: Extract information or statistics from trees.
 <ul>
-<li><code>compare</code>: Compare trees (RF, WRF, KF distances).</li>
 <li><code>distance</code>: Compute distances between nodes.</li>
 <li><code>label</code>: Extract labels/names from the tree.</li>
 <li><code>stat</code>: Print tree statistics (node count, leaf count, balance indices, etc.).</li>
@@ -1612,227 +1201,44 @@ neighbor &lt; input.infile
 </ul>
 <hr>
 <h2 id="information-commands"><a class="header" href="#information-commands">Information Commands</a></h2>
-<h3 id="compare"><a class="header" href="#compare">compare</a></h3>
-<p>Compare trees using Robinson-Foulds (RF) distance and its variants.</p>
-<pre><code class="language-bash">necom nwk compare [OPTIONS] &lt;infile&gt; [compare_file]
-</code></pre>
-<ul>
-<li><code>[compare_file]</code>: Optional second tree file. If omitted, all trees in <code>&lt;infile&gt;</code> are compared pairwise.</li>
-<li><code>--include-trivial</code>: Include trivial splits (single-leaf branches) in WRF/KF calculations.</li>
-<li>Output columns: <code>Tree1</code>, <code>Tree2</code>, <code>RF_Dist</code>, <code>WRF_Dist</code>, <code>KF_Dist</code>.</li>
-<li>Single-file pairwise mode requires at least 2 trees. With only 1 tree, a warning is emitted and the output contains only the header.</li>
-</ul>
-<blockquote>
-<p><strong>RF (Robinson-Foulds)</strong>: Measures topological difference based on the number of splits that differ between two trees. Smaller values indicate greater similarity; 0 means identical. WRF is weighted RF, and KF is the Kuhner-Felsenstein branch-score distance.</p>
-</blockquote>
 <h3 id="distance"><a class="header" href="#distance">distance</a></h3>
-<p>Compute distances between nodes or generate a distance matrix.</p>
-<pre><code class="language-bash">necom nwk distance [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>If the input file contains multiple trees, only the first tree is processed.</li>
-<li><code>--mode &lt;mode&gt;</code>: Computation mode.
-<ul>
-<li><code>root</code> (default): Distance to the root.</li>
-<li><code>parent</code>: Distance to the parent.</li>
-<li><code>pairwise</code>: Pairwise distances among all selected nodes, including self-pairs and both (i,j) and (j,i) orderings.</li>
-<li><code>lca</code>: Distances from each node in a pair to their Lowest Common Ancestor (LCA), for all selected-node pairs (including self-pairs).</li>
-<li><code>phylip</code>: Output a PHYLIP-format distance matrix for selected nodes. All selected nodes must be named and their names must not contain ASCII whitespace characters; unnamed nodes or names with whitespace cause an error.</li>
-</ul>
-</li>
-<li><code>-I</code>: Ignore internal nodes.</li>
-<li><code>-L</code>: Ignore leaf nodes.</li>
-<li><code>-n &lt;name&gt;</code> / <code>-l &lt;file&gt;</code> / <code>-x &lt;regex&gt;</code>: Restrict output to nodes matched by exact name, name-list file, or case-insensitive regex. When omitted, all selected nodes (respecting <code>-I</code>/<code>-L</code>) are reported.</li>
-</ul>
+<p>Compute distances between nodes or generate a distance matrix. Use <code>--mode</code> to select root, parent, pairwise, lca, or phylip output.</p>
 <h3 id="label"><a class="header" href="#label">label</a></h3>
 <p>Extract labels (names) from the tree.</p>
-<pre><code class="language-bash">necom nwk label [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-I</code>: Skip internal node labels.</li>
-<li><code>-L</code>: Skip leaf node labels.</li>
-<li><code>-n &lt;name&gt;</code> / <code>-l &lt;file&gt;</code> / <code>-x &lt;regex&gt;</code>: Filter nodes by name, list, or regex.</li>
-<li><code>-D</code>: Include descendants of selected nodes.</li>
-<li><code>-M</code>: Clade check (output only when the selected nodes form a clade with at least two nodes).</li>
-<li><code>--tab</code>: Output tab-separated values (single line).</li>
-<li><code>-c &lt;col&gt;</code> / <code>--extra-column &lt;col&gt;</code>: Append extra columns (<code>dup</code>, <code>taxid</code>, <code>species</code>, <code>full</code>).</li>
-<li><code>--root</code>: Output only the root node label. When <code>--root</code> is given, other selection options (<code>-I</code>, <code>-L</code>, <code>-n</code>, <code>-x</code>, etc.) are ignored.</li>
-</ul>
 <h3 id="stat"><a class="header" href="#stat">stat</a></h3>
 <p>Print tree statistics.</p>
-<pre><code class="language-bash">necom nwk stat [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>--style &lt;col|line&gt;</code>: Output format (key-value pairs or TSV lines).</li>
-<li>Statistics include: type (cladogram/phylogram/neither), node count, leaf count, rooted status, dichotomies, leaf labels, internal labels, edges with length, edges without length, cherries, Sackin index, Colless index.</li>
-</ul>
 <h3 id="support"><a class="header" href="#support">support</a></h3>
 <p>Assign bootstrap support values to a target tree based on replicate trees.</p>
-<pre><code class="language-bash">necom nwk support [OPTIONS] &lt;target&gt; &lt;replicates&gt;
-</code></pre>
-<ul>
-<li><code>-p, --percent</code>: Output support values as integer percentages (0–100), truncated toward zero.</li>
-<li><code>-r, --override-root</code>: Override the root node label with its support value.</li>
-<li>Overwrites existing internal node labels in the target tree.</li>
-<li>The root node is not annotated by default; any existing root label is preserved.</li>
-</ul>
 <hr>
 <h2 id="manipulation-commands"><a class="header" href="#manipulation-commands">Manipulation Commands</a></h2>
 <h3 id="order"><a class="header" href="#order">order</a></h3>
-<p>Sort children of each node (rotate branches) without changing topology.</p>
-<pre><code class="language-bash">necom nwk order [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>--num-descendants</code> / <code>--num-descendants-rev</code>: Sort by number of descendants (ladderize).</li>
-<li><code>--alphanumeric</code> / <code>--alphanumeric-rev</code>: Sort labels alphanumerically.</li>
-<li><code>--name-list &lt;file&gt;</code>: Sort by a given name list; applied before other sort options.</li>
-<li><code>--deladderize</code> (<code>--dl</code>): Alternate sort direction at each level.</li>
-<li>If no sort option is provided, children are sorted in ascending alphanumeric order by default.</li>
-<li>Entries in <code>--name-list</code> that are not found among the leaf names are logged as warnings and skipped.</li>
-</ul>
-<p>When both <code>--alphanumeric</code> and <code>--num-descendants</code> are enabled, labels are sorted alphabetically first, then stably ladderized by number of descendants; the final order is primarily by number of descendants, with alphabetical order used as a tie-breaker within groups of the same size.</p>
+<p>Sort children of each node without changing topology.</p>
 <h3 id="prune"><a class="header" href="#prune">prune</a></h3>
-<p>Remove nodes from the tree.</p>
-<pre><code class="language-bash">necom nwk prune [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-n &lt;name&gt;</code> / <code>-l &lt;file&gt;</code> / <code>-x &lt;regex&gt;</code>: Select nodes to remove.</li>
-<li><code>-i, --invert</code>: Invert selection (keep selected nodes, remove the rest).</li>
-<li><code>-D</code>: Include descendants.</li>
-</ul>
+<p>Remove selected nodes from the tree.</p>
 <h3 id="rename"><a class="header" href="#rename">rename</a></h3>
 <p>Rename specified nodes.</p>
-<pre><code class="language-bash">necom nwk rename [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-n &lt;name&gt;</code>: Select node by name.</li>
-<li><code>-l &lt;name1,name2&gt;</code>: Select node by LCA of two names.</li>
-<li><code>--rename &lt;new_name&gt;</code>: New name(s), which must correspond one-to-one with <code>-n</code> or <code>-l</code> arguments.</li>
-</ul>
 <h3 id="replace"><a class="header" href="#replace">replace</a></h3>
-<p>Batch replace node names or comments using a TSV file.</p>
-<pre><code class="language-bash">necom nwk replace [OPTIONS] --replace-tsv &lt;replace.tsv&gt; &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>--replace-tsv &lt;replace.tsv&gt;</code>: Tab-separated file with format <code>Original &lt;TAB&gt; Replacement [TAB Extra...]</code>.</li>
-<li><code>-I, --internal</code>: Skip internal labels.</li>
-<li><code>-L, --leaf</code>: Skip leaf labels.</li>
-<li><code>--mode &lt;mode&gt;</code>:
-<ul>
-<li><code>label</code> (default): Replace node names.</li>
-<li><code>taxid</code>: Add as NCBI TaxID (<code>:T=</code>).</li>
-<li><code>species</code>: Add as species name (<code>:S=</code>).</li>
-<li><code>asis</code>: Append directly as comment/attribute. Values containing <code>=</code> are parsed as <code>key=value</code>; bare values are treated as keys with empty values.</li>
-</ul>
-</li>
-</ul>
+<p>Batch replace node names or append annotations from a TSV file. Use <code>--mode</code> to choose label, taxid, species, or asis replacement.</p>
 <h3 id="reroot"><a class="header" href="#reroot">reroot</a></h3>
-<p>Reroot the tree.</p>
-<pre><code class="language-bash">necom nwk reroot [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>If the input file contains multiple trees, only the first tree is processed.</li>
-<li>(Default): Root at the midpoint of the longest branch.</li>
-<li><code>-n &lt;node&gt;</code>: Root on the edge leading to the LCA of specified nodes (outgroup rooting).</li>
-<li><code>-l, --lax</code>: Lax mode (if the LCA is already the root, use its complement).</li>
-<li><code>-d, --deroot</code>: Deroot (produce a multifurcating root).</li>
-<li><code>--support-as-labels</code>: Treat support values as labels (rerooting will move labels).</li>
-<li>The default midpoint rerooting is a no-op when the tree has no positive branch lengths (cladogram).</li>
-</ul>
+<p>Reroot the tree. The default is midpoint rooting; use <code>-n</code> for outgroup rooting.</p>
 <h3 id="subtree"><a class="header" href="#subtree">subtree</a></h3>
-<p>Extract the subtree rooted at the LCA of selected nodes.</p>
-<pre><code class="language-bash">necom nwk subtree [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-n</code> / <code>-l</code> / <code>-x</code>: Select nodes.</li>
-<li><code>-D, --descendants</code>: Include all descendants of selected internal nodes.</li>
-<li><code>-M</code>: Clade check (output only when selected nodes form a clade with at least two nodes).</li>
-<li><code>-c &lt;N&gt;</code>: Context (expand upward by N levels). Default: <code>0</code>.</li>
-<li><code>-C, --condense &lt;name&gt;</code>: Condense the subtree to a single node.
-<ul>
-<li>The new node gets <code>member=&lt;count&gt;</code> and <code>tri=white</code> comments.</li>
-<li><code>&lt;count&gt;</code> is the number of named nodes matched by <code>-n/-l/-x</code>, including descendants expanded by <code>-D</code>.</li>
-</ul>
-</li>
-</ul>
+<p>Extract the subtree rooted at the LCA of selected nodes, or condense it into a single node with <code>--condense</code>.</p>
 <h3 id="topo"><a class="header" href="#topo">topo</a></h3>
-<p>Modify tree topology and properties.</p>
-<pre><code class="language-bash">necom nwk topo [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>By default removes branch lengths and comments, keeping only topology.</li>
-<li><code>-b, --bl</code>: Preserve branch lengths.</li>
-<li><code>-c, --comment</code>: Preserve comments.</li>
-<li><code>-I</code>: Remove internal labels.</li>
-<li><code>-L</code>: Remove leaf labels.</li>
-</ul>
+<p>Modify tree topology and properties, such as removing branch lengths or labels.</p>
 <hr>
 <h2 id="visualization-commands"><a class="header" href="#visualization-commands">Visualization Commands</a></h2>
 <h3 id="comment"><a class="header" href="#comment">comment</a></h3>
-<p>Add comments to nodes for visualization.</p>
-<pre><code class="language-bash">necom nwk comment [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-n &lt;name&gt;</code> / <code>--node &lt;name&gt;</code>: Select node(s) by exact name (can be repeated).</li>
-<li><code>--lca &lt;A,B&gt;</code>: Select an internal node by the lowest common ancestor (LCA) of two comma-separated names. Can be specified multiple times.</li>
-<li><code>--string &lt;str&gt;</code>: Add a free-text string comment (stored as the <code>string</code> attribute).</li>
-<li><code>--color</code>, <code>--label</code>, <code>--comment-text</code>: Add text attributes (<code>--comment-text</code> stores as the <code>comment</code> attribute, used for visualization).</li>
-<li><code>--dot</code>, <code>--bar</code>, <code>--rec</code>, <code>--tri</code>: Add shape attributes (used by <code>to-tex</code> / <code>to-forest</code>).</li>
-<li><code>--remove &lt;regex&gt;</code>: Remove comments matching the regex.</li>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; <code>[stdout]</code> for screen output.</li>
-</ul>
+<p>Add visualization comments or attributes to selected nodes.</p>
 <h3 id="indent"><a class="header" href="#indent">indent</a></h3>
-<p>Format a Newick tree with indentation or compactly.</p>
-<pre><code class="language-bash">necom nwk indent [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>--text &lt;str&gt;</code>: Indentation string (default <code>"  "</code>).</li>
-<li><code>-c, --compact</code>: Compact output (single line).</li>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; <code>[stdout]</code> for screen output.</li>
-</ul>
+<p>Format a Newick tree with indentation or compact output.</p>
 <h3 id="to-dot"><a class="header" href="#to-dot">to-dot</a></h3>
-<p>Convert a Newick tree to Graphviz DOT format.</p>
-<pre><code class="language-bash">necom nwk to-dot [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; <code>[stdout]</code> for screen output.</li>
-</ul>
+<p>Convert to Graphviz DOT format.</p>
 <h3 id="to-forest"><a class="header" href="#to-forest">to-forest</a></h3>
-<p>Convert a Newick tree to raw LaTeX Forest code.</p>
-<pre><code class="language-bash">necom nwk to-forest [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>If the input file contains multiple trees, only the first tree is processed.</li>
-<li><code>-b, --bl</code>: Include branch lengths.</li>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; `[stdout] for screen output.</li>
-<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped or normalized for safe Forest output.</li>
-</ul>
+<p>Convert to LaTeX Forest code.</p>
 <h3 id="to-svg"><a class="header" href="#to-svg">to-svg</a></h3>
-<p>Convert a Newick tree to SVG format for visualization.</p>
-<pre><code class="language-bash">necom nwk to-svg [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>If the input file contains multiple trees, only the first tree is processed.</li>
-<li>Draws a phylogram if branch lengths exist, otherwise a cladogram.</li>
-<li><code>-w, --width &lt;N&gt;</code>: Drawing-area width used as the branch-length scaling baseline in pixels (default 800). The final SVG width also includes margins for leaf labels.</li>
-<li><code>-v, --vskip &lt;N&gt;</code>: Vertical spacing between leaf nodes in pixels (default 20).</li>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; <code>[stdout]</code> for screen output.</li>
-</ul>
+<p>Convert to SVG format. Draws a phylogram when branch lengths exist; otherwise draws a cladogram.</p>
 <h3 id="to-tex"><a class="header" href="#to-tex">to-tex</a></h3>
-<p>Wrap a Newick tree in a complete LaTeX document (based on <code>to-forest</code>).</p>
-<pre><code class="language-bash">necom nwk to-tex [OPTIONS] &lt;infile&gt;
-</code></pre>
-<ul>
-<li>If the input file contains multiple trees, only the first tree is processed (unless <code>--forest</code> is used, in which case the input is passed through verbatim).</li>
-<li><code>-b, --bl</code>: Draw a phylogram (with branch lengths).</li>
-<li><code>--forest</code>: Input is already Forest code.</li>
-<li><code>--no-default-style</code>: Skip default style definitions.</li>
-<li><code>-o, --outfile &lt;file&gt;</code>: Output filename; `[stdout] for screen output.</li>
-<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) and underscores in node names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped or normalized for safe LaTeX compilation.</li>
-</ul>
-<blockquote>
-<p>LaTeX output requires a locally installed <code>xelatex</code> or an engine such as <code>tectonic</code> to compile. By default the embedded style overrides the template fonts with <code>Noto Sans</code>; use <code>--no-default-style</code> to keep the template’s own font setup (<code>Fira Sans</code> / <code>Source Han Sans SC</code>).</p>
-</blockquote>
+<p>Wrap a Newick tree in a complete LaTeX document.</p>
 <hr>
 <h2 id="label-handling"><a class="header" href="#label-handling">Label Handling</a></h2>
 <ul>
@@ -1846,7 +1252,6 @@ neighbor &lt; input.infile
 <p><code>necom nwk</code> treats non-finite branch lengths (<code>NaN</code>, positive/negative infinity), negative values, and zero values as <code>0.0</code> during computation and visualization. On input, such values are normalized to <code>None</code> (no length annotation); on output, <code>None</code> and zero (<code>0.0</code>) lengths are omitted so that cladograms remain unannotated. This applies to:</p>
 <ul>
 <li>Statistics (<code>stat</code>) and distance calculations (<code>distance</code>).</li>
-<li>Tree comparison (<code>compare</code>), including weighted Robinson-Foulds and Kuhner-Felsenstein distances.</li>
 <li>Tree operations such as <code>reroot</code>, collapse, and insert_parent.</li>
 <li>Visualization (<code>to-svg</code>, <code>to-dot</code>, <code>to-forest</code>, <code>to-tex</code>).</li>
 </ul>
@@ -1860,7 +1265,8 @@ neighbor &lt; input.infile
 <h2 id="planned-subcommands"><a class="header" href="#planned-subcommands">Planned Subcommands</a></h2>
 <ul>
 <li><code>condense</code>: Tree condensation functionality is currently provided by <code>necom nwk subtree --condense</code>; no standalone <code>condense</code> subcommand is planned at this time.</li>
-<li><code>eval</code>: Multi-dimensional tree evaluation framework (geometric, taxonomic, phylogenetic, trait consistency). Related metrics are referenced in the <code>necom clust eval</code> and <code>necom cut</code> documentation.</li>
+<li><code>match</code>, <code>ed</code>, <code>gen</code>, <code>duration</code>: Mapped from <code>newick_utils</code> but not yet implemented in <code>necom nwk</code>; no concrete plan at this time.</li>
+<li>Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level command <code>necom eval</code>. The <code>compare</code> and <code>partition</code> subcommands have been migrated to <code>necom eval</code>; see <a href="#necom-eval"><code>docs/eval.md</code></a>. The <code>tree</code> subcommand remains in design — see <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a>.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="necom-pl"><a class="header" href="#necom-pl">necom pl</a></h1>
@@ -1869,52 +1275,54 @@ neighbor &lt; input.infile
 <ul>
 <li><code>condense</code>: Condense monophyletic subtrees based on a taxonomy TSV file.</li>
 </ul>
-<h2 id="condense"><a class="header" href="#condense">condense</a></h2>
-<p>Condenses subtrees based on taxonomy.</p>
-<pre><code class="language-bash">necom pl condense [OPTIONS] --taxon &lt;taxon.tsv&gt; &lt;infile&gt;
-</code></pre>
-<h3 id="arguments"><a class="header" href="#arguments">Arguments</a></h3>
-<ul>
-<li><code>&lt;infile&gt;</code>: Input Newick filename. Use <code>stdin</code> for standard input.</li>
-</ul>
-<h3 id="options"><a class="header" href="#options">Options</a></h3>
-<ul>
-<li><code>--taxon &lt;taxon.tsv&gt;</code>: Path to the taxonomy TSV file (required).</li>
-<li><code>--rank &lt;N&gt;</code>: Column index(es) to use for grouping (1-based). Can be specified multiple times. Default: <code>2</code>.</li>
-<li><code>--map</code>: Write a mapping file <code>condensed.tsv</code> showing original node names and their condensed labels.</li>
-<li><code>-o, --outfile &lt;outfile&gt;</code>: Output filename. Use <code>stdout</code> for screen output.</li>
-</ul>
-<h3 id="input-formats"><a class="header" href="#input-formats">Input Formats</a></h3>
-<ul>
-<li><strong>Newick tree</strong> (<code>&lt;infile&gt;</code>): A tree whose leaf labels match the first column of the taxonomy file.</li>
-<li><strong>Taxonomy TSV</strong> (<code>--taxon</code>): A tab-separated file without header, containing at least two columns:
-<ul>
-<li>Column 1: node name (must match leaf labels in the Newick file).</li>
-<li>Column 2+: taxonomic terms (e.g., species, genus, family).</li>
-</ul>
-</li>
-</ul>
-<p>Monophyletic subtrees whose leaves share the same taxonomic term at the selected rank are collapsed into a single node named <code>{term}||{count}</code>, where <code>{count}</code> is the number of leaves in the condensed group. Condensed nodes carry <code>member=&lt;count&gt;</code> and <code>tri=white</code> comments for visualization.</p>
-<h3 id="examples-2"><a class="header" href="#examples-2">Examples</a></h3>
-<pre><code class="language-bash"># Condense by species (2nd column)
-necom pl condense --taxon taxon.tsv tree.nwk
-
-# Condense by genus (3rd column)
-necom pl condense --taxon taxon.tsv --rank 3 tree.nwk
-
-# Condense by multiple ranks
-necom pl condense --taxon taxon.tsv --rank 2 --rank 3 tree.nwk
-
-# Output mapping file
-necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk
-</code></pre>
-<h3 id="full-example-with-test-data"><a class="header" href="#full-example-with-test-data">Full Example with Test Data</a></h3>
+<p>For command-line options and usage examples, see <a href="#condense"><code>docs/help/pl/condense.md</code></a>.</p>
+<h2 id="full-example-with-test-data"><a class="header" href="#full-example-with-test-data">Full Example with Test Data</a></h2>
 <pre><code class="language-bash">necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
     tests/pipeline/minhash.reroot.newick
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="necom-clust-eval"><a class="header" href="#necom-clust-eval">necom clust eval</a></h1>
-<p><code>necom clust eval</code> provides general clustering quality evaluation and comparison. It supports <strong>external validity</strong> (compared to Ground Truth) and <strong>internal validity</strong> (based on the geometry/statistics of the data itself).</p>
+<h1 id="necom-eval"><a class="header" href="#necom-eval">necom eval</a></h1>
+<p><code>necom eval</code> provides evaluation metrics for clustering partitions and phylogenetic trees. It is the unified entry point for assessing result quality, support, and consistency.</p>
+<h2 id="subcommands-1"><a class="header" href="#subcommands-1">Subcommands</a></h2>
+<p>Subcommands are grouped by evaluation target:</p>
+<ul>
+<li><strong>Tree comparison</strong>:
+<ul>
+<li><code>compare</code>: Compare trees (RF, WRF, KF distances).</li>
+</ul>
+</li>
+<li><strong>Partition evaluation</strong>:
+<ul>
+<li><code>partition</code>: Evaluate clustering partitions (external and internal metrics).</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="tree-comparison"><a class="header" href="#tree-comparison">Tree Comparison</a></h2>
+<h3 id="compare"><a class="header" href="#compare">compare</a></h3>
+<p>Compare trees using Robinson-Foulds (RF) distance and its variants. Supports pairwise comparison within a single file and cross-comparison between two files.</p>
+<hr>
+<h2 id="partition-evaluation"><a class="header" href="#partition-evaluation">Partition Evaluation</a></h2>
+<h3 id="partition"><a class="header" href="#partition">partition</a></h3>
+<p>Evaluate clustering partition quality. Supports external comparison to a reference partition (ARI, AMI, V-Measure, FMI, NMI, Jaccard, etc.) and internal evaluation using a distance matrix, tree, or coordinate matrix (Silhouette, Dunn, Davies-Bouldin, Calinski-Harabasz, etc.). Batch mode evaluates multiple partitions from parameter scans.</p>
+<p>See <a href="#necom-eval-partition"><code>docs/eval-partition.md</code></a> for detailed metric definitions and the selection guide.</p>
+<hr>
+<h2 id="branch-length-handling-1"><a class="header" href="#branch-length-handling-1">Branch Length Handling</a></h2>
+<p><code>necom eval compare</code> treats non-finite branch lengths (<code>NaN</code>, positive/negative infinity), negative values, and zero values as <code>0.0</code> during computation. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.</p>
+<hr>
+<h2 id="planned-subcommands-1"><a class="header" href="#planned-subcommands-1">Planned Subcommands</a></h2>
+<ul>
+<li><code>tree</code>: Multi-dimensional tree evaluation (geometry, taxonomy, evolution). See <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a> §4 for the design.</li>
+</ul>
+<hr>
+<h2 id="history"><a class="header" href="#history">History</a></h2>
+<ul>
+<li><code>eval partition</code> was migrated from <code>necom clust eval</code> (2026-07).</li>
+<li><code>eval compare</code> was migrated from <code>necom nwk compare</code> (2026-07).</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="necom-eval-partition"><a class="header" href="#necom-eval-partition">necom eval partition</a></h1>
+<p>This document describes the design philosophy, metrics, and selection guidance for <code>necom eval partition</code>. For command-line options and usage examples, see <a href="#partition-1"><code>docs/help/eval/partition.md</code></a>.</p>
 <h2 id="design-philosophy"><a class="header" href="#design-philosophy">Design Philosophy</a></h2>
 <p><code>necom</code> adopts a <strong>componentized</strong> design philosophy, separating cluster <strong>generation</strong> from <strong>evaluation</strong>. This differs from the integrated design of the Python package <code>clusteval</code>:</p>
 <ul>
@@ -1925,15 +1333,15 @@ necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk
 <p><strong><code>necom</code> workflow</strong>:</p>
 <ol>
 <li><strong>Generate</strong>: Use <code>necom cut --scan</code> to generate a series of candidate partitions (<code>necom clust dbscan</code>’s <code>--scan</code> is not yet implemented).</li>
-<li><strong>Evaluate</strong>: Use <code>necom clust eval</code> to compute evaluation metrics for these candidates in batch.</li>
+<li><strong>Evaluate</strong>: Use <code>necom eval partition</code> to compute evaluation metrics for these candidates in batch.</li>
 <li><strong>Decide</strong>: The user selects the optimal parameters based on metrics (e.g., Silhouette peak, Elbow point).</li>
 </ol>
 </li>
 <li>
 <p><strong>Complementary</strong>:</p>
 <ul>
-<li><code>necom nwk eval</code> [planned]: Focuses on consistency between tree structure and grouping (geometry/evolution).</li>
-<li><code>necom clust eval</code>: Focuses on the statistical validity of partitions, supporting external (two-group comparison) and internal (single group + matrix/coordinates/tree) evaluation.</li>
+<li><code>necom eval tree</code> [planned]: Focuses on consistency between tree structure and grouping (geometry/evolution).</li>
+<li><code>necom eval partition</code>: Focuses on the statistical validity of partitions, supporting external (two-group comparison) and internal (single group + matrix/coordinates/tree) evaluation.</li>
 </ul>
 </li>
 <li>
@@ -2072,7 +1480,6 @@ necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk
 </ul>
 </li>
 </ul>
-<hr>
 <h3 id="2-internal-validity"><a class="header" href="#2-internal-validity">2. Internal Validity</a></h3>
 <p><em>Used to evaluate the quality of a clustering result itself (compactness and separation) without Ground Truth.</em></p>
 <h4 id="21-distance-based"><a class="header" href="#21-distance-based">2.1 Distance-Based</a></h4>
@@ -2174,7 +1581,7 @@ necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk
 </ul>
 </li>
 </ul>
-<h3 id="3-metric-selection-guide"><a class="header" href="#3-metric-selection-guide">3. Metric Selection Guide</a></h3>
+<h2 id="metric-selection-guide"><a class="header" href="#metric-selection-guide">Metric Selection Guide</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -2192,101 +1599,10 @@ necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk
 </tbody>
 </table>
 </div>
-<h2 id="typical-workflows-1"><a class="header" href="#typical-workflows-1">Typical Workflows</a></h2>
-<h3 id="scenario-a-with-ground-truth-external-evaluation"><a class="header" href="#scenario-a-with-ground-truth-external-evaluation">Scenario A: With Ground Truth (External Evaluation)</a></h3>
-<p>Compare algorithm-generated clustering results with known classifications:</p>
-<pre><code class="language-bash"># Compare result.tsv and truth.tsv
-necom clust eval result.tsv --truth truth.tsv
-# Output: ARI, AMI, NMI, FMI, V-Measure...
-</code></pre>
-<h3 id="scenario-b-without-ground-truth-internal-evaluation"><a class="header" href="#scenario-b-without-ground-truth-internal-evaluation">Scenario B: Without Ground Truth (Internal Evaluation)</a></h3>
-<h4 id="1-using-a-distance-matrix-silhouette-dunn-etc"><a class="header" href="#1-using-a-distance-matrix-silhouette-dunn-etc">1. Using a Distance Matrix (Silhouette, Dunn, etc.)</a></h4>
-<pre><code class="language-bash"># 1. Prepare distance matrix
-necom nwk distance tree.nwk --mode phylip &gt; dist.mat
-
-# 2. Evaluate
-necom clust eval result.tsv --matrix dist.mat
-</code></pre>
-<h4 id="2-directly-using-a-tree-file-no-matrix-generation-needed"><a class="header" href="#2-directly-using-a-tree-file-no-matrix-generation-needed">2. Directly Using a Tree File (no matrix generation needed)</a></h4>
-<pre><code class="language-bash"># Compute distances directly from the tree (Patristic Distance)
-necom clust eval result.tsv --tree tree.nwk
-</code></pre>
-<h4 id="3-using-coordinates--vectors-davies-bouldin-ch-etc"><a class="header" href="#3-using-coordinates--vectors-davies-bouldin-ch-etc">3. Using Coordinates / Vectors (Davies-Bouldin, CH, etc.)</a></h4>
-<pre><code class="language-bash"># Input feature vectors
-necom clust eval result.tsv --coords vectors.tsv
-</code></pre>
-<h3 id="scenario-c-batch-scanning-and-evaluation"><a class="header" href="#scenario-c-batch-scanning-and-evaluation">Scenario C: Batch Scanning and Evaluation</a></h3>
-<p>Combine <code>necom cut --scan</code> to generate multiple threshold results and evaluate in batch.</p>
-<pre><code class="language-bash"># 1. Scan tree-cutting thresholds and output a long table (Group, Cluster, ID)
-necom cut tree.nwk --scan 0.01,1.0,0.01 --leaf-dist-min 0 &gt; partitions.tsv
-
-# 2. Batch evaluate internal metrics (pass tree file directly)
-necom clust eval partitions.tsv --input-format long --tree tree.nwk &gt; scores.tsv
-
-# 3. View results (find the threshold with the highest Silhouette)
-cat scores.tsv | sort -k2 -nr | head
-</code></pre>
-<h2 id="input-and-output-conventions"><a class="header" href="#input-and-output-conventions">Input and Output Conventions</a></h2>
-<h3 id="input-2"><a class="header" href="#input-2">Input</a></h3>
+<h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
 <ul>
-<li>
-<p><strong>Single comparison mode</strong>:</p>
-<ul>
-<li><strong>Partition 1 (<code>&lt;p1&gt;</code>)</strong>: The first grouping file (TSV).</li>
-<li><strong>Other partition (<code>--other</code>)</strong>: The second grouping file (TSV, optional, used for external evaluation; <code>--truth</code> is a synonym).</li>
-<li>If <code>--other</code> is provided, external metrics (ARI/AMI) are computed.</li>
-<li>Optional: <code>--no-singletons</code> excludes samples in singleton clusters from <code>--other</code> before evaluation (only effective for external evaluation).</li>
-<li>If <code>--other</code> is not provided but <code>--matrix/--tree/--coords</code> is provided, internal metrics are computed.</li>
-<li>Supports <code>cluster</code> / <code>pair</code> formats via <code>--input-format</code> (default: <code>pair</code>).</li>
-</ul>
-</li>
-<li>
-<p><strong>Batch evaluation mode</strong>:</p>
-<ul>
-<li><strong>Partition (<code>&lt;p1&gt;</code>)</strong>: A long-table file containing multiple grouping schemes (TSV).</li>
-<li>Must specify <code>--input-format long</code>; <code>cluster</code> / <code>pair</code> are not supported in this mode.</li>
-<li><strong>Column definitions</strong>:
-<ol>
-<li><code>Group</code>: Grouping identifier (e.g., threshold, parameter).</li>
-<li><code>ClusterID</code>: Cluster ID.</li>
-<li><code>SampleID</code>: Sample ID.</li>
-</ol>
-</li>
-<li>Data must be sorted or grouped by <code>Group</code> (the program processes block by block).</li>
-<li>Usually directly connected to the output of <code>necom cut --scan</code>.</li>
-<li>Supports metadata in <code>Group</code> in <code>Method=Value</code> format (e.g., <code>height=0.01</code>).</li>
-</ul>
-</li>
-</ul>
-<h3 id="output-2"><a class="header" href="#output-2">Output</a></h3>
-<ul>
-<li><strong>TSV format</strong>, containing all computed metrics.</li>
-<li><strong>Single mode (External)</strong>:
-<ul>
-<li>One header row + one data row.</li>
-<li>Column order: <code>ari</code>, <code>ami</code>, <code>homogeneity</code>, <code>completeness</code>, <code>v_measure</code>, <code>fmi</code>, <code>nmi</code>, <code>mi</code>, <code>ri</code>, <code>jaccard</code>, <code>precision</code>, <code>recall</code>.</li>
-</ul>
-</li>
-<li><strong>Single mode (Internal)</strong>:
-<ul>
-<li>Two rows: Metric Name + Value.</li>
-<li>If <code>--matrix</code>/<code>--tree</code> is provided, column order: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>.</li>
-<li>If <code>--coords</code> is provided, column order: <code>davies_bouldin</code>, <code>calinski_harabasz</code>, <code>pbm</code>, <code>ball_hall</code>, <code>xie_beni</code>, <code>wemmert_gancarski</code>.</li>
-</ul>
-</li>
-<li><strong>Batch mode (Batch)</strong>:
-<ul>
-<li>One header row + multiple data rows (one row per group).</li>
-<li>The first column is <code>Group</code>.</li>
-<li>Subsequent columns depend on the provided parameters (if multiple parameter types are provided simultaneously, columns are concatenated in the following order):
-<ol>
-<li>With <code>--truth</code>: contains all External metrics.</li>
-<li>With <code>--matrix</code>/<code>--tree</code>: contains all distance-based Internal metrics.</li>
-<li>With <code>--coords</code>: contains all coordinate-based Internal metrics.</li>
-</ol>
-</li>
-</ul>
-</li>
+<li><a href="#necom-clust"><code>necom clust</code></a> for command overview, supported algorithms, and partition/matrix/coordinate format conventions.</li>
+<li><a href="#partition-1"><code>docs/help/eval/partition.md</code></a> for the command-line help text, including available options and usage examples.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="cut"><a href="#cut" class="header">cut</a></h1>
@@ -2297,7 +1613,14 @@ cat scores.tsv | sort -k2 -nr | head
 <li>Branch lengths are used by distance/height-based methods.</li>
 <li>Branch support values (optional) can be used as a non-crossable constraint via <code>--support</code>.</li>
 </ul>
-<p>Criteria:</p>
+<p>Output:</p>
+<ul>
+<li><code>--format cluster</code> (default): each line contains points of one cluster; the first point is the representative.</li>
+<li><code>--format pair</code>: each line contains a <code>(representative, member)</code> pair.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>Cutting methods (mutually exclusive):
 <ul>
 <li><code>--k &lt;K&gt;</code>: cut into K clusters (top-down split by height).</li>
 <li><code>--height &lt;H&gt;</code>: cut at specific height (max distance to leaves).</li>
@@ -2314,13 +1637,12 @@ cat scores.tsv | sort -k2 -nr | head
 <li><code>--dynamic-tree &lt;N&gt;</code>: Dynamic Tree Cut (top-down adaptive, N=min cluster size).</li>
 <li><code>--dynamic-hybrid &lt;N&gt;</code>: Hybrid Cut (Dynamic Tree + PAM, N=min cluster size).</li>
 </ul>
-<p>Output:</p>
-<ul>
-<li><code>--format cluster</code> (default): each line contains points of one cluster; the first point is the representative.</li>
-<li><code>--format pair</code>: each line contains a <code>(representative, member)</code> pair.</li>
-</ul>
-<p>Notes:</p>
-<ul>
+</li>
+<li><code>--deep &lt;N&gt;</code>: depth for inconsistent coefficient calculation (default: <code>2</code>). Used with <code>--inconsistent</code>.</li>
+<li><code>--max-pam-dist &lt;D&gt;</code>: maximum distance to medoid for PAM reassignment. Used with <code>--dynamic-hybrid</code>.</li>
+<li><code>--no-pam-dendro</code>: disable dendrogram respect in PAM stage (allow assigning to clusters across high branches). Used with <code>--dynamic-hybrid</code>.</li>
+<li><code>--deep-split</code>: enable deep split for dynamic tree cut (default: false). More aggressive splitting. Used with <code>--dynamic-tree</code> / <code>--dynamic-hybrid</code>.</li>
+<li><code>--max-tree-height &lt;H&gt;</code>: maximum joining height for dynamic tree cut (default: 99% of tree height). Used with <code>--dynamic-tree</code> / <code>--dynamic-hybrid</code>.</li>
 <li>The representative is selected by <code>--rep</code>:
 <ul>
 <li><code>root</code> (default): member closest to root (alphabetical tie-break).</li>
@@ -2394,6 +1716,8 @@ cat scores.tsv | sort -k2 -nr | head
 <p>Notes:</p>
 <ul>
 <li>The input must contain distances, not similarities.</li>
+<li><code>--same &lt;V&gt;</code>: default score of identical element pairs (default: <code>0.0</code>).</li>
+<li><code>--missing &lt;V&gt;</code>: default score of missing pairs (default: <code>1.0</code>).</li>
 <li>The representative point is selected by <code>--rep</code>:
 <ul>
 <li><code>medoid</code> (default): point with minimum sum of distances to other cluster members.</li>
@@ -2418,46 +1742,6 @@ cat scores.tsv | sort -k2 -nr | head
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="eval"><a href="#eval" class="header">eval</a></h1>
-<p>Calculate clustering evaluation metrics.</p>
-<p>Input:</p>
-<ul>
-<li>A partition file (<code>p1</code>).</li>
-</ul>
-<p>Modes:</p>
-<ol>
-<li>External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, V-Measure, FMI, NMI, RI, Jaccard, Precision, and Recall.</li>
-<li>Internal Evaluation (Partition + Matrix/Tree/Coords): evaluates a single partition without ground truth.
-<ul>
-<li><code>--matrix</code> / <code>--tree</code>: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau).</li>
-<li><code>--coords</code>: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski).</li>
-</ul>
-</li>
-<li>Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (<code>Group\tCluster\tSample</code>).</li>
-</ol>
-<p>Notes:</p>
-<ul>
-<li><code>--other</code> / <code>--truth</code>: second partition for external evaluation (synonyms).</li>
-<li><code>--no-singletons</code>: exclude singleton clusters from <code>--other</code> before external evaluation.</li>
-<li><code>--input-format</code>: supports <code>pair</code> (default), <code>cluster</code>, or <code>long</code> (required for batch mode).</li>
-<li>In batch mode, the <code>Group</code> column is preserved as the first column of the output.</li>
-</ul>
-<p>Examples:</p>
-<ol>
-<li>
-<p>Compare result with ground truth
-<code>necom clust eval result.tsv --other truth.tsv -o eval.tsv</code></p>
-</li>
-<li>
-<p>Evaluate result using a distance matrix
-<code>necom clust eval result.tsv --matrix dist.phy</code></p>
-</li>
-<li>
-<p>Batch evaluation of scan results
-<code>necom clust eval partitions.tsv --format long --matrix dist.phy &gt; scores.tsv</code></p>
-</li>
-</ol>
-<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="hier"><a href="#hier" class="header">hier</a></h1>
 <p>Perform agglomerative hierarchical clustering on a distance matrix.</p>
 <p>Input:</p>
@@ -2473,6 +1757,7 @@ cat scores.tsv | sort -k2 -nr | head
 <ul>
 <li>The output tree uses the linkage distance (merge height) as node height.</li>
 <li>For Ward’s method, the input is assumed to be Euclidean distances or similar.</li>
+<li>Alias: <code>necom clust hclust</code> is equivalent to <code>necom clust hier</code>.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -2504,6 +1789,11 @@ cat scores.tsv | sort -k2 -nr | head
 <p>Notes:</p>
 <ul>
 <li>The input must contain distances, not similarities.</li>
+<li><code>--runs &lt;N&gt;</code>: number of random initializations (default: <code>10</code>).</li>
+<li><code>--max-iter &lt;N&gt;</code>: maximum number of iterations (default: <code>100</code>).</li>
+<li><code>--same &lt;V&gt;</code>: default score of identical element pairs (default: <code>0.0</code>).</li>
+<li><code>--missing &lt;V&gt;</code>: default score of missing pairs (default: <code>1.0</code>).</li>
+<li>Alias: <code>necom clust km</code> is equivalent to <code>necom clust k-medoids</code>.</li>
 <li>The representative point is selected by <code>--rep</code>:
 <ul>
 <li><code>medoid</code> (default): point with minimum sum of distances to other cluster members.</li>
@@ -2542,6 +1832,10 @@ cat scores.tsv | sort -k2 -nr | head
 <p>Notes:</p>
 <ul>
 <li>The input must contain similarities, not distances.</li>
+<li><code>--prune &lt;V&gt;</code>: pruning threshold; matrix entries smaller than this are set to zero (default: <code>1e-5</code>).</li>
+<li><code>--max-iter &lt;N&gt;</code>: maximum number of iterations (default: <code>100</code>).</li>
+<li><code>--same &lt;V&gt;</code>: default score of identical element pairs (default: <code>1.0</code>).</li>
+<li><code>--missing &lt;V&gt;</code>: default score of missing pairs (default: <code>0.0</code>).</li>
 <li>The representative point is selected by <code>--rep</code>:
 <ul>
 <li><code>medoid</code> (default): point with maximum sum of similarities to other cluster members.</li>
@@ -2549,10 +1843,7 @@ cat scores.tsv | sort -k2 -nr | head
 </ul>
 </li>
 <li>In <code>cluster</code> format, the representative is placed first; in <code>pair</code> format, it is the first column.</li>
-</ul>
-<p>Reference:</p>
-<ul>
-<li>Stijn van Dongen, Graph Clustering by Flow Simulation. PhD thesis, University of Utrecht, May 2000.</li>
+<li>Reference: Stijn van Dongen, Graph Clustering by Flow Simulation. PhD thesis, University of Utrecht, May 2000.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -2606,6 +1897,12 @@ cat scores.tsv | sort -k2 -nr | head
 <ul>
 <li>A Newick tree.</li>
 </ul>
+<p>Notes:</p>
+<ul>
+<li>UPGMA assumes an ultrametric (molecular clock): all leaves are equidistant from the root.</li>
+<li>When the input distances violate ultrametricity, the tree is still produced but branch lengths may not reflect true evolutionary distances.</li>
+<li>For non-ultrametric data, consider <code>necom clust nj</code> (neighbor-joining) instead.</li>
+</ul>
 <p>Examples:</p>
 <ol>
 <li>
@@ -2630,7 +1927,9 @@ cat scores.tsv | sort -k2 -nr | head
 <li>Tab-separated values with two columns: Method and Score.</li>
 <li>One row per requested method.</li>
 </ul>
-<p>Methods:</p>
+<p>Notes:</p>
+<ul>
+<li>Available methods:
 <ul>
 <li><code>all</code>: calculate all metrics below.</li>
 <li><code>pearson</code>: Pearson correlation coefficient (-1 to 1).</li>
@@ -2640,8 +1939,7 @@ cat scores.tsv | sort -k2 -nr | head
 <li><code>jaccard</code>: weighted Jaccard similarity (0 to 1).</li>
 <li><code>euclid</code>: Euclidean distance.</li>
 </ul>
-<p>Notes:</p>
-<ul>
+</li>
 <li>Useful for evaluating consistency between distance calculation methods, or measuring information loss before and after clustering (Cophenetic Correlation).</li>
 <li>Default method is <code>pearson</code>.</li>
 <li>Multiple methods can be requested as a comma-separated list.</li>
@@ -2694,6 +1992,12 @@ cat scores.tsv | sort -k2 -nr | head
 <li>Use this for compatibility with the original PHYLIP toolkit.</li>
 </ul>
 </li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li><code>strict</code> mode truncates names to 10 characters, which can cause name collisions if names share a 10-character prefix.</li>
+<li><code>full</code> and <code>lower</code> preserve original names without truncation.</li>
+<li>All distance values are preserved exactly across all formats; only the layout differs.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -2749,7 +2053,10 @@ cat scores.tsv | sort -k2 -nr | head
 <li>Tab-separated values (TSV).</li>
 <li>Three columns: name1, name2, distance.</li>
 <li>Lower-triangular output, including the diagonal.</li>
-<li>Useful as an edge list for graph clustering (e.g., <code>mcl</code>) or network visualization (e.g., Cytoscape).</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>Useful as an edge list for graph clustering (e.g., <code>necom clust mcl</code>) or network visualization (e.g., Cytoscape).</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -2795,7 +2102,9 @@ cat scores.tsv | sort -k2 -nr | head
 <li>PHYLIP distance matrix or pairwise TSV file.</li>
 <li>Use <code>--input-format pair</code> to read pairwise TSV input; useful for processing data from STDIN.</li>
 </ul>
-<p>Operations:</p>
+<p>Notes:</p>
+<ul>
+<li>Available operations (<code>--op</code>):
 <ul>
 <li><code>linear</code>: <code>val = val * scale + offset</code>.</li>
 <li><code>inv-linear</code>: off-diagonal <code>val = max - val</code>; diagonal is set to <code>0</code>.</li>
@@ -2804,8 +2113,7 @@ cat scores.tsv | sort -k2 -nr | head
 <li><code>square</code>: <code>val = val * val</code>.</li>
 <li><code>sqrt</code>: <code>val = sqrt(val)</code> (negative values produce <code>NaN</code>).</li>
 </ul>
-<p>Notes:</p>
-<ul>
+</li>
 <li>Useful for converting similarity matrices to distance matrices.</li>
 <li>Use <code>--normalize</code> to normalize based on diagonal elements before transformation: <code>x_norm(i, j) = x(i, j) / sqrt(x(i, i) * x(j, j))</code>.
 <ul>
@@ -2855,7 +2163,7 @@ cat scores.tsv | sort -k2 -nr | head
 <li>Visualization options:
 <ul>
 <li><code>--color</code>, <code>--label</code>, and <code>--comment-text</code> each take one argument.</li>
-<li><code>--dot</code>, <code>--bar</code>, and <code>--rec</code> take zero or one argument.</li>
+<li><code>--dot</code>, <code>--bar</code>, <code>--rec</code>, and <code>--tri</code> take zero or one argument.</li>
 </ul>
 </li>
 <li>Predefined colors for <code>--color</code>, <code>--dot</code>, and <code>--bar</code>:
@@ -2881,6 +2189,8 @@ cat scores.tsv | sort -k2 -nr | head
 <li><code>Celadon</code> {RGB}{185,251,192}</li>
 </ul>
 </li>
+<li><code>--tri</code> places a triangle at the end of the branch (default color: <code>white</code>).</li>
+<li><code>--remove &lt;REGEX&gt;</code> scans all nodes and removes parts of comments matching the regex.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -2894,42 +2204,6 @@ cat scores.tsv | sort -k2 -nr | head
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="compare-2"><a href="#compare-2" class="header">compare</a></h1>
-<p>Compare trees using Robinson-Foulds (RF) distance and its variants.</p>
-<p>Input:</p>
-<ul>
-<li>One file: compares all trees in the file against each other (pairwise).</li>
-<li>Two files: compares each tree in the first file against each tree in the second file.</li>
-</ul>
-<p>Output:</p>
-<ul>
-<li>TSV with columns <code>Tree1</code>, <code>Tree2</code>, <code>RF_Dist</code>, <code>WRF_Dist</code>, <code>KF_Dist</code>.</li>
-<li>Tree IDs are 1-based indices of the trees in the input files.</li>
-</ul>
-<p>Notes:</p>
-<ul>
-<li>Metrics:
-<ul>
-<li><code>RF</code>: Robinson-Foulds distance (topological difference).</li>
-<li><code>WRF</code>: Weighted Robinson-Foulds distance (branch length difference). Trivial splits (single-leaf branches) are excluded by default.</li>
-<li><code>KF</code>: Kuhner-Felsenstein (Branch Score) distance. Trivial splits are excluded by default.</li>
-</ul>
-</li>
-<li>Use <code>--include-trivial</code> to include single-leaf splits in WRF/KF calculations.</li>
-<li>Single-file pairwise mode requires at least 2 trees. With only 1 tree, a warning is emitted and the output contains only the header.</li>
-</ul>
-<p>Examples:</p>
-<ol>
-<li>
-<p>Compare all trees in a file
-<code>necom nwk compare trees.nwk</code></p>
-</li>
-<li>
-<p>Compare trees between two files
-<code>necom nwk compare set1.nwk set2.nwk</code></p>
-</li>
-</ol>
-<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="distance-1"><a href="#distance-1" class="header">distance</a></h1>
 <p>Calculate distances between nodes or generate distance matrices.</p>
 <p>Input:</p>
@@ -2937,7 +2211,9 @@ cat scores.tsv | sort -k2 -nr | head
 <li>A valid Newick tree file.</li>
 <li>If the file contains multiple trees, only the first tree is processed.</li>
 </ul>
-<p>Modes:</p>
+<p>Notes:</p>
+<ul>
+<li>Modes (<code>--mode</code>):
 <ul>
 <li><code>root</code> (default): distance from each node to the root. Output: <code>Node \t Distance</code>.</li>
 <li><code>parent</code>: distance from each node to its parent. Output: <code>Node \t Distance</code>.</li>
@@ -2945,8 +2221,7 @@ cat scores.tsv | sort -k2 -nr | head
 <li><code>lca</code>: distance from each node in a pair to their Lowest Common Ancestor (LCA), for all selected-node pairs. Output: <code>Node1 \t Node2 \t Dist1 \t Dist2</code>.</li>
 <li><code>phylip</code>: a PHYLIP-formatted distance matrix for the selected nodes.</li>
 </ul>
-<p>Notes:</p>
-<ul>
+</li>
 <li>Use <code>-I</code> to exclude internal nodes and <code>-L</code> to exclude leaf nodes.</li>
 <li>Use <code>-n</code> / <code>-l</code> / <code>-x</code> to restrict reported nodes to a name, name-list file, or regex.</li>
 <li>When no name-based filter is given, all selected nodes (respecting <code>-I</code>/<code>-L</code>) are reported.</li>
@@ -3014,6 +2289,7 @@ cat scores.tsv | sort -k2 -nr | head
 <p>Notes:</p>
 <ul>
 <li>By default, prints all non-empty labels in Newick order, one per line.</li>
+<li>Use <code>--root</code> to print only the root label.</li>
 <li>Use <code>--tab</code> to print labels on a single line separated by tabs.</li>
 <li>Use <code>-I</code> to exclude internal nodes and <code>-L</code> to exclude leaf nodes.</li>
 <li>Selection options (<code>-n</code>, <code>-l</code>, <code>-x</code>) can be combined.</li>
@@ -3069,7 +2345,7 @@ cat scores.tsv | sort -k2 -nr | head
 <li><code>--name-list</code>: by a list of names in the file, one per line.</li>
 <li><code>--alphanumeric</code> / <code>--alphanumeric-rev</code>: by alphanumeric order of labels.</li>
 <li><code>--num-descendants</code> / <code>--num-descendants-rev</code>: by number of descendants (ladderize).</li>
-<li><code>--deladderize</code>: alternate sort direction at each level.</li>
+<li><code>--deladderize</code> (alias <code>--dl</code>): alternate sort direction at each level.</li>
 </ul>
 </li>
 <li>Entries in <code>--name-list</code> that are not found among the leaf names are logged as warnings and skipped.</li>
@@ -3107,6 +2383,7 @@ cat scores.tsv | sort -k2 -nr | head
 <p>Notes:</p>
 <ul>
 <li>Target nodes can be specified by <code>--node</code>, <code>--name-list</code>, or <code>--regex</code>.</li>
+<li>With <code>-D</code> / <code>--descendants</code>, all descendants of selected internal nodes are also included in the pruning set.</li>
 <li>With <code>--invert</code>, specified nodes (along with their ancestors and descendants) are kept, and everything else is removed.</li>
 <li>Topology changes:
 <ul>
@@ -3252,7 +2529,10 @@ cat scores.tsv | sort -k2 -nr | head
 <li><code>--style col</code> (default): key-value pairs.</li>
 <li><code>--style line</code>: tab-separated values with a header row.</li>
 </ul>
-<p>Reported fields include type (cladogram/phylogram/neither), node count, leaf count, rooted status, dichotomies, leaf labels, internal labels, edges with/without length, cherries, Sackin index, and Colless index.</p>
+<p>Notes:</p>
+<ul>
+<li>Reported fields include type (cladogram/phylogram/neither), node count, leaf count, rooted status, dichotomies, leaf labels, internal labels, edges with/without length, cherries, Sackin index, and Colless index.</li>
+</ul>
 <p>Examples:</p>
 <ol>
 <li>
@@ -3339,6 +2619,11 @@ cat scores.tsv | sort -k2 -nr | head
 <p>Output:</p>
 <ul>
 <li>Graphviz DOT format.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>Render with Graphviz tools such as <code>dot</code>, <code>neato</code>, or <code>twopi</code> (e.g., <code>dot -Tpng tree.dot -o tree.png</code>).</li>
+<li>Node and edge styles (colors, labels) are derived from Newick comments added by <code>necom nwk comment</code>.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -3473,6 +2758,148 @@ cat scores.tsv | sort -k2 -nr | head
 <li>
 <p>Remove internal node labels
 <code>necom nwk topo tree.nwk -I</code></p>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="compare-2"><a href="#compare-2" class="header">compare</a></h1>
+<p>Compare trees using Robinson-Foulds (RF) distance and its variants.</p>
+<p>Input:</p>
+<ul>
+<li>One file: compares all trees in the file against each other (pairwise).</li>
+<li>Two files: compares each tree in the first file against each tree in the second file.</li>
+</ul>
+<p>Output:</p>
+<ul>
+<li>TSV with columns <code>Tree1</code>, <code>Tree2</code>, <code>RF_Dist</code>, <code>WRF_Dist</code>, <code>KF_Dist</code>.</li>
+<li>Tree IDs are 1-based indices of the trees in the input files.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>Metrics:
+<ul>
+<li><code>RF</code>: Robinson-Foulds distance (topological difference).</li>
+<li><code>WRF</code>: Weighted Robinson-Foulds distance (branch length difference). Trivial splits (single-leaf branches) are excluded by default.</li>
+<li><code>KF</code>: Kuhner-Felsenstein (Branch Score) distance. Trivial splits are excluded by default.</li>
+</ul>
+</li>
+<li>Use <code>--include-trivial</code> to include single-leaf splits in WRF/KF calculations.</li>
+<li>Single-file pairwise mode requires at least 2 trees. With only 1 tree, a warning is emitted and the output contains only the header.</li>
+</ul>
+<p>Examples:</p>
+<ol>
+<li>
+<p>Compare all trees in a file
+<code>necom eval compare trees.nwk</code></p>
+</li>
+<li>
+<p>Compare trees between two files
+<code>necom eval compare set1.nwk set2.nwk</code></p>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="partition-1"><a href="#partition-1" class="header">partition</a></h1>
+<p>Calculate clustering evaluation metrics for partitions. Supports external comparison to a reference partition and internal evaluation using a distance matrix, tree, or coordinate matrix.</p>
+<p>Input:</p>
+<ul>
+<li>A partition file (<code>p1</code>).</li>
+</ul>
+<p>Output:</p>
+<ul>
+<li>TSV with a header row.</li>
+<li>External evaluation: one row of pair-based metrics (ARI, AMI, V-Measure, etc.).</li>
+<li>Internal evaluation: one row per partition with Silhouette, Dunn, Davies-Bouldin, etc.</li>
+<li>Batch mode (<code>--input-format long</code>): one row per <code>Group</code>, with the <code>Group</code> column preserved as the first column.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, V-Measure, FMI, NMI, RI, Jaccard, Precision, and Recall.</li>
+<li>Internal Evaluation (Partition + Matrix/Tree/Coords): evaluates a single partition without ground truth.
+<ul>
+<li><code>--matrix</code> / <code>--tree</code>: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau).</li>
+<li><code>--coords</code>: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski).</li>
+</ul>
+</li>
+<li>Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (<code>Group\tCluster\tSample</code>).</li>
+<li><code>--other</code> / <code>--truth</code>: second partition for external evaluation (synonyms).</li>
+<li><code>--no-singletons</code>: exclude singleton clusters from <code>--other</code> before external evaluation.</li>
+<li><code>--input-format</code>: supports <code>pair</code> (default), <code>cluster</code>, or <code>long</code> (required for batch mode).</li>
+<li>In batch mode, the <code>Group</code> column is preserved as the first column of the output.</li>
+<li>Quick metric selection:
+<ul>
+<li>With ground truth: ARI or AMI.</li>
+<li>Without ground truth (distance matrix or tree): Silhouette.</li>
+<li>Without ground truth (coordinates): Davies-Bouldin or Calinski-Harabasz.</li>
+<li>See <code>docs/eval-partition.md</code> for detailed metric definitions and the full selection guide.</li>
+</ul>
+</li>
+<li>Typical batch workflow: generate candidates with <code>necom cut --scan</code>, evaluate with <code>--input-format long</code>, then select the best threshold.</li>
+</ul>
+<p>Examples:</p>
+<ol>
+<li>
+<p>External evaluation: compare result with ground truth
+<code>necom eval partition result.tsv --other truth.tsv -o eval.tsv</code></p>
+</li>
+<li>
+<p>Internal evaluation using a distance matrix
+<code>necom eval partition result.tsv --matrix dist.phy</code></p>
+</li>
+<li>
+<p>Internal evaluation using a tree file
+<code>necom eval partition result.tsv --tree tree.nwk</code></p>
+</li>
+<li>
+<p>Internal evaluation using coordinate vectors
+<code>necom eval partition result.tsv --coords vectors.tsv</code></p>
+</li>
+<li>
+<p>Batch evaluation of scan results
+<code>necom eval partition partitions.tsv --input-format long --matrix dist.phy &gt; scores.tsv</code></p>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="condense"><a href="#condense" class="header">condense</a></h1>
+<p>Condense monophyletic subtrees whose leaves share the same taxonomic term at a selected rank into a single node.</p>
+<p>Input:</p>
+<ul>
+<li><code>&lt;infile&gt;</code>: Newick tree whose leaf labels match the first column of the taxonomy TSV. Use <code>stdin</code> for standard input.</li>
+<li><code>--taxon &lt;taxon.tsv&gt;</code>: Tab-separated file without header, containing at least 2 columns:
+<ul>
+<li>Column 1: node name (must match leaf labels in the Newick file).</li>
+<li>Column 2+: taxonomic terms (e.g., species, genus, family).</li>
+</ul>
+</li>
+</ul>
+<p>Output:</p>
+<ul>
+<li>Condensed Newick tree written to <code>-o</code>/<code>--outfile</code> or <code>stdout</code>.</li>
+<li>With <code>--map</code>, also writes <code>condensed.tsv</code> mapping original node names to condensed labels.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>Use <code>--rank</code> to select which column(s) of the taxonomy TSV to use for grouping (1-based index, default: <code>2</code>).</li>
+<li>Multiple <code>--rank</code> values may be supplied to condense at multiple levels.</li>
+<li>Only monophyletic subtrees with the same taxonomic term are condensed; non-monophyletic groups are skipped.</li>
+<li>Condensed nodes are named <code>{term}||{count}</code>, where <code>{count}</code> is the number of leaves in the condensed group.</li>
+<li>Condensed nodes carry <code>member=&lt;count&gt;</code> and <code>tri=white</code> comments for visualization.</li>
+</ul>
+<p>Examples:</p>
+<ol>
+<li>
+<p>Condense by species (2nd column)
+<code>necom pl condense --taxon taxon.tsv tree.nwk</code></p>
+</li>
+<li>
+<p>Condense by genus (3rd column)
+<code>necom pl condense --taxon taxon.tsv --rank 3 tree.nwk</code></p>
+</li>
+<li>
+<p>Condense by multiple ranks
+<code>necom pl condense --taxon taxon.tsv --rank 2 --rank 3 tree.nwk</code></p>
+</li>
+<li>
+<p>Output a mapping file alongside the condensed tree
+<code>necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk</code></p>
 </li>
 </ol>
 

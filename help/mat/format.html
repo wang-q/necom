@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "../../searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-58dbae52.js"></script>
+        <script src="../../toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -215,6 +215,12 @@
 <li>Use this for compatibility with the original PHYLIP toolkit.</li>
 </ul>
 </li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li><code>strict</code> mode truncates names to 10 characters, which can cause name collisions if names share a 10-character prefix.</li>
+<li><code>full</code> and <code>lower</code> preserve original names without truncation.</li>
+<li>All distance values are preserved exactly across all formats; only the layout differs.</li>
 </ul>
 <p>Examples:</p>
 <ol>

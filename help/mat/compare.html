@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "../../searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-58dbae52.js"></script>
+        <script src="../../toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -191,7 +191,9 @@
 <li>Tab-separated values with two columns: Method and Score.</li>
 <li>One row per requested method.</li>
 </ul>
-<p>Methods:</p>
+<p>Notes:</p>
+<ul>
+<li>Available methods:
 <ul>
 <li><code>all</code>: calculate all metrics below.</li>
 <li><code>pearson</code>: Pearson correlation coefficient (-1 to 1).</li>
@@ -201,8 +203,7 @@
 <li><code>jaccard</code>: weighted Jaccard similarity (0 to 1).</li>
 <li><code>euclid</code>: Euclidean distance.</li>
 </ul>
-<p>Notes:</p>
-<ul>
+</li>
 <li>Useful for evaluating consistency between distance calculation methods, or measuring information loss before and after clustering (Cophenetic Correlation).</li>
 <li>Default method is <code>pearson</code>.</li>
 <li>Multiple methods can be requested as a comma-separated list.</li>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "../searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-58dbae52.js"></script>
+        <script src="../toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -187,7 +187,14 @@
 <li>Branch lengths are used by distance/height-based methods.</li>
 <li>Branch support values (optional) can be used as a non-crossable constraint via <code>--support</code>.</li>
 </ul>
-<p>Criteria:</p>
+<p>Output:</p>
+<ul>
+<li><code>--format cluster</code> (default): each line contains points of one cluster; the first point is the representative.</li>
+<li><code>--format pair</code>: each line contains a <code>(representative, member)</code> pair.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>Cutting methods (mutually exclusive):
 <ul>
 <li><code>--k &lt;K&gt;</code>: cut into K clusters (top-down split by height).</li>
 <li><code>--height &lt;H&gt;</code>: cut at specific height (max distance to leaves).</li>
@@ -204,13 +211,12 @@
 <li><code>--dynamic-tree &lt;N&gt;</code>: Dynamic Tree Cut (top-down adaptive, N=min cluster size).</li>
 <li><code>--dynamic-hybrid &lt;N&gt;</code>: Hybrid Cut (Dynamic Tree + PAM, N=min cluster size).</li>
 </ul>
-<p>Output:</p>
-<ul>
-<li><code>--format cluster</code> (default): each line contains points of one cluster; the first point is the representative.</li>
-<li><code>--format pair</code>: each line contains a <code>(representative, member)</code> pair.</li>
-</ul>
-<p>Notes:</p>
-<ul>
+</li>
+<li><code>--deep &lt;N&gt;</code>: depth for inconsistent coefficient calculation (default: <code>2</code>). Used with <code>--inconsistent</code>.</li>
+<li><code>--max-pam-dist &lt;D&gt;</code>: maximum distance to medoid for PAM reassignment. Used with <code>--dynamic-hybrid</code>.</li>
+<li><code>--no-pam-dendro</code>: disable dendrogram respect in PAM stage (allow assigning to clusters across high branches). Used with <code>--dynamic-hybrid</code>.</li>
+<li><code>--deep-split</code>: enable deep split for dynamic tree cut (default: false). More aggressive splitting. Used with <code>--dynamic-tree</code> / <code>--dynamic-hybrid</code>.</li>
+<li><code>--max-tree-height &lt;H&gt;</code>: maximum joining height for dynamic tree cut (default: 99% of tree height). Used with <code>--dynamic-tree</code> / <code>--dynamic-hybrid</code>.</li>
 <li>The representative is selected by <code>--rep</code>:
 <ul>
 <li><code>root</code> (default): member closest to root (alphabetical tie-break).</li>
@@ -247,7 +253,7 @@
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../clust-eval.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../eval-partition.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -261,7 +267,7 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../clust-eval.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../eval-partition.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

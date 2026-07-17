@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-20449e9b.js";
+            window.path_to_searchindex_js = "../../searchindex-7458c5db.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-58dbae52.js"></script>
+        <script src="../../toc-912da857.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -193,6 +193,11 @@
 <p>Notes:</p>
 <ul>
 <li>The input must contain distances, not similarities.</li>
+<li><code>--runs &lt;N&gt;</code>: number of random initializations (default: <code>10</code>).</li>
+<li><code>--max-iter &lt;N&gt;</code>: maximum number of iterations (default: <code>100</code>).</li>
+<li><code>--same &lt;V&gt;</code>: default score of identical element pairs (default: <code>0.0</code>).</li>
+<li><code>--missing &lt;V&gt;</code>: default score of missing pairs (default: <code>1.0</code>).</li>
+<li>Alias: <code>necom clust km</code> is equivalent to <code>necom clust k-medoids</code>.</li>
 <li>The representative point is selected by <code>--rep</code>:
 <ul>
 <li><code>medoid</code> (default): point with minimum sum of distances to other cluster members.</li>
