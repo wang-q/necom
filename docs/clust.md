@@ -4,10 +4,9 @@
 
 The `necom clust` module provides a collection of clustering algorithms for sequences, genomic features, and general data. These tools are designed to handle the distance matrices, similarity networks, and feature vectors commonly encountered in bioinformatics.
 
-Commands are divided into three categories by input data type (consistent with `necom clust --help`):
+Commands are divided into two categories by input data type (consistent with `necom clust --help`):
 1.  **Tree**: Build phylogenetic or hierarchical structures from a distance matrix (`hier`, `nj`, `upgma`).
 2.  **Flat**: Generate groups directly from graphs or vectors (`cc`, `dbscan`, `k-medoids`, `mcl`).
-3.  **Eval**: Assess the quality of clustering partitions (`eval`). See [Evaluation and Analysis](#evaluation-and-analysis) below.
 
 Flat partitions can also be derived from an existing tree using the separate `necom cut` command (see [`docs/cut.md`](cut.md)).
 
@@ -89,7 +88,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 
 The `necom cut` command splits an existing Newick tree (phylogenetic or hierarchical clustering tree) into flat partitions according to distance, topological, or statistical criteria. It is documented separately in [`docs/cut.md`](cut.md) because it operates on trees rather than running a clustering algorithm.
 
-Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or external tools can be passed directly to `necom cut`. The resulting partitions can be evaluated with `necom clust eval`.
+Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or external tools can be passed directly to `necom cut`. The resulting partitions can be evaluated with `necom eval partition`.
 
 ## Hierarchical Clustering Details
 
@@ -102,7 +101,7 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
 - **Synergy with existing necom capabilities**:
   - Tree building: `clust upgma` (rooted, ultrametric) and `clust nj` (additive, unrooted) already exist.
   - Cutting: tree-cut grouping via `necom cut`.
-  - Evaluation: `necom clust eval --matrix` / `--tree` / `--coords` (currently available); `necom eval tree` not yet implemented.
+  - Evaluation: `necom eval partition --matrix` / `--tree` / `--coords` (currently available); `necom eval tree` not yet implemented.
 
 ### Relationship to UPGMA/NJ
 
@@ -150,65 +149,12 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
   - General hierarchical analysis or when `ward.D2` is needed: `clust hier --method ward.D2`.
 - Cut and evaluate:
   - Cut: `necom cut --height H` or TreeCluster-style thresholds/constraints.
-  - Internal evaluation (no Ground Truth): `necom clust eval --matrix ...` (Silhouette) (currently available); `necom eval tree` not yet implemented.
-  - External evaluation (with Ground Truth): `necom clust eval` (ARI/AMI/V-Measure).
+  - Internal evaluation (no Ground Truth): `necom eval partition --matrix ...` (Silhouette) (currently available); `necom eval tree` not yet implemented.
+  - External evaluation (with Ground Truth): `necom eval partition` (ARI/AMI/V-Measure).
 
-## Evaluation and Analysis
+## Evaluation
 
-These commands do not produce clusters; they evaluate cluster or tree quality.
-
-- **Tree-based evaluation**
-  - **Command**: `necom eval tree` (not yet implemented)
-  - **Positioning**: Multi-dimensional evaluation of tree structure.
-  - **Capabilities**: Geometric compactness (Silhouette), taxonomic purity (Purity), evolutionary consistency (Discordance).
-  - **Alternative**: Currently use `necom clust eval --matrix` / `--tree` / `--coords` for distance/tree/coordinate-based evaluation.
-
-- **Partition-based evaluation**
-  - **Command**: `necom clust eval`
-  - **Positioning**: General clustering quality evaluation (supports with/without Ground Truth).
-  - **Capabilities**: ARI, AMI, V-Measure (external); Silhouette, Davies-Bouldin (internal).
-
-`necom` separates cluster generation from evaluation: generate candidates with `necom cut --scan`, then evaluate them in batch with `clust eval`, and finally select the best parameters manually.
-
-### External Validity Metrics
-
-*Compare a predicted partition to a reference partition.*
-
-| Metric | Range | Notes |
-| :--- | :--- | :--- |
-| ARI | [-1, 1] | Adjusted Rand Index; corrected for chance; 1 = perfect agreement. |
-| AMI | [0, 1] | Adjusted Mutual Information; robust with many clusters. |
-| NMI | [0, 1] | Normalized Mutual Information; not corrected for chance. |
-| V-Measure | [0, 1] | Harmonic mean of Homogeneity and Completeness. |
-| FMI | [0, 1] | Fowlkes-Mallows Index; geometric mean of Precision and Recall. |
-| RI | [0, 1] | Rand Index; not corrected for chance. |
-| Jaccard | [0, 1] | Pair-wise Jaccard similarity of same-cluster pairs. |
-| Precision / Recall | [0, 1] | Pair-wise precision and recall. |
-
-### Internal Validity Metrics
-
-*Evaluate a partition using the data geometry only.*
-
-| Type | Metrics | Required input |
-| :--- | :--- | :--- |
-| Distance-based | Silhouette, Dunn, C-Index, Gamma, Tau | `--matrix` or `--tree` |
-| Coordinate-based | Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski | `--coords` |
-
-Silhouette is the most commonly used distance-based metric: values near 1 indicate well-clustered samples, 0 indicate boundary samples, and negative values suggest possible mis-clustering.
-
-### Typical Workflows
-
-```bash
-# External evaluation (with ground truth)
-necom clust eval result.tsv --other truth.tsv -o eval.tsv
-
-# Internal evaluation with a distance matrix
-necom clust eval result.tsv --matrix dist.phy
-
-# Batch evaluation of scan results
-necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
-    necom clust eval - --input-format long --matrix matrix.phy > evaluation.tsv
-```
+Partition evaluation has moved to [`necom eval partition`](eval.md). See [`docs/eval.md`](eval.md) for the overview and [`docs/eval-partition.md`](eval-partition.md) for detailed metric definitions.
 
 ## Planned
 
@@ -240,7 +186,7 @@ How to determine the number of clusters (K) or the best model complexity?
 - **BIC (Bayesian Information Criterion)** [Planned]:
   - In GMM, BIC trades off log-likelihood (goodness of fit) against the number of parameters (complexity).
   - `necom` could provide `clust gmm --scan-k 2..20`, automatically computing and outputting a BIC curve to help users choose the best K (usually the BIC minimum or elbow).
-- **Silhouette / Calinski-Harabasz** [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (`clust eval` already supports distance-matrix Silhouette; tree-based Silhouette is planned for `necom eval tree` [planned]).
+- **Silhouette / Calinski-Harabasz** [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (`eval partition` already supports distance-matrix Silhouette; tree-based Silhouette is planned for `necom eval tree` [planned]).
 
 ## Large-Scale Data Strategy
 
@@ -285,16 +231,16 @@ necom clust mcl pairs.tsv --inflation 2.0 > families.tsv
 
 ### Scenario B: Hierarchical Clustering Parameter Scanning and Evaluation Workflow
 
-Combine `necom cut` scanning with `clust eval` batch evaluation to find the best cutting threshold.
+Combine `necom cut` scanning with `eval partition` batch evaluation to find the best cutting threshold.
 
 ```bash
 # 1. Generate hierarchical clustering tree
 necom clust hier matrix.phy --method ward > tree.nwk
 
 # 2. Scan thresholds and evaluate internal metrics (Silhouette)
-# necom cut outputs a long table in scan mode, which can be piped directly to clust eval
+# necom cut outputs a long table in scan mode, which can be piped directly to eval partition
 necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
-    necom clust eval - --input-format long --matrix matrix.phy > evaluation.tsv
+    necom eval partition - --input-format long --matrix matrix.phy > evaluation.tsv
 
 # 3. Analyze evaluation.tsv to choose the best threshold (e.g., maximum Silhouette)
 # Assume the best threshold is 0.45
@@ -339,7 +285,7 @@ Wide-table format; each line represents a cluster containing all its members.
 
 #### Long Format (batch, `--format long`)
 
-A dedicated TSV format (`Group\tClusterID\tItem`) for batch evaluation, auto-emitted by `necom cut --scan` and consumed by `necom clust eval --input-format long`. See [`docs/cut.md`](cut.md#output-format-in-scan-mode) for the full specification.
+A dedicated TSV format (`Group\tClusterID\tItem`) for batch evaluation, auto-emitted by `necom cut --scan` and consumed by `necom eval partition --input-format long`. See [`docs/cut.md`](cut.md#output-format-in-scan-mode) for the full specification.
 
 ### 2. Distance Matrix
 
@@ -351,7 +297,7 @@ Used by `clust hier`, `nj`, `upgma`, and `eval --matrix`.
 
 ### 3. Coordinates / Feature Vectors
 
-Used by `clust eval --coords` (Davies-Bouldin Index) or future `kmeans/gmm`.
+Used by `eval partition --coords` (Davies-Bouldin Index) or future `kmeans/gmm`.
 
 #### FeatureVector Format
 - **Structure**: `Name <tab> Val1,Val2,Val3...`

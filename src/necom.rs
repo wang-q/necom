@@ -25,13 +25,13 @@ fn main() -> anyhow::Result<()> {
             r###"Subcommand groups:
 
 * Clustering:
-    * clust - Algorithms: cc, dbscan, eval, hier, k-medoids, mcl, nj, upgma
+    * clust - Algorithms: cc, dbscan, hier, k-medoids, mcl, nj, upgma
 
 * Tree cutting:
     * cut   - Cut a Newick tree into flat partitions
 
 * Evaluation:
-    * eval - Metrics: compare
+    * eval - Metrics: compare, partition
 
 * Matrix:
     * mat   - Processing: compare, format, subset, to-pair, to-phylip, transform

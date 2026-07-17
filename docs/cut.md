@@ -18,7 +18,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 - **Performance and usability improvements**:
   - **High performance**: Rust-based implementation with no external dependencies, handling large trees more efficiently.
   - **Standardized**: Unifies terminology differences across source algorithms (e.g., consistently using `--height`, `--single-linkage`), reducing cognitive load.
-  - **Composable**: As part of the `necom` toolchain, it can directly cooperate with `clust eval` for clustering evaluation.
+  - **Composable**: As part of the `necom` toolchain, it can directly cooperate with `eval partition` for clustering evaluation.
 
 ## Supported Modes and Algorithms
 
@@ -218,7 +218,7 @@ Use `necom cut`:
 
 Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate `necom clust` commands; tree-topology comparison is also available via `necom nwk compare`:
 
-- **General metrics (`necom clust eval`, `necom mat compare`)**:
+- **General metrics (`necom eval partition`, `necom mat compare`)**:
   - Input: two clustering result TSVs (or one result + one reference); or two distance matrices for Cophenetic correlation.
   - Output: ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure, etc.; or matrix similarity scores from `mat compare`.
   - Use case: When the true classification of samples is known, or when you want to compare the difference between two cutting parameters.
@@ -245,7 +245,7 @@ necom nwk subtree input.nwk -l cluster1.names > cluster1.nwk
 
 #### 2. Hierarchical Clustering (hclust) Integration
 
-Starting from a distance matrix, generate a tree with `necom clust hier`, cut it, and evaluate. A complete worked example (hier → cut --scan → clust eval) is in [`docs/clust.md`](clust.md#scenario-b-hierarchical-clustering-parameter-scanning-and-evaluation-workflow).
+Starting from a distance matrix, generate a tree with `necom clust hier`, cut it, and evaluate. A complete worked example (hier → cut --scan → eval partition) is in [`docs/clust.md`](clust.md#scenario-b-hierarchical-clustering-parameter-scanning-and-evaluation-workflow).
 
 #### 3. SciPy-style Analysis (Inconsistency Coefficient)
 For trees with uneven evolutionary rates, the inconsistency coefficient can find more natural cluster boundaries.
@@ -289,7 +289,7 @@ When `--scan` is enabled, the `--format` option is ignored. Output behavior is a
 1.  **Standard output (`stdout` or `-o`)**: Always outputs a detailed partition table (Long format / Tidy Data).
     - Column definitions: `Group`, `ClusterID`, `SampleID`.
     - The `Group` column is formatted as `Method=Value` (e.g., `height=0.5`, `max-clade=0.02`), making it easy to distinguish different cutting parameters.
-    - This format can be directly used as input for `necom clust eval --input-format long` for batch evaluation.
+    - This format can be directly used as input for `necom eval partition --input-format long` for batch evaluation.
 2.  **Statistics output (`--stats-out`)**: If specified, writes the summary statistics table (threshold, cluster count, singleton count, non-singleton count, max cluster size) to that file.
 
 Example:
@@ -301,12 +301,12 @@ necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 > partitions.tsv
 necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv
 ```
 
-### Integration with `necom clust eval`
+### Integration with `necom eval partition`
 
-`necom cut` and `necom clust eval` work together through the Long format, supporting two evaluation modes:
+`necom cut` and `necom eval partition` work together through the Long format, supporting two evaluation modes:
 
-* **Batch internal evaluation**: pipe scan output to `necom clust eval --input-format long` with `--matrix`, `--tree`, or `--coords` to score every threshold without Ground Truth.
-* **Targeted external evaluation**: first use `--scan` to locate promising threshold ranges, then generate partitions for selected thresholds and compare them to Ground Truth with `necom clust eval --other`.
+* **Batch internal evaluation**: pipe scan output to `necom eval partition --input-format long` with `--matrix`, `--tree`, or `--coords` to score every threshold without Ground Truth.
+* **Targeted external evaluation**: first use `--scan` to locate promising threshold ranges, then generate partitions for selected thresholds and compare them to Ground Truth with `necom eval partition --other`.
 
 Concrete command examples are kept in `docs/clust.md` to avoid duplication.
 
@@ -333,15 +333,15 @@ This is a general strategy in data analysis.
   3. Visualization: Import `scan.tsv` into plotting tools to assist judgment.
 
 #### Strategy 3: Evaluation-Metric Based
-This is the most rigorous strategy, using `necom clust eval` to compute clustering quality metrics.
+This is the most rigorous strategy, using `necom eval partition` to compute clustering quality metrics.
 
 - **Principle**: Directly compute internal validity (e.g., Silhouette) or external consistency (e.g., ARI, if Ground Truth is available) of the partition.
-- **Operation**: Use together with `necom clust eval`.
+- **Operation**: Use together with `necom eval partition`.
   ```bash
   # Generate detailed list of all candidate partitions
   necom cut ... --scan ... > partitions.tsv
   # Batch evaluation
-  necom clust eval partitions.tsv --input-format long --matrix dist.phy
+  necom eval partition partitions.tsv --input-format long --matrix dist.phy
   ```
 
 ## Existing Tool References

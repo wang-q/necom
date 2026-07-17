@@ -139,13 +139,13 @@ fn test_clust_pipeline_full() {
     assert!(stderr.is_empty(), "cut failed: {}", stderr);
     assert!(fs::metadata(&cut_file).is_ok(), "cut file not created");
 
-    // 6. Evaluate (necom clust eval)
+    // 6. Evaluate (necom eval partition)
     // Compare cut result with ground truth
     // Output ARI should be 1.0 for perfect clustering
     let (stdout, stderr) = NecomCmd::new()
         .args(&[
-            "clust",
             "eval",
+            "partition",
             &cut_file, // Prediction
             "--other",
             &truth_file, // Ground Truth
@@ -154,7 +154,7 @@ fn test_clust_pipeline_full() {
         ])
         .run();
 
-    assert!(stderr.is_empty(), "clust eval failed: {}", stderr);
+    assert!(stderr.is_empty(), "eval partition failed: {}", stderr);
 
     // Evaluate output format:
     // Metric   Value

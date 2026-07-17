@@ -4,8 +4,8 @@ use assert_cmd::Command;
 fn test_clust_eval_perfect_match() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg("tests/clust/perfect_1.tsv")
         .arg("--other")
         .arg("tests/clust/perfect_2.tsv")
@@ -61,8 +61,8 @@ fn test_clust_eval_no_singletons() -> anyhow::Result<()> {
     // 1. Run WITHOUT --no-singletons
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg(pred_path)
         .arg("--other")
         .arg(truth_path)
@@ -79,8 +79,8 @@ fn test_clust_eval_no_singletons() -> anyhow::Result<()> {
     // 2. Run WITH --no-singletons
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg(pred_path)
         .arg("--other")
         .arg(truth_path)
@@ -107,8 +107,8 @@ fn test_clust_eval_no_singletons() -> anyhow::Result<()> {
 fn test_clust_eval_disjoint() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg("tests/clust/perfect_1.tsv")
         .arg("--other")
         .arg("tests/clust/disjoint_2.tsv")
@@ -140,8 +140,8 @@ fn test_clust_eval_disjoint() -> anyhow::Result<()> {
 fn test_clust_eval_single_vs_singletons() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg("tests/clust/single_1.tsv")
         .arg("--other")
         .arg("tests/clust/singletons.tsv")
@@ -170,8 +170,8 @@ fn test_clust_eval_single_vs_singletons() -> anyhow::Result<()> {
 fn test_clust_eval_pair_format() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg("tests/clust/pair_1.tsv")
         .arg("--other")
         .arg("tests/clust/pair_2.tsv")
@@ -203,8 +203,8 @@ fn test_clust_eval_pair_format() -> anyhow::Result<()> {
 fn test_clust_eval_internal_silhouette() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg("tests/clust/eval/simple.pair")
         .arg("--matrix")
         .arg("tests/clust/eval/simple.matrix.phy")
@@ -255,8 +255,8 @@ fn test_clust_eval_internal_silhouette() -> anyhow::Result<()> {
 fn test_clust_eval_internal_db() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg("tests/clust/eval/db.pair")
         .arg("--coords")
         .arg("tests/clust/eval/db.coords.tsv")
@@ -302,8 +302,8 @@ fn test_clust_eval_invariance_sample_order() -> anyhow::Result<()> {
 
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg(temp_orig)
         .arg("--other")
         .arg(temp_shuffled)
@@ -335,8 +335,8 @@ fn test_clust_eval_invariance_label_scaling() -> anyhow::Result<()> {
 
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg(temp_small)
         .arg("--other")
         .arg(temp_large)
@@ -362,8 +362,8 @@ fn test_clust_eval_empty_input() -> anyhow::Result<()> {
 
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg(temp_empty)
         .arg("--other")
         .arg(temp_empty)
@@ -390,8 +390,8 @@ fn test_eval_malformed_pair_format() -> anyhow::Result<()> {
 
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg(malformed_path)
         .arg("--other")
         .arg("tests/clust/eval/simple.pair")
@@ -417,8 +417,8 @@ fn test_eval_malformed_pair_format() -> anyhow::Result<()> {
 fn test_eval_missing_other_for_external() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg("tests/clust/perfect_1.tsv")
         .arg("--input-format")
         .arg("cluster")

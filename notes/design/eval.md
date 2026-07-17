@@ -1,6 +1,6 @@
 # necom eval 设计稿
 
-> **实现状态注记**：本文档为设计提案。当前 `necom eval compare` 已实现（由 `nwk compare` 迁移而来）；`necom clust eval` 仍待迁移为 `necom eval partition`；`necom eval tree` 尚未实现。本文已合并原 `nwk-eval.md` 中关于树评估的设计内容。本文提议将评估相关功能统一提升为顶级命令 `necom eval`，以容纳未来显著增长的聚类评估、树评估及支持值计算功能。
+> **实现状态注记**：本文档为设计提案。当前 `necom eval compare` 已实现（由 `nwk compare` 迁移而来）；`necom eval partition` 已实现（由 `clust eval` 迁移而来）；`necom eval tree` 尚未实现。本文已合并原 `nwk-eval.md` 中关于树评估的设计内容。本文提议将评估相关功能统一提升为顶级命令 `necom eval`，以容纳未来显著增长的聚类评估、树评估及支持值计算功能。
 >
 > **代码现状订正（2026-07）**：本文档已根据 `src/` 实际代码核对。关键订正：`compute_avg_clade_distances` 实际位于 `libs/phylo/tree/balance.rs`（`stat.rs` 仅 re-export）；代码库**不存在**簇内最大两两距离（`max_clade`）的 O(N) 算法，`stat.rs::diameter` 为全树双 BFS；`get_distance`/`node_distance` 位于 `query.rs`，`distance.rs` 是 CLI 输出辅助。详见 §5。
 
@@ -8,7 +8,7 @@
 
 随着 `necom` 从单纯的聚类/构树工具向评估与分析工具扩展，评估类功能将显著增长：
 
-- 分区统计有效性评估（已存在于 `clust eval`）
+- 分区统计有效性评估（已迁移至 `eval partition`）
 - 树结构与参考树/性状/分类一致性评估（原 `nwk eval` 规划）
 - 四分体采样一致性 / 分支支持值（未来）
 - Bootstrap / Jackknife 支持值（未来）
@@ -310,7 +310,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 ### 6.1 通用输入格式
 
-- **分区文件**：沿用 `clust eval` 的格式约定（cluster 列表、pair 列表、long 批量格式）。
+- **分区文件**：沿用 `eval partition` 的格式约定（cluster 列表、pair 列表、long 批量格式）。
 - **Newick 树**：标准 Newick 格式。
 - **距离矩阵**：PHYLIP 方阵或 Pair TSV。
 - **坐标矩阵**：TSV，每行一个样本，列为坐标。
@@ -333,6 +333,8 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 ### 阶段 2：迁移 `clust eval`
 
+> **状态：已完成（2026-07-18）。** `clust eval` 已迁移为 `eval partition`；`docs/clust-eval.md` 已重命名为 `docs/eval-partition.md`（见 §9.5 决策）。
+
 1. 将 [src/cmd_necom/clust/eval.rs](../../src/cmd_necom/clust/eval.rs) 的实现迁移到 `src/cmd_necom/eval/partition.rs`。**保留全部现有参数命名**（`p1`、`--other`、`--matrix`、`--tree`、`--coords`、`--input-format`、`--no-singletons`），仅移动命令位置。
 2. 底层指标代码 `libs/clust/eval/` **不动**（已良好分层，无需抽取）。
 3. 更新 [src/cmd_necom/clust/mod.rs](../../src/cmd_necom/clust/mod.rs)，移除 `eval` 子命令注册。
@@ -345,6 +347,8 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 7. 这是一个 breaking change，按项目规则不添加反向兼容 shim。
 
 ### 阶段 3：迁移 `nwk compare` → `eval compare`
+
+> **状态：已完成。** `nwk compare` 已迁移为 `eval compare`。
 
 按 §3.3 决策，将 `nwk compare` 迁移为 `eval compare`：
 
@@ -373,7 +377,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 - 树评估相关内容（原 `nwk-eval.md`，已删除）已合并到本文档 §4。
 - **[clust-impl.md](clust-impl.md)**：其中提到的 `libs/clust/feature.rs`、Phase 7 真实分布验证等内容，将继续为 `eval partition` 提供底层支持。
-- **[clust-eval.md](../../docs/clust-eval.md)**：迁移后应整合进 `docs/eval.md` 或保留为 `docs/eval-partition.md`（见 §9.5）。
+- **[eval-partition.md](../../docs/eval-partition.md)**：已重命名自 `docs/clust-eval.md`（见 §9.5 决策）。
 
 ## 9. 待决策问题
 
@@ -388,8 +392,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 4. **输出列控制**：
    - 倾向提供 `--metrics` 全局选项，让用户选择输出哪些指标列。具体设计在 Phase 1 实施时确定。
 
-5. **文档组织**：
-   - 倾向合并为一份 `docs/eval.md` 顶层文档，每个子命令一节。避免 `docs/eval-*.md` 文件 proliferation。具体在阶段 2 迁移时定。
+5. **文档组织** — **已决策（2026-07-18）**：保留 `docs/eval.md` 作为顶层概览（简洁，风格与 `docs/nwk.md`/`docs/mat.md` 一致），`docs/clust-eval.md` 重命名为 `docs/eval-partition.md` 作为 partition 详细指标参考，与未来 `docs/eval-tree.md` 对称。未采纳"合并为单一文件"方案，因为 partition 指标表很长，合并会让 `docs/eval.md` 过长。
 
 ## 10. 结论
 
@@ -400,6 +403,6 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 - 为未来 quartet、bootstrap 等扩展预留清晰的位置（但不预占命名空间）；
 - 通过 `libs/` 层共享实现，避免指标重复开发。
 
-主要成本是迁移已存在的 `clust eval` 与 `nwk compare`。考虑到未来评估功能的增长速度，这一迁移越早完成，成本越低。
+主要成本是迁移已存在的 `clust eval` 与 `nwk compare`，**两者均已完成**。考虑到未来评估功能的增长速度，这一迁移越早完成，成本越低。
 
-**实施优先级**：阶段 1（eval tree Phase 1）、阶段 2（clust eval 迁移）与阶段 3（nwk compare 迁移）为近期目标；阶段 4 按需推进；阶段 5 待需求出现
+**实施优先级**：阶段 2（clust eval 迁移）✅ 已完成；阶段 3（nwk compare 迁移）✅ 已完成；阶段 1（eval tree Phase 1）为下一近期目标；阶段 4 按需推进；阶段 5 待需求出现

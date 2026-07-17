@@ -65,8 +65,8 @@ D 1.0 1.0 0.2 0.0
 
     let mut cmd_eval = Command::cargo_bin("necom")?;
     let output_eval = cmd_eval
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg(partitions_file.path())
         .arg("--input-format")
         .arg("long")

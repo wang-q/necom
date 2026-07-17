@@ -7,11 +7,11 @@ use necom::libs::clust::eval::{
 use necom::libs::pairmat::NamedMatrix;
 use necom::libs::phylo::tree::Tree;
 use std::io::Write;
-/// Build the clap subcommand for eval.
+/// Build the clap subcommand for partition.
 pub fn make_subcommand() -> Command {
-    Command::new("eval")
+    Command::new("partition")
         .about("Evaluates clustering quality")
-        .after_help(include_str!("../../../docs/help/clust/eval.md"))
+        .after_help(include_str!("../../../docs/help/eval/partition.md"))
         .arg(
             Arg::new("p1")
                 .required(true)
@@ -26,7 +26,7 @@ pub fn make_subcommand() -> Command {
         .arg(crate::cmd_necom::args::outfile_arg())
         .arg(crate::cmd_necom::args::no_singletons_arg())
 }
-/// Execute the eval command.
+/// Execute the partition command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let p1_path = args
         .get_one::<String>("p1")

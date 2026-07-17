@@ -17,8 +17,8 @@ fn test_clust_eval_tree_internal() -> anyhow::Result<()> {
 
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
-        .arg("clust")
         .arg("eval")
+        .arg("partition")
         .arg(partition_path.to_str().unwrap())
         .arg("--tree")
         .arg(tree_path)

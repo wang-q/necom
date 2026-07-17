@@ -1,6 +1,6 @@
-# necom clust eval
+# necom eval partition
 
-This document describes the design philosophy, metrics, and selection guidance for `necom clust eval`. For command-line options and usage examples, see [`docs/help/clust/eval.md`](help/clust/eval.md).
+This document describes the design philosophy, metrics, and selection guidance for `necom eval partition`. For command-line options and usage examples, see [`docs/help/eval/partition.md`](help/eval/partition.md).
 
 ## Design Philosophy
 
@@ -9,12 +9,12 @@ This document describes the design philosophy, metrics, and selection guidance f
 *   **Python `clusteval`**: The `fit()` method internally performs Grid Search (trying different $k$ or $\epsilon$), computes internal metrics (e.g., Silhouette), and returns the optimal result.
 *   **`necom` workflow**:
     1.  **Generate**: Use `necom cut --scan` to generate a series of candidate partitions (`necom clust dbscan`'s `--scan` is not yet implemented).
-    2.  **Evaluate**: Use `necom clust eval` to compute evaluation metrics for these candidates in batch.
+    2.  **Evaluate**: Use `necom eval partition` to compute evaluation metrics for these candidates in batch.
     3.  **Decide**: The user selects the optimal parameters based on metrics (e.g., Silhouette peak, Elbow point).
 
 * **Complementary**:
   * `necom eval tree` [planned]: Focuses on consistency between tree structure and grouping (geometry/evolution).
-  * `necom clust eval`: Focuses on the statistical validity of partitions, supporting external (two-group comparison) and internal (single group + matrix/coordinates/tree) evaluation.
+  * `necom eval partition`: Focuses on the statistical validity of partitions, supporting external (two-group comparison) and internal (single group + matrix/coordinates/tree) evaluation.
 * **Scenarios**:
   * **Algorithm comparison**: Compare result differences between MCL and K-Medoids on the same dataset.
   * **Benchmarking**: Compare clustering results against known standard classifications (Ground Truth) to compute accuracy.
@@ -187,4 +187,4 @@ Clustering evaluation metrics usually fall into two categories: **external valid
 ## See Also
 
 * [`necom clust`](clust.md) for command overview, supported algorithms, and partition/matrix/coordinate format conventions.
-* [`docs/help/clust/eval.md`](help/clust/eval.md) for the command-line help text, including available options and usage examples.
+* [`docs/help/eval/partition.md`](help/eval/partition.md) for the command-line help text, including available options and usage examples.

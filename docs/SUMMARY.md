@@ -9,7 +9,7 @@
 - [Matrix Processing](mat.md)
 - [Newick Trees](nwk.md)
 - [Pipelines](pl.md)
-- [Clustering Evaluation Deep Dive](clust-eval.md)
+- [Partition Evaluation Deep Dive](eval-partition.md)
 
 # Command Reference
 
@@ -21,7 +21,6 @@
 
 - [cc](help/clust/cc.md)
 - [dbscan](help/clust/dbscan.md)
-- [eval](help/clust/eval.md)
 - [hier](help/clust/hier.md)
 - [k-medoids](help/clust/k-medoids.md)
 - [mcl](help/clust/mcl.md)
@@ -40,7 +39,6 @@
 ## Newick
 
 - [comment](help/nwk/comment.md)
-- [compare](help/nwk/compare.md)
 - [distance](help/nwk/distance.md)
 - [indent](help/nwk/indent.md)
 - [label](help/nwk/label.md)
@@ -57,6 +55,11 @@
 - [to-svg](help/nwk/to-svg.md)
 - [to-tex](help/nwk/to-tex.md)
 - [topo](help/nwk/topo.md)
+
+## Evaluation
+
+- [compare](help/eval/compare.md)
+- [partition](help/eval/partition.md)
 
 ## Pipelines
 
