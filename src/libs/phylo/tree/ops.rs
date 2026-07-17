@@ -944,10 +944,12 @@ pub fn reroot_at_longest_branch(
     // Skip when no meaningful branch lengths exist (cladogram); otherwise
     // get_node_with_longest_edge would return an arbitrary node due to
     // tie-breaking, producing a meaningless reroot.
+    // Use finite_length() so that NaN/inf are normalized to 0.0, consistent
+    // with the rest of the branch-length semantics.
     let has_length = tree
         .nodes
         .iter()
-        .any(|n| !n.deleted && n.length.map(|l| l > 0.0).unwrap_or(false));
+        .any(|n| !n.deleted && n.finite_length() > 0.0);
     if !has_length {
         log::debug!(
             "reroot_at_longest_branch: tree has no positive branch lengths, skipping"
@@ -1097,5 +1099,35 @@ mod tests {
         );
         assert!(names.contains("80"));
         assert!(names.contains("90"));
+    }
+
+    #[test]
+    fn reroot_at_longest_branch_ignores_non_finite_lengths() {
+        // Trees with only NaN/inf/zero lengths should be treated as cladograms
+        // and left unchanged by midpoint rerooting.
+        let mut tree_nan = Tree::from_newick("(A:NaN,B:NaN);").unwrap();
+        let original_nan = tree_nan.to_newick();
+        reroot_at_longest_branch(&mut tree_nan, false).unwrap();
+        assert_eq!(tree_nan.to_newick(), original_nan);
+
+        let mut tree_inf = Tree::from_newick("(A:inf,B:inf);").unwrap();
+        let original_inf = tree_inf.to_newick();
+        reroot_at_longest_branch(&mut tree_inf, false).unwrap();
+        assert_eq!(tree_inf.to_newick(), original_inf);
+    }
+
+    #[test]
+    fn reroot_at_longest_branch_actually_reroots_with_positive_lengths() {
+        // With a real positive length, the tree should be rerooted (topology
+        // changes because the midpoint of the longest edge becomes the new root).
+        let mut tree = Tree::from_newick("(A:0.1,B:1.0);").unwrap();
+        reroot_at_longest_branch(&mut tree, false).unwrap();
+        // The longest edge (B:1.0) is bisected, producing two edges of 0.5.
+        let out = tree.to_newick();
+        assert!(
+            out.contains(":0.5"),
+            "expected bisected length, got {}",
+            out
+        );
     }
 }

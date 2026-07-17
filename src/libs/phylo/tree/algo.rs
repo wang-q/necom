@@ -635,4 +635,50 @@ mod tests {
         ladderize(&mut tree, false);
         assert_eq!(tree.to_newick(), "(A,B,C,D);");
     }
+
+    #[test]
+    fn prune_nodes_empty_does_nothing() {
+        let mut tree = Tree::from_newick("(A,B,(C,D));").unwrap();
+        prune_nodes(&mut tree, Vec::new()).unwrap();
+        assert_eq!(tree.to_newick(), "(A,B,(C,D));");
+    }
+
+    #[test]
+    fn prune_nodes_remove_root_yields_empty_tree() {
+        let mut tree = Tree::from_newick("(A,B,(C,D));").unwrap();
+        let root = tree.get_root().unwrap();
+        prune_nodes(&mut tree, vec![root]).unwrap();
+        assert!(tree.is_empty());
+        assert!(tree.to_newick().is_empty());
+    }
+
+    #[test]
+    fn prune_nodes_remove_all_leaves_yields_empty_tree() {
+        let mut tree = Tree::from_newick("(A,B,(C,D));").unwrap();
+        let leaves: Vec<_> = tree
+            .nodes
+            .iter()
+            .filter(|n| !n.deleted && n.is_leaf())
+            .map(|n| n.id)
+            .collect();
+        prune_nodes(&mut tree, leaves).unwrap();
+        assert!(tree.is_empty());
+    }
+
+    #[test]
+    fn prune_nodes_keep_single_leaf() {
+        // Invert-style pruning that leaves a single leaf should produce a
+        // one-node tree without panic.
+        let mut tree = Tree::from_newick("(A,B,(C,D));").unwrap();
+        let target = tree.get_node_by_name("A").unwrap();
+        let keep = compute_keep_set(&tree, [target]);
+        let root = tree.get_root().unwrap();
+        let to_remove: Vec<_> = tree
+            .levelorder(root)
+            .into_iter()
+            .filter(|id| !keep.contains(id))
+            .collect();
+        prune_nodes(&mut tree, to_remove).unwrap();
+        assert_eq!(tree.to_newick(), "A;");
+    }
 }

@@ -1123,4 +1123,42 @@ mod tests {
             assert_eq!(child.name.as_deref(), Some(*label));
         }
     }
+
+    #[test]
+    fn test_very_long_label_round_trip() {
+        // A 10,000-character label should parse and serialize without panic.
+        let label = "x".repeat(10_000);
+        let quoted = format!("('{}');", label.replace('\'', "''"));
+        let trees = Tree::from_newick_multi(&quoted).unwrap();
+        assert_eq!(trees.len(), 1);
+        let root = trees[0].get_root().unwrap();
+        let child = trees[0]
+            .get_node(trees[0].get_node(root).unwrap().children[0])
+            .unwrap();
+        assert_eq!(child.name.as_deref(), Some(label.as_str()));
+
+        // Round-trip through Newick serialization.
+        let serialized = trees[0].to_newick();
+        let trees2 = Tree::from_newick_multi(&serialized).unwrap();
+        let root2 = trees2[0].get_root().unwrap();
+        let child2 = trees2[0]
+            .get_node(trees2[0].get_node(root2).unwrap().children[0])
+            .unwrap();
+        assert_eq!(child2.name.as_deref(), Some(label.as_str()));
+    }
+
+    #[test]
+    fn test_whitespace_only_input_rejected() {
+        // All-whitespace input must return a parse error, not panic.
+        let inputs = ["", "   ", "\n\t "];
+        for input in &inputs {
+            let res = Tree::from_newick_multi(input);
+            assert!(
+                matches!(res, Err(TreeError::ParseError { .. })),
+                "expected ParseError for whitespace-only input {:?}, got {:?}",
+                input,
+                res
+            );
+        }
+    }
 }
