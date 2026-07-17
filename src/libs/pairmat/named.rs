@@ -145,7 +145,7 @@ impl NamedMatrix {
 
     /// Get matrix value by sequence names
     ///
-    /// ```ignore
+    /// ```
     /// # use necom::libs::pairmat::NamedMatrix;
     /// let names = vec!["seq1".to_string(), "seq2".to_string()];
     /// let mut matrix = NamedMatrix::new(names).unwrap();
@@ -162,7 +162,7 @@ impl NamedMatrix {
 
     /// Set matrix value by sequence names
     ///
-    /// ```ignore
+    /// ```
     /// # use necom::libs::pairmat::NamedMatrix;
     /// let names = vec!["seq1".to_string(), "seq2".to_string()];
     /// let mut matrix = NamedMatrix::new(names).unwrap();
@@ -202,9 +202,13 @@ impl NamedMatrix {
 
     /// Creates a new matrix from a relaxed PHYLIP format file
     ///
-    /// ```ignore
+    /// ```
     /// # use necom::libs::pairmat::NamedMatrix;
+    /// let content = "3\nA 0.0 1.0 2.0\nB 1.0 0.0 3.0\nC 2.0 3.0 0.0\n";
+    /// std::fs::write("input.phy", content).unwrap();
     /// let matrix = NamedMatrix::from_relaxed_phylip("input.phy").unwrap();
+    /// assert_eq!(matrix.get_names(), vec!["A", "B", "C"]);
+    /// # std::fs::remove_file("input.phy").ok();
     /// ```
     pub fn from_relaxed_phylip(infile: &str) -> anyhow::Result<Self> {
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]

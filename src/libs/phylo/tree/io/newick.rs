@@ -12,7 +12,7 @@ use std::io::Read;
 /// * `infile` - Path to the input file (or "stdin" for stdin).
 ///
 /// # Example
-/// ```ignore
+/// ```
 /// // usage in CLI:
 /// // let trees = necom::libs::phylo::tree::io::from_file("path/to/tree.nwk")?;
 /// ```

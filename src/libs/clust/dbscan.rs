@@ -58,7 +58,7 @@ where
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```
     /// # use necom::libs::clust::dbscan::Dbscan;
     /// # use necom::libs::pairmat::ScoringMatrix;
     ///

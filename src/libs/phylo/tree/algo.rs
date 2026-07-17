@@ -11,7 +11,7 @@ use std::collections::{HashMap, HashSet};
 /// * `descending` - If true, sort in descending order (Z-A).
 ///
 /// # Example
-/// ```ignore
+/// ```
 /// use necom::libs::phylo::tree::Tree;
 /// use necom::libs::phylo::tree::algo;
 ///
@@ -109,7 +109,7 @@ fn compute_subtree_sizes(tree: &Tree, root: NodeId) -> HashMap<NodeId, usize> {
 /// * `descending` - If true, nodes with more descendants come first.
 ///
 /// # Example
-/// ```ignore
+/// ```
 /// use necom::libs::phylo::tree::Tree;
 /// use necom::libs::phylo::tree::algo;
 ///
@@ -163,7 +163,7 @@ pub fn ladderize(tree: &mut Tree, descending: bool) {
 /// * `order_list` - A list of names defining the desired order.
 ///
 /// # Example
-/// ```ignore
+/// ```
 /// use necom::libs::phylo::tree::Tree;
 /// use necom::libs::phylo::tree::algo;
 ///

@@ -9,7 +9,7 @@
 //!
 //! # Example
 //!
-//! ```ignore
+//! ```
 //! use necom::libs::clust::mcl::Mcl;
 //! use necom::libs::pairmat::ScoringMatrix;
 //!

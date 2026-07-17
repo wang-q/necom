@@ -590,7 +590,7 @@ impl Tree {
     /// Parse a Newick string into a Tree.
     ///
     /// # Example
-    /// ```ignore
+    /// ```
     /// use necom::libs::phylo::tree::Tree;
     ///
     /// // Successful parse
