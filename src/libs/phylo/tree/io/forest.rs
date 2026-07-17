@@ -155,25 +155,18 @@ fn to_forest_node_props(
         }
     }
 
-    let content = if let Some(color) = &color {
+    let mut content = String::new();
+    if let Some(color) = &color {
         if let Some(name) = &name {
-            format!(
-                r"{{\color{{{color}}}{{{name}}}}}",
-                color = color,
-                name = name
-            )
+            let _ = write!(&mut content, "{{\\color{{{}}}{{{}}}}}", color, name);
         } else if node.is_leaf() {
-            format!(r"{{\color{{{color}}}{{~}}}}", color = color)
-        } else {
-            String::new()
+            let _ = write!(&mut content, "{{\\color{{{}}}{{~}}}}", color);
         }
     } else if let Some(name) = &name {
-        format!("{{{}}}", name)
+        let _ = write!(&mut content, "{{{}}}", name);
     } else if node.is_leaf() {
-        "{~}".to_string() // non-breaking space in latex
-    } else {
-        String::new()
-    };
+        content.push_str("{~}"); // non-breaking space in latex
+    }
 
     if height == 0.0 {
         let tier = *heights.get(&id).unwrap_or(&0);

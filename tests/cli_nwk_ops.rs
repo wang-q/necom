@@ -61,6 +61,69 @@ fn command_rename_mixed() {
 }
 
 #[test]
+fn command_rename_missing_node_warns() {
+    // Missing --node name: warn and continue without renaming.
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["nwk", "rename", "stdin", "-n", "Missing", "--rename", "X"])
+        .stdin("((A,B),C);")
+        .run();
+
+    assert!(
+        stderr.contains("node not found: Missing"),
+        "expected warning for missing node, got stderr: {}",
+        stderr
+    );
+    assert_eq!(stdout, "((A,B),C);\n");
+    assert!(!stdout.contains("X"));
+}
+
+#[test]
+fn command_rename_missing_lca_warns() {
+    // Missing --lca name pair: warn and continue without renaming.
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "rename",
+            "stdin",
+            "-l",
+            "MissingA,MissingB",
+            "--rename",
+            "X",
+        ])
+        .stdin("((A,B),C);")
+        .run();
+
+    assert!(
+        stderr.contains("lca name not found in tree: MissingA / MissingB"),
+        "expected warning for missing lca pair, got stderr: {}",
+        stderr
+    );
+    assert_eq!(stdout, "((A,B),C);\n");
+    assert!(!stdout.contains("X"));
+}
+
+#[test]
+fn command_rename_partial_match_warns_and_renames() {
+    // One missing --node and one valid --node: warn for the missing one and
+    // still rename the valid one.
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&[
+            "nwk", "rename", "stdin", "-n", "Missing", "--rename", "X", "-n", "A", "--rename", "A1",
+        ])
+        .stdin("((A,B),C);")
+        .run();
+
+    assert!(
+        stderr.contains("node not found: Missing"),
+        "expected warning for missing node, got stderr: {}",
+        stderr
+    );
+    assert!(stdout.contains("A1"));
+    assert!(!stdout.contains("X"));
+    assert!(!stdout.contains("Homo"));
+}
+
+#[test]
 fn command_replace() {
     let (stdout, _) = NecomCmd::new()
         .args(&[

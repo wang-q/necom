@@ -39,17 +39,14 @@ pub fn to_dot(tree: &Tree) -> String {
                 let Some(child) = tree.get_node(child_id) else {
                     continue;
                 };
-                let edge_attrs = if let Some(len) = child.length {
-                    if len.is_finite() && len >= 0.0 {
-                        format!(" [label=\"{}\"]", len)
-                    } else {
-                        String::new()
-                    }
-                } else {
-                    String::new()
-                };
 
-                let _ = writeln!(s, "    {} -> {}{};", node_id, child_id, edge_attrs);
+                let _ = write!(s, "    {} -> {}", node_id, child_id);
+                if let Some(len) = child.length {
+                    if len.is_finite() && len > 0.0 {
+                        let _ = write!(s, " [label=\"{}\"]", len);
+                    }
+                }
+                let _ = writeln!(s, ";");
             }
         }
     }
@@ -124,5 +121,43 @@ mod tests {
 
         let dot = to_dot(&tree);
         assert!(dot.contains("label=\"A\\\"B\\\\C\""));
+    }
+
+    #[test]
+    fn test_to_dot_zero_length() {
+        let mut tree = Tree::new();
+        let n0 = tree.add_node();
+        let n1 = tree.add_node();
+
+        let _ = tree.set_root(n0);
+        tree.add_child(n0, n1).unwrap();
+
+        tree.get_node_mut(n0).unwrap().set_name("Root");
+        tree.get_node_mut(n1).unwrap().set_name("A");
+        tree.get_node_mut(n1).unwrap().length = Some(0.0);
+
+        let dot = to_dot(&tree);
+        // Zero length should be treated as no label
+        assert!(!dot.contains("label=\"0\""));
+        assert!(dot.contains(&format!("{} -> {};", n0, n1)));
+    }
+
+    #[test]
+    fn test_to_dot_missing_length() {
+        let mut tree = Tree::new();
+        let n0 = tree.add_node();
+        let n1 = tree.add_node();
+
+        let _ = tree.set_root(n0);
+        tree.add_child(n0, n1).unwrap();
+
+        tree.get_node_mut(n0).unwrap().set_name("Root");
+        tree.get_node_mut(n1).unwrap().set_name("A");
+        // length is None by default
+
+        let dot = to_dot(&tree);
+        // Missing length should produce no edge label attribute.
+        assert!(!dot.contains(&format!("{} -> {} [label=", n0, n1)));
+        assert!(dot.contains(&format!("{} -> {};", n0, n1)));
     }
 }

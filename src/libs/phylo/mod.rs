@@ -13,6 +13,8 @@ pub mod taxonomy;
 /// Tree structure, traversal, and algorithms.
 pub mod tree;
 
+/// Float formatter used by visualization output.
+pub use cmp::format_float;
 /// Tree comparison trait (RF, WRF, KF distances and splits).
 pub use cmp::TreeComparison;
 /// Tree-level error type.

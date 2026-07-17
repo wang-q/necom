@@ -370,3 +370,55 @@ fn command_viz_escapes_special_chars() {
         .run();
     assert!(stdout.contains("A{B}C\\D"));
 }
+
+#[test]
+fn command_to_tex_bl_scale_bar() {
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "to-tex", "tests/newick/hg38.7way.nwk", "--bl"])
+        .run();
+
+    assert!(stdout.contains(r"\draw"));
+    assert!(stdout.contains(r"\scriptsize{"));
+    assert!(!stdout.contains("NaN"));
+    assert!(!stdout.contains("-0"));
+}
+
+#[test]
+fn command_to_tex_forest_pass_through() {
+    let forest = "[A[B][C]]";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "to-tex", "stdin", "--forest"])
+        .stdin(forest)
+        .run();
+
+    assert!(stdout.contains(r"\begin{forest}"));
+    assert!(stdout.contains("[A[B][C]]"));
+    assert!(stdout.contains(r"\end{forest}"));
+}
+
+#[test]
+fn command_to_tex_no_default_style() {
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "to-tex",
+            "tests/newick/hg38.7way.nwk",
+            "--no-default-style",
+        ])
+        .run();
+
+    assert!(stdout.contains("Fira Sans"));
+    assert!(!stdout.contains("NotoSans"));
+}
+
+#[test]
+fn command_to_tex_bl_tiny_branch_lengths() {
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "to-tex", "stdin", "--bl"])
+        .stdin("(A:1e-10,B:2e-10)R;")
+        .run();
+
+    assert!(stdout.contains(r"\draw"));
+    assert!(!stdout.contains("NaN"));
+    assert!(!stdout.contains("-0"));
+}

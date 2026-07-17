@@ -31,7 +31,7 @@ pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
             tree.get_node(id)
                 .filter(|n| n.is_leaf())
                 .and_then(|n| n.name.as_ref())
-                .map(|name| name.replace('_', " ").len() as f64 * 7.0 + 6.0)
+                .map(|name| name.len() as f64 * 7.0 + 6.0)
         })
         .fold(0.0_f64, f64::max);
 
@@ -149,26 +149,26 @@ pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
 
         if node.is_leaf() {
             // Leaf label: right of node
-            let label = node.name.as_deref().unwrap_or("").replace('_', " ");
-            if !label.is_empty() {
-                let _ = writeln!(
+            if let Some(name) = node.name.as_deref().filter(|n| !n.is_empty()) {
+                let _ = write!(
                     s,
-                    "\t<text x=\"{}\" y=\"{}\" text-anchor=\"start\" dominant-baseline=\"middle\">{}</text>",
+                    "\t<text x=\"{}\" y=\"{}\" text-anchor=\"start\" dominant-baseline=\"middle\">",
                     ox + nx + 6.0,
-                    oy + ny,
-                    xml_escape(&label)
+                    oy + ny
                 );
+                let _ = write_label_content(&mut s, name);
+                let _ = writeln!(s, "</text>");
             }
-        } else if let Some(name) = &node.name {
+        } else if let Some(name) = node.name.as_deref().filter(|n| !n.is_empty()) {
             // Internal node label: left of node
-            let label = name.replace('_', " ");
-            let _ = writeln!(
+            let _ = write!(
                 s,
-                "\t<text x=\"{}\" y=\"{}\" text-anchor=\"end\" dominant-baseline=\"middle\" class=\"label\">{}</text>",
+                "\t<text x=\"{}\" y=\"{}\" text-anchor=\"end\" dominant-baseline=\"middle\" class=\"label\">",
                 ox + nx - 6.0,
-                oy + ny,
-                xml_escape(&label)
+                oy + ny
             );
+            let _ = write_label_content(&mut s, name);
+            let _ = writeln!(s, "</text>");
         }
     }
 
@@ -329,12 +329,42 @@ fn compute_svg_positions(
 }
 
 /// Escape special XML characters in text content.
+#[cfg(test)]
 fn xml_escape(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&apos;")
+    let mut out = String::new();
+    write_xml_escaped(&mut out, s).unwrap();
+    out
+}
+
+#[cfg(test)]
+fn write_xml_escaped(s: &mut String, text: &str) -> std::fmt::Result {
+    for c in text.chars() {
+        match c {
+            '&' => s.push_str("&amp;"),
+            '<' => s.push_str("&lt;"),
+            '>' => s.push_str("&gt;"),
+            '"' => s.push_str("&quot;"),
+            '\'' => s.push_str("&apos;"),
+            c => s.push(c),
+        }
+    }
+    Ok(())
+}
+
+/// Write a label into `s` with underscores replaced by spaces and XML-escaped.
+fn write_label_content(s: &mut String, label: &str) -> std::fmt::Result {
+    for c in label.chars() {
+        let c = if c == '_' { ' ' } else { c };
+        match c {
+            '&' => s.push_str("&amp;"),
+            '<' => s.push_str("&lt;"),
+            '>' => s.push_str("&gt;"),
+            '"' => s.push_str("&quot;"),
+            '\'' => s.push_str("&apos;"),
+            c => s.push(c),
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]

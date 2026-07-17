@@ -306,6 +306,7 @@ necom nwk to-tex [OPTIONS] <infile>
 *   Unquoted labels are trimmed: leading and trailing whitespace is removed. Internal whitespace is preserved only when the label is quoted with single or double quotes.
 *   Labels containing Newick reserved characters (`( ) : ; , [ ]`) or whitespace must be quoted to round-trip correctly.
 *   Single quotes inside single-quoted labels are escaped by doubling (`''`), and double quotes inside double-quoted labels are escaped by doubling (`""`).
+*   Name-based selection filters (`-n`, `-l`, `-x`, `--lca`) log a warning and continue when a requested name is not found, rather than aborting. This applies to commands such as `rename`, `subtree`, `comment`, and `prune`.
 
 ---
 

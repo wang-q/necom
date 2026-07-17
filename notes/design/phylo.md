@@ -213,7 +213,7 @@ graph LR
 
 *   **`nw_condense`** $\to$ **`necom nwk subtree --condense`**
     *   **功能**: 压缩树 (合并短枝/多叉化)
-    *   **状态**: 通过 `subtree --condense` 提供；暂无独立 `condense` 子命令计划
+    *   **状态**: **仅通过 `subtree --condense` 提供；无计划实现独立 `condense` 子命令**
 
 *   **`nw_support`** $\to$ **`necom nwk support`**
     *   **功能**: 计算/显示支持率 (Bootstrap)

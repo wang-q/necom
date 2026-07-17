@@ -1,7 +1,9 @@
 use anyhow::Context;
 use clap::{Arg, ArgAction, ArgMatches, Command};
+use necom::libs::phylo::format_float;
 use necom::libs::phylo::tree::io::{compute_scale_bar, to_forest};
 use necom::libs::phylo::tree::Tree;
+use std::fmt::Write as _;
 use std::io::Read;
 
 /// Build the clap subcommand for to-tex.
@@ -100,10 +102,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let (scale, bar_mm) = compute_scale_bar(height);
 
             // Draw scale bar
-            s += "\\draw[-, grey, line width=1pt]";
-            s += " ($(current bounding box.south east)+(-10mm,-2mm)$)";
-            s += &format!(" --++ (-{}mm,0mm)", bar_mm);
-            s += &format!(" node[midway, below]{{\\scriptsize{{{}}}}};\n", scale);
+            write!(
+                &mut s,
+                "\\draw[-, grey, line width=1pt]\
+                 ($(current bounding box.south east)+(-10mm,-2mm)$)\
+                 --++ (-{}mm,0mm) node[midway, below]{{\\scriptsize{{{}}}}};",
+                bar_mm,
+                format_float(scale)
+            )?;
         }
 
         s

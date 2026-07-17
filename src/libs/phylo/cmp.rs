@@ -341,7 +341,9 @@ pub fn compute_tree_metrics(
 ///
 /// Non-finite values and zero (including -0.0) are formatted as `"0"`.
 /// Negative finite values retain their leading minus sign.
-pub(crate) fn format_float(val: f64) -> String {
+/// Very small non-zero values fall back to scientific notation so they are
+/// not silently rounded to zero.
+pub fn format_float(val: f64) -> String {
     if !val.is_finite() || val == 0.0 {
         return "0".to_string();
     }
