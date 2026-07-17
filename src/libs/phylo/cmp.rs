@@ -338,6 +338,9 @@ pub fn compute_tree_metrics(
 }
 
 /// Format a float to 6 decimal places, stripping trailing zeros.
+///
+/// Non-finite values and zero (including -0.0) are formatted as `"0"`.
+/// Negative finite values retain their leading minus sign.
 pub(crate) fn format_float(val: f64) -> String {
     if !val.is_finite() || val == 0.0 {
         return "0".to_string();
@@ -543,11 +546,38 @@ mod tests {
     }
 
     #[test]
+    fn test_mismatched_leaf_sets_report_difference() {
+        let t1 = Tree::from_newick("((A,B),(C,D));").unwrap();
+        let t2 = Tree::from_newick("((A,B),(C,E));").unwrap();
+
+        let err = t1.robinson_foulds(&t2).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("Leaf sets do not match"));
+        assert!(msg.contains("D"));
+        assert!(msg.contains("E"));
+    }
+
+    #[test]
+    fn test_duplicate_leaf_names_rejected() {
+        let t1 = Tree::from_newick("((A,A),(C,D));").unwrap();
+        let t2 = Tree::from_newick("((A,B),(C,D));").unwrap();
+
+        let err = t1.robinson_foulds(&t2).unwrap_err();
+        assert!(err.to_string().contains("duplicate leaf name"));
+    }
+
+    #[test]
     fn format_float_negative_zero() {
         assert_eq!(format_float(-0.0), "0");
         assert_eq!(format_float(0.0), "0");
         assert_eq!(format_float(1.0), "1");
         assert_eq!(format_float(1.234560), "1.23456");
+    }
+
+    #[test]
+    fn format_float_negative_finite_retains_sign() {
+        assert_eq!(format_float(-1.0), "-1");
+        assert_eq!(format_float(-1.234560), "-1.23456");
     }
 
     #[test]

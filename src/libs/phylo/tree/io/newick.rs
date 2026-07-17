@@ -21,7 +21,8 @@ pub fn from_file(infile: &str) -> anyhow::Result<Vec<Tree>> {
     reader
         .read_to_string(&mut newick)
         .map_err(|e| anyhow::anyhow!("Read error: {}", e))?;
-    Ok(Tree::from_newick_multi(newick.as_str())?)
+    Tree::from_newick_multi(newick.as_str())
+        .map_err(|e| anyhow::anyhow!("failed to parse '{}': {}", infile, e))
 }
 
 /// Serialize tree to Newick string.

@@ -1,7 +1,7 @@
 use super::Tree;
 use crate::libs::phylo::node::NodeId;
 use std::cmp::Reverse;
-use std::collections::{BTreeMap, BinaryHeap, HashMap};
+use std::collections::{BTreeMap, BinaryHeap, HashMap, HashSet};
 
 /// Get IDs of all leaves in subtree rooted at `id`.
 pub fn get_leaves(tree: &Tree, id: NodeId) -> Vec<NodeId> {
@@ -45,6 +45,24 @@ pub fn get_name_id(tree: &Tree) -> BTreeMap<String, NodeId> {
         .iter()
         .filter(|n| !n.deleted)
         .filter_map(|n| n.name.as_ref().map(|name| (name.clone(), n.id)))
+        .collect()
+}
+
+/// Return the set of node names that appear more than once in the tree.
+pub fn duplicate_names(tree: &Tree) -> HashSet<String> {
+    let mut counts = HashMap::new();
+    for node in &tree.nodes {
+        if node.deleted {
+            continue;
+        }
+        if let Some(name) = &node.name {
+            *counts.entry(name.clone()).or_insert(0usize) += 1;
+        }
+    }
+    counts
+        .into_iter()
+        .filter(|(_, count)| *count > 1)
+        .map(|(name, _)| name)
         .collect()
 }
 

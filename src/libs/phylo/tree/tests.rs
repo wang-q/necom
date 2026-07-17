@@ -154,11 +154,12 @@ fn test_tree_paths_and_distances() {
 
 #[test]
 fn node_distance_uses_branch_lengths_when_present() {
-    // When the tree has branch lengths, node_distance returns the weighted sum.
+    // When the weighted sum exceeds 1e-9, node_distance returns the weighted sum;
+    // otherwise it falls back to the topological edge count.
     let tree = Tree::from_newick("(A:1e-10,B:1e-10)R;").unwrap();
     let a = tree.get_node_by_name("A").unwrap();
     let b = tree.get_node_by_name("B").unwrap();
-    assert!((tree.node_distance(a, b).unwrap() - 2e-10).abs() < 1e-15);
+    assert_eq!(tree.node_distance(a, b).unwrap(), 2.0);
 
     let tree = Tree::from_newick("(A:1.0,B:1.0)R;").unwrap();
     let a = tree.get_node_by_name("A").unwrap();

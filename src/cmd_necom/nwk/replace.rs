@@ -74,15 +74,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .get_one::<String>("replace_tsv")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: replace_tsv"))?;
     let replace_map = necom::libs::io::read_replace_tsv_overwrite(rfile)?;
-    let mapping: Vec<(String, Vec<String>)> = replace_map
-        .iter()
-        .map(|(k, v)| (k.clone(), v.clone()))
-        .collect();
 
     let mut trees = Tree::from_file(infile)?;
 
     for tree in &mut trees {
-        tree.replace_annotations(annotation_mode, &mapping, skip_internal, skip_leaf)?;
+        tree.replace_annotations(annotation_mode, &replace_map, skip_internal, skip_leaf)?;
 
         let out_string = tree.to_newick();
         writer.write_all((out_string + "\n").as_ref())?;

@@ -150,7 +150,7 @@ impl Tree {
     pub fn replace_annotations(
         &mut self,
         mode: AnnotationMode,
-        mapping: &[(String, Vec<String>)],
+        mapping: &std::collections::BTreeMap<String, Vec<String>>,
         skip_internal: bool,
         skip_leaf: bool,
     ) -> anyhow::Result<()> {

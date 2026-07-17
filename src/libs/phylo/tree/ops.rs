@@ -1,6 +1,6 @@
 use super::Tree;
 use crate::libs::phylo::node::NodeId;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 /// Check if `ancestor` is on the parent chain of `descendant`.
 fn is_ancestor_of(tree: &Tree, ancestor: NodeId, descendant: NodeId) -> bool {
@@ -204,33 +204,32 @@ pub fn collapse_node(tree: &mut Tree, id: NodeId) -> anyhow::Result<()> {
     }
 
     // 1. Get info. `finite_length()` normalizes non-finite/negative/zero
-    // lengths to 0.0, matching the global branch-length semantics.
-    let (parent_id, parent_has_len, parent_len) = {
+    // lengths to 0.0, matching the global branch-length semantics. We use the
+    // normalized value for both "has length" and "length value" decisions so
+    // that a `Some(0.0)` parent edge is treated the same as an absent length.
+    let (parent_id, parent_len) = {
         let node = tree
             .get_node(id)
             .ok_or_else(|| anyhow::anyhow!("Node {} not found or deleted", id))?;
         let parent_id = node
             .parent
             .ok_or_else(|| anyhow::anyhow!("Node {} has no parent", id))?;
-        (parent_id, node.length.is_some(), node.finite_length())
+        (parent_id, node.finite_length())
     };
-    let children_info: Vec<(NodeId, bool, f64)> = tree
+    let children_info: Vec<(NodeId, f64)> = tree
         .get_node(id)
         .map(|node| {
             node.children
                 .iter()
-                .filter_map(|&c| {
-                    tree.get_node(c)
-                        .map(|child| (c, child.length.is_some(), child.finite_length()))
-                })
+                .filter_map(|&c| tree.get_node(c).map(|child| (c, child.finite_length())))
                 .collect()
         })
         .unwrap_or_default();
 
     // 2. Re-parent children
     let mut new_children_ids = Vec::new();
-    for (child_id, child_has_len, child_len) in children_info {
-        let new_edge = match (parent_has_len, child_has_len) {
+    for (child_id, child_len) in children_info {
+        let new_edge = match (parent_len > 0.0, child_len > 0.0) {
             (true, true) => {
                 let sum = parent_len + child_len;
                 if sum > 0.0 {
@@ -239,9 +238,9 @@ pub fn collapse_node(tree: &mut Tree, id: NodeId) -> anyhow::Result<()> {
                     None
                 }
             }
-            (true, false) if parent_len > 0.0 => Some(parent_len),
-            (false, true) if child_len > 0.0 => Some(child_len),
-            _ => None,
+            (true, false) => Some(parent_len),
+            (false, true) => Some(child_len),
+            (false, false) => None,
         };
 
         // Update child
@@ -766,24 +765,6 @@ pub enum AnnotationMode {
     AsIs,
 }
 
-/// Returns the set of node names that appear more than once in the tree.
-fn duplicate_names(tree: &Tree) -> HashSet<String> {
-    let mut counts = HashMap::new();
-    for node in &tree.nodes {
-        if node.deleted {
-            continue;
-        }
-        if let Some(name) = &node.name {
-            *counts.entry(name.clone()).or_insert(0usize) += 1;
-        }
-    }
-    counts
-        .into_iter()
-        .filter(|(_, count)| *count > 1)
-        .map(|(name, _)| name)
-        .collect()
-}
-
 /// Append a single property entry parsed as `key=value` or a bare key.
 fn append_property_item(node: &mut crate::libs::phylo::node::Node, item: &str) {
     if let Some((key, value)) = item.split_once('=') {
@@ -807,11 +788,11 @@ fn append_remaining_properties<'a>(
 pub fn replace_annotations(
     tree: &mut Tree,
     mode: AnnotationMode,
-    mapping: &[(String, Vec<String>)],
+    mapping: &BTreeMap<String, Vec<String>>,
     skip_internal: bool,
     skip_leaf: bool,
 ) -> anyhow::Result<()> {
-    let duplicates = duplicate_names(tree);
+    let duplicates = super::stat::duplicate_names(tree);
     for (original, replacements) in mapping {
         let Some(id) = tree.get_node_by_name(original) else {
             continue;
@@ -967,18 +948,66 @@ mod tests {
     use crate::libs::phylo::tree::Tree;
 
     #[test]
+    fn collapse_node_sums_finite_lengths() {
+        let mut tree = Tree::from_newick("(A:0.1,(B:0.2,C:0.3)D:0.4)Root;").unwrap();
+        let d_id = tree.get_node_by_name("D").unwrap();
+        collapse_node(&mut tree, d_id).unwrap();
+
+        let root = tree.get_root().unwrap();
+        let children: Vec<NodeId> = tree.get_node(root).unwrap().children.clone();
+        assert_eq!(children.len(), 3);
+        let child_lengths: Vec<f64> = children
+            .iter()
+            .map(|&id| tree.get_node(id).unwrap().finite_length())
+            .collect();
+        assert!(child_lengths.contains(&0.1));
+        assert!(child_lengths.contains(&(0.2 + 0.4)));
+        assert!(child_lengths.contains(&(0.3 + 0.4)));
+    }
+
+    #[test]
+    fn collapse_node_zero_parent_length_uses_child_lengths() {
+        let mut tree = Tree::from_newick("(A:0.1,(B:0.2,C:0.3)D:0.0)Root;").unwrap();
+        let d_id = tree.get_node_by_name("D").unwrap();
+        collapse_node(&mut tree, d_id).unwrap();
+
+        let root = tree.get_root().unwrap();
+        let child_lengths: Vec<f64> = tree
+            .get_node(root)
+            .unwrap()
+            .children
+            .iter()
+            .map(|&id| tree.get_node(id).unwrap().finite_length())
+            .collect();
+        assert!(child_lengths.contains(&0.1));
+        assert!(child_lengths.contains(&0.2));
+        assert!(child_lengths.contains(&0.3));
+    }
+
+    #[test]
+    fn collapse_node_nan_child_length_treated_as_zero() {
+        let mut tree = Tree::from_newick("(A:0.1,(B:0.2,C:0.3)D:0.4)Root;").unwrap();
+        let b_id = tree.get_node_by_name("B").unwrap();
+        tree.get_node_mut(b_id).unwrap().length = Some(f64::NAN);
+        let d_id = tree.get_node_by_name("D").unwrap();
+        collapse_node(&mut tree, d_id).unwrap();
+
+        // NaN child length is normalized to 0.0, so B gets only the parent length.
+        let b_new_len = tree.get_node(b_id).unwrap().finite_length();
+        assert!((b_new_len - 0.4).abs() < 1e-9);
+        let c_new_len = tree.get_node_by_name("C").unwrap();
+        let c_new_len = tree.get_node(c_new_len).unwrap().finite_length();
+        assert!((c_new_len - 0.7).abs() < 1e-9);
+    }
+
+    #[test]
     fn replace_annotations_handles_duplicate_names() {
         // Two nodes named A; replace_annotations should match the first one
         // and not panic. The visible result is that one A is renamed.
         let mut tree = Tree::from_newick("((A,A),B);").unwrap();
-        replace_annotations(
-            &mut tree,
-            AnnotationMode::Label,
-            &[("A".to_string(), vec!["X".to_string()])],
-            false,
-            false,
-        )
-        .unwrap();
+        let mut mapping = BTreeMap::new();
+        mapping.insert("A".to_string(), vec!["X".to_string()]);
+        replace_annotations(&mut tree, AnnotationMode::Label, &mapping, false, false).unwrap();
         let names: Vec<_> = tree.get_names();
         assert!(names.contains(&"X".to_string()));
         assert!(names.contains(&"A".to_string()));

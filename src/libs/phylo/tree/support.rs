@@ -79,7 +79,8 @@ pub fn compute_all_bitsets(
 }
 
 /// Annotate internal nodes of `target` with support values from `counts`.
-/// If `as_percent` is true, values are written as integer percentages of `total_reps`.
+/// If `as_percent` is true, values are written as integer percentages of
+/// `total_reps`, truncated toward zero.
 pub fn annotate_support(
     target: &mut Tree,
     leaf_map: &BTreeMap<String, usize>,

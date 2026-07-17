@@ -173,7 +173,7 @@ graph LR
 
 *   **`necom nwk cmp`**
     *   **功能**: 比较树 (RF, WRF, KF 距离)
-    *   **状态**: **已实现** (支持单文件内两两比较, 双文件比较)
+    *   **状态**: **已实现** (支持单文件内两两比较, 双文件比较; 单文件仅含 1 棵树时发出警告并仅输出表头)
 
 *   **`necom nwk comment`**
     *   **功能**: 添加 NHX 注释 (color, dot, bar, rec, tri 等)
@@ -217,7 +217,7 @@ graph LR
 
 *   **`nw_support`** $\to$ **`necom nwk support`**
     *   **功能**: 计算/显示支持率 (Bootstrap)
-    *   **状态**: **已实现** (支持 target + replicates 输入, `--percent` 选项)
+    *   **状态**: **已实现** (支持 target + replicates 输入, `--percent` 输出整数百分比并截断至零)
 
 *   **`nw_match`** $\to$ **`necom nwk match`**
     *   **功能**: 匹配两棵树的节点

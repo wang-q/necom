@@ -1,10 +1,11 @@
 //! Shared helpers for `necom nwk` subcommands.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use anyhow::{anyhow, bail};
 use clap::ArgMatches;
 use necom::libs::phylo::node::{Node, NodeId};
+use necom::libs::phylo::tree::stat::duplicate_names;
 use necom::libs::phylo::tree::Tree;
 use regex::RegexBuilder;
 
@@ -73,26 +74,6 @@ pub(crate) fn format_label_columns(
         }
     }
     Ok(out)
-}
-
-/// Returns the set of node names that appear more than once in the tree.
-fn duplicate_names(tree: &Tree) -> HashSet<String> {
-    let Some(root) = tree.get_root() else {
-        return HashSet::new();
-    };
-
-    let mut counts = HashMap::new();
-    for id in tree.preorder(root) {
-        if let Some(name) = tree.get_node(id).and_then(|n| n.name.as_deref()) {
-            *counts.entry(name.to_string()).or_insert(0usize) += 1;
-        }
-    }
-
-    counts
-        .into_iter()
-        .filter(|(_, count)| *count > 1)
-        .map(|(name, _)| name)
-        .collect()
 }
 
 /// Warn once for each duplicate name that is being matched by name.

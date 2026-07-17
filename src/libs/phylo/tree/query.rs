@@ -117,11 +117,11 @@ pub fn get_distance(tree: &Tree, a: NodeId, b: NodeId) -> anyhow::Result<(f64, u
 
 /// Distance between two nodes.
 ///
-/// If the tree has any positive, finite branch lengths, returns the sum of
-/// branch lengths along the path. Otherwise returns the number of edges.
+/// Uses the sum of branch lengths along the path when its absolute value
+/// exceeds `1e-9`; otherwise returns the number of edges.
 pub fn node_distance(tree: &Tree, a: NodeId, b: NodeId) -> anyhow::Result<f64> {
     let (edge_sum, num_edges) = get_distance(tree, a, b)?;
-    Ok(if super::stat::has_branch_lengths(tree) {
+    Ok(if edge_sum.abs() > 1e-9 {
         edge_sum
     } else {
         num_edges as f64
@@ -258,7 +258,7 @@ pub fn get_node_by_name(tree: &Tree, name: &str) -> Option<NodeId> {
 }
 
 /// Find the medoid index among `ids` (min sum of pairwise branch-length distances).
-pub fn tree_medoid(tree: &Tree, ids: &[NodeId]) -> Option<usize> {
+pub(crate) fn tree_medoid(tree: &Tree, ids: &[NodeId]) -> Option<usize> {
     if ids.is_empty() {
         return None;
     }
@@ -291,7 +291,7 @@ pub fn tree_medoid(tree: &Tree, ids: &[NodeId]) -> Option<usize> {
 ///
 /// Returns `Some(comp_lca)` when the complement is non-empty and its LCA
 /// differs from `root_id`; otherwise returns `None`.
-pub fn lax_complement_lca(
+pub(crate) fn lax_complement_lca(
     tree: &Tree,
     specified_ids: &BTreeSet<NodeId>,
     root_id: NodeId,
@@ -327,5 +327,51 @@ pub fn lax_complement_lca(
         None
     } else {
         Some(comp_lca)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::libs::phylo::tree::Tree;
+
+    #[test]
+    fn node_distance_all_zero_lengths_uses_topology() {
+        // All branch lengths are zero/normalized to None; distance should be edge count.
+        // A -> internal -> root -> C is 3 edges.
+        let tree = Tree::from_newick("((A:0.0,B:0.0):0.0,C:0.0);").unwrap();
+        let a = tree.get_node_by_name("A").unwrap();
+        let c = tree.get_node_by_name("C").unwrap();
+        assert_eq!(node_distance(&tree, a, c).unwrap(), 3.0);
+    }
+
+    #[test]
+    fn node_distance_tiny_length_uses_topology() {
+        // A branch length below 1e-9 should not trigger weighted distance.
+        let tree = Tree::from_newick("((A:1e-10,B:1e-10):1e-10,C:1e-10);").unwrap();
+        let a = tree.get_node_by_name("A").unwrap();
+        let c = tree.get_node_by_name("C").unwrap();
+        assert_eq!(node_distance(&tree, a, c).unwrap(), 3.0);
+    }
+
+    #[test]
+    fn node_distance_positive_lengths_use_weighted_sum() {
+        // A-C path: A->internal (0.1) + internal->root (0.2) + root->C (0.3) = 0.6
+        let tree = Tree::from_newick("((A:0.1,B:0.1):0.2,C:0.3);").unwrap();
+        let a = tree.get_node_by_name("A").unwrap();
+        let c = tree.get_node_by_name("C").unwrap();
+        assert!((node_distance(&tree, a, c).unwrap() - 0.6).abs() < 1e-9);
+    }
+
+    #[test]
+    fn node_distance_mixed_lengths() {
+        // A-C path sum is 0.1 + 0.2 + 0.0 = 0.3 (> 1e-9) → weighted.
+        // B-C path sum is 0.0 + 0.2 + 0.0 = 0.2 (> 1e-9) → weighted.
+        let tree = Tree::from_newick("((A:0.1,B:0.0):0.2,C:0.0);").unwrap();
+        let a = tree.get_node_by_name("A").unwrap();
+        let b = tree.get_node_by_name("B").unwrap();
+        let c = tree.get_node_by_name("C").unwrap();
+        assert!((node_distance(&tree, a, c).unwrap() - 0.3).abs() < 1e-9);
+        assert!((node_distance(&tree, b, c).unwrap() - 0.2).abs() < 1e-9);
     }
 }

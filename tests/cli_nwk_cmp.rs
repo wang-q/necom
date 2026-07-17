@@ -34,6 +34,21 @@ fn command_nwk_cmp_single_file() {
 }
 
 #[test]
+fn command_nwk_cmp_single_file_one_tree_warns_and_prints_header_only() {
+    let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file, "((A,B),(C,D));").unwrap();
+
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["nwk", "cmp", file.path().to_str().unwrap()])
+        .run();
+
+    assert!(stdout.contains("Tree1\tTree2\tRF_Dist\tWRF_Dist\tKF_Dist"));
+    // No data lines (the header is the only line).
+    assert_eq!(stdout.lines().count(), 1);
+    assert!(stderr.contains("need at least 2 trees for pairwise comparison"));
+}
+
+#[test]
 fn command_nwk_cmp_two_files() {
     let mut file1 = Builder::new().suffix(".nwk").tempfile().unwrap();
     writeln!(file1, "((A,B),(C,D));").unwrap(); // Tree 1

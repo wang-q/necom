@@ -43,6 +43,7 @@ necom nwk cmp [OPTIONS] <infile> [compare_file]
 *   `[compare_file]`: Optional second tree file. If omitted, all trees in `<infile>` are compared pairwise.
 *   `--include-trivial`: Include trivial splits (single-leaf branches) in WRF/KF calculations.
 *   Output columns: `Tree1`, `Tree2`, `RF_Dist`, `WRF_Dist`, `KF_Dist`.
+*   Single-file pairwise mode requires at least 2 trees. With only 1 tree, a warning is emitted and the output contains only the header.
 
 > **RF (Robinson-Foulds)**: Measures topological difference based on the number of splits that differ between two trees. Smaller values indicate greater similarity; 0 means identical. WRF is weighted RF, and KF is the Kuhner-Felsenstein branch-score distance.
 
@@ -101,7 +102,7 @@ Assign bootstrap support values to a target tree based on replicate trees.
 necom nwk support [OPTIONS] <target> <replicates>
 ```
 
-*   `-p, --percent`: Output support values as percentages (0–100).
+*   `-p, --percent`: Output support values as integer percentages (0–100), truncated toward zero.
 *   Overwrites existing internal node labels in the target tree.
 
 ---
