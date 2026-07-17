@@ -13,7 +13,7 @@ Notes:
     * `--name-list`: by a list of names in the file, one per line.
     * `--alphanumeric` / `--alphanumeric-rev`: by alphanumeric order of labels.
     * `--num-descendants` / `--num-descendants-rev`: by number of descendants (ladderize).
-    * `--deladderize`: alternate sort direction at each level.
+    * `--deladderize` (alias `--dl`): alternate sort direction at each level.
 * Entries in `--name-list` that are not found among the leaf names are logged as warnings and skipped.
 
 Examples:

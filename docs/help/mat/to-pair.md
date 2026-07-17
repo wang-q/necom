@@ -11,7 +11,10 @@ Output:
 * Tab-separated values (TSV).
 * Three columns: name1, name2, distance.
 * Lower-triangular output, including the diagonal.
-* Useful as an edge list for graph clustering (e.g., `mcl`) or network visualization (e.g., Cytoscape).
+
+Notes:
+
+* Useful as an edge list for graph clustering (e.g., `necom clust mcl`) or network visualization (e.g., Cytoscape).
 
 Examples:
 

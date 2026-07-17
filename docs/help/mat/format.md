@@ -26,6 +26,12 @@ Output:
     * Space-separated values.
     * Use this for compatibility with the original PHYLIP toolkit.
 
+Notes:
+
+* `strict` mode truncates names to 10 characters, which can cause name collisions if names share a 10-character prefix.
+* `full` and `lower` preserve original names without truncation.
+* All distance values are preserved exactly across all formats; only the layout differs.
+
 Examples:
 
 1. Create a full matrix

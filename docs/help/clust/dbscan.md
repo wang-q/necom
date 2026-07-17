@@ -12,6 +12,8 @@ Output:
 Notes:
 
 * The input must contain distances, not similarities.
+* `--same <V>`: default score of identical element pairs (default: `0.0`).
+* `--missing <V>`: default score of missing pairs (default: `1.0`).
 * The representative point is selected by `--rep`:
     * `medoid` (default): point with minimum sum of distances to other cluster members.
     * `first`: alphabetically first member.

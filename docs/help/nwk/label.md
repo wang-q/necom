@@ -7,6 +7,7 @@ Input:
 Notes:
 
 * By default, prints all non-empty labels in Newick order, one per line.
+* Use `--root` to print only the root label.
 * Use `--tab` to print labels on a single line separated by tabs.
 * Use `-I` to exclude internal nodes and `-L` to exclude leaf nodes.
 * Selection options (`-n`, `-l`, `-x`) can be combined.

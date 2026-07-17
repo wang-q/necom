@@ -12,7 +12,7 @@ Notes:
 * Use `--string` to add a free-form string as the `comment` property.
 * Visualization options:
     * `--color`, `--label`, and `--comment-text` each take one argument.
-    * `--dot`, `--bar`, and `--rec` take zero or one argument.
+    * `--dot`, `--bar`, `--rec`, and `--tri` take zero or one argument.
 * Predefined colors for `--color`, `--dot`, and `--bar`:
     * `red` {RGB}{188,36,46}
     * `black` {RGB}{26,25,25}
@@ -30,6 +30,8 @@ Notes:
     * `ElectricBlue` {RGB}{142,236,245}
     * `Aquamarine` {RGB}{152,245,225}
     * `Celadon` {RGB}{185,251,192}
+* `--tri` places a triangle at the end of the branch (default color: `white`).
+* `--remove <REGEX>` scans all nodes and removes parts of comments matching the regex.
 
 Examples:
 

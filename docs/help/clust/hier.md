@@ -13,6 +13,7 @@ Notes:
 
 * The output tree uses the linkage distance (merge height) as node height.
 * For Ward's method, the input is assumed to be Euclidean distances or similar.
+* Alias: `necom clust hclust` is equivalent to `necom clust hier`.
 
 Examples:
 

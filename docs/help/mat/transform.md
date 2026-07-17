@@ -5,17 +5,15 @@ Input:
 * PHYLIP distance matrix or pairwise TSV file.
 * Use `--input-format pair` to read pairwise TSV input; useful for processing data from STDIN.
 
-Operations:
-
-* `linear`: `val = val * scale + offset`.
-* `inv-linear`: off-diagonal `val = max - val`; diagonal is set to `0`.
-* `log`: `val = -ln(val)` (off-diagonal `<= 0` becomes `Inf`; diagonal `<= 0` becomes `0`).
-* `exp`: `val = exp(-val)` (input diagonals of `0` produce output diagonals of `1.0`).
-* `square`: `val = val * val`.
-* `sqrt`: `val = sqrt(val)` (negative values produce `NaN`).
-
 Notes:
 
+* Available operations (`--op`):
+    * `linear`: `val = val * scale + offset`.
+    * `inv-linear`: off-diagonal `val = max - val`; diagonal is set to `0`.
+    * `log`: `val = -ln(val)` (off-diagonal `<= 0` becomes `Inf`; diagonal `<= 0` becomes `0`).
+    * `exp`: `val = exp(-val)` (input diagonals of `0` produce output diagonals of `1.0`).
+    * `square`: `val = val * val`.
+    * `sqrt`: `val = sqrt(val)` (negative values produce `NaN`).
 * Useful for converting similarity matrices to distance matrices.
 * Use `--normalize` to normalize based on diagonal elements before transformation: `x_norm(i, j) = x(i, j) / sqrt(x(i, i) * x(j, j))`.
   * `--normalize` requires diagonal data in the input; if absent, results will be `0`.

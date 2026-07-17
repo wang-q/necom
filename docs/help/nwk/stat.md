@@ -9,7 +9,9 @@ Output:
 * `--style col` (default): key-value pairs.
 * `--style line`: tab-separated values with a header row.
 
-Reported fields include type (cladogram/phylogram/neither), node count, leaf count, rooted status, dichotomies, leaf labels, internal labels, edges with/without length, cherries, Sackin index, and Colless index.
+Notes:
+
+* Reported fields include type (cladogram/phylogram/neither), node count, leaf count, rooted status, dichotomies, leaf labels, internal labels, edges with/without length, cherries, Sackin index, and Colless index.
 
 Examples:
 
