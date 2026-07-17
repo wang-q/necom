@@ -102,6 +102,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         ids_pos
     };
 
+    if mode == "phylip" {
+        for &id in &ids {
+            if tree.get_node(id).map(|n| n.name.is_none()).unwrap_or(false) {
+                anyhow::bail!("Phylip matrix requires all selected nodes to be named");
+            }
+        }
+    }
+
     let mut id_of = BTreeMap::new();
     let name_id_map = tree.get_name_id();
     let existing_names: std::collections::HashSet<&String> = name_id_map.keys().collect();

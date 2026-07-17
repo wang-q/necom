@@ -28,7 +28,7 @@ fn test_nwk_support() {
         ])
         .run();
 
-    assert!(stdout.contains("((A,B)2,(C,D)2)3;"));
+    assert!(stdout.contains("((A,B)2,(C,D)2);"));
 
     // 4. Run command (percent)
     let (stdout, _) = NecomCmd::new()
@@ -42,7 +42,7 @@ fn test_nwk_support() {
         .run();
 
     // 2/3 * 100 = 66
-    assert!(stdout.contains("((A,B)66,(C,D)66)100;"));
+    assert!(stdout.contains("((A,B)66,(C,D)66);"));
 }
 
 #[test]
@@ -64,5 +64,5 @@ fn test_nwk_support_overwrites_internal_labels() {
         .run();
 
     assert!(!stdout.contains("OldLabel"));
-    assert!(stdout.contains("((A,B)1,(C,D)1)1;"));
+    assert!(stdout.contains("((A,B)1,(C,D)1);"));
 }

@@ -1,6 +1,7 @@
 //! Graphviz DOT format writer.
 
 use super::super::Tree;
+use std::fmt::Write as _;
 
 /// Escape a string for safe use inside a DOT double-quoted label.
 fn escape_dot_label(s: &str) -> String {
@@ -22,35 +23,33 @@ pub fn to_dot(tree: &Tree) -> String {
             // 1. Define Node
             // Use NodeID as the DOT identifier
             let label = node.name.as_deref().unwrap_or("");
-            let mut label_attr = format!("label=\"{}\"", escape_dot_label(label));
             if label.is_empty() {
-                label_attr = format!("label=\"{}\"", node_id);
+                let _ = writeln!(s, "    {} [label=\"{}\"];", node_id, node_id);
+            } else {
+                let _ = writeln!(
+                    s,
+                    "    {} [label=\"{}\"];",
+                    node_id,
+                    escape_dot_label(label)
+                );
             }
-
-            s.push_str(&format!("    {} [{}];\n", node_id, label_attr));
 
             // 2. Define Edges to children
             for &child_id in &node.children {
                 let Some(child) = tree.get_node(child_id) else {
                     continue;
                 };
-                let mut edge_attrs = Vec::new();
-                if let Some(len) = child.length {
+                let edge_attrs = if let Some(len) = child.length {
                     if len.is_finite() && len >= 0.0 {
-                        edge_attrs.push(format!("label=\"{}\"", len));
+                        format!(" [label=\"{}\"]", len)
+                    } else {
+                        String::new()
                     }
-                }
-
-                let edge_attr_str = if edge_attrs.is_empty() {
-                    String::new()
                 } else {
-                    format!(" [{}]", edge_attrs.join(", "))
+                    String::new()
                 };
 
-                s.push_str(&format!(
-                    "    {} -> {}{};\n",
-                    node_id, child_id, edge_attr_str
-                ));
+                let _ = writeln!(s, "    {} -> {}{};", node_id, child_id, edge_attrs);
             }
         }
     }

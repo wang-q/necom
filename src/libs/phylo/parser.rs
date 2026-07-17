@@ -298,6 +298,28 @@ fn parse_plain_comment(input: &str) -> IResult<&str, &str, DetailedError<'_>> {
     ws(char(']')).parse(input).map(|(rest, _)| (rest, content))
 }
 
+/// Unescape an NHX property value.
+///
+/// Reverses `escape_nhx_value` from the writer: `\]` becomes `]` and `\\`
+/// becomes a single backslash.
+fn unescape_nhx_value(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    let mut chars = value.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            if let Some(&next) = chars.peek() {
+                if next == '\\' || next == ']' {
+                    chars.next();
+                    out.push(next);
+                    continue;
+                }
+            }
+        }
+        out.push(c);
+    }
+    out
+}
+
 /// Parse NHX properties from the content of an NHX comment.
 ///
 /// Input is expected to start with `&&NHX` (the leading marker itself is
@@ -314,7 +336,7 @@ fn parse_nhx_content(content: &str) -> Option<BTreeMap<String, String>> {
             continue;
         }
         if let Some((k, v)) = part.split_once('=') {
-            props.insert(k.to_string(), v.to_string());
+            props.insert(k.to_string(), unescape_nhx_value(v));
         } else if !part.trim().is_empty() {
             // Unstructured part in NHX -> key with empty value
             props.insert(part.to_string(), String::new());
@@ -646,6 +668,17 @@ mod tests {
         let props = root.properties.as_ref().unwrap();
         assert_eq!(props.get("S").map(|s| s.as_str()), Some("human"));
         assert_eq!(props.get("E").map(|s| s.as_str()), Some("1.5"));
+    }
+
+    #[test]
+    fn test_parser_nhx_escaped_values() {
+        // `\]` and `\\` inside an NHX value must be unescaped by the parser.
+        let input = r"(A:0.1,B:0.2)n1[&&NHX:comment=a\]b\\c];";
+        let tree = Tree::from_newick(input).unwrap();
+
+        let root = tree.get_node(tree.get_root().unwrap()).unwrap();
+        let props = root.properties.as_ref().unwrap();
+        assert_eq!(props.get("comment").map(|s| s.as_str()), Some("a]b\\c"));
     }
 
     #[test]

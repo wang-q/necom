@@ -4,6 +4,7 @@ use super::super::Tree;
 use super::util::{compute_depths, compute_heights};
 use crate::libs::phylo::node::NodeId;
 use std::collections::HashMap;
+use std::fmt::Write as _;
 
 /// Escape characters that are special in LaTeX/Forest text.
 ///
@@ -46,7 +47,9 @@ pub fn to_forest(tree: &Tree, height: f64) -> String {
     if let Some(root) = tree.get_root() {
         let depths = compute_depths(tree);
         let heights = compute_heights(tree);
-        to_forest_recursive(tree, root, height, &depths, &heights)
+        let mut s = String::new();
+        to_forest_recursive(tree, root, height, &depths, &heights, &mut s);
+        s
     } else {
         String::new()
     }
@@ -58,9 +61,10 @@ fn to_forest_recursive(
     height: f64,
     depths: &HashMap<NodeId, usize>,
     heights: &HashMap<NodeId, usize>,
-) -> String {
+    s: &mut String,
+) {
     let Some(node) = tree.get_node(id) else {
-        return String::new();
+        return;
     };
     let indent = "  ";
 
@@ -69,25 +73,24 @@ fn to_forest_recursive(
 
     if children.is_empty() {
         let indention = indent.repeat(depth);
-        format!(
-            "{}[{}]\n",
+        let _ = writeln!(
+            s,
+            "{}[{}]",
             indention,
             to_forest_node_props(tree, id, height, heights)
-        )
+        );
     } else {
-        let branch_set = children
-            .iter()
-            .map(|&child| to_forest_recursive(tree, child, height, depths, heights))
-            .collect::<Vec<_>>();
-
         let indention = indent.repeat(depth);
-        format!(
-            "{}[{}\n{}{}]\n",
+        let _ = writeln!(
+            s,
+            "{}[{}",
             indention,
-            to_forest_node_props(tree, id, height, heights),
-            branch_set.join(""),
-            indention,
-        )
+            to_forest_node_props(tree, id, height, heights)
+        );
+        for &child in children {
+            to_forest_recursive(tree, child, height, depths, heights, s);
+        }
+        let _ = writeln!(s, "{}]", indention);
     }
 }
 
@@ -123,7 +126,7 @@ fn to_forest_node_props(
         }
         for key in ["dot", "bar", "rec", "tri"] {
             if let Some(v) = props.get(key) {
-                options += &format!(", {}={{{}}}", key, v.replace('_', " "));
+                let _ = write!(options, ", {}={{{}}}", key, v.replace('_', " "));
             }
         }
         let mut comment = String::new();
@@ -136,19 +139,19 @@ fn to_forest_node_props(
             }
         }
         if !comment.is_empty() {
-            options += &format!(", comment={{{}}}", comment);
+            let _ = write!(options, ", comment={{{}}}", comment);
         }
     }
 
     if let Some(color) = &color {
         if let Some(label) = &label {
             if !label.is_empty() {
-                options += &format!(", label=\\color{{{}}}{{{}}}", color, label);
+                let _ = write!(options, ", label=\\color{{{}}}{{{}}}", color, label);
             }
         }
     } else if let Some(label) = &label {
         if !label.is_empty() {
-            options += &format!(", label={{{}}}", label);
+            let _ = write!(options, ", label={{{}}}", label);
         }
     }
 
@@ -174,11 +177,11 @@ fn to_forest_node_props(
 
     if height == 0.0 {
         let tier = *heights.get(&id).unwrap_or(&0);
-        options += &format!(", tier={}", tier);
+        let _ = write!(options, ", tier={}", tier);
     } else {
         let edge = node.finite_length();
         let bl = calc_length(edge, height);
-        options += &format!(", l={}mm, l sep=0", bl);
+        let _ = write!(options, ", l={}mm, l sep=0", bl);
 
         if node.is_leaf() {
             // Add an invisible node to the rightmost to occupy spaces

@@ -61,7 +61,7 @@ necom nwk distance [OPTIONS] <infile>
     *   `parent`: Distance to the parent.
     *   `pairwise`: Pairwise distances among all leaves.
     *   `lca`: Distance to the lowest common ancestor (LCA).
-    *   `phylip`: Output a PHYLIP-format distance matrix for selected nodes.
+    *   `phylip`: Output a PHYLIP-format distance matrix for selected nodes. All selected nodes must be named; unnamed nodes cause an error.
 *   `-I`: Ignore internal nodes.
 *   `-L`: Ignore leaf nodes.
 *   `-n <name>` / `-l <file>` / `-x <regex>`: Restrict output to nodes matched by exact name, name-list file, or case-insensitive regex. When omitted, all selected nodes (respecting `-I`/`-L`) are reported.
@@ -104,6 +104,7 @@ necom nwk support [OPTIONS] <target> <replicates>
 
 *   `-p, --percent`: Output support values as integer percentages (0–100), truncated toward zero.
 *   Overwrites existing internal node labels in the target tree.
+*   The root node is not annotated; any existing root label is preserved.
 
 ---
 

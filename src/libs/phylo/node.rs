@@ -72,9 +72,12 @@ impl Node {
     }
 
     /// Add a property (key-value pair).
+    ///
+    /// Keys containing Newick/NHX reserved characters (`=`, `:`, `[`, `]`, `;`,
+    /// `,`, or whitespace) are silently ignored to keep the output valid.
     pub fn add_property(&mut self, key: impl Into<String>, value: impl Into<String>) {
         let key = key.into();
-        if key.is_empty() {
+        if key.is_empty() || key.chars().any(|c| "=:[];, \t\r\n".contains(c)) {
             return;
         }
         self.properties

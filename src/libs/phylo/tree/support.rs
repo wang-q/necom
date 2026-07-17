@@ -93,7 +93,7 @@ pub fn annotate_support(
         let node = target
             .get_node_mut(id)
             .ok_or_else(|| anyhow::anyhow!("invalid node id"))?;
-        if !node.is_leaf() {
+        if !node.is_leaf() && node.parent.is_some() {
             let count = counts.get(&bs).copied().unwrap_or(0);
             let label = if as_percent {
                 match (count * 100).checked_div(total_reps) {
@@ -130,4 +130,52 @@ pub fn count_clades(
     }
 
     Ok(counts)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::libs::phylo::tree::Tree;
+
+    #[test]
+    fn annotate_support_skips_root() {
+        let target = Tree::from_newick("((A,B),(C,D));").unwrap();
+        let replicate = Tree::from_newick("((A,B),(C,D));").unwrap();
+        let leaf_map = build_leaf_map(&replicate).unwrap();
+        let counts = count_clades(&[replicate], &leaf_map).unwrap();
+
+        let mut annotated = target;
+        annotate_support(&mut annotated, &leaf_map, &counts, 1, false).unwrap();
+
+        let root = annotated.get_root().expect("root exists");
+        assert!(
+            annotated.get_node(root).unwrap().name.is_none(),
+            "root node should not be annotated with a support value"
+        );
+
+        let internal_names: Vec<_> = annotated
+            .nodes
+            .iter()
+            .filter(|n| !n.is_leaf() && n.parent.is_some())
+            .filter_map(|n| n.name.clone())
+            .collect();
+        assert_eq!(internal_names, vec!["1", "1"]);
+    }
+
+    #[test]
+    fn annotate_support_preserves_root_label() {
+        let target = Tree::from_newick("((A,B),(C,D))Root;").unwrap();
+        let replicate = Tree::from_newick("((A,B),(C,D));").unwrap();
+        let leaf_map = build_leaf_map(&replicate).unwrap();
+        let counts = count_clades(&[replicate], &leaf_map).unwrap();
+
+        let mut annotated = target;
+        annotate_support(&mut annotated, &leaf_map, &counts, 1, false).unwrap();
+
+        let root = annotated.get_root().expect("root exists");
+        assert_eq!(
+            annotated.get_node(root).unwrap().name.as_deref(),
+            Some("Root")
+        );
+    }
 }

@@ -63,6 +63,39 @@ fn command_order_list() {
 }
 
 #[test]
+fn command_order_name_list_missing_warns() {
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    let mut list_file = NamedTempFile::new().unwrap();
+    writeln!(list_file, "A").unwrap();
+    writeln!(list_file, "Missing1").unwrap();
+    writeln!(list_file, "B").unwrap();
+    writeln!(list_file, "Missing2").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "order",
+            "tests/newick/abc.nwk",
+            "--name-list",
+            list_file.path().to_str().unwrap(),
+        ])
+        .run();
+
+    assert!(
+        stderr.contains("name-list entries not found in tree"),
+        "expected warning for missing names, got stderr: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("Missing1") && stderr.contains("Missing2"),
+        "expected missing names in warning, got stderr: {}",
+        stderr
+    );
+}
+
+#[test]
 fn command_order_unnamed() {
     // Test case where internal nodes are unnamed.
     // ((C,D),(A,B));

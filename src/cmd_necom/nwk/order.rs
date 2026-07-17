@@ -1,6 +1,7 @@
 use anyhow::Context;
 use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command, Id};
 use necom::libs::phylo::tree::{algo, Tree};
+use std::collections::HashSet;
 use std::io::Write;
 
 /// Build the clap subcommand for order.
@@ -112,6 +113,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     for tree in &mut trees {
         if !names.is_empty() {
+            let leaf_name_vec = tree.get_leaf_names();
+            let leaf_names: HashSet<&str> =
+                leaf_name_vec.iter().filter_map(|n| n.as_deref()).collect();
+            let missing: Vec<&str> = names
+                .iter()
+                .map(|s| s.as_str())
+                .filter(|n| !leaf_names.contains(n))
+                .collect();
+            if !missing.is_empty() {
+                log::warn!("name-list entries not found in tree: {:?}", missing);
+            }
             algo::sort_by_list(tree, &names);
         }
         if default_an || !opt_an.is_empty() {

@@ -1024,4 +1024,56 @@ mod tests {
         tree.get_node_mut(a_id).unwrap().parent = Some(a_id);
         assert!(reroot_at(&mut tree, a_id, false).is_err());
     }
+
+    #[test]
+    fn reroot_at_to_child_shifts_support_labels() {
+        // Original tree: root 90 with two internal children 70 and 80.
+        // Reroot at the internal node labeled 70.
+        // The old root label (90) moves to the new root; the node that used
+        // to be 70 now sits below the new root and takes label 70.
+        let mut tree = Tree::from_newick("((A,B)70,(C,D)80)90;").unwrap();
+        let target = tree.get_node_by_name("70").unwrap();
+        reroot_at(&mut tree, target, true).unwrap();
+
+        assert_eq!(tree.to_newick(), "(A,B,((C,D)80)70)90;");
+        let names: std::collections::HashSet<_> = tree.get_names().into_iter().collect();
+        assert!(names.contains("90"));
+        assert!(names.contains("80"));
+        assert!(names.contains("70"));
+    }
+
+    #[test]
+    fn reroot_at_to_leaf_preserves_leaf_name_and_clears_path_internal() {
+        // Reroot at leaf C. The internal node directly above C (80) is
+        // converted into the new root's child and must lose its support label
+        // so that leaf C keeps its taxon name.
+        let mut tree = Tree::from_newick("((A,B)70,(C,D)80)90;").unwrap();
+        let target = tree.get_node_by_name("C").unwrap();
+        reroot_at(&mut tree, target, true).unwrap();
+
+        assert_eq!(tree.to_newick(), "((D,((A,B)70)80))C;");
+        let names: std::collections::HashSet<_> = tree.get_names().into_iter().collect();
+        assert!(names.contains("C"));
+        assert!(names.contains("70"));
+        assert!(names.contains("80"));
+        // The node directly above C should no longer have a support label.
+        assert!(!names.contains("90"));
+    }
+
+    #[test]
+    fn reroot_at_support_values_do_not_overwrite_other_internals() {
+        // Reroot at the right internal node. The untouched left internal node
+        // keeps its original support label.
+        let mut tree = Tree::from_newick("((A,B)70,(C,D)80)90;").unwrap();
+        let target = tree.get_node_by_name("80").unwrap();
+        reroot_at(&mut tree, target, true).unwrap();
+
+        let names: std::collections::HashSet<_> = tree.get_names().into_iter().collect();
+        assert!(
+            names.contains("70"),
+            "untouched internal label should be preserved"
+        );
+        assert!(names.contains("80"));
+        assert!(names.contains("90"));
+    }
 }

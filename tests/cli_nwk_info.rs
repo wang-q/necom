@@ -752,9 +752,31 @@ fn command_distance_reference_parent() {
     assert!(stdout.contains("k\t0"));
 }
 
+#[test]
+fn command_distance_phylip_rejects_unnamed_nodes() {
+    let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file, "((A,B),(C,D))Root;").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "distance",
+            file.path().to_str().unwrap(),
+            "--mode",
+            "phylip",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("Phylip matrix requires all selected nodes to be named"),
+        "expected clear error for unnamed nodes, got stderr: {}",
+        stderr
+    );
+}
+
 // ================================================================================================
 // Edge cases
-// ================================================================================================
+// ==============================================================================================
 
 #[test]
 fn command_stat_empty_input() {

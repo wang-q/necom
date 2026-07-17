@@ -347,8 +347,10 @@ pub(crate) fn format_float(val: f64) -> String {
     }
     let s = format!("{:.6}", val);
     let trimmed = s.trim_end_matches('0').trim_end_matches('.');
-    if trimmed.is_empty() {
-        "0".to_string()
+    if trimmed.parse::<f64>() == Ok(0.0) {
+        // Values too small for 6 decimal places (e.g. 1e-7) must not be
+        // silently rounded to "0".
+        format!("{:e}", val)
     } else {
         trimmed.to_string()
     }
@@ -578,6 +580,13 @@ mod tests {
     fn format_float_negative_finite_retains_sign() {
         assert_eq!(format_float(-1.0), "-1");
         assert_eq!(format_float(-1.234560), "-1.23456");
+    }
+
+    #[test]
+    fn format_float_preserves_tiny_nonzero_values() {
+        assert_eq!(format_float(1e-7), "1e-7");
+        assert_eq!(format_float(-1e-7), "-1e-7");
+        assert_eq!(format_float(1.234567e-7), "1.234567e-7");
     }
 
     #[test]

@@ -4,6 +4,7 @@ use super::super::Tree;
 use super::util::compute_scale_bar;
 use crate::libs::phylo::node::NodeId;
 use std::collections::HashMap;
+use std::fmt::Write as _;
 
 /// Serialize tree to SVG format.
 pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
@@ -46,12 +47,13 @@ pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
     let mut s = String::new();
 
     // SVG header
-    s.push_str(&format!(
+    let _ = writeln!(
+        s,
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
          <svg xmlns=\"http://www.w3.org/2000/svg\" \
-         width=\"{}\" height=\"{}\" viewBox=\"0 0 {} {}\">\n",
+         width=\"{}\" height=\"{}\" viewBox=\"0 0 {} {}\">",
         svg_width, svg_height, svg_width, svg_height
-    ));
+    );
 
     // Embedded styles matching template.tex
     s.push_str(
@@ -80,13 +82,14 @@ pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
         // Horizontal branch line (from parent to this node)
         if let Some(parent_id) = node.parent {
             if let Some(&(px, _)) = positions.get(&parent_id) {
-                s.push_str(&format!(
-                    "\t<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\"/>\n",
+                let _ = writeln!(
+                    s,
+                    "\t<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\"/>",
                     ox + px,
                     oy + ny,
                     ox + nx,
                     oy + ny
-                ));
+                );
             }
         }
 
@@ -99,13 +102,14 @@ pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
             if let (Some(&(_, first_y)), Some(&(_, last_y))) =
                 (positions.get(&first_child), positions.get(&last_child))
             {
-                s.push_str(&format!(
-                    "\t<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\"/>\n",
+                let _ = writeln!(
+                    s,
+                    "\t<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\"/>",
                     ox + nx,
                     oy + first_y,
                     ox + nx,
                     oy + last_y
-                ));
+                );
             }
         }
     }
@@ -123,11 +127,12 @@ pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
         if !node.is_leaf() {
             // Only draw dot if node has a name (matching Forest behavior)
             if node.name.is_some() {
-                s.push_str(&format!(
-                    "\t<circle cx=\"{}\" cy=\"{}\" r=\"2\" class=\"dot\"/>\n",
+                let _ = writeln!(
+                    s,
+                    "\t<circle cx=\"{}\" cy=\"{}\" r=\"2\" class=\"dot\"/>",
                     ox + nx,
                     oy + ny
-                ));
+                );
             }
         }
     }
@@ -146,22 +151,24 @@ pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
             // Leaf label: right of node
             let label = node.name.as_deref().unwrap_or("").replace('_', " ");
             if !label.is_empty() {
-                s.push_str(&format!(
-                    "\t<text x=\"{}\" y=\"{}\" text-anchor=\"start\" dominant-baseline=\"middle\">{}</text>\n",
+                let _ = writeln!(
+                    s,
+                    "\t<text x=\"{}\" y=\"{}\" text-anchor=\"start\" dominant-baseline=\"middle\">{}</text>",
                     ox + nx + 6.0,
                     oy + ny,
                     xml_escape(&label)
-                ));
+                );
             }
         } else if let Some(name) = &node.name {
             // Internal node label: left of node
             let label = name.replace('_', " ");
-            s.push_str(&format!(
-                "\t<text x=\"{}\" y=\"{}\" text-anchor=\"end\" dominant-baseline=\"middle\" class=\"label\">{}</text>\n",
+            let _ = writeln!(
+                s,
+                "\t<text x=\"{}\" y=\"{}\" text-anchor=\"end\" dominant-baseline=\"middle\" class=\"label\">{}</text>",
                 ox + nx - 6.0,
                 oy + ny,
                 xml_escape(&label)
-            ));
+            );
         }
     }
 
@@ -173,19 +180,21 @@ pub fn to_svg(tree: &Tree, height: f64, vskip: f64, width: f64) -> String {
         let bar_x = ox;
         let bar_y = svg_height - 20.0;
 
-        s.push_str(&format!(
-            "\t<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\"/>\n",
+        let _ = writeln!(
+            s,
+            "\t<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\"/>",
             bar_x,
             bar_y,
             bar_x + scale_px,
             bar_y
-        ));
-        s.push_str(&format!(
-            "\t<text x=\"{}\" y=\"{}\" text-anchor=\"middle\" class=\"scale-text\">{}</text>\n",
+        );
+        let _ = writeln!(
+            s,
+            "\t<text x=\"{}\" y=\"{}\" text-anchor=\"middle\" class=\"scale-text\">{}</text>",
             bar_x + scale_px / 2.0,
             bar_y + 14.0,
             crate::libs::phylo::cmp::format_float(scale)
-        ));
+        );
     }
 
     s.push_str("</svg>\n");

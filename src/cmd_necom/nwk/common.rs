@@ -76,6 +76,12 @@ pub(crate) fn format_label_columns(
     Ok(out)
 }
 
+/// Return the value of a flag argument, defaulting to `false` when absent
+/// or when the argument is not defined for the current command.
+fn flag(args: &ArgMatches, id: &str) -> bool {
+    args.try_contains_id(id).unwrap_or(false) && args.get_flag(id)
+}
+
 /// Warn once for each duplicate name that is being matched by name.
 fn warn_duplicate_name(duplicates: &HashSet<String>, name: &str) {
     if duplicates.contains(name) {
@@ -156,11 +162,7 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
     }
 
     // Include all descendants of internal nodes
-    let is_descendants = if args.try_contains_id("descendants").is_ok() {
-        args.get_flag("descendants")
-    } else {
-        false
-    };
+    let is_descendants = flag(args, "descendants");
 
     if is_descendants {
         let internal_ids: Vec<NodeId> = ids
@@ -180,16 +182,8 @@ pub(crate) fn match_names(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTre
 
 /// Returns IDs of nodes matching the position selection rules from CLI args.
 pub(crate) fn match_positions(tree: &Tree, args: &ArgMatches) -> anyhow::Result<BTreeSet<NodeId>> {
-    let skip_internal = if args.try_contains_id("internal").is_ok() {
-        args.get_flag("internal")
-    } else {
-        false
-    };
-    let skip_leaf = if args.try_contains_id("leaf").is_ok() {
-        args.get_flag("leaf")
-    } else {
-        false
-    };
+    let skip_internal = flag(args, "internal");
+    let skip_leaf = flag(args, "leaf");
 
     // all matched IDs
     let mut ids = BTreeSet::new();

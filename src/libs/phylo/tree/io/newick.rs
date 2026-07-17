@@ -3,6 +3,7 @@
 use super::super::Tree;
 use crate::libs::phylo::node::NodeId;
 use crate::libs::phylo::parser::is_newick_reserved;
+use std::fmt::Write as _;
 use std::io::Read;
 
 /// Read a Newick tree from a file.
@@ -34,7 +35,8 @@ pub fn to_newick(tree: &Tree) -> String {
 /// Currently supports indentation (empty for single line).
 pub fn to_newick_with_format(tree: &Tree, indent: &str) -> String {
     if let Some(root) = tree.get_root() {
-        let mut s = to_newick_recursive(tree, root, indent, 0);
+        let mut s = String::new();
+        to_newick_recursive(tree, root, indent, 0, &mut s);
         s.push(';');
         s
     } else {
@@ -44,14 +46,15 @@ pub fn to_newick_with_format(tree: &Tree, indent: &str) -> String {
 
 /// Serialize a specific subtree to a Newick string.
 pub fn to_newick_subtree(tree: &Tree, root: NodeId, indent: &str) -> String {
-    let mut s = to_newick_recursive(tree, root, indent, 0);
+    let mut s = String::new();
+    to_newick_recursive(tree, root, indent, 0, &mut s);
     s.push(';');
     s
 }
 
-fn to_newick_recursive(tree: &Tree, node_id: NodeId, indent: &str, depth: usize) -> String {
+fn to_newick_recursive(tree: &Tree, node_id: NodeId, indent: &str, depth: usize, s: &mut String) {
     let Some(node) = tree.get_node(node_id) else {
-        return String::new();
+        return;
     };
     let is_pretty = !indent.is_empty();
 
@@ -62,7 +65,40 @@ fn to_newick_recursive(tree: &Tree, node_id: NodeId, indent: &str, depth: usize)
         String::new()
     };
 
-    // Format node info: Label + Length + Comment
+    if node.children.is_empty() {
+        // Leaf: Indent + NodeInfo
+        let _ = write!(s, "{}{}", my_indent, node_info(tree, node_id));
+    } else {
+        // Internal node
+        if is_pretty {
+            let _ = writeln!(s, "{}(", my_indent);
+        } else {
+            s.push('(');
+        }
+        for (i, &child) in node.children.iter().enumerate() {
+            to_newick_recursive(tree, child, indent, depth + 1, s);
+            if i + 1 < node.children.len() {
+                if is_pretty {
+                    s.push_str(",\n");
+                } else {
+                    s.push(',');
+                }
+            }
+        }
+        if is_pretty {
+            let _ = write!(s, "\n{}){}", my_indent, node_info(tree, node_id));
+        } else {
+            let _ = write!(s, "){}", node_info(tree, node_id));
+        }
+    }
+}
+
+/// Format node info: Label + Length + Comment.
+fn node_info(tree: &Tree, node_id: NodeId) -> String {
+    let Some(node) = tree.get_node(node_id) else {
+        return String::new();
+    };
+
     let mut node_info = String::new();
 
     if let Some(name) = &node.name {
@@ -71,7 +107,7 @@ fn to_newick_recursive(tree: &Tree, node_id: NodeId, indent: &str, depth: usize)
 
     let len = node.finite_length();
     if len > 0.0 {
-        node_info.push_str(&format!(":{}", len));
+        let _ = write!(node_info, ":{}", len);
     }
     // len == 0.0 (including NaN/inf/negative inputs) is omitted to keep
     // cladograms clean and match the documented output semantics.
@@ -81,39 +117,16 @@ fn to_newick_recursive(tree: &Tree, node_id: NodeId, indent: &str, depth: usize)
             node_info.push_str("[&&NHX");
             for (k, v) in props {
                 if v.is_empty() {
-                    node_info.push_str(&format!(":{}", k));
+                    let _ = write!(node_info, ":{}", k);
                 } else {
-                    node_info.push_str(&format!(":{}={}", k, v));
+                    let _ = write!(node_info, ":{}={}", k, escape_nhx_value(v));
                 }
             }
             node_info.push(']');
         }
     }
 
-    if node.children.is_empty() {
-        // Leaf: Indent + NodeInfo
-        format!("{}{}", my_indent, node_info)
-    } else {
-        // Internal node
-        let children_strs: Vec<String> = node
-            .children
-            .iter()
-            .map(|&child| to_newick_recursive(tree, child, indent, depth + 1))
-            .collect();
-
-        if is_pretty {
-            // (\n children \n)NodeInfo
-            format!(
-                "{}(\n{}\n{}){}",
-                my_indent,
-                children_strs.join(",\n"),
-                my_indent,
-                node_info
-            )
-        } else {
-            format!("({}){}", children_strs.join(","), node_info)
-        }
-    }
+    node_info
 }
 
 fn quote_label(label: &str) -> String {
@@ -125,6 +138,22 @@ fn quote_label(label: &str) -> String {
     } else {
         label.to_string()
     }
+}
+
+/// Escape characters that are special inside an NHX annotation value.
+///
+/// Backslashes and closing square brackets must be escaped so that the
+/// generated Newick string can be re-parsed unambiguously.
+fn escape_nhx_value(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    for c in value.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            ']' => out.push_str("\\]"),
+            _ => out.push(c),
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -215,6 +244,27 @@ mod tests {
         let output = to_newick(&tree);
         // Since BTreeMap order is deterministic (alphabetical keys), but we only have one key here.
         assert!(output.contains("A[&&NHX:color=red];"));
+    }
+
+    #[test]
+    fn test_to_newick_property_value_escaping_round_trip() {
+        let mut tree = Tree::new();
+        let n0 = tree.add_node();
+        let _ = tree.set_root(n0);
+        tree.get_node_mut(n0).unwrap().set_name("A");
+        tree.get_node_mut(n0)
+            .unwrap()
+            .add_property("comment", "a]b\\c");
+
+        let output = to_newick(&tree);
+        assert!(output.contains("A[&&NHX:comment=a\\]b\\\\c];"));
+
+        let parsed = Tree::from_newick(&output).unwrap();
+        let root = parsed.get_node(parsed.get_root().unwrap()).unwrap();
+        assert_eq!(
+            root.get_property("comment").map(|s| s.as_str()),
+            Some("a]b\\c")
+        );
     }
 
     #[test]
