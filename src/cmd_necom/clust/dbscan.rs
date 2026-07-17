@@ -6,25 +6,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("dbscan")
         .about("Clusters entries via DBSCAN")
-        .after_help(
-            r###"
-Density-based spatial clustering of applications with noise (DBSCAN).
-
-Note: The input file should contain pairwise distances (lower is better), NOT similarities.
-
-Output formats:
-    * cluster: Each line contains points of one cluster.
-    * pair: Each line contains a (representative point, cluster member) pair.
-
-Note:
-The representative point is selected by --rep and affects both output formats:
-    * For 'pair' format: it is the first column (representative ID).
-    * For 'cluster' format: it is placed in the first column.
-    * medoid (default): point with minimum sum of distances to other cluster members.
-    * first: alphabetically first member of the cluster.
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/clust/dbscan.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input file containing pairwise distances in .tsv format",
         ))

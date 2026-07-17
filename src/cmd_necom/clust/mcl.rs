@@ -6,34 +6,10 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("mcl")
         .about("Clusters entries via Markov Clustering (MCL)")
-        .after_help(
-            r###"
-MCL is a fast and scalable unsupervised cluster algorithm for graphs (also known as networks) based on simulation of (stochastic) flow in graphs.
-
-It is particularly useful for clustering protein interaction networks or similarity networks.
-
-Note: The input file should contain similarity scores (higher is better), NOT distances.
-
-Output formats:
-    * cluster: Each line contains points of one cluster.
-    * pair: Each line contains a (representative point, cluster member) pair.
-
-Note:
-The representative point is selected by --rep and affects both output formats:
-    * For 'pair' format: it is the first column (representative ID).
-    * For 'cluster' format: it is placed in the first column.
-    * medoid (default): point with maximum sum of similarities to other cluster members.
-    * first: alphabetically first member of the cluster.
-
-Reference:
-Stijn van Dongen, Graph Clustering by Flow Simulation. PhD thesis, University of Utrecht, May 2000.
-"###,
-        )
-        .arg(
-            crate::cmd_necom::args::infile_arg_required_with_help(
-                "Input file containing pairwise similarities (edge weights) in .tsv format",
-            ),
-        )
+        .after_help(include_str!("../../../docs/help/clust/mcl.md"))
+        .arg(crate::cmd_necom::args::infile_arg_required_with_help(
+            "Input file containing pairwise similarities (edge weights) in .tsv format",
+        ))
         .arg(crate::cmd_necom::args::format_arg())
         .arg(crate::cmd_necom::args::flat_rep_arg())
         .arg(crate::cmd_necom::args::same_arg("1.0"))

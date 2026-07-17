@@ -11,33 +11,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("eval")
         .about("Evaluates clustering quality")
-        .after_help(
-            r###"Calculates clustering evaluation metrics.
-
-Modes:
-1. External Evaluation (Partition vs Partition):
-   Compares two clustering partitions (e.g., ground truth vs result).
-   Metrics: ARI, AMI, V-Measure.
-
-2. Internal Evaluation (Partition + Matrix):
-   Evaluates a single partition using a distance matrix.
-   Metrics: Silhouette Coefficient.
-
-3. Batch Evaluation (Long Format):
-   Evaluates multiple partitions (e.g. from parameter scan) against a ground truth or using internal metrics.
-   Input file must be in 'long' format (Group, Cluster, Sample).
-
-Examples:
-1. Compare result with ground truth:
-   $ necom clust eval result.tsv --other other.tsv -o eval.tsv
-
-2. Evaluate result using distance matrix:
-   $ necom clust eval result.tsv --matrix dist.phy
-
-3. Batch evaluation of scan results:
-   $ necom clust eval scan.tsv --format long --matrix dist.phy
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/clust/eval.md"))
         .arg(
             Arg::new("p1")
                 .required(true)

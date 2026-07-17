@@ -7,24 +7,7 @@ pub fn make_subcommand() -> Command {
     Command::new("k-medoids")
         .about("Clusters entries via K-Medoids")
         .visible_alias("km")
-        .after_help(
-            r###"
-K-Medoids clustering algorithm (PAM/Lloyd-like).
-
-Note: The input file should contain pairwise distances (lower is better), NOT similarities.
-
-Output formats:
-    * cluster: Each line contains points of one cluster.
-    * pair: Each line contains a (representative point, cluster member) pair.
-
-Note:
-The representative point is selected by --rep and affects both output formats:
-    * For 'pair' format: it is the first column (representative ID).
-    * For 'cluster' format: it is placed in the first column.
-    * medoid (default): point with minimum sum of distances to other cluster members.
-    * first: alphabetically first member of the cluster.
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/clust/k-medoids.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input file containing pairwise distances in .tsv format",
         ))

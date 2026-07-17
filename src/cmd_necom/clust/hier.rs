@@ -11,28 +11,7 @@ pub fn make_subcommand() -> Command {
     Command::new("hier")
         .about("Clusters entries via hierarchical clustering")
         .visible_alias("hclust")
-        .after_help(
-            r###"
-This command performs hierarchical clustering (agglomerative) on a distance matrix.
-It takes a PHYLIP format distance matrix as input and produces a Newick tree string.
-
-Notes:
-* Input matrix must be in PHYLIP format (strict or relaxed).
-* If you have a pairwise list (name1 name2 dist), use `necom mat to-phylip` first.
-* The output Newick tree uses the linkage distance (merge height) as node height.
-* For Ward's method, the input is assumed to be Euclidean distances (or similar).
-
-Examples:
-1. Basic usage with Ward's method (default):
-   necom clust hier matrix.phy > tree.nwk
-
-2. Use Average Linkage (UPGMA):
-   necom clust hier matrix.phy --method average > tree.nwk
-
-3. Use Single Linkage (Nearest Neighbor):
-   necom clust hier matrix.phy --method single > tree.nwk
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/clust/hier.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input PHYLIP distance matrix file. [stdin] for standard input",
         ))

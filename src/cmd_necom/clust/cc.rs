@@ -6,24 +6,10 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("cc")
         .about("Clusters entries via connected components")
-        .after_help(
-            r###"
-Ignores scores and writes all connected components.
-
-Output formats:
-    * cluster: Each line contains points of one cluster.
-    * pair: Each line contains a (representative point, cluster member) pair.
-
-Note:
-    For the 'pair' format, the representative point is the alphabetically first member of the cluster.
-
-"###,
-        )
-        .arg(
-            crate::cmd_necom::args::infile_arg_required_with_help(
-                "Input file containing pairwise relations (weights ignored) in .tsv format",
-            ),
-        )
+        .after_help(include_str!("../../../docs/help/clust/cc.md"))
+        .arg(crate::cmd_necom::args::infile_arg_required_with_help(
+            "Input file containing pairwise relations (weights ignored) in .tsv format",
+        ))
         .arg(crate::cmd_necom::args::format_arg())
         .arg(crate::cmd_necom::args::outfile_arg())
 }

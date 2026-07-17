@@ -7,23 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("nj")
         .about("Constructs a phylogenetic tree using Neighbor-Joining")
-        .after_help(
-            r###"
-Constructs a phylogenetic tree from a distance matrix using the Neighbor-Joining (NJ) algorithm.
-
-Notes:
-* Input: PHYLIP distance matrix (relaxed or strict).
-* Output: Newick tree (midpoint rooted).
-* NJ is a bottom-up clustering method suitable for variable evolutionary rates.
-
-Examples:
-1. Build tree from matrix:
-   necom clust nj matrix.phy -o tree.nwk
-
-2. Pipe matrix to tree:
-   cat matrix.phy | necom clust nj stdin > tree.nwk
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/clust/nj.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input PHYLIP matrix file. [stdin] for standard input",
         ))

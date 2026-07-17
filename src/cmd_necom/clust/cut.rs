@@ -7,50 +7,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("cut")
         .about("Cuts a tree into clusters")
-        .after_help(
-            r###"
-Cuts the tree into clusters based on various criteria.
-
-Criteria:
-* `--k <K>`: Cut into K clusters (top-down split by height).
-* `--height <H>`: Cut at specific height (max distance to leaves).
-* `--root-dist <D>`: Cut at specific distance from root.
-* `--max-clade <T>`: TreeCluster style (max pairwise distance in clade <= T).
-* `--avg-clade <T>`: TreeCluster style (avg pairwise distance in clade <= T).
-* `--med-clade <T>`: TreeCluster style (median pairwise distance in clade <= T).
-* `--sum-branch <T>`: TreeCluster style (sum of branch lengths in clade <= T).
-* `--leaf-dist-max <T>`: TreeCluster style (max distance from cluster root to any leaf <= T).
-* `--leaf-dist-min <T>`: TreeCluster style (min distance from cluster root to any leaf <= T).
-* `--leaf-dist-avg <T>`: TreeCluster style (avg distance from cluster root to leaves <= T).
-* `--max-edge <T>` / `--single-linkage <T>`: Cut branches longer than threshold.
-* `--inconsistent <T>`: SciPy style (inconsistent coefficient <= T).
-* `--dynamic-tree <N>`: Dynamic Tree Cut (top-down adaptive, N=min cluster size).
-* `--dynamic-hybrid <N>`: Hybrid Cut (Dynamic Tree + PAM, N=min cluster size).
-
-Output formats:
-    * cluster: Each line contains points of one cluster. The first point is the representative.
-    * pair: Each line contains a (representative point, cluster member) pair.
-
-Note:
-The representative point is determined by `--rep` (applies to both 'cluster' and 'pair' formats):
-* root (default): Member closest to root (alphabetical tie-break).
-* medoid: Member with min sum of distances to others (alphabetical tie-break).
-* first: Alphabetically first member.
-
-Examples:
-1. Cut into 5 clusters:
-   necom clust cut tree.nwk --k 5
-
-2. Cut at height 0.5:
-   necom clust cut tree.nwk --height 0.5
-
-3. Dynamic Tree Cut with min cluster size 20:
-   necom clust cut tree.nwk --dynamic-tree 20
-
-4. Hybrid Cut with PAM (needs distance matrix):
-   necom clust cut tree.nwk --dynamic-hybrid 20 --matrix dist.phy
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/clust/cut.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
             "Input Newick file",
         ))
