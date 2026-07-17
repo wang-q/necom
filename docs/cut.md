@@ -312,8 +312,6 @@ Concrete command examples are kept in `docs/clust.md` to avoid duplication.
 
 ### Threshold-Selection Strategy Reference
 
-A brief summary of these strategies also appears in `docs/clust.md`. The following sections provide more detail.
-
 When unsure about the best threshold, use `--scan` to generate data and refer to the following common strategies for decision-making:
 
 #### Strategy 1: Maximize Non-Singleton Clusters

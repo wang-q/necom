@@ -24,9 +24,12 @@ Examples:
 
 1. Condense by species (2nd column)
    `necom pl condense --taxon taxon.tsv tree.nwk`
+
 2. Condense by genus (3rd column)
    `necom pl condense --taxon taxon.tsv --rank 3 tree.nwk`
+
 3. Condense by multiple ranks
    `necom pl condense --taxon taxon.tsv --rank 2 --rank 3 tree.nwk`
+
 4. Output a mapping file alongside the condensed tree
    `necom pl condense --taxon taxon.tsv --map tree.nwk -o condensed.nwk`

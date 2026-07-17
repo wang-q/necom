@@ -8,13 +8,13 @@ The `necom mat` module focuses on the manipulation and conversion of **distance 
 - **Functionality**: Format conversion, subset extraction, matrix comparison, and standardization.
 - **Goal**: Provide standard, efficient data interfaces for phylogenetics and statistical clustering.
 
-## Supported File Formats
+## Scope
 
 `necom` currently focuses on clustering, distance matrix processing, and phylogenetic tree operations. Supported file formats are limited to those actually used by these commands.
 
 | Format | Description | Command Docs |
 | :--- | :--- | :--- |
-| Distance | Distance matrix structures such as `PHYLIP` and `Pairwise` | [mat.md](mat.md), [clust.md](clust.md) |
+| Distance | Distance matrix structures such as `PHYLIP` and `Pairwise` | this file, [clust.md](clust.md) |
 | Newick | Phylogenetic tree format | [nwk.md](nwk.md) |
 
 Distance matrices and Newick trees do not carry genomic coordinates. If other `necom` commands require coordinate-based input, this is documented separately in the corresponding command documentation.

@@ -50,7 +50,7 @@ Commands are divided into three categories by input data type (consistent with `
 - **Advantages**: Does not require specifying the number of clusters K; identifies noise.
 - **Input**: Pairwise distances `.tsv` (lower is better).
 - **Output**: `cluster` (one cluster per line, first element is the representative) or `pair` (representative–member pairs).
-- **Unimplemented options**: Parameter scanning and scoring such as `--scan`, `--opt-eps`, `--min-pct` are not yet implemented; they may be provided later as subcommands of `necom clust dbscan` or standalone scripts.
+- **Unimplemented options**: Parameter scanning and scoring such as `--scan`, `--opt-eps`, `--min-pct` are not yet implemented; planning details are in [`notes/design/dbscan-planned.md`](../notes/design/dbscan-planned.md). They may be provided later as subcommands of `necom clust dbscan` or standalone scripts.
 
 ### UPGMA
 
@@ -211,8 +211,6 @@ necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
 ## Planned
 
 GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Algorithms considered but not adopted (K-Means, Spectral, OPTICS, BIRCH, etc.) are documented in [`notes/design/clust-impl.md`](../notes/design/clust-impl.md).
-
-## Detailed Algorithm Descriptions
 
 ### GMM (Gaussian Mixture Models) [Planned]
 
