@@ -171,7 +171,7 @@ cargo test
 
 ## 关键设计文档
 
-- **`docs/`**: 用户面向命令文档（英文）。当前保留的文档包括 `clust.md`、`clust-cut.md`、`clust-eval.md`、`mat.md`、`mat-transform.md`、`nwk.md`，以及 `docs/formats/` 下的 `README.md` 和 `distance.md`。
+- **`docs/`**: 用户面向命令文档（英文）。当前保留的文档包括 `clust.md`、`clust-cut.md`、`clust-eval.md`、`mat.md`、`nwk.md`，以及 `docs/formats/` 下的 `README.md` 和 `distance.md`。
 - **`notes/`**: 开发者面向笔记（中文）：`notes/design/` 下保留与 `clust` / `nwk` / `phylo` 相关的设计稿，其余笔记已随命令移除而删除。
 
 ## 命令结构 (Command Structure)

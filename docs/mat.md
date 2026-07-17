@@ -132,14 +132,97 @@ Compute correlation or difference between two matrices.
 - **Prerequisite**: Uses the intersection of common IDs between the two matrices.
 - **Metrics (`--method`)**: Pearson, Spearman, Cosine, Jaccard, MAE, Euclidean, or `all`. Default is `pearson`; multiple methods can be comma-separated.
 
-#### `necom mat transform`
+### `necom mat transform`
 
-Apply mathematical transformations to matrix elements.
+The `necom mat transform` command applies mathematical transformations to values in a matrix.
+
+It is the core tool for converting a **Similarity Matrix** into a **Distance Matrix**, and also supports normalization and other numerical adjustments.
 
 - **Purpose**: Convert similarity matrices to distance matrices, or perform normalization and log transformations.
 - **Operations (`--op`)**: `linear`, `inv-linear`, `log`, `exp`, `square`, `sqrt`.
-- **Normalization (`--normalize`)**: Normalize based on diagonal elements.
-- **See also**: [mat-transform.md](mat-transform.md) for detailed transformation scenarios.
+- **Normalization (`--normalize`)**: Normalize based on diagonal elements before applying the transformation.
+- **Input**: PHYLIP distance matrix or pairwise TSV file; use `--input-format pair` for pairwise TSV.
+
+Clustering algorithms (such as UPGMA, NJ, Ward) and multidimensional scaling (MDS) usually require a **Distance Matrix** or **Dissimilarity Matrix** that satisfies:
+
+- $D(x, x) = 0$
+- $D(x, y) \ge 0$
+- Smaller $D(x, y)$ indicates higher similarity
+
+However, upstream bioinformatics tools (such as BLAST, MMseqs2, Diamond) or statistical analyses usually output **Similarity**, which satisfies:
+
+- $S(x, x) = Max$ (e.g., 1.0 or 100)
+- Larger $S(x, y)$ indicates higher similarity
+
+#### Conversion Models
+
+`necom mat transform` supports the following common transformation modes:
+
+##### 1. Linear Inversion
+
+Applicable to similarities with a fixed upper bound (e.g., Identity, Percent Similarity).
+
+$$D = Max - S$$
+
+- **Scenario**: BLAST Identity (0–100) $\rightarrow$ $D = 100 - S$
+- **Scenario**: Fraction (0–1) $\rightarrow$ $D = 1 - S$
+
+##### 2. Normalized Linear Inversion
+
+If $S$ has no fixed upper bound (e.g., Alignment Score), normalization is required first.
+
+Raw scores are usually affected by sequence length and cannot be directly compared (e.g., a score of 1000 for a long sequence may be less significant than a score of 100 for a short sequence). Normalization uses the diagonal (self-alignment score) to convert raw scores into relative similarity (0–1 range), giving subsequent distance transformations (e.g., $1-S$) a meaningful mathematical interpretation.
+
+$$D = 1 - \frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}}$$
+
+Or simply:
+
+$$D = 1 - \frac{S(x, y)}{Max(S)}$$
+
+##### 3. Logarithmic
+
+Applicable to probabilities or multiplicative models (similar to Jukes-Cantor correction).
+
+$$D = -\ln(S)$$
+
+Or after normalization:
+
+$$D = -\ln(\frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}})$$
+
+- **Scenario**: Sequence identity probability $\rightarrow$ evolutionary distance
+
+#### Data Flow
+
+```mermaid
+flowchart LR
+    A[pair/phylip input] --> B{input format?}
+    B -->|pair| C[from_pair_scores<br/>--same/--missing]
+    B -->|phylip| D[from_relaxed_phylip<br/>sequence/value validation]
+    C --> E[NamedMatrix]
+    D --> E
+    E --> F[transform_matrix<br/>normalize? op]
+    F --> G[write_phylip_matrix<br/>precision=6]
+    G --> H[stdout/file]
+```
+
+#### Notes
+
+- **Diagonal handling**:
+  - When `necom` reads a matrix, it usually ignores the diagonal (sets it to 0), but the `transform` command attempts to preserve diagonal information to support `--normalize`.
+  - If the input file lacks diagonal information (as in some PHYLIP variants), `--normalize` will not work correctly (treated as 0).
+- **Numerical stability**:
+  - The `log` operation is sensitive to 0 or negative values; off-diagonal values are set to `Inf` and diagonal values are set to 0.
+  - If the diagonal is 0 during normalization, the result will be 0.
+
+#### Future Work
+
+The following transformations are not currently implemented but may be useful in the future:
+
+- **Reciprocal**: $D = \frac{1}{S} - \frac{1}{Max}$. Can be approximated with `--op linear` plus an external script.
+- **Cosine Similarity**: $D = 1 - \cos(\theta)$
+- **Correlation**: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$
+
+For Cosine/Correlation distances, we recommend computing them in Python (SciPy) and exporting the result as a PHYLIP matrix.
 
 ## Recommended Workflows
 

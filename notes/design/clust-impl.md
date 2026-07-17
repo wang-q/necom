@@ -238,7 +238,7 @@
     - **注意**：由于 `necom clust cut` 命令已实现，该测试可以被激活。
 2.  **输入预处理文档 (已完成)**:
     - 目标：澄清输入要求。
-    - 状态：已在 `mat-transform.md` 和 `docs/clust.md` 的 Hierarchical Clustering 详细说明中更新，并增强了 `necom mat transform` 功能（支持对角线归一化），确保用户能正确地将相似度转换为距离。
+    - 状态：已在 `docs/mat.md` 的 `necom mat transform` 小节和 `docs/clust.md` 的 Hierarchical Clustering 详细说明中更新，并增强了 `necom mat transform` 功能（支持对角线归一化），确保用户能正确地将相似度转换为距离。
 
 ## 6. clust hier 内部实现细节（与 SciPy 对比）
 
