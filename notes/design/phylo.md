@@ -252,11 +252,11 @@ graph LR
     *   `Tree::from_newick()`: 解析 Newick 字符串 (支持引号、注释、科学计数法)。
     *   `Tree::from_file()`: 从文件读取并解析 Newick。
 *   **序列化**:
-    *   `to_newick()`: 紧凑格式输出。
-    *   `to_newick_with_format()`: 支持缩进的格式化输出。
-    *   `to_newick_subtree()`: 序列化指定子树。
-    *   `to_dot()` (Graphviz): 输出 DOT 格式。
-    *   `to_svg()`: 输出 SVG 矢量图格式。
+    *   `to_newick()`: 紧凑格式输出 (Tree 方法)。
+    *   `to_newick_with_format()`: 支持缩进的格式化输出 (Tree 方法)。
+    *   `to_newick_subtree()`: 序列化指定子树 (自由函数，通过 `io::to_newick_subtree()` 调用)。
+    *   `to_dot()`: 输出 Graphviz DOT 格式 (Tree 方法)。
+    *   `to_svg()`: 输出 SVG 矢量图格式 (Tree 方法)。
     *   `to_forest()`: 输出 LaTeX Forest 代码 (自由函数，通过 `io::to_forest()` 调用)。
 *   **遍历**:
     *   `preorder`, `postorder`: 深度优先遍历，返回 `Vec<NodeId>`。
