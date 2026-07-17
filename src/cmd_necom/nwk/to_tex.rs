@@ -121,11 +121,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             .find("%FOREST_END")
             .ok_or_else(|| anyhow::anyhow!("template marker %FOREST_END missing"))?;
         anyhow::ensure!(begin < end, "template markers %FOREST out of order");
-        template.replace_range(begin..end, &out_string);
+        let after_end = end + "%FOREST_END".len();
+        template.replace_range(begin..after_end, &out_string);
     }
 
-    if !no_default_style {
-        let default_font = r#"\setmainfont{NotoSans}[
+    let default_font = r#"\setmainfont{NotoSans}[
     Extension      = .ttf,
     UprightFont    = *-Regular,
     BoldFont       = *-Bold,
@@ -134,16 +134,26 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 ]
 "#;
 
-        // Section style
-        let begin = template
-            .find("%STYLE_BEGIN")
-            .ok_or_else(|| anyhow::anyhow!("template marker %STYLE_BEGIN missing"))?;
-        let end = template
-            .find("%STYLE_END")
-            .ok_or_else(|| anyhow::anyhow!("template marker %STYLE_END missing"))?;
-        anyhow::ensure!(begin < end, "template markers %STYLE out of order");
-        template.replace_range(begin..end, default_font);
-    }
+    // Section style: always replace the marker region. With --no-default-style,
+    // keep the template's original content between the markers; otherwise inject
+    // the Noto Sans setup.
+    let style_begin = template
+        .find("%STYLE_BEGIN")
+        .ok_or_else(|| anyhow::anyhow!("template marker %STYLE_BEGIN missing"))?;
+    let style_end = template
+        .find("%STYLE_END")
+        .ok_or_else(|| anyhow::anyhow!("template marker %STYLE_END missing"))?;
+    anyhow::ensure!(
+        style_begin < style_end,
+        "template markers %STYLE out of order"
+    );
+    let style_after_end = style_end + "%STYLE_END".len();
+    let style_replacement = if no_default_style {
+        template[style_begin + "%STYLE_BEGIN".len()..style_end].to_string()
+    } else {
+        default_font.to_string()
+    };
+    template.replace_range(style_begin..style_after_end, &style_replacement);
 
     writer.write_all(template.as_ref())?;
 

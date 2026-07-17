@@ -337,16 +337,14 @@ pub fn insert_parent(tree: &mut Tree, id: NodeId) -> anyhow::Result<NodeId> {
     let parent = node
         .parent
         .ok_or_else(|| anyhow::anyhow!("Node {} has no parent", id))?;
-    let length = node.length;
     let half_len = node.finite_length() / 2.0;
-    let new_length = length.map(|_| half_len);
 
     let new_node = tree.add_node();
 
     // Link parent -> new_node
     add_child(tree, parent, new_node)?;
     if let Some(n) = tree.get_node_mut(new_node) {
-        n.length = new_length;
+        n.set_length(half_len);
     }
 
     // Unlink parent -> id
@@ -361,7 +359,7 @@ pub fn insert_parent(tree: &mut Tree, id: NodeId) -> anyhow::Result<NodeId> {
     // Link new_node -> id
     add_child(tree, new_node, id)?;
     if let Some(node) = tree.get_node_mut(id) {
-        node.length = new_length;
+        node.set_length(half_len);
     }
 
     Ok(new_node)
@@ -405,8 +403,8 @@ pub fn insert_parent_pair(tree: &mut Tree, id1: NodeId, id2: NodeId) -> anyhow::
     }
 
     let old = parent1;
-    let edge1 = node1.length;
-    let edge2 = node2.length;
+    let edge1 = node1.finite_length();
+    let edge2 = node2.finite_length();
 
     // New node with parent (old) has no edge length
     let new = tree.add_node();
@@ -428,12 +426,12 @@ pub fn insert_parent_pair(tree: &mut Tree, id1: NodeId, id2: NodeId) -> anyhow::
     // 2. Link to new
     add_child(tree, new, id1)?;
     if let Some(node) = tree.get_node_mut(id1) {
-        node.length = edge1;
+        node.set_length(edge1);
     }
 
     add_child(tree, new, id2)?;
     if let Some(node) = tree.get_node_mut(id2) {
-        node.length = edge2;
+        node.set_length(edge2);
     }
 
     Ok(new)
@@ -464,11 +462,15 @@ pub fn remove_degree_two_nodes(tree: &mut Tree) -> anyhow::Result<()> {
 
 /// Deroot the tree by converting a bifurcating root into a multifurcating root.
 ///
-/// Both children of the root are removed and their children are promoted to be
-/// direct children of the root. Edge lengths from the root to each removed
-/// child are added to that child's descendants, matching the behavior of
-/// `collapse_node`. Non-finite, negative, and zero lengths are normalized to
-/// 0.0 before summing, and non-positive sums are stored as `None`.
+/// Both children of a bifurcating root are removed and their children are
+/// promoted to be direct children of the root. Edge lengths from the root to
+/// each removed child are added to that child's descendants, matching the
+/// behavior of `collapse_node`. Non-finite, negative, and zero lengths are
+/// normalized to 0.0 before summing, and non-positive sums are stored as
+/// `None`.
+///
+/// If the root is not bifurcating (already multifurcating or degenerate),
+/// the tree is left unchanged and the call succeeds.
 pub fn deroot(tree: &mut Tree) -> anyhow::Result<()> {
     let root = tree.root.ok_or_else(|| anyhow::anyhow!("Empty tree"))?;
     let children = tree
@@ -478,7 +480,10 @@ pub fn deroot(tree: &mut Tree) -> anyhow::Result<()> {
         .clone();
 
     if children.len() != 2 {
-        anyhow::bail!("Root is not bifurcating (degree != 2)");
+        // If the root already has != 2 children, there is no bifurcating root to
+        // expand. A multifurcating root is already derooted; a degenerate root
+        // with 0 or 1 child has nothing meaningful to promote.
+        return Ok(());
     }
 
     let mut new_children = Vec::new();
@@ -640,7 +645,7 @@ pub fn reroot_at(
         // c. Update parent's parent pointer and length
         if let Some(parent) = tree.get_node_mut(parent_id) {
             parent.parent = Some(child_id);
-            parent.length = length;
+            parent.set_length(length.unwrap_or(0.0));
         }
     }
 
@@ -694,7 +699,7 @@ pub fn condense_subtree(
         let new_node_id = tree.add_node();
         if let Some(node) = tree.get_node_mut(new_node_id) {
             node.set_name(name);
-            node.length = edge_len;
+            node.set_length(edge_len.unwrap_or(0.0));
             node.add_property("member", member_count.to_string());
             node.add_property("tri", "white");
         }

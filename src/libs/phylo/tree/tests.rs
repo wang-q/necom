@@ -702,15 +702,15 @@ fn nan_length_insert_parent() {
 
     let new_parent_node = tree.get_node(new_parent).unwrap();
     assert!(
-        (new_parent_node.length.unwrap()).abs() < 1e-9,
-        "expected 0.0, got {:?}",
+        new_parent_node.length.is_none(),
+        "expected None, got {:?}",
         new_parent_node.length
     );
 
     let leaf_node = tree.get_node(leaf).unwrap();
     assert!(
-        (leaf_node.length.unwrap()).abs() < 1e-9,
-        "expected 0.0, got {:?}",
+        leaf_node.length.is_none(),
+        "expected None, got {:?}",
         leaf_node.length
     );
 }
@@ -845,6 +845,18 @@ fn test_deroot_binary_root_becomes_multifurcating() {
     assert!(child_names.contains(&"A".to_string()));
     assert!(child_names.contains(&"B".to_string()));
     assert!(child_names.contains(&"D".to_string()));
+}
+
+#[test]
+fn test_deroot_multifurcating_root_is_noop() {
+    let original = "(A,B,C)Root;";
+    let mut tree = Tree::from_newick(original).unwrap();
+
+    // Derooting an already multifurcating root should succeed without changing
+    // the tree.
+    tree.deroot().unwrap();
+
+    assert_eq!(tree.to_newick().trim(), original);
 }
 
 #[test]

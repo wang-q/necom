@@ -18,9 +18,9 @@ Notes:
       Output: Node \t Distance
     * `parent`: Distance from each node to its parent.
       Output: Node \t Distance
-    * `pairwise`: Distance between every pair of nodes.
+    * `pairwise`: Distance between every pair of selected nodes, including self-pairs and both (i,j) and (j,i) orderings.
       Output: Node1 \t Node2 \t Distance
-    * `lca`: Distance from each node in a pair to their Lowest Common Ancestor (LCA).
+    * `lca`: Distance from each node in a pair to their Lowest Common Ancestor (LCA), for all selected-node pairs (including self-pairs).
       Output: Node1 \t Node2 \t Dist1 \t Dist2
     * `phylip`: A Phylip-formatted distance matrix for the selected nodes.
 

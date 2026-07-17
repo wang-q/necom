@@ -52,8 +52,8 @@ pub struct Node {
 ```rust
 // src/libs/phylo/tree/mod.rs
 pub struct Tree {
-    nodes: Vec<Node>,            // Arena 存储
-    root: Option<NodeId>,        // 根节点 ID
+    pub(super) nodes: Vec<Node>,   // Arena 存储
+    pub(super) root: Option<NodeId>, // 根节点 ID
 }
 ```
 

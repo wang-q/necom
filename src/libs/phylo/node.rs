@@ -55,12 +55,17 @@ impl Node {
 
     /// Set the branch length.
     pub fn with_length(mut self, length: f64) -> Self {
+        self.set_length(length);
+        self
+    }
+
+    /// Set the branch length, normalizing non-finite, negative, and zero values to `None`.
+    pub fn set_length(&mut self, length: f64) {
         self.length = if length.is_finite() && length > 0.0 {
             Some(length)
         } else {
             None
         };
-        self
     }
 
     /// Return the branch length as a finite, non-negative value.
@@ -172,5 +177,28 @@ mod tests {
 
         node.children.push(2);
         assert!(!node.is_leaf());
+    }
+
+    #[test]
+    fn test_set_length_normalization() {
+        let mut node = Node::new(1);
+
+        node.set_length(1.5);
+        assert_eq!(node.length, Some(1.5));
+
+        node.set_length(0.0);
+        assert_eq!(node.length, None);
+
+        node.set_length(-0.5);
+        assert_eq!(node.length, None);
+
+        node.set_length(f64::NAN);
+        assert_eq!(node.length, None);
+
+        node.set_length(f64::INFINITY);
+        assert_eq!(node.length, None);
+
+        node.set_length(f64::NEG_INFINITY);
+        assert_eq!(node.length, None);
     }
 }

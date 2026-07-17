@@ -59,8 +59,8 @@ necom nwk distance [OPTIONS] <infile>
 *   `--mode <mode>`: Computation mode.
     *   `root` (default): Distance to the root.
     *   `parent`: Distance to the parent.
-    *   `pairwise`: Pairwise distances among all leaves.
-    *   `lca`: Distance to the lowest common ancestor (LCA).
+    *   `pairwise`: Pairwise distances among all selected nodes, including self-pairs and both (i,j) and (j,i) orderings.
+    *   `lca`: Distances from each node in a pair to their Lowest Common Ancestor (LCA), for all selected-node pairs (including self-pairs).
     *   `phylip`: Output a PHYLIP-format distance matrix for selected nodes. All selected nodes must be named; unnamed nodes cause an error.
 *   `-I`: Ignore internal nodes.
 *   `-L`: Ignore leaf nodes.
@@ -225,7 +225,7 @@ Add comments to nodes for visualization.
 necom nwk comment [OPTIONS] <infile>
 ```
 
-*   `-n` / `-l`: Select nodes by name or name-list file.
+*   `-n <name>` / `--node <name>`: Select node(s) by exact name (can be repeated).
 *   `--lca <A,B>`: Select an internal node by the lowest common ancestor (LCA) of two comma-separated names. Can be specified multiple times.
 *   `--string <str>`: Add a free-text string comment (stored as the `string` attribute).
 *   `--color`, `--label`, `--comment-text`: Add text attributes (`--comment-text` stores as the `comment` attribute, used for visualization).
