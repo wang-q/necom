@@ -1,0 +1,700 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Tree Cutting - tva Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-21237feb.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-58dbae52.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">tva Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/wang-q/tva" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/wang-q/tva/edit/master/docs/cut.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="necom-cut"><a class="header" href="#necom-cut">necom cut</a></h1>
+<p><code>necom cut</code> cuts a Newick tree (phylogenetic or hierarchical clustering tree) into flat clustering partitions.</p>
+<p>Unlike <code>necom clust</code> (which builds clusters from data), <code>cut</code> focuses on “deriving groups from an existing tree structure.” It supports multiple biological and statistical cutting rules and provides stable, reusable tabular output.</p>
+<p>This document describes the command’s algorithm patterns, parameter-selection guidelines, and input/output conventions.</p>
+<h2 id="use-cases-and-design-rationale"><a class="header" href="#use-cases-and-design-rationale">Use Cases and Design Rationale</a></h2>
+<p>In practice, we often already have a tree (phylogenetic or hierarchical clustering tree) and want to cut its leaves into different groups (partitions) at some threshold. Cutting rules can vary: by height, by number of clusters, by maximum within-cluster distance (diameter), requiring monophyly (clade), etc.</p>
+<p><code>necom cut</code> aims to provide a comprehensive, efficient, and standardized cutting toolkit:</p>
+<ul>
+<li>
+<p><strong>Algorithm core</strong>:
+Implements basic cuts by cluster count (<code>--k</code>) and height (<code>--height</code>), with logic consistent with <code>SciPy.cluster.hierarchy</code> and R <code>cutree</code>; it also fully ports TreeCluster’s biological-constraint algorithms (e.g., <code>--max-clade</code>, <code>--med-clade</code>), optimized for phylogenetic trees.</p>
+</li>
+<li>
+<p><strong>Performance and usability improvements</strong>:</p>
+<ul>
+<li><strong>High performance</strong>: Rust-based implementation with no external dependencies, handling large trees more efficiently.</li>
+<li><strong>Standardized</strong>: Unifies terminology differences across source algorithms (e.g., consistently using <code>--height</code>, <code>--single-linkage</code>), reducing cognitive load.</li>
+<li><strong>Composable</strong>: As part of the <code>necom</code> toolchain, it can directly cooperate with <code>clust eval</code> for clustering evaluation.</li>
+</ul>
+</li>
+</ul>
+<h2 id="supported-modes-and-algorithms"><a class="header" href="#supported-modes-and-algorithms">Supported Modes and Algorithms</a></h2>
+<p><code>necom cut</code> provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below.</p>
+<h3 id="1-cut-by-cluster-count---k-k"><a class="header" href="#1-cut-by-cluster-count---k-k">1. Cut by Cluster Count (<code>--k &lt;K&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: Split the tree into $K$ clusters produced by $K-1$ cuts. Cutting order is based on node height (distance to the farthest leaf), prioritizing nodes with the largest height.</li>
+<li><strong>Complexity</strong>: $O(N \log N)$, where $N$ is the number of leaves. Requires sorting all internal nodes by height.</li>
+<li><strong>Use case</strong>: Exploratory analysis when you only want a fixed number of groups and do not care about the exact distance threshold.</li>
+</ul>
+<h3 id="2-cut-by-height---height-h"><a class="header" href="#2-cut-by-height---height-h">2. Cut by Height (<code>--height &lt;H&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: Cut all edges whose node height (distance to the farthest leaf) is greater than $H$.
+<ul>
+<li>For any resulting cluster $C$, all nodes $u$ in it satisfy $height(u) \le H$.</li>
+<li>Equivalent to SciPy’s <code>fcluster(criterion='distance')</code> or R’s <code>cutree(h=H)</code>.</li>
+</ul>
+</li>
+<li><strong>Complexity</strong>: $O(N)$. Only one post-order traversal is needed.</li>
+<li><strong>Use case</strong>: Suitable for ultrametric trees, where height strictly represents time or genetic distance.</li>
+</ul>
+<h3 id="3-cut-by-root-distance---root-dist-d"><a class="header" href="#3-cut-by-root-distance---root-dist-d">3. Cut by Root Distance (<code>--root-dist &lt;D&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: Cut all edges whose path length from the root exceeds $D$.
+<ul>
+<li>For the root node $r_C$ of any resulting cluster $C$, $dist(root, r_C) \le D$.</li>
+<li>Once a path’s cumulative length exceeds $D$, that path is cut and no longer extends downward.</li>
+</ul>
+</li>
+<li><strong>Complexity</strong>: $O(N)$. Only one pre-order traversal is needed.</li>
+<li><strong>Use case</strong>: Phylogenetic analysis defining clades that diverged a certain time after the common ancestor (root).</li>
+</ul>
+<h3 id="4-cut-by-maximum-within-cluster-diameter---max-clade-t"><a class="header" href="#4-cut-by-maximum-within-cluster-diameter---max-clade-t">4. Cut by Maximum Within-Cluster Diameter (<code>--max-clade &lt;T&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: Partition leaves into non-overlapping clusters ${C_1, C_2, …, C_m}$ such that for each cluster $C_i$:
+<ol>
+<li><strong>Monophyly</strong>: Leaves in $C_i$ must form a clade in the original tree $T$.</li>
+<li><strong>Diameter constraint</strong>: $\max_{u, v \in C_i} dist(u, v) \le T$.</li>
+<li><strong>Support constraint</strong> (if <code>--support</code> is specified): The path between any two points in $C_i$ must not contain edges with support below the threshold.</li>
+</ol>
+</li>
+<li><strong>Algorithm</strong>: TreeCluster “Max Clade” algorithm. Uses efficient bottom-up diameter computation and top-down greedy selection.</li>
+<li><strong>Complexity</strong>: $O(N)$. Avoids the $O(N^2)$ all-pairs distance computation.</li>
+<li><strong>Use case</strong>: Virus subtyping, OTU clustering, and other scenarios requiring strict control of within-cluster divergence.</li>
+</ul>
+<h3 id="5-cut-by-average-within-cluster-distance---avg-clade-t"><a class="header" href="#5-cut-by-average-within-cluster-distance---avg-clade-t">5. Cut by Average Within-Cluster Distance (<code>--avg-clade &lt;T&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: Similar to <code>--max-clade</code>, but the constraint is:
+<ol>
+<li><strong>Monophyly</strong>.</li>
+<li><strong>Average distance constraint</strong>: $\frac{1}{|C_i|(|C_i|-1)} \sum_{u, v \in C_i, u \neq v} dist(u, v) \le T$.</li>
+<li><strong>Support constraint</strong>.</li>
+</ol>
+</li>
+<li><strong>Algorithm</strong>: TreeCluster “Avg Clade” algorithm. Maintains within-subtree distance sums and node counts bottom-up.</li>
+<li><strong>Complexity</strong>: $O(N)$.</li>
+<li><strong>Use case</strong>: Compared to maximum distance, average distance is more robust to individual outliers.</li>
+</ul>
+<h3 id="6-cut-by-median-within-cluster-distance---med-clade-t"><a class="header" href="#6-cut-by-median-within-cluster-distance---med-clade-t">6. Cut by Median Within-Cluster Distance (<code>--med-clade &lt;T&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: Similar to <code>--max-clade</code>, but the constraint is:
+<ol>
+<li><strong>Monophyly</strong>.</li>
+<li><strong>Median distance constraint</strong>: $median({dist(u, v) \mid u, v \in C_i, u \neq v}) \le T$.</li>
+<li><strong>Support constraint</strong>.</li>
+</ol>
+</li>
+<li><strong>Algorithm</strong>: TreeCluster “Med Clade” algorithm. Computes medians by merging sorted lists bottom-up.</li>
+<li><strong>Complexity</strong>: $O(N^2 \log N)$ in the worst case. Significantly more expensive than the previous two methods.</li>
+<li><strong>Note</strong>: Not recommended for very large trees (e.g., &gt;10k leaves) unless median robustness is truly required.</li>
+</ul>
+<h3 id="7-cut-by-total-within-cluster-branch-length---sum-branch-t"><a class="header" href="#7-cut-by-total-within-cluster-branch-length---sum-branch-t">7. Cut by Total Within-Cluster Branch Length (<code>--sum-branch &lt;T&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: Similar to <code>--max-clade</code>, but the constraint is:
+<ol>
+<li><strong>Monophyly</strong>.</li>
+<li><strong>Total branch length constraint</strong>: The total branch length of the minimal subtree spanning cluster $C_i$ (Phylogenetic Diversity, PD) $\le T$.</li>
+<li><strong>Support constraint</strong>.</li>
+</ol>
+</li>
+<li><strong>Biological meaning</strong>: Total branch length corresponds to <strong>Phylogenetic Diversity (PD)</strong>, representing the total evolutionary history contained in the cluster.</li>
+<li><strong>Algorithm</strong>: TreeCluster “Sum Branch Clade” algorithm.</li>
+<li><strong>Complexity</strong>: $O(N)$.</li>
+<li><strong>Notes</strong>:
+<ul>
+<li>PD is an <strong>extensive quantity</strong> (monotonically increasing with sample size), unlike diameter or average distance, which are “intensive quantities.”</li>
+<li>Therefore, as a cutting threshold it tends to chop tight large clusters (because accumulated branch length easily exceeds the limit) while retaining loose small clusters.</li>
+<li>Unless there is a specific biological reason (e.g., “limit the maximum evolutionary potential of each OTU”), it is generally not recommended as the primary cutting criterion.</li>
+</ul>
+</li>
+</ul>
+<h3 id="8-cut-by-leaf-distance---leaf-dist-maxminavg-t"><a class="header" href="#8-cut-by-leaf-distance---leaf-dist-maxminavg-t">8. Cut by Leaf Distance (<code>--leaf-dist-max/min/avg &lt;T&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: Cutting based on the distance from the cluster root to leaves.
+<ul>
+<li><strong>Max Leaf Dist</strong> (<code>--leaf-dist-max &lt;T&gt;</code>): Cut the tree so that the maximum distance from the cluster root to any leaf is $\le T$.
+<ul>
+<li>Equivalent to <code>root_dist(max_depth - T)</code>.</li>
+<li>Similar to <code>--height</code>, but suitable for non-ultrametric trees, aligned by the farthest leaf.</li>
+</ul>
+</li>
+<li><strong>Min Leaf Dist</strong> (<code>--leaf-dist-min &lt;T&gt;</code>): Cut the tree so that the minimum distance from the cluster root to any leaf is $\le T$.
+<ul>
+<li>Equivalent to <code>root_dist(min_depth - T)</code>.</li>
+</ul>
+</li>
+<li><strong>Avg Leaf Dist</strong> (<code>--leaf-dist-avg &lt;T&gt;</code>): Cut the tree so that the average distance from the cluster root to all leaves is $\le T$.
+<ul>
+<li>Equivalent to <code>root_dist(avg_depth - T)</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Complexity</strong>: $O(N)$. Requires a prior traversal to compute depth statistics.</li>
+<li><strong>Use case</strong>: Non-ultrametric trees (e.g., virus trees), where “time” is not uniform and one needs to look back from sampling times (leaves).</li>
+</ul>
+<h3 id="9-cut-by-maximum-edge-length---max-edge-t"><a class="header" href="#9-cut-by-maximum-edge-length---max-edge-t">9. Cut by Maximum Edge Length (<code>--max-edge &lt;T&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: Cut all edges whose length is greater than $T$.
+<ul>
+<li>For any resulting cluster $C$, all edges $e$ in it satisfy $length(e) \le T$.</li>
+<li>This method is also known in graph theory as <strong>Single Linkage Clustering</strong>: as long as two points are connected by a path of “short edges” ($\le T$), they belong to the same cluster.</li>
+<li>Alias: <code>--single-linkage &lt;T&gt;</code>.</li>
+</ul>
+</li>
+<li><strong>Complexity</strong>: $O(N)$. Only one traversal is needed.</li>
+<li><strong>Use cases</strong>:
+<ul>
+<li>Remove the influence of long branch attraction.</li>
+<li>Quickly identify tightly connected groups while ignoring sparse connections.</li>
+</ul>
+</li>
+</ul>
+<h3 id="10-cut-by-inconsistency-coefficient---inconsistent-t"><a class="header" href="#10-cut-by-inconsistency-coefficient---inconsistent-t">10. Cut by Inconsistency Coefficient (<code>--inconsistent &lt;T&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: Cut based on the “inconsistency” of a node relative to its subtrees.
+<ul>
+<li>For each non-leaf node $i$, compute its inconsistency coefficient $I_i$.</li>
+<li>$I_i = \frac{height(i) - \text{mean}(H)}{\text{std}(H)}$, where $H$ is the set of all merge heights within $d$ levels (<code>--deep</code>) below node $i$.</li>
+<li><strong>SciPy reference</strong>: <code>scipy.cluster.hierarchy.inconsistent</code>.</li>
+<li>Traverse from the root downward for each node $i$:
+<ul>
+<li>Compute the maximum inconsistency coefficient $M_i$ in the subtree rooted at $i$.</li>
+<li>If $M_i \le T$, the subtree is sufficiently “consistent”; treat $i$ and its leaves as one cluster and stop splitting.</li>
+<li>If $M_i &gt; T$, the subtree contains significantly inconsistent merge points; continue checking $i$’s children.</li>
+</ul>
+</li>
+<li>Leaf nodes naturally form a cluster.</li>
+</ul>
+</li>
+<li><strong>Complexity</strong>: $O(N)$.</li>
+<li><strong>Use case</strong>: When overall evolutionary rates are uneven, find “natural” cluster boundaries.</li>
+</ul>
+<h3 id="11-dynamic-tree-cut---dynamic-tree-implemented"><a class="header" href="#11-dynamic-tree-cut---dynamic-tree-implemented">11. Dynamic Tree Cut (<code>--dynamic-tree</code>) [Implemented]</a></h3>
+<ul>
+<li><strong>Definition</strong>: Based on the <code>cutreeDynamicTree</code> algorithm in the R package <code>dynamicTreeCut</code> (<code>dynamicTreeCut/R/cutreeDynamic.R</code>).</li>
+<li><strong>Principle</strong>: Top-down recursive algorithm.
+<ol>
+<li>First perform an initial cut based on global height.</li>
+<li>For each preliminary cluster, analyze its internal structure (height distribution).</li>
+<li>If a cluster contains significant substructure (i.e., a split point satisfying conditions for “height difference” and “subcluster size”), recursively split it further.</li>
+</ol>
+</li>
+<li><strong>Options</strong>:
+<ul>
+<li><code>--dynamic-tree &lt;N&gt;</code>: Enable dynamic tree cut; N is the minimum cluster size (required, no default).</li>
+<li><code>--deep-split</code>: Enable more aggressive splitting (corresponds to <code>deepSplit=TRUE</code> in R).</li>
+<li><code>--max-tree-height &lt;H&gt;</code> (optional): Maximum merge height (default 99% tree height).</li>
+</ul>
+</li>
+<li><strong>Input</strong>: Only the tree structure (dendrogram) is needed; no distance matrix is required.</li>
+<li><strong>Use cases</strong>:
+<ul>
+<li>Only tree structure is available; fast, automated cutting is desired.</li>
+<li>Suitable for nested structures with small clusters inside large clusters.</li>
+</ul>
+</li>
+</ul>
+<h3 id="12-hybrid-dynamic-cut---dynamic-hybrid-implemented"><a class="header" href="#12-hybrid-dynamic-cut---dynamic-hybrid-implemented">12. Hybrid Dynamic Cut (<code>--dynamic-hybrid</code>) [Implemented]</a></h3>
+<ul>
+<li><strong>Definition</strong>: Based on the <code>cutreeHybrid</code> algorithm in the R package <code>dynamicTreeCut</code>.</li>
+<li><strong>Principle</strong>: Two-phase bottom-up algorithm.
+<ol>
+<li><strong>Core Detection</strong>:
+<ul>
+<li>Implements the bottom-up algorithm of R <code>cutreeHybrid</code>, identifying “core clusters” that satisfy tightness (Core Scatter) and separation (Gap) requirements.</li>
+</ul>
+</li>
+<li><strong>PAM-like Reassignment</strong>: Uses the original distance matrix to adsorb objects left unassigned in the first phase (outliers/singletons) to the nearest core cluster (medoid-based assignment).
+<ul>
+<li>Default behavior is consistent with R (<code>pamStage=TRUE</code>, <code>pamRespectsDendro=TRUE</code>, <code>respectSmallClusters=TRUE</code>).</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><strong>Input</strong>: Requires both tree structure and the original distance matrix (<code>--matrix</code>).</li>
+<li><strong>Options</strong>:
+<ul>
+<li><code>--dynamic-hybrid &lt;N&gt;</code>: Enable hybrid cut; N is the minimum cluster size.</li>
+<li><code>--matrix &lt;FILE&gt;</code>: Distance matrix file (PHYLIP format).</li>
+<li><code>--max-pam-dist &lt;D&gt;</code>: Maximum distance threshold for PAM assignment (default equals the cut height <code>cutHeight</code>). If an unassigned point’s distance to the nearest medoid exceeds this value, it remains unassigned.</li>
+<li><code>--no-pam-dendro</code>: Disable the dendrogram constraint in the PAM stage (allows assigning objects across high branches). By default the PAM stage respects tree structure (<code>pamRespectsDendro=TRUE</code>).</li>
+</ul>
+</li>
+<li><strong>Use cases</strong>:
+<ul>
+<li>High accuracy at cluster boundaries is required.</li>
+<li>The distance matrix is needed to correct small errors or uncertainties in the tree structure.</li>
+<li>Can effectively identify and handle outliers.</li>
+</ul>
+</li>
+</ul>
+<h3 id="13-support-filtering---support-s"><a class="header" href="#13-support-filtering---support-s">13. Support Filtering (<code>--support &lt;S&gt;</code>)</a></h3>
+<ul>
+<li><strong>Definition</strong>: A <strong>preprocessing step</strong> for all the above methods.
+<ul>
+<li>Traverse all edges in the tree; if an edge’s support value $&lt; S$, its length is treated as $+\infty$ (infinite).</li>
+<li><strong>Default behavior</strong>: For nodes without explicit support values (e.g., internal nodes produced by parsing multifurcating trees), <code>necom</code> defaults their support to 100 (fully trusted).</li>
+</ul>
+</li>
+<li><strong>Effect</strong>: Any clustering attempt that crosses a low-support edge will fail because the distance/height exceeds the limit, thereby forcing a cut at low-support positions.</li>
+</ul>
+<h2 id="input-and-output"><a class="header" href="#input-and-output">Input and Output</a></h2>
+<h3 id="input"><a class="header" href="#input">Input</a></h3>
+<ul>
+<li><strong>Input tree</strong>: Newick format (single tree).</li>
+<li><strong>Branch lengths</strong>: Used for distance/height-related methods (e.g., root distance, max pairwise distance).</li>
+<li><strong>Branch support (optional)</strong>: If nodes/edges carry support values (e.g., bootstrap), they can be used as a “non-crossable” constraint.</li>
+</ul>
+<h3 id="output"><a class="header" href="#output">Output</a></h3>
+<p>Output follows the same conventions as <code>necom clust dbscan</code> for interoperability with existing tools:</p>
+<ul>
+<li><code>cluster</code> format: Each line contains all points of one cluster; the first point is the representative.</li>
+<li><code>pair</code> format: Each line contains a pair (representative, cluster member).
+<ul>
+<li>Representative: the representative point of the cluster.</li>
+<li>Member: a cluster member.</li>
+<li>Singleton: the representative is itself.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Representative selection (<code>--rep</code>)</strong>:
+Applies to both <code>cluster</code> and <code>pair</code> formats:</p>
+<ul>
+<li><code>root</code> (default): the member closest to the root (alphabetical order as tie-break).</li>
+<li><code>medoid</code>: Medoid, i.e., the member with the smallest sum of distances to other members.</li>
+<li><code>first</code>: the alphabetically first member.</li>
+</ul>
+<h3 id="common-options"><a class="header" href="#common-options">Common Options</a></h3>
+<ul>
+<li><code>--format {cluster|pair}</code>: Output format. Default: <code>cluster</code>.</li>
+<li><code>--rep {root|medoid|first}</code>: Representative selection. Default: <code>root</code>.</li>
+<li><code>--deep &lt;N&gt;</code>: Depth used by the inconsistency coefficient method (<code>--inconsistent</code>). Default: <code>2</code>.</li>
+<li><code>--support &lt;S&gt;</code>: Treat edges with support <code>&lt; S</code> as infinite length, forcing a cut. Default behavior treats unlabeled internal nodes as support <code>100.0</code>.</li>
+<li><code>--scan &lt;start&gt;,&lt;end&gt;,&lt;step&gt;</code>: Parameter sweep over the main threshold.</li>
+<li><code>--stats-out &lt;FILE&gt;</code>: In scan mode, write the summary statistics table to this file.</li>
+</ul>
+<h2 id="workflow-and-toolchain-collaboration"><a class="header" href="#workflow-and-toolchain-collaboration">Workflow and Toolchain Collaboration</a></h2>
+<p>To keep commands focused and orthogonal, we recommend the following “generate-evaluate” separated workflow:</p>
+<h3 id="1-generate"><a class="header" href="#1-generate">1. Generate</a></h3>
+<p>Use <code>necom cut</code>:</p>
+<ul>
+<li>It only “cuts”; it does not “evaluate.”</li>
+<li>Supports multiple strategies (k, height, max_clade, etc.) and parameter scanning.</li>
+<li>Outputs standard TSV format.</li>
+</ul>
+<h3 id="2-evaluate"><a class="header" href="#2-evaluate">2. Evaluate</a></h3>
+<p>Evaluating clustering quality usually requires a reference standard (Ground Truth) or comparison with other results. This logic is placed in separate <code>necom clust</code> or <code>necom nwk</code> commands:</p>
+<ul>
+<li>
+<p><strong>General metrics (<code>necom clust eval</code> / <code>compare</code>)</strong>:</p>
+<ul>
+<li>Input: two clustering result TSVs (or one result + one reference).</li>
+<li>Output: ARI (Adjusted Rand Index), AMI (Adjusted Mutual Information), V-Measure, etc.</li>
+<li>Use case: When the true classification of samples is known, or when you want to compare the difference between two cutting parameters.</li>
+</ul>
+</li>
+<li>
+<p><strong>Tree-related metrics (<code>necom nwk eval</code> [planned])</strong>:</p>
+<ul>
+<li>Input: tree file + clustering result.</li>
+<li>Output: Parsimony score, Silhouette score (based on tree distance matrix), etc.</li>
+<li>Use case: No true classification is available; assess compactness or separability of clusters on the tree structure.</li>
+</ul>
+</li>
+</ul>
+<h3 id="recommended-workflow-examples"><a class="header" href="#recommended-workflow-examples">Recommended Workflow Examples</a></h3>
+<h4 id="1-classic-phylogenetic-analysis"><a class="header" href="#1-classic-phylogenetic-analysis">1. Classic Phylogenetic Analysis</a></h4>
+<pre><code class="language-bash"># 1. Scan different parameters to generate multiple clustering results
+# necom cut input.nwk --max-clade 0.10 --scan 0.01,0.10,0.01 &gt; partitions.tsv
+
+# 2. Select the best threshold and generate final clusters
+necom cut input.nwk --max-clade 0.05 &gt; final_cluster.tsv
+
+# 3. Extract the subtree corresponding to the first cluster in final_cluster.tsv
+head -1 final_cluster.tsv | tr '\t' '\n' &gt; cluster1.names
+necom nwk subtree input.nwk -l cluster1.names &gt; cluster1.nwk
+</code></pre>
+<h4 id="2-hierarchical-clustering-hclust-integration"><a class="header" href="#2-hierarchical-clustering-hclust-integration">2. Hierarchical Clustering (hclust) Integration</a></h4>
+<p>Starting from a distance matrix, generate a tree with hclust, then cut and evaluate.</p>
+<pre><code class="language-bash"># 1. Generate hierarchical clustering tree
+necom clust hier matrix.phy --method ward &gt; tree.nwk
+
+# 2. Cut (by height threshold)
+necom cut tree.nwk --height 0.05 &gt; clusters.tsv
+
+# 3. Evaluate (compute Cophenetic correlation and Silhouette)
+# necom nwk eval tree.nwk --part clusters.tsv --metrics silhouette &gt; sil.tsv (planned, not implemented)
+</code></pre>
+<h4 id="3-scipy-style-analysis-inconsistency-coefficient"><a class="header" href="#3-scipy-style-analysis-inconsistency-coefficient">3. SciPy-style Analysis (Inconsistency Coefficient)</a></h4>
+<p>For trees with uneven evolutionary rates, the inconsistency coefficient can find more natural cluster boundaries.</p>
+<pre><code class="language-bash"># Cut using inconsistency coefficient (default depth=2)
+necom cut tree.nwk --inconsistent 1.5 &gt; clusters.tsv
+</code></pre>
+<h2 id="choosing-threshold--cluster-count-scanning-and-criteria"><a class="header" href="#choosing-threshold--cluster-count-scanning-and-criteria">Choosing Threshold / Cluster Count: Scanning and Criteria</a></h2>
+<p>In <code>cut</code> scenarios, users commonly make two types of choices:</p>
+<ul>
+<li>Directly specify the cluster count <code>K</code> (analogous to R <code>cutree(k=...)</code>).</li>
+<li>Specify a threshold <code>t</code> (distance/height/diameter etc.) and let the threshold determine the cluster count.</li>
+</ul>
+<p>When unsure about <code>K</code> or <code>t</code>, use <code>--scan</code> for parameter scanning.</p>
+<h3 id="scanning"><a class="header" href="#scanning">Scanning</a></h3>
+<p><code>necom</code> provides explicit scanning capability: applicable to all numeric-parameter methods (e.g., <code>--k</code>, <code>--height</code>, <code>--max-clade</code>, <code>--inconsistent</code>).</p>
+<p><strong>Usage</strong>:
+<code>necom cut ... --scan &lt;start&gt;,&lt;end&gt;,&lt;step&gt;</code>
+(Note: scanning only targets the <strong>main threshold parameter</strong> of the method. For <code>--inconsistent</code>, it scans the coefficient threshold <code>T</code>, while depth <code>--deep</code> remains fixed at the user-specified or default value.)</p>
+<p><strong>Output summary table</strong>:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">Group</th><th style="text-align: left">Clusters</th><th style="text-align: left">Singletons</th><th style="text-align: left">Non-Singletons</th><th style="text-align: left">Max Cluster Size</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">height=0.01</td><td style="text-align: left">500</td><td style="text-align: left">480</td><td style="text-align: left">20</td><td style="text-align: left">5</td></tr>
+<tr><td style="text-align: left">height=0.02</td><td style="text-align: left">300</td><td style="text-align: left">200</td><td style="text-align: left">100</td><td style="text-align: left">15</td></tr>
+<tr><td style="text-align: left">…</td><td style="text-align: left">…</td><td style="text-align: left">…</td><td style="text-align: left">…</td><td style="text-align: left">…</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li><strong>Non-Singletons</strong>: The metric that TreeCluster <code>argmax_clusters</code> tries to maximize.</li>
+<li><strong>Max Cluster Size</strong>: Helps judge whether a “super-cluster” exists (under-clustering).</li>
+</ul>
+<h3 id="output-format-in-scan-mode"><a class="header" href="#output-format-in-scan-mode">Output Format in Scan Mode</a></h3>
+<p>When <code>--scan</code> is enabled, the <code>--format</code> option is ignored. Output behavior is as follows:</p>
+<ol>
+<li><strong>Standard output (<code>stdout</code> or <code>-o</code>)</strong>: Always outputs a detailed partition table (Long format / Tidy Data).
+<ul>
+<li>Column definitions: <code>Group</code>, <code>ClusterID</code>, <code>SampleID</code>.</li>
+<li>The <code>Group</code> column is formatted as <code>Method=Value</code> (e.g., <code>height=0.5</code>, <code>max-clade=0.02</code>), making it easy to distinguish different cutting parameters.</li>
+<li>This format can be directly used as input for <code>necom clust eval --input-format long</code> for batch evaluation.</li>
+</ul>
+</li>
+<li><strong>Statistics output (<code>--stats-out</code>)</strong>: If specified, writes the summary statistics table (threshold, cluster count, singleton count, non-singleton count, max cluster size) to that file.</li>
+</ol>
+<p>Example:</p>
+<pre><code class="language-bash"># 1. Output only the detailed partition table (for downstream analysis or evaluation)
+necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 &gt; partitions.tsv
+
+# 2. Save statistics at the same time (for quick inspection)
+necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv
+</code></pre>
+<h3 id="integration-with-necom-clust-eval"><a class="header" href="#integration-with-necom-clust-eval">Integration with <code>necom clust eval</code></a></h3>
+<p><code>necom cut</code> and <code>necom clust eval</code> work together through the Long format, supporting two evaluation modes:</p>
+<ul>
+<li><strong>Batch internal evaluation</strong>: pipe scan output to <code>necom clust eval --input-format long</code> with <code>--matrix</code>, <code>--tree</code>, or <code>--coords</code> to score every threshold without Ground Truth.</li>
+<li><strong>Targeted external evaluation</strong>: first use <code>--scan</code> to locate promising threshold ranges, then generate partitions for selected thresholds and compare them to Ground Truth with <code>necom clust eval --other</code>.</li>
+</ul>
+<p>Concrete command examples are kept in <code>docs/clust.md</code> to avoid duplication.</p>
+<h3 id="threshold-selection-strategy-reference"><a class="header" href="#threshold-selection-strategy-reference">Threshold-Selection Strategy Reference</a></h3>
+<p>A brief summary of these strategies also appears in <code>docs/clust.md</code>. The following sections provide more detail.</p>
+<p>When unsure about the best threshold, use <code>--scan</code> to generate data and refer to the following common strategies for decision-making:</p>
+<h4 id="strategy-1-maximize-non-singleton-clusters"><a class="header" href="#strategy-1-maximize-non-singleton-clusters">Strategy 1: Maximize Non-Singleton Clusters</a></h4>
+<ul>
+<li><strong>Principle</strong>: Find a threshold that maximizes the number of “non-singleton clusters” (clusters with &gt;1 member).</li>
+<li><strong>Applicability</strong>: When you expect as many meaningful (&gt;1 member) clusters as possible while avoiding over-chopping (many singletons) or under-cutting (huge clusters).</li>
+<li><strong>Operation</strong>: Observe the <code>Non-Singletons</code> column in the scan result table and choose the threshold corresponding to its maximum.</li>
+</ul>
+<h4 id="strategy-2-elbow-rule"><a class="header" href="#strategy-2-elbow-rule">Strategy 2: Elbow Rule</a></h4>
+<p>This is a general strategy in data analysis.</p>
+<ul>
+<li><strong>Principle</strong>: Look at the curve of threshold versus cluster count (or singleton count) and find the “elbow” point.
+<ul>
+<li><strong>Steep decline phase</strong>: As the threshold relaxes, cluster count drops rapidly (many tiny clusters merge).</li>
+<li><strong>Flat plateau phase</strong>: Cluster count changes stabilize.</li>
+<li><strong>Elbow point</strong>: The point where the curve changes from “steep” to “flat,” usually corresponding to the data’s inherent natural structure.</li>
+</ul>
+</li>
+<li><strong>Operation</strong>:
+<ol>
+<li>Run scan: <code>necom cut ... --scan ... &gt; scan.tsv</code></li>
+<li>Observe the rate of change: if cluster count changes sharply when the threshold increases from $T_1$ to $T_2$ but flattens from $T_2$ to $T_3$, then $T_2$ may be the best cut point.</li>
+<li>Visualization: Import <code>scan.tsv</code> into plotting tools to assist judgment.</li>
+</ol>
+</li>
+</ul>
+<h4 id="strategy-3-evaluation-metric-based"><a class="header" href="#strategy-3-evaluation-metric-based">Strategy 3: Evaluation-Metric Based</a></h4>
+<p>This is the most rigorous strategy, using <code>necom clust eval</code> to compute clustering quality metrics.</p>
+<ul>
+<li><strong>Principle</strong>: Directly compute internal validity (e.g., Silhouette) or external consistency (e.g., ARI, if Ground Truth is available) of the partition.</li>
+<li><strong>Operation</strong>: Use together with <code>necom clust eval</code>.
+<pre><code class="language-bash"># Generate detailed list of all candidate partitions
+necom cut ... --scan ... &gt; partitions.tsv
+# Batch evaluation
+necom clust eval partitions.tsv --input-format long --matrix dist.phy
+</code></pre>
+</li>
+</ul>
+<h2 id="existing-tool-references"><a class="header" href="#existing-tool-references">Existing Tool References</a></h2>
+<p>The design of <code>necom cut</code> draws on best practices from multiple fields:</p>
+<ul>
+<li>
+<p><strong>SciPy (<code>scipy.cluster.hierarchy</code>)</strong>:</p>
+<ul>
+<li>Provides the <code>fcluster</code> function, supporting cuts by height (<code>distance</code>), cluster count (<code>maxclust</code>), and inconsistency coefficient (<code>inconsistent</code>).</li>
+<li><code>necom</code> reuses its definitions of <code>height</code> and <code>inconsistent</code>.</li>
+</ul>
+</li>
+<li>
+<p><strong>R (<code>dynamicTreeCut</code>)</strong>:</p>
+<ul>
+<li>Provides <code>cutreeDynamic</code> (Tree) and <code>cutreeHybrid</code> (Hybrid) methods.</li>
+<li>Introduces the ideas of “adaptive recursive cutting” and “core detection + reassignment.”</li>
+<li><code>necom</code> fully implements its Dynamic Tree and Hybrid algorithms, providing a high-performance Rust version.</li>
+</ul>
+</li>
+<li>
+<p><strong>TreeCluster</strong>:</p>
+<ul>
+<li>Designed specifically for phylogenetic trees, introducing <code>Max Clade</code> (diameter), <code>Avg Clade</code>, etc.</li>
+<li>Solves cutting problems for non-ultrametric trees.</li>
+<li><code>necom</code> fully implements its core algorithm set.</li>
+</ul>
+</li>
+<li>
+<p><strong>R (<code>cutree</code>)</strong>:</p>
+<ul>
+<li>Provides the most basic <code>h</code> (height) and <code>k</code> (cluster count) cuts.</li>
+</ul>
+</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="clust.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="mat.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="clust.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="mat.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

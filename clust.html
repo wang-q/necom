@@ -1,0 +1,855 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Clustering - tva Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-21237feb.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-58dbae52.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">tva Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/wang-q/tva" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/wang-q/tva/edit/master/docs/clust.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="necom-clust"><a class="header" href="#necom-clust">necom clust</a></h1>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>The <code>necom clust</code> module provides a collection of clustering algorithms for sequences, genomic features, and general data. These tools are designed to handle the distance matrices, similarity networks, and feature vectors commonly encountered in bioinformatics.</p>
+<p>Commands are divided into three categories by input data type (consistent with <code>necom clust --help</code>):</p>
+<ol>
+<li><strong>Tree</strong>: Build phylogenetic or hierarchical structures from a distance matrix (<code>hier</code>, <code>nj</code>, <code>upgma</code>).</li>
+<li><strong>Flat</strong>: Generate groups directly from graphs or vectors, or derive groups from an existing tree (<code>cc</code>, <code>cut</code>, <code>dbscan</code>, <code>k-medoids</code>, <code>mcl</code>).</li>
+<li><strong>Eval</strong>: Assess the quality of clustering partitions (<code>eval</code>). See <a href="#evaluation-and-analysis">Evaluation and Analysis</a> below.</li>
+</ol>
+<h2 id="algorithm-list"><a class="header" href="#algorithm-list">Algorithm List</a></h2>
+<h3 id="mcl-markov-cluster-algorithm"><a class="header" href="#mcl-markov-cluster-algorithm">MCL (Markov Cluster Algorithm)</a></h3>
+<ul>
+<li><strong>Principle</strong>: Simulates random walks on a graph, alternating between “expansion” and “inflation” operations. This concentrates flow within strongly connected regions and causes flow in weakly connected regions to fade, naturally separating out modules.</li>
+<li><strong>Command</strong>: <code>necom clust mcl</code></li>
+<li><strong>Characteristics</strong>: Graph clustering based on flow simulation.</li>
+<li><strong>Use cases</strong>: <strong>Biological networks</strong> (e.g., SSN), protein family detection, module discovery.</li>
+<li><strong>Advantages</strong>: Robust to noise; handles complex network structures.</li>
+<li><strong>Input</strong>: Pairwise similarities <code>.tsv</code> (higher is better).</li>
+<li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
+<li><strong>CLI options</strong>: <code>infile</code>, <code>--format {cluster|pair}</code>, <code>--rep {medoid|first}</code>, <code>--same &lt;FLOAT&gt;</code>, <code>--missing &lt;FLOAT&gt;</code>, <code>--inflation &lt;FLOAT&gt;</code>, <code>--prune &lt;FLOAT&gt;</code>, <code>--max-iter &lt;N&gt;</code>, <code>-o/--outfile</code>.
+<ul>
+<li><code>--inflation</code> default: <code>2.0</code> (higher values produce tighter, more clusters).</li>
+<li><code>--prune</code> default: <code>1e-5</code> (matrix entries below this are set to zero).</li>
+<li><code>--max-iter</code> default: <code>100</code>.</li>
+<li><code>--rep</code> default: <code>medoid</code> (maximum sum of similarities to other members); <code>first</code> uses the alphabetically first member.</li>
+<li><code>--same</code> default: <code>1.0</code>; <code>--missing</code> default: <code>0.0</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="connected-components-cc"><a class="header" href="#connected-components-cc">Connected Components (CC)</a></h3>
+<ul>
+<li><strong>Principle</strong>: A fundamental graph-theory concept that finds all sets of mutually reachable nodes. Edge weights are ignored; only connectivity matters.</li>
+<li><strong>Command</strong>: <code>necom clust cc</code></li>
+<li><strong>Characteristics</strong>: The most basic connected component clustering.</li>
+<li><strong>Use cases</strong>: Fast deduplication at very high similarity thresholds.</li>
+<li><strong>Advantages</strong>: Extremely fast (linear complexity).</li>
+<li><strong>Input</strong>: Pairwise relations in TSV format (<code>name1  name2  weight</code>); the weight column is ignored.</li>
+<li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
+<li><strong>CLI options</strong>: <code>infile</code>, <code>--format {cluster|pair}</code>, <code>-o/--outfile</code>.
+<ul>
+<li>In <code>pair</code> format, the representative is the alphabetically first member of each component.</li>
+</ul>
+</li>
+</ul>
+<h3 id="k-medoids"><a class="header" href="#k-medoids">K-Medoids</a></h3>
+<ul>
+<li><strong>Principle</strong>: Iterative optimization similar to K-Means, but the center (medoid) must be an actual sample from the dataset. Centers are updated by minimizing the sum of dissimilarities to the nearest center.</li>
+<li><strong>Command</strong>: <code>necom clust k-medoids</code> (alias <code>km</code>)</li>
+<li><strong>Characteristics</strong>: Like K-Means, but centers must be actual samples (medoids).</li>
+<li><strong>Use cases</strong>: Noise-resistant scenarios, or when only a <strong>distance matrix</strong> (non-Euclidean space) is available.</li>
+<li><strong>Advantages</strong>: Robust to outliers; interpretable results because centers are real samples.</li>
+<li><strong>Input</strong>: Pairwise distances <code>.tsv</code> (lower is better).</li>
+<li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
+<li><strong>CLI options</strong>: <code>infile</code>, <code>-k/--k &lt;N&gt;</code> (required), <code>--format {cluster|pair}</code>, <code>--rep {medoid|first}</code>, <code>--same &lt;FLOAT&gt;</code>, <code>--missing &lt;FLOAT&gt;</code>, <code>--runs &lt;N&gt;</code>, <code>--max-iter &lt;N&gt;</code>, <code>--seed &lt;UINT&gt;</code>, <code>-o/--outfile</code>.
+<ul>
+<li><code>--rep</code> default: <code>medoid</code> (minimum sum of distances to other members); <code>first</code> uses the alphabetically first member.</li>
+<li><code>--runs</code> default: <code>10</code> (number of random initializations).</li>
+<li><code>--max-iter</code> default: <code>100</code>.</li>
+<li><code>--same</code> default: <code>0.0</code>; <code>--missing</code> default: <code>1.0</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="dbscan"><a class="header" href="#dbscan">DBSCAN</a></h3>
+<ul>
+<li><strong>Principle</strong>: Density-based clustering. Starting from any point, if the number of points within its $\epsilon$ neighborhood exceeds <code>min_points</code>, it becomes a core point and expands a cluster; regions with insufficient density are treated as noise.</li>
+<li><strong>Command</strong>: <code>necom clust dbscan</code></li>
+<li><strong>Characteristics</strong>: Density-based clustering that requires specifying neighborhood radius <code>eps</code> and minimum point count <code>min_points</code>.</li>
+<li><strong>Use cases</strong>: <strong>Non-convex</strong> cluster shapes, uneven density distributions, <strong>outlier detection</strong>.</li>
+<li><strong>Advantages</strong>: Does not require specifying the number of clusters K; identifies noise.</li>
+<li><strong>Input</strong>: Pairwise distances <code>.tsv</code> (lower is better).</li>
+<li><strong>Output</strong>: <code>cluster</code> (one cluster per line, first element is the representative) or <code>pair</code> (representative–member pairs).</li>
+<li><strong>CLI options</strong>: <code>infile</code>, <code>--format {cluster|pair}</code>, <code>--rep {medoid|first}</code>, <code>--same &lt;FLOAT&gt;</code>, <code>--missing &lt;FLOAT&gt;</code>, <code>--eps &lt;FLOAT&gt;</code>, <code>--min-points &lt;N&gt;</code>, <code>-o/--outfile</code>.
+<ul>
+<li><code>--eps</code> default: <code>0.05</code> (neighborhood radius).</li>
+<li><code>--min-points</code> default: <code>4</code> (minimum points to form a dense region).</li>
+<li><code>--rep</code> default: <code>medoid</code> (smallest sum of distances); <code>first</code> uses the alphabetically first member.</li>
+<li><code>--same</code> default: <code>0.0</code>; <code>--missing</code> default: <code>1.0</code>.</li>
+</ul>
+</li>
+<li><strong>Unimplemented options</strong>: Parameter scanning and scoring such as <code>--scan</code>, <code>--opt-eps</code>, <code>--min-pct</code> are not yet implemented; they may be provided later as subcommands of <code>necom clust dbscan</code> or standalone scripts.</li>
+</ul>
+<h4 id="usage-examples"><a class="header" href="#usage-examples">Usage Examples</a></h4>
+<pre><code class="language-bash"># Basic clustering (pairwise distance input)
+necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 -o clusters.tsv
+
+# Output pair format for downstream evaluation
+necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.tsv
+</code></pre>
+<h3 id="upgma"><a class="header" href="#upgma">UPGMA</a></h3>
+<ul>
+<li><strong>Principle</strong>: Unweighted Pair Group Method with Arithmetic Mean. A bottom-up hierarchical clustering that repeatedly merges the two closest clusters; distances between the new cluster and all others are computed as arithmetic averages of all member-to-member distances. Assumes a constant evolutionary rate (molecular clock).</li>
+<li><strong>Command</strong>: <code>necom clust upgma</code></li>
+<li><strong>Characteristics</strong>: Hierarchical clustering (average linkage) that outputs a <strong>rooted tree</strong>.</li>
+<li><strong>Use cases</strong>: Phylogenetic analysis assuming a <strong>molecular clock</strong> (ultrametric).</li>
+<li><strong>Advantages</strong>: Produces a hierarchical structure with branch heights carrying clear distance meaning.</li>
+<li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
+<li><strong>Output</strong>: Newick tree.</li>
+<li><strong>CLI options</strong>: <code>infile</code>, <code>-o/--outfile</code>.</li>
+</ul>
+<h3 id="nj-neighbor-joining"><a class="header" href="#nj-neighbor-joining">NJ (Neighbor-Joining)</a></h3>
+<ul>
+<li><strong>Principle</strong>: Neighbor-Joining. Iteratively merges the pair of nodes with the smallest net divergence by minimizing total tree length (based on the Q-matrix-corrected distances). Does not assume a molecular clock and allows different evolutionary rates across branches.</li>
+<li><strong>Command</strong>: <code>necom clust nj</code></li>
+<li><strong>Characteristics</strong>: Distance-matrix tree-building algorithm that outputs an <strong>unrooted tree</strong>.</li>
+<li><strong>Use cases</strong>: General additive distances (no molecular-clock assumption); evolutionary tree construction.</li>
+<li><strong>Advantages</strong>: Fast; robust to different evolutionary rates.</li>
+<li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
+<li><strong>Output</strong>: Newick tree.</li>
+<li><strong>CLI options</strong>: <code>infile</code>, <code>-o/--outfile</code>.</li>
+</ul>
+<h3 id="hierarchical-clustering"><a class="header" href="#hierarchical-clustering">Hierarchical Clustering</a></h3>
+<ul>
+<li><strong>Principle</strong>: A general bottom-up (agglomerative) clustering framework. Clusters are merged according to different linkage criteria (e.g., Ward minimum variance, Complete maximum distance), building a complete dendrogram hierarchy.</li>
+<li><strong>Command</strong>: <code>necom clust hier</code> (alias <code>hclust</code>)</li>
+<li><strong>Characteristics</strong>: General hierarchical clustering supporting <code>single</code>, <code>complete</code>, <code>average</code>, <code>weighted</code>, <code>centroid</code>, <code>median</code>, <code>ward</code>.</li>
+<li><strong>Implementation status</strong>: Implemented with $O(N^2)$ NN-chain optimization.</li>
+<li><strong>Value</strong>: Provides a general hierarchical view (not limited to biological evolution); combined with <code>necom cut</code> it yields flexible groupings at different granularities.</li>
+<li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
+<li><strong>Output</strong>: Newick tree.</li>
+<li><strong>CLI options</strong>: <code>infile</code>, <code>--method {single|complete|average|weighted|centroid|median|ward}</code> (default: <code>ward</code>), <code>-o/--outfile</code>.</li>
+<li><strong>Details</strong>: <a href="#hierarchical-clustering-details">Hierarchical Clustering Details</a></li>
+</ul>
+<h3 id="tree-cutting"><a class="header" href="#tree-cutting">Tree Cutting</a></h3>
+<p>The <code>necom cut</code> command splits an existing Newick tree (phylogenetic or hierarchical clustering tree) into flat partitions according to distance, topological, or statistical criteria. It is documented separately in <a href="cut.html"><code>docs/cut.md</code></a> because it operates on trees rather than running a clustering algorithm.</p>
+<p>Trees built by <code>necom clust hier</code>, <code>necom clust upgma</code>, <code>necom clust nj</code>, or external tools can be passed directly to <code>necom cut</code>. The resulting partitions can be evaluated with <code>necom clust eval</code>.</p>
+<h2 id="hierarchical-clustering-details"><a class="header" href="#hierarchical-clustering-details">Hierarchical Clustering Details</a></h2>
+<p><code>necom clust hier</code> (alias <code>hclust</code>) provides general hierarchical clustering (dendrogram) generation, supporting <code>single/complete/average/ward.D2</code> and other methods, outputting Newick format for downstream <code>necom cut</code>.</p>
+<h3 id="background-and-positioning"><a class="header" href="#background-and-positioning">Background and Positioning</a></h3>
+<ul>
+<li><strong>Module</strong>: <code>clust</code>, alongside <code>k-medoids</code>, <code>mcl</code>, etc.</li>
+<li><strong>Goal</strong>: Statistically meaningful dendrograms (merge heights express the cost of the linkage criterion), without enforcing “evolution/molecular-clock” semantics.</li>
+<li><strong>Synergy with existing necom capabilities</strong>:
+<ul>
+<li>Tree building: <code>clust upgma</code> (rooted, ultrametric) and <code>clust nj</code> (additive, unrooted) already exist.</li>
+<li>Cutting: tree-cut grouping via <code>necom cut</code>.</li>
+<li>Evaluation: <code>necom clust eval --matrix</code> / <code>--tree</code> / <code>--coords</code> (currently available); <code>necom nwk eval</code> not yet implemented.</li>
+</ul>
+</li>
+</ul>
+<h3 id="relationship-to-upgmanj"><a class="header" href="#relationship-to-upgmanj">Relationship to UPGMA/NJ</a></h3>
+<ul>
+<li>Commonalities: All take a distance matrix as input and output a tree-like structure; all can be combined with <code>necom cut</code> to obtain flat groupings.</li>
+<li>Relationship to UPGMA:
+<ul>
+<li>R <code>hclust(method="average")</code> is equivalent to “average linkage”; UPGMA is a specialized version under the “ultrametric (molecular clock)” assumption, producing a rooted, strictly ultrametric tree whose branch lengths have “time/evolution” meaning.</li>
+<li>Conclusion: The linkage updates are identical, but the semantics differ; UPGMA leans toward phylogenetic scenarios, while <code>clust hier</code> leans toward statistical clustering.</li>
+</ul>
+</li>
+<li>Relationship to NJ:
+<ul>
+<li>NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an “additive minimum-length tree” that does not belong to the linkage-update paradigm and usually outputs an unrooted tree.</li>
+<li>For general additive distances, NJ is more robust than UPGMA; if the distances are ultrametric, UPGMA/hclust-average and NJ usually agree topologically (unrooted view).</li>
+</ul>
+</li>
+</ul>
+<h3 id="methods-and-algorithm-essentials"><a class="header" href="#methods-and-algorithm-essentials">Methods and Algorithm Essentials</a></h3>
+<ul>
+<li><code>single/complete/average</code>: Standard linkage updates (Lance–Williams framework); merge height is the distance/cost corresponding to the linkage criterion.</li>
+<li><code>ward.D2</code>:
+<ul>
+<li>Concept: Minimizes the increase in within-cluster sum of squares (total within-group variance, SSE); commonly used and robust.</li>
+<li>Update (squared-distance version, where n is cluster size):
+<ul>
+<li>Let the squared distance between merged cluster <code>u∪v</code> and a third cluster <code>w</code> be:</li>
+<li><code>d(u∪v,w)^2 = [ (n_u+n_w) d(u,w)^2 + (n_v+n_w) d(v,w)^2 − n_w d(u,v)^2 ] / (n_u+n_v+n_w)</code></li>
+</ul>
+</li>
+<li>If the input is non-squared distances: square them for the update, and take the square root or use the SSE-increment definition for merge heights when outputting.</li>
+<li>Distance prerequisite: Theoretically requires Euclidean or near-Euclidean distances; usable on general biological distances, but the statistical interpretation of “variance minimization” becomes weaker.</li>
+</ul>
+</li>
+</ul>
+<h3 id="output-and-conventions"><a class="header" href="#output-and-conventions">Output and Conventions</a></h3>
+<ul>
+<li>Outputs Newick dendrogram:
+<ul>
+<li>Internal node height is half the merge distance (<code>height = distance / 2</code>), and branch length from child to parent is <code>parent_height - child_height</code>.</li>
+<li>Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.</li>
+<li>Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).</li>
+<li>Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of <code>necom cut --height</code>.</li>
+</ul>
+</li>
+<li>Numeric format: unified six decimal places with trailing zeros removed; consistent with the convention in <code>nwk distance</code>.</li>
+</ul>
+<h3 id="recommended-hier-workflow"><a class="header" href="#recommended-hier-workflow">Recommended Hier Workflow</a></h3>
+<ul>
+<li>Generate tree:
+<ul>
+<li>Near-molecular-clock/ultrametric scenarios: <code>clust upgma</code> outputs a rooted ultrametric tree.</li>
+<li>General additive-distance scenarios: <code>clust nj</code>.</li>
+<li>General hierarchical analysis or when <code>ward.D2</code> is needed: <code>clust hier --method ward.D2</code>.</li>
+</ul>
+</li>
+<li>Cut and evaluate:
+<ul>
+<li>Cut: <code>necom cut --height H</code> or TreeCluster-style thresholds/constraints.</li>
+<li>Internal evaluation (no Ground Truth): <code>necom clust eval --matrix ...</code> (Silhouette) (currently available); <code>necom nwk eval</code> not yet implemented.</li>
+<li>External evaluation (with Ground Truth): <code>necom clust eval</code> (ARI/AMI/V-Measure).</li>
+</ul>
+</li>
+</ul>
+<h3 id="cli-design"><a class="header" href="#cli-design">CLI Design</a></h3>
+<h4 id="command-overview"><a class="header" href="#command-overview">Command Overview</a></h4>
+<ul>
+<li>Name: <code>necom clust hier</code> (visible alias <code>hclust</code>)</li>
+<li>Purpose: Generate a hierarchical clustering tree (dendrogram) from a distance matrix, output as Newick for downstream <code>necom cut</code>.</li>
+<li>Module: <code>clust</code>, alongside <code>k-medoids</code> and others.</li>
+</ul>
+<h4 id="input"><a class="header" href="#input">Input</a></h4>
+<ul>
+<li>Matrix file: PHYLIP distance matrix (standard or relaxed format).</li>
+<li>Format conversion: If you have a pair TSV (<code>name1  name2  distance</code>), first convert it to PHYLIP with <code>necom mat to-phylip</code>; this unified entry reduces ambiguity and keeps the interface consistent with <code>clust upgma/nj</code>.</li>
+<li>Distance/similarity conversion: <code>clust hier</code> only accepts <strong>distance matrices</strong> (smaller means more similar). If the input is a similarity matrix (e.g., BLAST Identity, Alignment Score), convert it first with <code>necom mat transform</code> (e.g., <code>--op inv-linear --max-val 100</code> or <code>--op log</code>).</li>
+<li>Name source: Parsed automatically from input; no extra label file needed.</li>
+</ul>
+<h4 id="main-options"><a class="header" href="#main-options">Main Options</a></h4>
+<ul>
+<li><code>--method {single|complete|average|weighted|centroid|median|ward}</code>: linkage/criterion selection (default <code>ward</code>). Naming aligns with SciPy <code>linkage</code>.</li>
+<li><code>--outfile/-o &lt;path&gt;</code>: output file path (default <code>stdout</code>, i.e., print to screen).</li>
+</ul>
+<h4 id="output"><a class="header" href="#output">Output</a></h4>
+<ul>
+<li>Default output: Newick dendrogram with branch lengths representing merge heights.</li>
+<li>Numeric format: unified six decimal places, trailing zeros removed; consistent with the convention in <code>nwk distance</code>.</li>
+</ul>
+<h4 id="examples"><a class="header" href="#examples">Examples</a></h4>
+<pre><code class="language-bash"># Convert pair TSV to PHYLIP first
+necom mat to-phylip pairs.tsv -o matrix.phy
+
+# Ward (PHYLIP input, default Newick output)
+necom clust hier matrix.phy --method ward &gt; tree.nwk
+
+# Average/complete/single (PHYLIP input)
+necom clust hier matrix.phy --method average &gt; tree.nwk
+</code></pre>
+<h4 id="notes"><a class="header" href="#notes">Notes</a></h4>
+<ul>
+<li>Distance prerequisite: Ward.D2 theoretically relies on Euclidean or near-Euclidean distances; usable on general biological distances, but the statistical interpretation of “minimum total within-group variance” becomes weaker.</li>
+<li>Semantic differences:
+<ul>
+<li>Hier merge heights are linkage/criterion costs; ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions).</li>
+<li>If you need “rooted, ultrametric, evolution-meaningful” branch lengths, use <code>clust upgma</code>; for general additive distances, use <code>clust nj</code>.</li>
+</ul>
+</li>
+<li>Stability: Ties are broken by alphabetical order of names to ensure determinism.</li>
+<li>Implementation convention: <code>ward.D2</code> internally performs updates with “squared distances” and returns branch lengths in “distance units”; users do not need to provide or distinguish <code>D</code> from <code>D^2</code>.</li>
+<li>Method characteristics:
+<ul>
+<li><code>centroid/median</code> may produce non-monotonic merge heights (inversion), which is an algorithmic characteristic; the output is still valid Newick, but the intuitive meaning of heights is slightly weaker than for <code>average/ward</code>.</li>
+<li>Leaf ordering: the <code>hier</code> command itself does not reorder leaves; for improved visualization readability, use <code>necom nwk order --num-descendants</code> (ladderize).</li>
+</ul>
+</li>
+</ul>
+<h3 id="mapping-to-and-differences-from-scipy"><a class="header" href="#mapping-to-and-differences-from-scipy">Mapping to and Differences from SciPy</a></h3>
+<ul>
+<li>Method mapping: Aligned with SciPy <code>linkage</code> <code>method</code> set; <code>ward</code> is equivalent to <code>ward.D2</code> (internally updates with squared distances); <code>average</code> is equivalent to UPGMA, <code>weighted</code> to WPGMA, and <code>centroid/median</code> to UPGMC/WPGMC.</li>
+<li>Input differences: SciPy accepts a “condensed distance vector” or an observation matrix; necom uniformly uses PHYLIP distance matrices. To convert from pair TSV, use <code>necom mat to-phylip</code>.</li>
+<li>Output differences: SciPy returns an <code>(n-1)×4</code> linkage matrix Z; necom outputs a Newick tree directly for <code>necom cut / to-dot / to-forest</code>. Average users do not need to care about Z; if SciPy interoperability is required, continue using Z with <code>fcluster/cophenet</code> on the Python side.</li>
+<li>Leaf ordering: necom recommends <code>necom nwk order --num-descendants</code> (ladderize) for extremely high performance and usually sufficient visualization quality.</li>
+<li>Flat clustering: SciPy’s <code>fcluster</code> supports <code>criterion='distance'|'maxclust'|...</code>; in necom these correspond to <code>necom cut --height H</code> and <code>necom cut --k K</code>, respectively. Other criteria such as <code>monocrit/inconsistent</code> are not introduced for now.</li>
+<li>Evaluation metrics: SciPy has <code>cophenet</code> (cophenetic correlation coefficient); necom plans to add the cophenetic correlation coefficient to <code>necom nwk eval</code> as a supplementary tree-quality metric (not yet implemented).</li>
+</ul>
+<h4 id="user-tips"><a class="header" href="#user-tips">User Tips</a></h4>
+<ul>
+<li>Beginner path (recommended): <code>mat to-phylip → clust hier --method ward → necom cut --height → clust eval → nwk visualization</code></li>
+<li>Interoperability and audit: If you need to verify the merging process step by step or perform further flat cutting/statistics in Python, use SciPy’s linkage matrix and tools; on the necom side, keep Newick as the primary format to reduce cognitive load.</li>
+</ul>
+<h4 id="example-mappings"><a class="header" href="#example-mappings">Example Mappings</a></h4>
+<ul>
+<li>SciPy linkage (Ward):
+<ul>
+<li>Python: <code>Z = linkage(y, method='ward', optimal_ordering=True)</code></li>
+<li>necom: <code>necom mat to-phylip pairs.tsv -o matrix.phy</code> → <code>necom clust hier matrix.phy --method ward &gt; tree.nwk</code> → <code>necom nwk order tree.nwk --num-descendants &gt; ordered.nwk</code></li>
+</ul>
+</li>
+<li>SciPy fcluster (cut by distance):
+<ul>
+<li>Python: <code>labels = fcluster(Z, t=0.05, criterion='distance')</code></li>
+<li>necom: <code>necom cut tree.nwk --height 0.05 &gt; clusters.tsv</code></li>
+</ul>
+</li>
+<li>SciPy fcluster (cut by cluster count):
+<ul>
+<li>Python: <code>labels = fcluster(Z, t=20, criterion='maxclust')</code></li>
+<li>necom: <code>necom cut tree.nwk --k 20 &gt; clusters.tsv</code></li>
+</ul>
+</li>
+<li>SciPy cophenet:
+<ul>
+<li>Python: <code>c, dists = cophenet(Z, Y)</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="scikit-learn-mapping"><a class="header" href="#scikit-learn-mapping">scikit-learn Mapping</a></h4>
+<ul>
+<li>AgglomerativeClustering (Ward):
+<ul>
+<li>Python: <code>model = AgglomerativeClustering(linkage='ward').fit(X)</code></li>
+<li>necom: <code>necom clust hier matrix.phy --method ward &gt; tree.nwk</code> (distance matrix must be computed first)</li>
+</ul>
+</li>
+<li>AgglomerativeClustering (Average/Complete/Single):
+<ul>
+<li>Python: <code>model = AgglomerativeClustering(linkage='average').fit(X)</code></li>
+<li>necom: <code>necom clust hier matrix.phy --method average &gt; tree.nwk</code></li>
+</ul>
+</li>
+<li>Differences:
+<ul>
+<li>scikit-learn focuses on directly outputting cluster labels (<code>labels_</code>); <code>necom</code> focuses on generating tree structure (Newick).</li>
+<li>To obtain labels in <code>necom</code>, use it together with <code>necom cut</code>.</li>
+</ul>
+</li>
+</ul>
+<h4 id="toolchain-collaboration"><a class="header" href="#toolchain-collaboration">Toolchain Collaboration</a></h4>
+<ul>
+<li>Tree building: <code>necom clust hier</code> → generate dendrogram</li>
+<li>Cutting: <code>necom cut --height H</code> → export groups</li>
+<li>Evaluation:
+<ul>
+<li>No Ground Truth: <code>necom clust eval --matrix</code> / <code>--tree</code> / <code>--coords</code> (currently available); <code>necom nwk eval</code> not yet implemented</li>
+<li>With Ground Truth: <code>necom clust eval</code> (ARI/AMI/V-Measure)</li>
+</ul>
+</li>
+<li>Visualization: <code>necom nwk to-dot/to-forest</code> → graphic/LaTeX display</li>
+</ul>
+<h2 id="evaluation-and-analysis"><a class="header" href="#evaluation-and-analysis">Evaluation and Analysis</a></h2>
+<p>These commands do not produce clusters; they evaluate cluster or tree quality.</p>
+<ul>
+<li>
+<p><strong>Tree-based evaluation</strong></p>
+<ul>
+<li><strong>Command</strong>: <code>necom nwk eval</code> (not yet implemented)</li>
+<li><strong>Positioning</strong>: Multi-dimensional evaluation of tree structure.</li>
+<li><strong>Capabilities</strong>: Geometric compactness (Silhouette), taxonomic purity (Purity), evolutionary consistency (Discordance).</li>
+<li><strong>Alternative</strong>: Currently use <code>necom clust eval --matrix</code> / <code>--tree</code> / <code>--coords</code> for distance/tree/coordinate-based evaluation.</li>
+</ul>
+</li>
+<li>
+<p><strong>Partition-based evaluation</strong></p>
+<ul>
+<li><strong>Command</strong>: <code>necom clust eval</code></li>
+<li><strong>Positioning</strong>: General clustering quality evaluation (supports with/without Ground Truth).</li>
+<li><strong>Capabilities</strong>: ARI, AMI, V-Measure (external); Silhouette, Davies-Bouldin (internal).</li>
+</ul>
+</li>
+</ul>
+<p><code>necom</code> separates cluster generation from evaluation: generate candidates with <code>necom cut --scan</code>, then evaluate them in batch with <code>clust eval</code>, and finally select the best parameters manually.</p>
+<h3 id="external-validity-metrics"><a class="header" href="#external-validity-metrics">External Validity Metrics</a></h3>
+<p><em>Compare a predicted partition to a reference partition.</em></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">Metric</th><th style="text-align: left">Range</th><th style="text-align: left">Notes</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">ARI</td><td style="text-align: left">[-1, 1]</td><td style="text-align: left">Adjusted Rand Index; corrected for chance; 1 = perfect agreement.</td></tr>
+<tr><td style="text-align: left">AMI</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Adjusted Mutual Information; robust with many clusters.</td></tr>
+<tr><td style="text-align: left">NMI</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Normalized Mutual Information; not corrected for chance.</td></tr>
+<tr><td style="text-align: left">V-Measure</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Harmonic mean of Homogeneity and Completeness.</td></tr>
+<tr><td style="text-align: left">FMI</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Fowlkes-Mallows Index; geometric mean of Precision and Recall.</td></tr>
+<tr><td style="text-align: left">RI</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Rand Index; not corrected for chance.</td></tr>
+<tr><td style="text-align: left">Jaccard</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Pair-wise Jaccard similarity of same-cluster pairs.</td></tr>
+<tr><td style="text-align: left">Precision / Recall</td><td style="text-align: left">[0, 1]</td><td style="text-align: left">Pair-wise precision and recall.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="internal-validity-metrics"><a class="header" href="#internal-validity-metrics">Internal Validity Metrics</a></h3>
+<p><em>Evaluate a partition using the data geometry only.</em></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">Type</th><th style="text-align: left">Metrics</th><th style="text-align: left">Required input</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: left">Distance-based</td><td style="text-align: left">Silhouette, Dunn, C-Index, Gamma, Tau</td><td style="text-align: left"><code>--matrix</code> or <code>--tree</code></td></tr>
+<tr><td style="text-align: left">Coordinate-based</td><td style="text-align: left">Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski</td><td style="text-align: left"><code>--coords</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Silhouette is the most commonly used distance-based metric: values near 1 indicate well-clustered samples, 0 indicate boundary samples, and negative values suggest possible mis-clustering.</p>
+<h3 id="typical-workflows"><a class="header" href="#typical-workflows">Typical Workflows</a></h3>
+<pre><code class="language-bash"># External evaluation (with ground truth)
+necom clust eval result.tsv --other truth.tsv -o eval.tsv
+
+# Internal evaluation with a distance matrix
+necom clust eval result.tsv --matrix dist.phy
+
+# Batch evaluation of scan results
+necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
+    necom clust eval - --input-format long --matrix matrix.phy &gt; evaluation.tsv
+</code></pre>
+<h2 id="planned"><a class="header" href="#planned">Planned</a></h2>
+<p>GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap.</p>
+<h2 id="not-recommended--no-plans"><a class="header" href="#not-recommended--no-plans">Not Recommended / No Plans</a></h2>
+<p>These algorithms are classic but have limitations in large-scale biological data scenarios, so they are not being introduced as core features.</p>
+<ul>
+<li>
+<p><strong>K-Means</strong></p>
+<ul>
+<li><strong>Reason</strong>: Fast, but assumes clusters are spherical with equal variance, and centroids are usually not real samples, lacking biological interpretability (e.g., they cannot directly serve as representative sequences).</li>
+<li><strong>Alternative</strong>: <code>K-Medoids</code> (already implemented), where medoids must be real samples and arbitrary distance matrices are supported, making it more suitable for biological sequence analysis.</li>
+</ul>
+</li>
+<li>
+<p><strong>Bisecting K-Means</strong></p>
+<ul>
+<li><strong>Principle</strong>: Top-down divisive clustering. Initially all points form one cluster; the cluster with the largest SSE is selected and split by K-Means until K clusters are reached.</li>
+<li><strong>Reason</strong>: Although it produces a tree structure (binary tree), it inherits K-Means limitations (requires Euclidean distances; centroids are not real samples). Biological tree building usually prefers bottom-up agglomerative methods such as UPGMA/NJ.</li>
+</ul>
+</li>
+<li>
+<p><strong>Affinity Propagation (AP)</strong></p>
+<ul>
+<li><strong>Principle</strong>: Message-passing mechanism in which all points compete to become exemplars. Does not require specifying the cluster count, but has high computational complexity.</li>
+<li><strong>Reason</strong>: Time and space complexity are high ($O(N^2)$), making it difficult to handle large-scale biological sequence data (e.g., &gt;10k sequences).</li>
+<li><strong>Alternative</strong>: For small datasets seeking representatives, use <code>K-Medoids</code>; for automatic cluster count, use <code>DBSCAN</code> or <code>MCL</code>.</li>
+</ul>
+</li>
+<li>
+<p><strong>Spectral Clustering</strong></p>
+<ul>
+<li><strong>Principle</strong>: Uses eigenvectors of the Laplacian matrix for dimensionality reduction, then performs K-Means clustering in the low-dimensional space. Essentially seeks the graph’s minimum normalized cut (Normalized Cut).</li>
+<li><strong>Reason</strong>: Constructing the Laplacian matrix and eigendecomposition is computationally expensive ($O(N^3)$).</li>
+<li><strong>Alternative</strong>: <code>MCL</code> usually provides similar or better results for biological network clustering and scales better.</li>
+</ul>
+</li>
+<li>
+<p><strong>Mean Shift</strong></p>
+<ul>
+<li><strong>Principle</strong>: Density-based hill-climbing algorithm. Points are repeatedly shifted toward the density center (mean shift) of their neighborhood until they converge to local density peaks (modes).</li>
+<li><strong>Reason</strong>: High computational complexity and the bandwidth parameter is hard to choose adaptively.</li>
+<li><strong>Alternative</strong>: <code>DBSCAN</code> or <code>GMM</code> usually covers its density-estimation needs.</li>
+</ul>
+</li>
+<li>
+<p><strong>OPTICS</strong></p>
+<ul>
+<li><strong>Principle</strong>: Produces a reachability plot by ordering data points according to reachability distances, capturing all possible density levels in a single run. Solves DBSCAN’s sensitivity to a global <code>eps</code>.</li>
+<li><strong>Reason</strong>: Its core idea (hierarchical density clustering) has been better inherited and automated by <strong>HDBSCAN</strong>; OPTICS results (reachability plots) require complex post-processing to obtain clear clusters.</li>
+<li><strong>Alternative</strong>: Use the more modern, lower-parameter, and more automated <code>HDBSCAN</code>.</li>
+</ul>
+</li>
+<li>
+<p><strong>Biclustering</strong></p>
+<ul>
+<li><strong>Reason</strong>: Simultaneously clusters rows and columns (e.g., Spectral Co-Clustering), mainly used for specific matrix-subblock mining scenarios such as gene expression profiling. This differs substantially from necom’s current focus on “sample grouping”.</li>
+<li><strong>Alternative</strong>: If features (columns) need to be clustered, transpose the matrix and use standard clustering; if co-expression modules are needed, use dedicated expression-profiling tools (e.g., WGCNA).</li>
+</ul>
+</li>
+<li>
+<p><strong>BIRCH</strong></p>
+<ul>
+<li><strong>Principle</strong>: Incremental clustering based on a Clustering Feature tree (CF Tree). Builds a highly compressed tree in a single scan; tree nodes store cluster statistics (sum, square sum), making it ideal for very large datasets.</li>
+<li><strong>Reason</strong>: Strongly relies on Euclidean-space statistical properties (computing centroids and radii), not suitable for complex distance measures of biological sequences (e.g., edit distance); also restricts cluster shapes.</li>
+<li><strong>Alternative</strong>: For large-scale vectors, MiniBatch K-Means is more general; for large-scale sequences, use <code>MCL</code> (graph clustering) or <code>CD-HIT/MMseqs2</code> (greedy clustering).</li>
+</ul>
+</li>
+</ul>
+<h2 id="detailed-algorithm-descriptions"><a class="header" href="#detailed-algorithm-descriptions">Detailed Algorithm Descriptions</a></h2>
+<h3 id="gmm-gaussian-mixture-models-planned"><a class="header" href="#gmm-gaussian-mixture-models-planned">GMM (Gaussian Mixture Models) [Planned]</a></h3>
+<p>Motivation for introducing GMM:</p>
+<ul>
+<li><strong>Soft Clustering</strong>: Unlike the hard assignment of K-means, GMM gives the probability that a sample belongs to each cluster, suitable for fuzzy biological classifications (e.g., subspecies, gene-family transitional states).</li>
+<li><strong>Non-spherical clusters</strong>: Models different shapes and sizes through covariance matrices (K-means assumes equal-variance spherical clusters).</li>
+<li><strong>Generative model</strong>: Can be used for density estimation and outlier detection.</li>
+</ul>
+<p><strong>Planned interface</strong>:</p>
+<pre><code class="language-bash"># GMM clustering from CSV/TSV vector input
+necom clust gmm input.tsv --k 5 --cov full &gt; clusters.tsv
+
+# Output includes: ID, Cluster, PosteriorProb
+</code></pre>
+<h3 id="model-selection"><a class="header" href="#model-selection">Model Selection</a></h3>
+<p>How to determine the number of clusters (K) or the best model complexity?</p>
+<ul>
+<li><strong>BIC (Bayesian Information Criterion)</strong> [Planned]:
+<ul>
+<li>In GMM, BIC trades off log-likelihood (goodness of fit) against the number of parameters (complexity).</li>
+<li><code>necom</code> could provide <code>clust gmm --scan-k 2..20</code>, automatically computing and outputting a BIC curve to help users choose the best K (usually the BIC minimum or elbow).</li>
+</ul>
+</li>
+<li><strong>Silhouette / Calinski-Harabasz</strong> [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (<code>clust eval</code> already supports distance-matrix Silhouette; tree-based Silhouette is planned for <code>necom nwk eval</code> [planned]).</li>
+</ul>
+<h2 id="large-scale-data-strategy"><a class="header" href="#large-scale-data-strategy">Large-Scale Data Strategy</a></h2>
+<p>For large-scale data with $N &gt; 20,000$, the memory ($O(N^2)$) and computation ($O(N^2)$) costs of fully connected hierarchical clustering increase sharply.</p>
+<p><strong>Memory estimate (f32 condensed matrix)</strong>:</p>
+<ul>
+<li><strong>1 GiB</strong>: ~23,000 points</li>
+<li><strong>10 GiB</strong>: ~73,000 points</li>
+<li><strong>32 GiB</strong>: ~130,000 points</li>
+<li><strong>64 GiB</strong>: ~185,000 points</li>
+</ul>
+<p><strong>Conclusion</strong>: Even on a high-end server with 64 GiB memory, processing $N=200k$ is near the limit.</p>
+<p><strong>Recommended strategy</strong>: Use a “two-step” approach combining fast clustering with careful tree building.</p>
+<ol>
+<li><strong>Pre-clustering/compression</strong>: Use linear or near-linear algorithms (e.g., <code>necom clust k-medoids</code>, <code>necom clust mcl</code>, or external tools such as <code>mmseqs2</code>) to compress data into $K$ representative points ($K \approx 5000 \sim 10000$).</li>
+<li><strong>Hierarchical clustering</strong>: Extract the distance matrix among representative points and run <code>necom clust hier</code> to build the backbone tree.</li>
+</ol>
+<p><strong>Workflow example</strong>:</p>
+<pre><code class="language-bash"># 1. Fast clustering to select representatives (k=5000)
+necom clust k-medoids all_data.tsv --k 5000 --format pair &gt; clusters.tsv
+
+# 2. Extract representative list
+cut -f1 clusters.tsv | sort -u &gt; representatives.list
+
+# 3. Extract sub-matrix for representatives
+necom mat subset all_data.tsv representatives.list -o sub_matrix.phy
+
+# 4. Build tree on representatives
+necom clust hier sub_matrix.phy --method ward &gt; backbone.nwk
+</code></pre>
+<h2 id="recommended-workflows"><a class="header" href="#recommended-workflows">Recommended Workflows</a></h2>
+<h3 id="scenario-a-protein-family-mining-graph-based"><a class="header" href="#scenario-a-protein-family-mining-graph-based">Scenario A: Protein Family Mining (Graph-based)</a></h3>
+<pre><code class="language-bash"># 1. Build sequence-alignment network (e.g., mmseqs/blast -&gt; pair.tsv)
+# 2. MCL clustering
+necom clust mcl pairs.tsv --inflation 2.0 &gt; families.tsv
+</code></pre>
+<h3 id="scenario-b-hierarchical-clustering-parameter-scanning-and-evaluation-workflow"><a class="header" href="#scenario-b-hierarchical-clustering-parameter-scanning-and-evaluation-workflow">Scenario B: Hierarchical Clustering Parameter Scanning and Evaluation Workflow</a></h3>
+<p>Combine <code>necom cut</code> scanning with <code>clust eval</code> batch evaluation to find the best cutting threshold.</p>
+<pre><code class="language-bash"># 1. Generate hierarchical clustering tree
+necom clust hier matrix.phy --method ward &gt; tree.nwk
+
+# 2. Scan thresholds and evaluate internal metrics (Silhouette)
+# necom cut outputs a long table in scan mode, which can be piped directly to clust eval
+necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
+    necom clust eval - --input-format long --matrix matrix.phy &gt; evaluation.tsv
+
+# 3. Analyze evaluation.tsv to choose the best threshold (e.g., maximum Silhouette)
+# Assume the best threshold is 0.45
+necom cut tree.nwk --height 0.45 &gt; final_clusters.tsv
+</code></pre>
+<h2 id="inputoutput-format-conventions"><a class="header" href="#inputoutput-format-conventions">Input/Output Format Conventions</a></h2>
+<p>The <code>necom clust</code> family of commands involves multiple data formats; the following standard formats are used for interoperability.</p>
+<h3 id="1-partition-files"><a class="header" href="#1-partition-files">1. Partition Files</a></h3>
+<p>Used to represent clustering results (sample-to-cluster mapping). Three formats are supported via the <code>--format</code> option.</p>
+<h4 id="pair-format-default---format-pair"><a class="header" href="#pair-format-default---format-pair">Pair Format (default, <code>--format pair</code>)</a></h4>
+<p>The most general long-table format; each line indicates which cluster a sample belongs to.</p>
+<ul>
+<li><strong>Structure</strong>: <code>ClusterID &lt;tab&gt; Item</code></li>
+<li><strong>Representative selection</strong>: For <code>dbscan</code>/<code>mcl</code>/<code>k-medoids</code>, controlled by <code>--rep {medoid|first}</code>; default <code>medoid</code> (extreme of sum of distances/similarities), <code>first</code> is the alphabetically first member in the cluster. This option also affects the first column of <code>cluster</code> format. <code>cc</code> does not read weights and always uses <code>first</code>.</li>
+<li><strong>Characteristics</strong>: Easy to parse; supports streaming.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-text"># Numeric ID
+1	GeneA
+1	GeneB
+2	GeneC
+
+# Representative as ID
+GeneA	GeneA
+GeneA	GeneB
+GeneC	GeneC
+</code></pre>
+</li>
+</ul>
+<h4 id="cluster-format---format-cluster"><a class="header" href="#cluster-format---format-cluster">Cluster Format (<code>--format cluster</code>)</a></h4>
+<p>Wide-table format; each line represents a cluster containing all its members.</p>
+<ul>
+<li><strong>Structure</strong>: <code>Item1 &lt;space/tab&gt; Item2 ...</code></li>
+<li><strong>Characteristics</strong>: Human-readable; suitable for inspecting results. The line number (1-based) is the ClusterID.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-text">GeneA GeneB
+GeneC
+</code></pre>
+</li>
+</ul>
+<h4 id="long-format-batch---format-long"><a class="header" href="#long-format-batch---format-long">Long Format (batch, <code>--format long</code>)</a></h4>
+<p>A dedicated format for batch evaluation. <code>--input-format long</code> is only accepted by <code>necom clust eval</code>; <code>necom cut</code>’s <code>--format</code> only supports <code>cluster</code>/<code>pair</code>, but in <code>--scan</code> mode it automatically outputs the long format.</p>
+<ul>
+<li><strong>Structure</strong>: <code>Group &lt;tab&gt; ClusterID &lt;tab&gt; Item</code></li>
+<li><strong>Group column</strong>: Identifies different parameter combinations or cutting methods. The format is usually <code>Method=Value</code> (e.g., <code>height=0.5</code>).
+<ul>
+<li><code>necom clust eval</code> preserves this column as the identifier in evaluation results.</li>
+</ul>
+</li>
+<li><strong>Example</strong>:
+<pre><code class="language-text">height=0.1	1	GeneA
+height=0.1	2	GeneC
+height=0.2	1	GeneA
+height=0.2	1	GeneC
+</code></pre>
+</li>
+</ul>
+<h3 id="2-distance-matrix"><a class="header" href="#2-distance-matrix">2. Distance Matrix</a></h3>
+<p>Used by <code>clust hier</code>, <code>nj</code>, <code>upgma</code>, and <code>eval --matrix</code>.</p>
+<h4 id="phylip-format-relaxed"><a class="header" href="#phylip-format-relaxed">PHYLIP Format (relaxed)</a></h4>
+<ul>
+<li><strong>Structure</strong>:
+<ul>
+<li>First line: sample count $N$.</li>
+<li>Next $N$ lines: <code>Name &lt;space&gt; Dist1 &lt;space&gt; Dist2 ...</code></li>
+</ul>
+</li>
+<li><strong>Characteristics</strong>: Standard bioinformatics format. <code>necom</code> supports a “relaxed” format with arbitrary whitespace between names and data.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-text">3
+A  0.0 0.1 0.5
+B  0.1 0.0 0.5
+C  0.5 0.5 0.0
+</code></pre>
+</li>
+</ul>
+<h3 id="3-coordinates--feature-vectors"><a class="header" href="#3-coordinates--feature-vectors">3. Coordinates / Feature Vectors</a></h3>
+<p>Used by <code>clust eval --coords</code> (Davies-Bouldin Index) or future <code>kmeans/gmm</code>.</p>
+<h4 id="featurevector-format"><a class="header" href="#featurevector-format">FeatureVector Format</a></h4>
+<ul>
+<li><strong>Structure</strong>: <code>Name &lt;tab&gt; Val1,Val2,Val3...</code></li>
+<li><strong>Delimiters</strong>: <strong>Tab</strong> between name and vector; <strong>commas</strong> between numeric values.</li>
+<li><strong>Example</strong>:
+<pre><code class="language-text">GeneA	1.2,0.5,3.3
+GeneB	1.1,0.6,3.1
+</code></pre>
+</li>
+<li><strong>Compatibility</strong>: A general feature-vector/coordinate representation format.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="cut.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="cut.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
