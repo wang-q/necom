@@ -42,7 +42,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         tree.strip_topology(is_bl, is_comment, skip_internal, skip_leaf);
 
         let out_string = tree.to_newick();
-        writer.write_all((out_string + "\n").as_ref())?;
+        writer.write_fmt(format_args!("{}\n", out_string))?;
     }
 
     writer.flush()?;

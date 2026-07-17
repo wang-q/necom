@@ -268,7 +268,7 @@ necom nwk to-forest [OPTIONS] <infile>
 *   If the input file contains multiple trees, only the first tree is processed.
 *   `-b, --bl`: Include branch lengths.
 *   `-o, --outfile <file>`: Output filename; `[stdout] for screen output.
-*   LaTeX special characters (`{ } \ # $ % & ~ ^`) and underscores in node names, labels, and comments are escaped or normalized for safe Forest output.
+*   LaTeX special characters (`{ } \ # $ % & ~ ^`) and underscores in node names, labels, comments, and visualization attributes (`dot`, `bar`, `rec`, `tri`) are escaped or normalized for safe Forest output.
 
 ### to-svg
 
@@ -297,7 +297,7 @@ necom nwk to-tex [OPTIONS] <infile>
 *   `--forest`: Input is already Forest code.
 *   `--no-default-style`: Skip default style definitions.
 *   `-o, --outfile <file>`: Output filename; `[stdout] for screen output.
-*   LaTeX special characters (`{ } \ # $ % & ~ ^`) and underscores in node names, labels, and comments are escaped or normalized for safe LaTeX compilation.
+*   LaTeX special characters (`{ } \ # $ % & ~ ^`) and underscores in node names, labels, comments, and visualization attributes (`dot`, `bar`, `rec`, `tri`) are escaped or normalized for safe LaTeX compilation.
 
 > LaTeX output requires a locally installed `xelatex` or an engine such as `tectonic` to compile. By default the embedded style overrides the template fonts with `Noto Sans`; use `--no-default-style` to keep the template's own font setup (`Fira Sans` / `Source Han Sans SC`).
 

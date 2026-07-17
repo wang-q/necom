@@ -11,8 +11,8 @@ Notes:
 * Styles are stored in the comments of each node.
 * Draws a cladogram by default.
 * Use `--bl` to draw a phylogram with branch lengths.
-* Underscores (`_`) in names, labels, and comments are replaced with spaces.
-* Other LaTeX special characters (`{ } \ # $ % & ~ ^`) in names, labels, and comments are escaped automatically.
+*   Underscores (`_`) in names, labels, comments, and visualization attributes (`dot`, `bar`, `rec`, `tri`) are replaced with spaces.
+*   Other LaTeX special characters (`{ } \ # $ % & ~ ^`) in names, labels, comments, and visualization attributes (`dot`, `bar`, `rec`, `tri`) are escaped automatically.
 * Requires a LaTeX installation with `fontspec`, `xeCJK` (for East Asian characters), and the `forest` package. Compilation can be done with `tectonic` or `latexmk -xelatex`.
 * Use `--no-default-style` to keep the template's original font setup instead of injecting the default `Noto Sans` configuration.
 

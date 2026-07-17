@@ -60,25 +60,18 @@ pub(crate) fn format_label_columns(
                 );
             }
             "full" => {
-                let comment = node
-                    .properties
-                    .as_ref()
-                    .filter(|p| !p.is_empty())
-                    .map(|p| {
-                        let pairs: Vec<String> = p
-                            .iter()
-                            .map(|(k, v)| {
-                                if v.is_empty() {
-                                    format!(":{}", k)
-                                } else {
-                                    format!(":{}={}", k, escape_nhx_value(v))
-                                }
-                            })
-                            .collect();
-                        format!("[&&NHX{}]", pairs.join(""))
-                    })
-                    .unwrap_or_default();
-                let _ = write!(out, "\t{}", comment);
+                let _ = write!(out, "\t");
+                if let Some(p) = node.properties.as_ref().filter(|p| !p.is_empty()) {
+                    let _ = write!(out, "[&&NHX");
+                    for (k, v) in p {
+                        if v.is_empty() {
+                            let _ = write!(out, ":{}", k);
+                        } else {
+                            let _ = write!(out, ":{}={}", k, escape_nhx_value(v));
+                        }
+                    }
+                    let _ = write!(out, "]");
+                }
             }
             _ => bail!("unknown extra column: {}", column),
         }
@@ -334,16 +327,16 @@ mod tests {
     #[test]
     fn format_label_columns_full_escapes_nhx_values() {
         let mut node = Node::new(0);
-        node.add_property("comment", "a]b\\c");
+        node.add_property("comment", "a]b\\c:d=e;f,g");
         let cols = vec!["full".to_string()];
         let out = format_label_columns(&node, "A", &cols).unwrap();
-        assert_eq!(out, "A\t[&&NHX:comment=a\\]b\\\\c]");
+        assert_eq!(out, "A\t[&&NHX:comment=a\\]b\\\\c\\:d\\=e\\;f\\,g]");
     }
 
     #[test]
     fn format_label_columns_full_round_trips_through_parser() {
         let mut node = Node::new(0);
-        node.add_property("comment", "a]b\\c");
+        node.add_property("comment", "a]b\\c:d=e;f,g");
         let cols = vec!["full".to_string()];
         let out = format_label_columns(&node, "A", &cols).unwrap();
         let newick = format!("{};", out.replace('\t', ""));
@@ -352,7 +345,7 @@ mod tests {
         let parsed = tree.get_node(root).unwrap();
         assert_eq!(
             parsed.get_property("comment").map(|s| s.as_str()),
-            Some("a]b\\c")
+            Some("a]b\\c:d=e;f,g")
         );
     }
 }

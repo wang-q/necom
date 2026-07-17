@@ -10,7 +10,7 @@ Notes:
 * Styles are stored in the comments of each node.
 * Draws a cladogram by default.
 * Use `--bl` to draw a phylogram with branch lengths.
-* LaTeX special characters (`{ } \ # $ % & ~ ^`) and underscores in node names, labels, and comments are escaped or normalized for safe Forest output.
+*   LaTeX special characters (`{ } \ # $ % & ~ ^`) and underscores in node names, labels, comments, and visualization attributes (`dot`, `bar`, `rec`, `tri`) are escaped or normalized for safe Forest output.
 
 Examples:
 

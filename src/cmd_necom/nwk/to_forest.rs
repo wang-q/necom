@@ -35,7 +35,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let out_string = to_forest(&tree, height)
         .map_err(|e| anyhow::anyhow!("to_forest failed: {}", e))?;
 
-    writer.write_all((out_string + "\n").as_ref())?;
+    writer.write_fmt(format_args!("{}\n", out_string))?;
 
     writer.flush()?;
     Ok(())

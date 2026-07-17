@@ -148,14 +148,19 @@ fn quote_label(label: &str) -> String {
 
 /// Escape characters that are special inside an NHX annotation value.
 ///
-/// Backslashes and closing square brackets must be escaped so that the
-/// generated Newick string can be re-parsed unambiguously.
+/// Backslashes, closing square brackets, and Newick structural characters
+/// (`:`, `=`, `;`, `,`) must be escaped so that the generated Newick string
+/// can be re-parsed unambiguously.
 pub fn escape_nhx_value(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for c in value.chars() {
         match c {
             '\\' => out.push_str("\\\\"),
             ']' => out.push_str("\\]"),
+            ':' => out.push_str("\\:"),
+            '=' => out.push_str("\\="),
+            ';' => out.push_str("\\;"),
+            ',' => out.push_str("\\,"),
             _ => out.push(c),
         }
     }
@@ -270,6 +275,27 @@ mod tests {
         assert_eq!(
             root.get_property("comment").map(|s| s.as_str()),
             Some("a]b\\c")
+        );
+    }
+
+    #[test]
+    fn test_to_newick_property_value_escapes_newick_structural_chars() {
+        let mut tree = Tree::new();
+        let n0 = tree.add_node();
+        let _ = tree.set_root(n0);
+        tree.get_node_mut(n0).unwrap().set_name("A");
+        tree.get_node_mut(n0)
+            .unwrap()
+            .add_property("comment", "a:b=c;d,e");
+
+        let output = to_newick(&tree);
+        assert!(output.contains("A[&&NHX:comment=a\\:b\\=c\\;d\\,e];"));
+
+        let parsed = Tree::from_newick(&output).unwrap();
+        let root = parsed.get_node(parsed.get_root().unwrap()).unwrap();
+        assert_eq!(
+            root.get_property("comment").map(|s| s.as_str()),
+            Some("a:b=c;d,e")
         );
     }
 

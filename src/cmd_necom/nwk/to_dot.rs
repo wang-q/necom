@@ -25,7 +25,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     for tree in trees {
         let out_string = tree.to_dot();
-        writer.write_all((out_string + "\n").as_ref())?;
+        writer.write_fmt(format_args!("{}\n", out_string))?;
     }
 
     writer.flush()?;

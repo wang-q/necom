@@ -59,7 +59,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         algo::prune_nodes(&mut tree, to_remove)?;
 
         let out_string = tree.to_newick();
-        writer.write_all((out_string + "\n").as_ref())?;
+        writer.write_fmt(format_args!("{}\n", out_string))?;
     }
 
     writer.flush()?;

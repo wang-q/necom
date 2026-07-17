@@ -301,15 +301,21 @@ fn parse_plain_comment(input: &str) -> IResult<&str, &str, DetailedError<'_>> {
 
 /// Unescape an NHX property value.
 ///
-/// Reverses `escape_nhx_value` from the writer: `\]` becomes `]` and `\\`
-/// becomes a single backslash.
+/// Reverses `escape_nhx_value` from the writer: `\]`, `\\`, `\:`, `\=`,
+/// `\;`, and `\,` are restored to their original characters.
 fn unescape_nhx_value(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     let mut chars = value.chars().peekable();
     while let Some(c) = chars.next() {
         if c == '\\' {
             if let Some(&next) = chars.peek() {
-                if next == '\\' || next == ']' {
+                if next == '\\'
+                    || next == ']'
+                    || next == ':'
+                    || next == '='
+                    || next == ';'
+                    || next == ','
+                {
                     chars.next();
                     out.push(next);
                     continue;
@@ -321,26 +327,58 @@ fn unescape_nhx_value(value: &str) -> String {
     out
 }
 
+/// Split a string on `delimiter`, treating `\<delimiter>` as an escaped
+/// literal and `\\` as an escaped backslash.
+fn split_escaped(s: &str, delimiter: char) -> Vec<&str> {
+    let mut parts = Vec::new();
+    let mut start = 0;
+    let mut chars = s.char_indices().peekable();
+
+    while let Some((idx, c)) = chars.next() {
+        if c == '\\' {
+            // Skip the escaped character so it is never treated as a delimiter.
+            chars.next();
+            continue;
+        }
+        if c == delimiter {
+            parts.push(&s[start..idx]);
+            start = idx + c.len_utf8();
+        }
+    }
+    parts.push(&s[start..]);
+    parts
+}
+
 /// Parse NHX properties from the content of an NHX comment.
 ///
 /// Input is expected to start with `&&NHX` (the leading marker itself is
 /// skipped). Properties are colon-separated `key=value` pairs; bare keys
-/// without a value get an empty string.
+/// without a value get an empty string. Escaped colons and equals signs
+/// inside values are preserved.
 fn parse_nhx_content(content: &str) -> Option<BTreeMap<String, String>> {
     if !content.starts_with("&&NHX") {
         return None;
     }
 
     let mut props = BTreeMap::new();
-    for part in content.split(':') {
-        if part == "&&NHX" {
+    for part in split_escaped(content, ':') {
+        if part == "&&NHX" || part.trim().is_empty() {
             continue;
         }
-        if let Some((k, v)) = part.split_once('=') {
-            props.insert(k.to_string(), unescape_nhx_value(v));
-        } else if !part.trim().is_empty() {
-            // Unstructured part in NHX -> key with empty value
-            props.insert(part.to_string(), String::new());
+        let kv = split_escaped(part, '=');
+        match kv.len() {
+            1 => {
+                props.insert(unescape_nhx_value(kv[0]).to_string(), String::new());
+            }
+            _ => {
+                // First unescaped `=` separates key from value; any further
+                // unescaped `=` are restored into the value.
+                let value = kv[1..].join("=");
+                props.insert(
+                    unescape_nhx_value(kv[0]).to_string(),
+                    unescape_nhx_value(&value),
+                );
+            }
         }
     }
 
@@ -693,6 +731,17 @@ mod tests {
         let root = tree.get_node(tree.get_root().unwrap()).unwrap();
         let props = root.properties.as_ref().unwrap();
         assert_eq!(props.get("comment").map(|s| s.as_str()), Some("a]b\\c"));
+    }
+
+    #[test]
+    fn test_parser_nhx_escaped_structural_chars() {
+        // `:`, `=`, `;`, `,` inside an NHX value must be unescaped by the parser.
+        let input = r"(A:0.1,B:0.2)n1[&&NHX:comment=a\:b\=c\;d\,e];";
+        let tree = Tree::from_newick(input).unwrap();
+
+        let root = tree.get_node(tree.get_root().unwrap()).unwrap();
+        let props = root.properties.as_ref().unwrap();
+        assert_eq!(props.get("comment").map(|s| s.as_str()), Some("a:b=c;d,e"));
     }
 
     #[test]

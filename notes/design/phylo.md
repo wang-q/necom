@@ -2,7 +2,7 @@
 
 `necom nwk` 提供完整的 Newick 格式系统发育树处理功能，包括解析、操作、分析和可视化。
 
-> **实现状态注记**：截至 2026-07-16，`necom nwk` 主体命令体系（stat/distance/indent/compare/comment/to-*/topo/label/reroot/prune/subtree/order/rename/replace/support）已实现；`nwk condense`/`match`/`ed`/`gen`/`duration`、部分标准化统计指标（`colless_yule`/`pda`、`sackin_yule`/`pda`）以及 ASCII 树/随机树生成为规划中。
+> **实现状态注记**：截至 2026-07-18，`necom nwk` 主体命令体系（stat/distance/indent/compare/comment/to-*/topo/label/reroot/prune/subtree/order/rename/replace/support）已实现；NHX 注释值对 Newick 结构字符（`:`、`=`、`;`、`,`、`]`、`\`）做完整转义以保证 round-trip；Forest/LaTeX 输出对 `dot`/`bar`/`rec`/`tri` 等可视化属性值也进行 LaTeX 特殊字符转义。`nwk condense`/`match`/`ed`/`gen`/`duration`、部分标准化统计指标（`colless_yule`/`pda`、`sackin_yule`/`pda`）以及 ASCII 树/随机树生成为规划中。
 >
 > **关联文档**：[nwk-eval.md](nwk-eval.md)（计划中的多维树评估框架，复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
 
@@ -371,7 +371,7 @@ graph LR
     *   允许将外部生成的 Forest 代码文件（非 Newick）直接嵌入模板生成 PDF。
 *   **特殊字符处理**:
     *   Newick 名称中的下划线 `_` 会被自动转换为空格，避免 LaTeX 编译错误。
-    *   节点名、label、comment 中的 LaTeX 特殊字符（`{ } \ # $ % & ~ ^`）会被自动转义，防止破坏 Forest 语法或导致编译失败。
+    *   节点名、label、comment 以及可视化属性 `dot`/`bar`/`rec`/`tri` 中的 LaTeX 特殊字符（`{ } \ # $ % & ~ ^`）会被自动转义，防止破坏 Forest 语法或导致编译失败。
 
 #### 工作流示例
 

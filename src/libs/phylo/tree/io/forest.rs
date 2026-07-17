@@ -127,7 +127,7 @@ fn to_forest_node_props(
         }
         for key in ["dot", "bar", "rec", "tri"] {
             if let Some(v) = props.get(key) {
-                let _ = write!(options, ", {}={{{}}}", key, v.replace('_', " "));
+                let _ = write!(options, ", {}={{{}}}", key, display_text(v));
             }
         }
         let mut comment = String::new();
@@ -344,6 +344,69 @@ mod tests {
         assert!(
             !output.contains("G&H"),
             "unescaped ampersand in output: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn to_forest_escapes_visual_property_values() {
+        let mut tree = Tree::new();
+        let root = tree.add_node();
+        let leaf = tree.add_node();
+        let _ = tree.set_root(root);
+        tree.add_child(root, leaf).unwrap();
+
+        if let Some(node) = tree.get_node_mut(leaf) {
+            node.name = Some("Leaf".to_string());
+            let mut props = BTreeMap::new();
+            props.insert("dot".to_string(), "#FF_00$00".to_string());
+            props.insert("bar".to_string(), "25%".to_string());
+            props.insert("rec".to_string(), "a&b".to_string());
+            props.insert("tri".to_string(), "x\\y".to_string());
+            node.properties = Some(props);
+        }
+
+        let output = to_forest(&tree, 0.0).unwrap();
+        // Underscores become spaces; LaTeX special chars are escaped.
+        assert!(
+            output.contains("dot={\\#FF 00\\$00}"),
+            "expected escaped hash, dollar and space in dot value, got: {}",
+            output
+        );
+        assert!(
+            output.contains("bar={25\\%}"),
+            "expected escaped percent in bar value, got: {}",
+            output
+        );
+        assert!(
+            output.contains("rec={a\\&b}"),
+            "expected escaped ampersand in rec value, got: {}",
+            output
+        );
+        assert!(
+            output.contains("tri={x\\textbackslash{}y}"),
+            "expected escaped backslash in tri value, got: {}",
+            output
+        );
+        // Raw special characters should not appear in the output.
+        assert!(
+            !output.contains("#FF_00$00"),
+            "unescaped dot value in output: {}",
+            output
+        );
+        assert!(
+            !output.contains("25%"),
+            "unescaped bar value in output: {}",
+            output
+        );
+        assert!(
+            !output.contains("a&b"),
+            "unescaped rec value in output: {}",
+            output
+        );
+        assert!(
+            !output.contains(r"x\y"),
+            "unescaped tri value in output: {}",
             output
         );
     }
