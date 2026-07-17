@@ -259,8 +259,8 @@ graph LR
     *   `to_svg()`: 输出 SVG 矢量图格式。
     *   `to_forest()`: 输出 LaTeX Forest 代码 (自由函数，通过 `io::to_forest()` 调用)。
 *   **遍历**:
-    *   `preorder`, `postorder`: 深度优先遍历 (迭代器风格)。
-    *   `levelorder`: 广度优先遍历。
+    *   `preorder`, `postorder`: 深度优先遍历，返回 `Vec<NodeId>`。
+    *   `levelorder`: 广度优先遍历，返回 `Vec<NodeId>`。
 *   **查询**:
     *   `get_leaves()`: 获取所有叶子节点。
     *   `get_path_from_root()`: 获取根到节点的路径。

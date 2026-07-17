@@ -102,9 +102,10 @@ Assign bootstrap support values to a target tree based on replicate trees.
 necom nwk support [OPTIONS] <target> <replicates>
 ```
 
-*   `-p, --percent`: Output support values as integer percentages (0–100), truncated toward zero.
-*   Overwrites existing internal node labels in the target tree.
-*   The root node is not annotated; any existing root label is preserved.
+* `-p, --percent`: Output support values as integer percentages (0–100), truncated toward zero.
+* `-r, --override-root`: Override the root node label with its support value.
+* Overwrites existing internal node labels in the target tree.
+* The root node is not annotated by default; any existing root label is preserved.
 
 ---
 

@@ -211,3 +211,15 @@ fn command_prune_invert() {
     assert!(!stdout.contains("Gorilla"));
     assert!(!stdout.contains("Pongo"));
 }
+
+#[test]
+fn command_prune_invert_no_match_keeps_tree() {
+    // Inverting a selection that matches nothing should keep the original tree.
+    let input = "(((Homo,Pan),Gorilla),Pongo);";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "prune", "stdin", "--invert", "-n", "Missing"])
+        .stdin(input)
+        .run();
+
+    assert_eq!(stdout.trim(), input);
+}

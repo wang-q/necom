@@ -1049,4 +1049,29 @@ mod tests {
             res
         );
     }
+
+    #[test]
+    fn test_deep_tree_round_trip() {
+        // A 200-level nested cladogram should parse and serialize without panic.
+        let deep_tree = "(".repeat(200) + "A" + &")".repeat(200) + ";";
+        let trees = Tree::from_newick_multi(&deep_tree).unwrap();
+        assert_eq!(trees.len(), 1);
+        assert!(trees[0].to_newick().contains("A"));
+    }
+
+    #[test]
+    fn test_reserved_characters_round_trip() {
+        // All Newick reserved characters in quoted labels must round-trip.
+        let reserved = ["A(B)", "A,B", "A:B", "A;B", "A[B", "A]B"];
+        for label in &reserved {
+            let quoted = format!("('{}');", label.replace('\'', "''"));
+            let trees = Tree::from_newick_multi(&quoted).unwrap();
+            assert_eq!(trees.len(), 1, "failed to parse: {}", quoted);
+            let root = trees[0].get_root().unwrap();
+            let child = trees[0]
+                .get_node(trees[0].get_node(root).unwrap().children[0])
+                .unwrap();
+            assert_eq!(child.name.as_deref(), Some(*label));
+        }
+    }
 }

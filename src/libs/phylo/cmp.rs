@@ -353,7 +353,7 @@ pub fn format_float(val: f64) -> String {
     }
     let s = format!("{:.6}", val);
     let trimmed = s.trim_end_matches('0').trim_end_matches('.');
-    if trimmed.parse::<f64>() == Ok(0.0) {
+    if val.abs() <= 0.5e-6 {
         // Values too small for 6 decimal places (e.g. 1e-7) must not be
         // silently rounded to "0".
         format!("{:e}", val)
@@ -593,6 +593,36 @@ mod tests {
         assert_eq!(format_float(1e-7), "1e-7");
         assert_eq!(format_float(-1e-7), "-1e-7");
         assert_eq!(format_float(1.234567e-7), "1.234567e-7");
+    }
+
+    #[test]
+    fn format_float_threshold_boundaries() {
+        // Below the threshold: scientific notation so the value is not rounded to 0.
+        assert_eq!(format_float(4.999e-7), "4.999e-7");
+        assert_eq!(format_float(-4.999e-7), "-4.999e-7");
+        // At the threshold: still use scientific notation (matches the
+        // original rounded-zero check).
+        assert_eq!(format_float(5e-7), "5e-7");
+        // Above the threshold: fixed decimal representation.
+        assert_eq!(format_float(1e-6), "0.000001");
+    }
+
+    #[test]
+    fn format_float_subnormal_and_negative_zero() {
+        assert_eq!(format_float(-0.0), "0");
+        let tiny = f64::MIN_POSITIVE / 2.0;
+        let out_tiny = format_float(tiny);
+        assert!(
+            out_tiny.contains('e') && !out_tiny.contains("0e"),
+            "subnormal value should use scientific notation, got {}",
+            out_tiny
+        );
+        let out_neg_tiny = format_float(-tiny);
+        assert!(
+            out_neg_tiny.starts_with('-') && out_neg_tiny.contains('e'),
+            "negative subnormal should use scientific notation, got {}",
+            out_neg_tiny
+        );
     }
 
     #[test]

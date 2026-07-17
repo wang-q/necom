@@ -29,6 +29,13 @@ pub fn make_subcommand() -> Command {
                 .action(ArgAction::SetTrue)
                 .help("Print values as percentages"),
         )
+        .arg(
+            Arg::new("override_root")
+                .short('r')
+                .long("override-root")
+                .action(ArgAction::SetTrue)
+                .help("Override the root node label with its support value"),
+        )
         .arg(crate::cmd_necom::args::outfile_arg())
 }
 /// Execute the support command.
@@ -40,6 +47,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .get_one::<String>("replicates")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: replicates"))?;
     let percent = args.get_flag("percent");
+    let override_root = args.get_flag("override_root");
 
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer = necom::writer(outfile)
@@ -88,8 +96,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // 5. Annotate Target Trees
     for target in &mut targets {
-        support::annotate_support(target, &leaf_map, &counts, total_reps, percent)
-            .map_err(|e| anyhow::anyhow!("annotate_support failed: {}", e))?;
+        support::annotate_support(
+            target,
+            &leaf_map,
+            &counts,
+            total_reps,
+            percent,
+            override_root,
+        )
+        .map_err(|e| anyhow::anyhow!("annotate_support failed: {}", e))?;
         writer.write_fmt(format_args!("{}\n", target.to_newick()))?;
     }
 

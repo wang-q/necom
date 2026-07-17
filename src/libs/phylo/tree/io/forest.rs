@@ -43,15 +43,15 @@ fn display_text(s: &str) -> String {
 /// # Arguments
 /// * `tree` - The tree to serialize.
 /// * `height` - Tree height for scaling branch lengths. If 0.0, uses cladogram mode (tier-based).
-pub fn to_forest(tree: &Tree, height: f64) -> String {
+pub fn to_forest(tree: &Tree, height: f64) -> anyhow::Result<String> {
     if let Some(root) = tree.get_root() {
         let depths = compute_depths(tree);
         let heights = compute_heights(tree);
         let mut s = String::new();
-        to_forest_recursive(tree, root, height, &depths, &heights, &mut s);
-        s
+        to_forest_recursive(tree, root, height, &depths, &heights, &mut s)?;
+        Ok(s)
     } else {
-        String::new()
+        Ok(String::new())
     }
 }
 
@@ -62,9 +62,9 @@ fn to_forest_recursive(
     depths: &HashMap<NodeId, usize>,
     heights: &HashMap<NodeId, usize>,
     s: &mut String,
-) {
+) -> anyhow::Result<()> {
     let Some(node) = tree.get_node(id) else {
-        return;
+        return Ok(());
     };
     let indent = "  ";
 
@@ -77,7 +77,7 @@ fn to_forest_recursive(
             s,
             "{}[{}]",
             indention,
-            to_forest_node_props(tree, id, height, heights)
+            to_forest_node_props(tree, id, height, heights)?
         );
     } else {
         let indention = indent.repeat(depth);
@@ -85,13 +85,14 @@ fn to_forest_recursive(
             s,
             "{}[{}",
             indention,
-            to_forest_node_props(tree, id, height, heights)
+            to_forest_node_props(tree, id, height, heights)?
         );
         for &child in children {
-            to_forest_recursive(tree, child, height, depths, heights, s);
+            to_forest_recursive(tree, child, height, depths, heights, s)?;
         }
         let _ = writeln!(s, "{}]", indention);
     }
+    Ok(())
 }
 
 fn to_forest_node_props(
@@ -99,9 +100,9 @@ fn to_forest_node_props(
     id: NodeId,
     height: f64,
     heights: &HashMap<NodeId, usize>,
-) -> String {
+) -> anyhow::Result<String> {
     let Some(node) = tree.get_node(id) else {
-        return String::new();
+        return Ok(String::new());
     };
 
     let mut options = String::new();
@@ -173,7 +174,7 @@ fn to_forest_node_props(
         let _ = write!(options, ", tier={}", tier);
     } else {
         let edge = node.finite_length();
-        let bl = calc_length(edge, height);
+        let bl = calc_length(edge, height)?;
         let _ = write!(options, ", l={}mm, l sep=0", bl);
 
         if node.is_leaf() {
@@ -184,22 +185,31 @@ fn to_forest_node_props(
 
     if content.is_empty() {
         // Strip the leading comma separator when there is no node content.
-        if options.starts_with(", ") {
+        Ok(if options.starts_with(", ") {
             options.split_off(2)
         } else if options.starts_with(',') {
             options.split_off(1)
         } else {
             options
-        }
+        })
     } else {
-        content + &options
+        Ok(content + &options)
     }
 }
 
 // relative length
-fn calc_length(edge: f64, height: f64) -> i32 {
+fn calc_length(edge: f64, height: f64) -> anyhow::Result<i32> {
+    if height <= 0.0 {
+        anyhow::bail!("tree height must be positive for branch-length scaling");
+    }
     let scaled = (edge * 100.0 / height).round();
-    scaled.clamp(i32::MIN as f64, i32::MAX as f64) as i32
+    if !scaled.is_finite() || scaled < i32::MIN as f64 || scaled > i32::MAX as f64 {
+        anyhow::bail!(
+            "relative branch length {} is out of range for Forest output",
+            scaled
+        );
+    }
+    Ok(scaled as i32)
 }
 
 #[cfg(test)]
@@ -223,7 +233,7 @@ mod tests {
             node.properties = Some(props);
         }
 
-        let output = to_forest(&tree, 0.0);
+        let output = to_forest(&tree, 0.0).unwrap();
         assert!(
             output.contains(r"{\color{red}{Leaf A}},"),
             "expected colored leaf content, got: {}",
@@ -251,7 +261,7 @@ mod tests {
 
         tree.get_node_mut(leaf).unwrap().name = Some("Homo_sapiens".to_string());
 
-        let output = to_forest(&tree, 0.0);
+        let output = to_forest(&tree, 0.0).unwrap();
         assert!(
             output.contains("{Homo sapiens}"),
             "underscore should become space, got: {}",
@@ -289,7 +299,7 @@ mod tests {
             node.properties = Some(props);
         }
 
-        let output = to_forest(&tree, 0.0);
+        let output = to_forest(&tree, 0.0).unwrap();
         assert!(
             output.contains(r"\{"),
             "expected escaped brace, got: {}",
@@ -336,5 +346,23 @@ mod tests {
             "unescaped ampersand in output: {}",
             output
         );
+    }
+
+    #[test]
+    fn calc_length_rejects_overflow() {
+        let huge_edge = (i32::MAX as f64) * 10.0;
+        assert!(calc_length(huge_edge, 1.0).is_err());
+    }
+
+    #[test]
+    fn calc_length_rejects_non_positive_height() {
+        assert!(calc_length(1.0, 0.0).is_err());
+        assert!(calc_length(1.0, -1.0).is_err());
+    }
+
+    #[test]
+    fn calc_length_rejects_non_finite() {
+        assert!(calc_length(f64::NAN, 1.0).is_err());
+        assert!(calc_length(f64::INFINITY, 1.0).is_err());
     }
 }

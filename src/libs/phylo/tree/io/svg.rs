@@ -328,43 +328,29 @@ fn compute_svg_positions(
     positions
 }
 
-/// Escape special XML characters in text content.
-#[cfg(test)]
-fn xml_escape(s: &str) -> String {
-    let mut out = String::new();
-    write_xml_escaped(&mut out, s).unwrap();
-    out
+/// Push a single XML-escaped character into `s`.
+fn push_xml_escaped(s: &mut String, c: char) {
+    match c {
+        '&' => s.push_str("&amp;"),
+        '<' => s.push_str("&lt;"),
+        '>' => s.push_str("&gt;"),
+        '"' => s.push_str("&quot;"),
+        '\'' => s.push_str("&apos;"),
+        c => s.push(c),
+    }
 }
 
-#[cfg(test)]
-fn write_xml_escaped(s: &mut String, text: &str) -> std::fmt::Result {
+/// Escape special XML characters into `s`.
+pub(crate) fn write_xml_escaped(s: &mut String, text: &str) -> std::fmt::Result {
     for c in text.chars() {
-        match c {
-            '&' => s.push_str("&amp;"),
-            '<' => s.push_str("&lt;"),
-            '>' => s.push_str("&gt;"),
-            '"' => s.push_str("&quot;"),
-            '\'' => s.push_str("&apos;"),
-            c => s.push(c),
-        }
+        push_xml_escaped(s, c);
     }
     Ok(())
 }
 
 /// Write a label into `s` with underscores replaced by spaces and XML-escaped.
 fn write_label_content(s: &mut String, label: &str) -> std::fmt::Result {
-    for c in label.chars() {
-        let c = if c == '_' { ' ' } else { c };
-        match c {
-            '&' => s.push_str("&amp;"),
-            '<' => s.push_str("&lt;"),
-            '>' => s.push_str("&gt;"),
-            '"' => s.push_str("&quot;"),
-            '\'' => s.push_str("&apos;"),
-            c => s.push(c),
-        }
-    }
-    Ok(())
+    write_xml_escaped(s, &label.replace('_', " "))
 }
 
 #[cfg(test)]
@@ -403,12 +389,29 @@ mod tests {
 
     #[test]
     fn test_xml_escape() {
-        assert_eq!(xml_escape("A & B"), "A &amp; B");
-        assert_eq!(xml_escape("A < B"), "A &lt; B");
-        assert_eq!(xml_escape("A > B"), "A &gt; B");
-        assert_eq!(xml_escape("A\"B"), "A&quot;B");
-        assert_eq!(xml_escape("A'B"), "A&apos;B");
-        assert_eq!(xml_escape("plain"), "plain");
+        let mut out = String::new();
+        write_xml_escaped(&mut out, "A & B").unwrap();
+        assert_eq!(out, "A &amp; B");
+
+        out.clear();
+        write_xml_escaped(&mut out, "A < B").unwrap();
+        assert_eq!(out, "A &lt; B");
+
+        out.clear();
+        write_xml_escaped(&mut out, "A > B").unwrap();
+        assert_eq!(out, "A &gt; B");
+
+        out.clear();
+        write_xml_escaped(&mut out, "A\"B").unwrap();
+        assert_eq!(out, "A&quot;B");
+
+        out.clear();
+        write_xml_escaped(&mut out, "A'B").unwrap();
+        assert_eq!(out, "A&apos;B");
+
+        out.clear();
+        write_xml_escaped(&mut out, "plain").unwrap();
+        assert_eq!(out, "plain");
     }
 
     #[test]

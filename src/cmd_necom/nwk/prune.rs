@@ -33,23 +33,24 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for mut tree in trees {
         let target_ids = super::common::match_names(&tree, args)?;
 
-        if args.get_flag("invert") && target_ids.is_empty() {
-            log::warn!(
-                "--invert set but no target nodes matched; entire tree will be pruned"
-            );
-        }
-
         let to_remove: Vec<_> = if args.get_flag("invert") {
-            let keep = algo::compute_keep_set(&tree, target_ids.iter().copied());
-            match tree.get_root() {
-                Some(root) => {
-                    let all_ids = tree.levelorder(root);
-                    all_ids
-                        .into_iter()
-                        .filter(|id| !keep.contains(id))
-                        .collect()
+            if target_ids.is_empty() {
+                log::warn!(
+                    "--invert set but no target nodes matched; keeping tree unchanged"
+                );
+                Vec::new()
+            } else {
+                let keep = algo::compute_keep_set(&tree, target_ids.iter().copied());
+                match tree.get_root() {
+                    Some(root) => {
+                        let all_ids = tree.levelorder(root);
+                        all_ids
+                            .into_iter()
+                            .filter(|id| !keep.contains(id))
+                            .collect()
+                    }
+                    None => Vec::new(),
                 }
-                None => Vec::new(),
             }
         } else {
             target_ids.into_iter().collect()

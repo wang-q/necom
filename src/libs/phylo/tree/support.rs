@@ -81,19 +81,24 @@ pub fn compute_all_bitsets(
 /// Annotate internal nodes of `target` with support values from `counts`.
 /// If `as_percent` is true, values are written as integer percentages of
 /// `total_reps`, truncated toward zero.
+///
+/// By default the root node is skipped so that any existing root label is
+/// preserved. Set `override_root` to `true` to also annotate the root.
 pub fn annotate_support(
     target: &mut Tree,
     leaf_map: &BTreeMap<String, usize>,
     counts: &HashMap<FixedBitSet, usize>,
     total_reps: usize,
     as_percent: bool,
+    override_root: bool,
 ) -> anyhow::Result<()> {
     let target_bitsets = compute_all_bitsets(target, leaf_map)?;
     for (id, bs) in target_bitsets {
         let node = target
             .get_node_mut(id)
             .ok_or_else(|| anyhow::anyhow!("invalid node id"))?;
-        if !node.is_leaf() && node.parent.is_some() {
+        let is_root = node.parent.is_none();
+        if !node.is_leaf() && (override_root || !is_root) {
             let count = counts.get(&bs).copied().unwrap_or(0);
             let label = if as_percent {
                 match (count * 100).checked_div(total_reps) {
@@ -145,7 +150,7 @@ mod tests {
         let counts = count_clades(&[replicate], &leaf_map).unwrap();
 
         let mut annotated = target;
-        annotate_support(&mut annotated, &leaf_map, &counts, 1, false).unwrap();
+        annotate_support(&mut annotated, &leaf_map, &counts, 1, false, false).unwrap();
 
         let root = annotated.get_root().expect("root exists");
         assert!(
@@ -170,12 +175,30 @@ mod tests {
         let counts = count_clades(&[replicate], &leaf_map).unwrap();
 
         let mut annotated = target;
-        annotate_support(&mut annotated, &leaf_map, &counts, 1, false).unwrap();
+        annotate_support(&mut annotated, &leaf_map, &counts, 1, false, false).unwrap();
 
         let root = annotated.get_root().expect("root exists");
         assert_eq!(
             annotated.get_node(root).unwrap().name.as_deref(),
             Some("Root")
+        );
+    }
+
+    #[test]
+    fn annotate_support_override_root() {
+        let target = Tree::from_newick("((A,B),(C,D))Root;").unwrap();
+        let replicate = Tree::from_newick("((A,B),(C,D));").unwrap();
+        let leaf_map = build_leaf_map(&replicate).unwrap();
+        let counts = count_clades(&[replicate], &leaf_map).unwrap();
+
+        let mut annotated = target;
+        annotate_support(&mut annotated, &leaf_map, &counts, 1, false, true).unwrap();
+
+        let root = annotated.get_root().expect("root exists");
+        assert_eq!(
+            annotated.get_node(root).unwrap().name.as_deref(),
+            Some("1"),
+            "root label should be overridden with support value"
         );
     }
 }

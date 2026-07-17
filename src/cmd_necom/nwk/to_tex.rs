@@ -68,7 +68,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         } else {
             0.0
         };
-        let mut s = to_forest(&tree, height);
+        let mut s = to_forest(&tree, height)
+            .map_err(|e| anyhow::anyhow!("to_forest failed: {}", e))?;
 
         // a bar of unit length
         if is_bl && height > 0.0 {

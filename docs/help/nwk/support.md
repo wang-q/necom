@@ -11,6 +11,7 @@ Notes:
 * All trees must share the same set of leaves.
 * The root node is not annotated; any existing root label is preserved.
 * `--percent` / `-p`: output support values as integer percentages (0–100), truncated toward zero.
+* `--override-root` / `-r`: override the root node label with its support value.
 
 Examples:
 
@@ -19,3 +20,6 @@ Examples:
 
 2. Output support as percentages
    `necom nwk support target.nwk replicates.nwk --percent`
+
+3. Override root label with support value
+   `necom nwk support target.nwk replicates.nwk --override-root`

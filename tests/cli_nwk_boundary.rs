@@ -172,3 +172,42 @@ fn command_prune_duplicate_name_warning() {
     // Only one A is removed, leaving the other.
     assert!(stdout.contains("A"));
 }
+
+#[test]
+fn command_deep_tree_indent_no_panic() {
+    // A deeply nested cladogram should be parsed and serialized without panic.
+    let deep_tree = "(".repeat(200) + "A" + &")".repeat(200) + ";";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "indent", "stdin", "--compact"])
+        .stdin(&deep_tree)
+        .run();
+    assert!(stdout.contains("A"));
+    assert!(stdout.ends_with(";\n") || stdout.ends_with(';'));
+}
+
+#[test]
+fn command_deep_tree_to_svg_no_panic() {
+    // A deeply nested cladogram should be rendered without panic.
+    let deep_tree = "(".repeat(200) + "A" + &")".repeat(200) + ";";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "to-svg", "stdin"])
+        .stdin(&deep_tree)
+        .run();
+    assert!(stdout.contains("<svg xmlns=\"http://www.w3.org/2000/svg\""));
+    assert!(stdout.contains("</svg>"));
+}
+
+#[test]
+fn command_distance_phylip_unnamed_nodes_error() {
+    // PHYLIP mode requires all selected nodes to be named.
+    let (_, stderr) = NecomCmd::new()
+        .args(&["nwk", "distance", "stdin", "--mode", "phylip"])
+        .stdin("(,);")
+        .run_fail();
+
+    assert!(
+        stderr.contains("named") || stderr.contains("name"),
+        "expected naming requirement error, got stderr: {}",
+        stderr
+    );
+}

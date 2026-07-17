@@ -102,3 +102,21 @@ fn command_nwk_compare_branch_lengths() {
     // 1\t3\t2\t0.8\t0.565685
     assert!(stdout.contains("1\t3\t2\t0.8\t0.565685"));
 }
+
+#[test]
+fn command_nwk_compare_rejects_duplicate_leaf_names() {
+    let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
+    // Duplicate leaf name A should be rejected with a clear error.
+    writeln!(file, "((A,A),(B,C));").unwrap();
+    writeln!(file, "((A,B),(C,D));").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["nwk", "compare", file.path().to_str().unwrap()])
+        .run_fail();
+
+    assert!(
+        stderr.contains("duplicate leaf name"),
+        "expected duplicate leaf name error, got stderr: {}",
+        stderr
+    );
+}

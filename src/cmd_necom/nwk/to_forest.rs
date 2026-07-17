@@ -32,7 +32,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let height = super::common::display_height(&tree, is_bl);
 
-    let out_string = to_forest(&tree, height);
+    let out_string = to_forest(&tree, height)
+        .map_err(|e| anyhow::anyhow!("to_forest failed: {}", e))?;
 
     writer.write_all((out_string + "\n").as_ref())?;
 

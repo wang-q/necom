@@ -469,3 +469,32 @@ fn command_nwk_reroot_node_not_found() {
 
     assert!(stderr.contains("none of the specified --node names were found"));
 }
+
+#[test]
+fn command_reroot_cladogram_no_op() {
+    // Default midpoint rerooting is a no-op when the tree has no branch lengths.
+    let input = "((A,B),(C,D));";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "reroot", "stdin"])
+        .stdin(input)
+        .run();
+
+    assert_eq!(stdout.trim(), input);
+}
+
+#[test]
+fn command_reroot_support_as_labels_shift() {
+    // Internal node labels should be treated as support values and shifted
+    // along the path during rerooting.
+    let input = "(((A,B)61,(C,D)62)100,E);";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "reroot", "stdin", "-n", "A", "--support-as-labels"])
+        .stdin(input)
+        .run();
+
+    // The tree should be rerooted at A and the support labels should move.
+    // Label 61 (above A,B) follows the edge now connecting B to the rest;
+    // label 62 remains on the (C,D) clade. The old root label 100 is dropped
+    // because the root edge no longer exists.
+    assert_eq!(stdout.trim(), "(A,(B,((C,D)62,E)61));");
+}
