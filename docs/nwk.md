@@ -78,7 +78,7 @@ necom nwk label [OPTIONS] <infile>
 *   `-L`: Skip leaf node labels.
 *   `-n <name>` / `-l <file>` / `-x <regex>`: Filter nodes by name, list, or regex.
 *   `-D`: Include descendants of selected nodes.
-*   `-M`: Clade check (output only when the selected nodes form a monophyletic group with at least two nodes).
+*   `-M`: Clade check (output only when the selected nodes form a clade with at least two nodes).
 *   `--tab`: Output tab-separated values (single line).
 *   `-c <col>` / `--extra-column <col>`: Append extra columns (`dup`, `taxid`, `species`, `full`).
 *   `--root`: Output only the root node label. When `--root` is given, other selection options (`-I`, `-L`, `-n`, `-x`, etc.) are ignored.
@@ -193,7 +193,7 @@ necom nwk subtree [OPTIONS] <infile>
 
 *   `-n` / `-l` / `-x`: Select nodes.
 *   `-D, --descendants`: Include all descendants of selected internal nodes.
-*   `-M`: Clade check (output only when selected nodes form a monophyletic group with at least two nodes).
+*   `-M`: Clade check (output only when selected nodes form a clade with at least two nodes).
 *   `-c <N>`: Context (expand upward by N levels). Default: `0`.
 *   `-C, --condense <name>`: Condense the subtree to a single node.
     *   The new node gets `member=<count>` and `tri=white` comments.

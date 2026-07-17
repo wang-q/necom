@@ -19,8 +19,8 @@ Notes:
 * The `-I` and `-L` options filter out internal or leaf nodes.
 * Selection options (`-n`, `-l`, `-x`) can be combined.
 * With `-D`, descendants of selected internal nodes are also included.
-* Clade check (`-M`) verifies if the selected nodes form a monophyletic group
-  with at least two nodes. It checks terminal nodes against the selection.
+* Clade check (`-M`) verifies if the selected nodes form a clade with at least
+  two nodes. It checks terminal nodes against the selection.
 * Warning: Duplicate node names may affect selection/clade checks.
 * Extra columns (`-c`) details:
     * `dup`: duplicate the node name

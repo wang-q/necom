@@ -19,8 +19,7 @@ Notes:
     * `-x`: Select nodes by regular expression.
     * If no selection is provided, no output is generated.
 * Clade check (`-M`):
-    * Ensures the selected nodes form a monophyletic group with at least two
-      terminal nodes.
+    * Ensures the selected nodes form a clade with at least two terminal nodes.
     * Useful to verify if a group is a clade.
 * Condense (`--condense`):
     * Instead of extracting the subtree, it replaces the subtree with a single
