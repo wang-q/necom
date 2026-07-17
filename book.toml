@@ -2,8 +2,8 @@
 authors = ["Qiang Wang"]
 language = "en"
 src = "docs"
-title = "tva Documentation"
+title = "necom Documentation"
 
 [output.html]
-git-repository-url = "https://github.com/wang-q/tva"
-edit-url-template = "https://github.com/wang-q/tva/edit/master/{path}"
+git-repository-url = "https://github.com/wang-q/necom"
+edit-url-template = "https://github.com/wang-q/necom/edit/master/{path}"

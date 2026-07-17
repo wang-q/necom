@@ -16,12 +16,7 @@ fn test_dynamic_tree_cut_basic() {
     fs::write(&tree_file, tree_content).unwrap();
 
     let (stdout, stderr) = NecomCmd::new()
-        .args(&[
-            "cut",
-            tree_file.to_str().unwrap(),
-            "--dynamic-tree",
-            "2",
-        ])
+        .args(&["cut", tree_file.to_str().unwrap(), "--dynamic-tree", "2"])
         .run();
 
     if !stderr.is_empty() {
