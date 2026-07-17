@@ -39,4 +39,11 @@ See [`docs/eval-partition.md`](eval-partition.md) for detailed metric definition
 
 ## Planned Subcommands
 
-*   `tree`: Multi-dimensional tree evaluation (geometry, taxonomy, evolution). See [`notes/design/eval.md`](../notes/design/eval.md) §4 for the design.
+*   `tree`: Multi-dimensional tree evaluation (geometry, taxonomy, evolution). See [`notes/design/eval-planned.md`](../notes/design/eval-planned.md) §4 for the design.
+
+---
+
+## History
+
+*   `eval partition` was migrated from `necom clust eval` (2026-07).
+*   `eval compare` was migrated from `necom nwk compare` (2026-07).

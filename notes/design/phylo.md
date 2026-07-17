@@ -8,7 +8,7 @@
 >
 > **规划中**：`print_entity`（ASCII 树状图，用于终端调试展示）；`generate_random_tree`（Yule/Coalescent 模型，主要用于模拟研究，优先级较低）。
 >
-> **关联文档**：[eval.md](eval.md)（计划中的统一评估命令，其中 `eval tree` 子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
+> **关联文档**：[eval-planned.md](eval-planned.md)（`necom eval` 命令的未来工作计划，其中 `eval tree` 子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
 
 ## 1. 架构设计
 
