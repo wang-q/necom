@@ -28,7 +28,7 @@ pub struct Dbscan<T> {
 
 impl<T> Dbscan<T>
 where
-    T: Default + Copy + PartialOrd + std::ops::AddAssign + num_traits::ToPrimitive,
+    T: Default + Copy + PartialOrd + std::ops::AddAssign,
 {
     /// Creates a new DBSCAN instance.
     ///
@@ -165,6 +165,11 @@ where
         (cluster_map, noise_points)
     }
 
+    /// Returns clusters as a vector of member-index vectors.
+    ///
+    /// Noise points (points not assigned to any density cluster) are returned
+    /// as one-member clusters, consistent with the flat-clustering output
+    /// convention used by the other `clust` commands.
     pub fn results_cluster(&self) -> Vec<Vec<usize>> {
         let (cluster_map, noise_points) = self.all_clusters();
         let mut res: Vec<Vec<usize>> = vec![];

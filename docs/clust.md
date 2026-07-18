@@ -67,11 +67,11 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 
 - **Principle**: Neighbor-Joining. Iteratively merges the pair of nodes with the smallest net divergence by minimizing total tree length (based on the Q-matrix-corrected distances). Does not assume a molecular clock and allows different evolutionary rates across branches.
 - **Command**: `necom clust nj`
-- **Characteristics**: Distance-matrix tree-building algorithm that outputs an **unrooted tree**.
+- **Characteristics**: Distance-matrix tree-building algorithm that outputs a **midpoint-rooted Newick tree**.
 - **Use cases**: General additive distances (no molecular-clock assumption); evolutionary tree construction.
 - **Advantages**: Fast; robust to different evolutionary rates.
 - **Input**: PHYLIP distance matrix (strict or relaxed).
-- **Output**: Newick tree.
+- **Output**: Midpoint-rooted Newick tree.
 
 ### Hierarchical Clustering
 
@@ -110,7 +110,7 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
   - R `hclust(method="average")` is equivalent to "average linkage"; UPGMA is a specialized version under the "ultrametric (molecular clock)" assumption, producing a rooted, strictly ultrametric tree whose branch lengths have "time/evolution" meaning.
   - Conclusion: The linkage updates are identical, but the semantics differ; UPGMA leans toward phylogenetic scenarios, while `clust hier` leans toward statistical clustering.
 - Relationship to NJ:
-  - NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an "additive minimum-length tree" that does not belong to the linkage-update paradigm and usually outputs an unrooted tree.
+  - NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an "additive minimum-length tree" that does not belong to the linkage-update paradigm and outputs a **midpoint-rooted Newick tree**.
   - For general additive distances, NJ is more robust than UPGMA; if the distances are ultrametric, UPGMA/hclust-average and NJ usually agree topologically (unrooted view).
 
 ### Methods and Algorithm Essentials
@@ -127,6 +127,7 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
 ### Output and Conventions
 
 - Outputs Newick dendrogram:
+  - Merges are emitted in the order they are performed by the linkage algorithm (merge-order output). The internal node IDs increase with the merge sequence, matching the convention used by R `hclust` and SciPy `linkage`.
   - Internal node height is half the merge distance (`height = distance / 2`), and branch length from child to parent is `parent_height - child_height`.
   - Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.
   - Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).
@@ -139,7 +140,8 @@ Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or ext
 - `ward` updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.
 - `ward` theoretically assumes Euclidean or near-Euclidean distances; on general biological distances the statistical interpretation of "minimum variance" is weaker.
 - `centroid` and `median` linkage may produce non-monotonic merge heights (inversions); this is an algorithmic characteristic of these methods.
-- Ties are broken by alphabetical order to ensure deterministic output.
+- For reducible methods (`single`, `complete`, `average`, `weighted`, `ward`), the default NN-chain implementation produces the same dendrogram as the primitive $O(N^3)$ algorithm, but the concrete merge order may differ. Consequently, the Newick string may have a different internal node ordering than `clust upgma` for the same method, even though the underlying clustering is equivalent.
+- Ties in nearest-neighbor selection are broken deterministically by cluster index; because `hier` operates on the indexed distance matrix, this is independent of sample name alphabetical order.
 
 ### Recommended Hier Workflow
 
@@ -255,10 +257,11 @@ The `necom clust` family of commands involves multiple data formats; the followi
 
 Used to represent clustering results (sample-to-cluster mapping). Three formats are supported via the `--format` option.
 
-#### Pair Format (default, `--format pair`)
+#### Pair Format (`--format pair`)
 The most general long-table format; each line indicates which cluster a sample belongs to.
 - **Structure**: `ClusterID <tab> Item`
 - **Representative selection**: For `dbscan`/`mcl`/`k-medoids`, controlled by `--rep {medoid|first}`; default `medoid` (extreme of sum of distances/similarities), `first` is the alphabetically first member in the cluster. This option also affects the first column of `cluster` format. `cc` does not read weights and always uses `first`.
+- **Default format**: The default output format for flat clustering commands is `cluster`; use `--format pair` to emit this long-table representation.
 - **Characteristics**: Easy to parse; supports streaming.
 - **Example**:
   ```text

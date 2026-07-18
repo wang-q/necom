@@ -3,6 +3,8 @@
 //! Shared formatting logic for clustering algorithms that produce
 //! `Vec<Vec<usize>>` results (DBSCAN, K-Medoids, MCL, Connected Components).
 
+use std::fmt::Write as _;
+
 /// Sort and format flat clustering results (indices into `names`).
 ///
 /// Members within each cluster are sorted alphabetically by name; clusters
@@ -29,7 +31,11 @@ where
         other => other,
     });
 
-    let mut out = String::new();
+    // Rough capacity estimate: one byte per character is a lower bound; the
+    // multiplier accounts for tabs/newlines and typical name lengths.
+    let total_members: usize = clusters.iter().map(|c| c.len()).sum();
+    let mut out = String::with_capacity(total_members * 16);
+
     match format {
         "cluster" => {
             for c in clusters {
@@ -45,8 +51,8 @@ where
                         }
                     }
                 }
-                out.push_str(&members.join("\t"));
-                out.push('\n');
+                write!(out, "{}", members.join("\t"))?;
+                writeln!(out)?;
             }
         }
         "pair" => {
@@ -54,10 +60,7 @@ where
                 if let Some(rep_idx) = rep_fn(c) {
                     let rep_name = &names[rep_idx];
                     for &member_idx in c {
-                        out.push_str(rep_name);
-                        out.push('\t');
-                        out.push_str(&names[member_idx]);
-                        out.push('\n');
+                        writeln!(out, "{}\t{}", rep_name, names[member_idx])?;
                     }
                 }
             }

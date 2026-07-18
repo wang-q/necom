@@ -390,8 +390,12 @@ fn test_scipy_workflow() {
         "necom clust hier output is empty"
     );
 
-    let nwk_file = "tests/mat/scipy_tree.nwk";
-    fs::write(nwk_file, &stdout).expect("Failed to write tree file");
+    // Write the generated tree to a temporary file so we do not overwrite the
+    // version-controlled fixture in tests/mat/scipy_tree.nwk.
+    let temp = tempfile::TempDir::new().unwrap();
+    let nwk_file = temp.path().join("scipy_tree.nwk");
+    fs::write(&nwk_file, &stdout).expect("Failed to write tree file");
+    let nwk_file_str = nwk_file.to_str().unwrap();
 
     // 2. Verify fcluster_distance (t=0.6)
     // Note: necom clust hier outputs tree where height = distance / 2.
@@ -415,7 +419,7 @@ fn test_scipy_workflow() {
     ]);
 
     let (cut_out, stderr) = NecomCmd::new()
-        .args(&["cut", nwk_file, "--height", "0.3"])
+        .args(&["cut", nwk_file_str, "--height", "0.3"])
         .run();
 
     if cut_out.trim().is_empty() {
@@ -441,7 +445,9 @@ fn test_scipy_workflow() {
         vec!["21", "22", "23", "24", "25", "26", "27", "28", "29"],
     ]);
 
-    let (cut_out_k4, _) = NecomCmd::new().args(&["cut", nwk_file, "--k", "4"]).run();
+    let (cut_out_k4, _) = NecomCmd::new()
+        .args(&["cut", nwk_file_str, "--k", "4"])
+        .run();
 
     let actual_maxclust_4 = parse_clusters(&cut_out_k4);
     assert_eq!(
@@ -482,7 +488,9 @@ fn test_scipy_workflow() {
         vec!["24"],
     ]);
 
-    let (cut_out_k8, _) = NecomCmd::new().args(&["cut", nwk_file, "--k", "8"]).run();
+    let (cut_out_k8, _) = NecomCmd::new()
+        .args(&["cut", nwk_file_str, "--k", "8"])
+        .run();
 
     let actual_maxclust_8 = parse_clusters(&cut_out_k8);
     assert_eq!(
@@ -515,7 +523,7 @@ fn test_scipy_workflow() {
     ]);
 
     let (cut_out_inc, _stderr) = NecomCmd::new()
-        .args(&["cut", nwk_file, "--inconsistent", "0.8"])
+        .args(&["cut", nwk_file_str, "--inconsistent", "0.8"])
         .run();
 
     let actual_inc_0_8 = parse_clusters(&cut_out_inc);
