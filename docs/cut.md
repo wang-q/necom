@@ -229,7 +229,7 @@ Evaluating clustering quality usually requires a reference standard (Ground Trut
 
 - **Tree-related metrics (`necom eval tree` [planned])**:
   - Input: tree file + clustering result.
-  - Output: Parsimony score, Silhouette score (based on tree distance matrix), etc.
+  - Output: Silhouette score (based on tree distance matrix), tree geometry metrics, etc.
   - Use case: No true classification is available; assess compactness or separability of clusters on the tree structure.
 
 ### Recommended Workflow Examples

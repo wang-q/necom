@@ -11,7 +11,8 @@ Notes:
     * Partition evaluation: `partition`
     * Branch support: `replicate`
 * Run `necom eval <subcommand> --help` for command-specific options.
-* Reads from stdin if input file is 'stdin'.
+* `eval compare` reads from stdin if the input file is `stdin`.
+* `eval partition` requires a real file path; it does not accept `stdin` as the positional partition argument.
 
 Examples:
 
