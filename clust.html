@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c6ea49b8.js";
+            window.path_to_searchindex_js = "searchindex-a0934509.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-01a6bffc.js"></script>
@@ -199,7 +199,7 @@
 <li><strong>Advantages</strong>: Robust to noise; handles complex network structures.</li>
 <li><strong>Input</strong>: Pairwise similarities <code>.tsv</code> (higher is better).</li>
 <li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
-<li><strong>Defaults</strong>: <code>--inflation 2.0</code>.</li>
+<li><strong>Defaults</strong>: <code>--inflation 2.0</code>, <code>--max-iter 100</code>.</li>
 <li><strong>Note</strong>: <code>--max-iter</code> must be greater than 0.</li>
 </ul>
 <h3 id="connected-components-cc"><a class="header" href="#connected-components-cc">Connected Components (CC)</a></h3>
@@ -221,6 +221,7 @@
 <li><strong>Advantages</strong>: Robust to outliers; interpretable results because centers are real samples.</li>
 <li><strong>Input</strong>: Pairwise distances <code>.tsv</code> (lower is better).</li>
 <li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
+<li><strong>Defaults</strong>: <code>--runs 10</code>, <code>--max-iter 100</code>.</li>
 <li><strong>Note</strong>: <code>--k</code> must not exceed the number of samples.</li>
 </ul>
 <h3 id="dbscan"><a class="header" href="#dbscan">DBSCAN</a></h3>
