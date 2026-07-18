@@ -34,10 +34,13 @@
 
 use std::collections::HashMap;
 
-/// Markov Clustering Algorithm configuration and execution
+/// Markov Clustering Algorithm configuration and execution.
 pub struct Mcl {
+    /// Inflation parameter controlling cluster granularity.
     inflation: f64,
+    /// Matrix entries smaller than this value are set to zero during pruning.
     prune_limit: f64,
+    /// Maximum number of expansion/inflation iterations.
     max_iter: usize,
 }
 

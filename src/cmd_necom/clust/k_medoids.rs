@@ -34,9 +34,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_k = *args
         .get_one::<usize>("k")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: k"))?;
-    if opt_k == 0 {
-        anyhow::bail!("--k must be greater than 0");
-    }
     // Remaining arguments have clap default values, so unwrap is safe.
     let opt_format = args.get_one::<String>("clust_format").unwrap();
     let opt_rep = args.get_one::<String>("flat_rep").unwrap().as_str();
@@ -44,6 +41,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_missing = *args.get_one::<f32>("missing").unwrap();
     let runs = *args.get_one::<usize>("runs").unwrap();
     let max_iter = *args.get_one::<usize>("max_iter").unwrap();
+    if opt_k == 0 {
+        anyhow::bail!("--k must be greater than 0");
+    }
+    if runs == 0 {
+        anyhow::bail!("--runs must be greater than 0");
+    }
+    if max_iter == 0 {
+        anyhow::bail!("--max-iter must be greater than 0");
+    }
     let outfile = crate::cmd_necom::args::get_outfile(args);
 
     let mut writer = necom::writer(outfile)

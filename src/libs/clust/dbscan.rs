@@ -19,10 +19,15 @@ use std::collections::{HashMap, VecDeque};
 /// DBSCAN clustering from a distance matrix.
 #[derive(Debug)]
 pub struct Dbscan<T> {
+    /// Maximum distance between two points to be considered neighbors.
     eps: T,
+    /// Minimum number of points (including the point itself) to form a dense region.
     min_points: usize,
+    /// Cluster label for each point; `Some(id)` for cluster members, `None` for noise.
     clusters: Vec<Option<usize>>,
+    /// Whether each point has been visited by the algorithm.
     visited: Vec<bool>,
+    /// Next cluster identifier to assign.
     current_cluster: usize,
 }
 

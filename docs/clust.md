@@ -21,6 +21,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Advantages**: Robust to noise; handles complex network structures.
 - **Input**: Pairwise similarities `.tsv` (higher is better).
 - **Output**: `cluster` (default) or `pair` format, controlled by `--format`.
+- **Defaults**: `--inflation 2.0`.
 
 ### Connected Components (CC)
 
@@ -51,6 +52,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Advantages**: Does not require specifying the number of clusters K; identifies noise.
 - **Input**: Pairwise distances `.tsv` (lower is better).
 - **Output**: `cluster` (one cluster per line, first element is the representative) or `pair` (representative–member pairs).
+- **Defaults**: `--eps 0.05`, `--min-points 4`.
 - **Note on `--min-points`**: The neighborhood count includes the point itself, because self-distance is 0 and is always <= `eps`.
 - **Unimplemented options**: Parameter scanning and scoring such as `--scan`, `--opt-eps`, `--min-pct` are not yet implemented; planning details are in [`notes/design/dbscan-planned.md`](../notes/design/dbscan-planned.md). They may be provided later as subcommands of `necom clust dbscan` or standalone scripts.
 

@@ -32,11 +32,15 @@
 /// ```
 use rand::prelude::*;
 
-/// K-Medoids Clustering (Lloyd-like algorithm)
+/// K-Medoids Clustering (Lloyd-like algorithm).
 pub struct KMedoids {
+    /// Number of clusters to produce.
     k: usize,
+    /// Maximum number of iterations per random initialization.
     max_iter: usize,
+    /// Number of random initializations to run.
     runs: usize,
+    /// Optional fixed random seed for reproducible results.
     seed: Option<u64>,
 }
 
@@ -69,7 +73,7 @@ impl KMedoids {
         matrix: &crate::libs::pairmat::ScoringMatrix<f32>,
     ) -> Vec<Vec<usize>> {
         let n = matrix.size();
-        if n == 0 || self.k == 0 {
+        if n == 0 || self.k == 0 || self.runs == 0 {
             return vec![];
         }
         if self.k >= n {
@@ -226,6 +230,15 @@ mod tests {
     fn test_kmedoids_k_zero() {
         let sm = ScoringMatrix::<f32>::with_size_and_defaults(3, 0.0, 1.0);
         let kmedoids = KMedoids::new(0, 10, 1);
+        let clusters = kmedoids.perform_clustering(&sm);
+
+        assert!(clusters.is_empty());
+    }
+
+    #[test]
+    fn test_kmedoids_runs_zero() {
+        let sm = ScoringMatrix::<f32>::with_size_and_defaults(3, 0.0, 1.0);
+        let kmedoids = KMedoids::new(2, 10, 0);
         let clusters = kmedoids.perform_clustering(&sm);
 
         assert!(clusters.is_empty());

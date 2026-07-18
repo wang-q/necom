@@ -41,17 +41,24 @@ impl std::str::FromStr for Method {
 /// One merge step in the agglomerative clustering process.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Step {
+    /// First child cluster identifier.
     pub cluster1: usize,
+    /// Second child cluster identifier.
     pub cluster2: usize,
+    /// Linkage distance at which the two clusters are merged.
     pub distance: f32,
+    /// Total number of original items in the merged cluster.
     pub size: usize,
 }
 
 /// Algorithm implementation to use for hierarchical clustering.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Algorithm {
+    /// Primitive O(N^3) agglomerative algorithm.
     Primitive,
+    /// Nearest-neighbor chain O(N^2) algorithm for reducible methods.
     NnChain,
+    /// Automatically choose the appropriate algorithm for the linkage method.
     Auto,
 }
 

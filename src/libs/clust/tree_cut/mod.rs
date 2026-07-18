@@ -31,9 +31,13 @@ pub enum CutDispatch {
     DynamicHybrid(HybridOptions),
     /// One of the standard `METHOD_NAMES` methods.
     Standard {
+        /// Method name (must be one of `METHOD_NAMES`).
         name: &'static str,
+        /// Threshold value for the method.
         val: f64,
+        /// Depth used by the inconsistent-coefficient method.
         deep: usize,
+        /// Precomputed leaf depth statistics for `leaf_dist_*` methods.
         leaf_depths: Option<(f64, f64, f64)>,
     },
 }

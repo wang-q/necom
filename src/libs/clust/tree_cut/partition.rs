@@ -12,6 +12,12 @@ pub struct Partition {
     pub num_clusters: usize,
 }
 
+impl Default for Partition {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Partition {
     /// Create a new empty partition.
     pub fn new() -> Self {
@@ -59,12 +65,6 @@ impl Partition {
     }
 }
 
-impl Default for Partition {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// Representative selection mode for clusters.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RepMode {
@@ -91,9 +91,9 @@ impl RepMode {
 /// A cluster of tree leaves with members sorted alphabetically by name.
 #[derive(Debug, Clone)]
 pub struct Cluster {
-    /// (NodeId, name) pairs, sorted alphabetically by name.
+    /// `(NodeId, name)` pairs, sorted alphabetically by name.
     pub members: Vec<(NodeId, String)>,
-    /// Index of the representative in `members` (None if cluster is empty).
+    /// Index of the representative in `members` (`None` if the cluster is empty).
     pub rep_index: Option<usize>,
 }
 
@@ -185,25 +185,16 @@ pub fn format_clusters(clusters: &[Cluster], format: &str) -> anyhow::Result<Str
         "cluster" => {
             for c in clusters {
                 if let Some(rep_idx) = c.rep_index {
-                    let names: Vec<&str> =
+                    let mut names: Vec<&str> =
                         c.members.iter().map(|(_, n)| n.as_str()).collect();
-                    if rep_idx != 0 {
-                        // Write representative first, then remaining members sorted.
-                        write!(out, "{}", names[rep_idx])?;
-                        let mut rest: Vec<&str> = names[..rep_idx]
-                            .iter()
-                            .chain(&names[rep_idx + 1..])
-                            .copied()
-                            .collect();
-                        rest.sort();
-                        for name in rest {
-                            write!(out, "\t{}", name)?;
+                    if rep_idx > 0 {
+                        names.swap(0, rep_idx);
+                    }
+                    for (i, name) in names.iter().enumerate() {
+                        if i > 0 {
+                            write!(out, "\t")?;
                         }
-                    } else {
-                        write!(out, "{}", names[0])?;
-                        for &name in &names[1..] {
-                            write!(out, "\t{}", name)?;
-                        }
+                        write!(out, "{}", name)?;
                     }
                     writeln!(out)?;
                 }
@@ -213,10 +204,7 @@ pub fn format_clusters(clusters: &[Cluster], format: &str) -> anyhow::Result<Str
             for c in clusters {
                 if let Some(rep_name) = c.rep_name() {
                     for (_, member_name) in &c.members {
-                        out.push_str(rep_name);
-                        out.push('\t');
-                        out.push_str(member_name);
-                        out.push('\n');
+                        writeln!(out, "{}\t{}", rep_name, member_name)?;
                     }
                 }
             }
