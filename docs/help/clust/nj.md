@@ -11,6 +11,7 @@ Output:
 Notes:
 
 * NJ is a bottom-up clustering method suitable for variable evolutionary rates.
+* For non-additive distance matrices, negative branch lengths are clamped to 0.
 
 Examples:
 

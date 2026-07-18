@@ -109,9 +109,11 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
 
         let new_node = tree.add_node();
 
-        // Calculate branch lengths
-        let len1 = 0.5 * d12 + (r1 - r2) / (2.0 * (k as f64 - 2.0));
-        let len2 = d12 - len1;
+        // Calculate branch lengths. For non-additive distance matrices the
+        // raw NJ estimates can be negative; clamp to zero so the resulting
+        // Newick tree remains valid.
+        let len1 = (0.5 * d12 + (r1 - r2) / (2.0 * (k as f64 - 2.0))).max(0.0);
+        let len2 = (d12 - len1).max(0.0);
 
         // Add children
         tree.add_child(new_node, id1)
@@ -186,7 +188,7 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
         tree.add_child(root, id1).map_err(|e| anyhow::anyhow!(e))?;
         tree.add_child(root, id2).map_err(|e| anyhow::anyhow!(e))?;
 
-        let len = d / 2.0;
+        let len = (d / 2.0).max(0.0);
         tree.get_node_mut(id1)
             .ok_or_else(|| anyhow::anyhow!("node {} not found", id1))?
             .set_length(len);
@@ -267,5 +269,43 @@ D 14 9 7 0
             let node = tree.get_node(leaf).unwrap();
             assert!((node.length.unwrap() - 2.0).abs() < 1e-6);
         }
+    }
+
+    #[test]
+    fn test_nj_non_additive_no_negative_lengths() {
+        // A deliberately non-additive matrix that can produce negative raw NJ
+        // branch lengths without clamping.
+        let content = "4
+A 0 1 1 1
+B 1 0 10 10
+C 1 10 0 10
+D 1 10 10 0
+";
+        let temp = tempfile::TempDir::new().unwrap();
+        let filename = temp.path().join("test_nj_non_add.phy");
+        let mut file = std::fs::File::create(&filename).unwrap();
+        file.write_all(content.as_bytes()).unwrap();
+
+        let mat = NamedMatrix::from_relaxed_phylip(filename.to_str().unwrap()).unwrap();
+        let tree = nj(&mat).unwrap();
+
+        // All assigned branch lengths must be non-negative.
+        for id in 0..tree.len() {
+            if let Some(node) = tree.get_node(id) {
+                if let Some(len) = node.length {
+                    assert!(
+                        len >= 0.0 || len.abs() < 1e-12,
+                        "negative branch length {} on node {:?}",
+                        len,
+                        node.name
+                    );
+                }
+            }
+        }
+
+        // The resulting Newick string must remain parseable.
+        let nwk = tree.to_newick();
+        let reparsed = Tree::from_newick(&nwk).unwrap();
+        assert_eq!(reparsed.len(), tree.len());
     }
 }

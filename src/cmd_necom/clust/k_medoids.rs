@@ -63,6 +63,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             opt_missing,
         )?;
 
+    if opt_k > names.len() {
+        anyhow::bail!(
+            "--k ({}) cannot exceed the number of samples ({})",
+            opt_k,
+            names.len()
+        );
+    }
+
     // 3. Clustering
     let mut kmedoids =
         necom::libs::clust::k_medoids::KMedoids::new(opt_k, max_iter, runs);

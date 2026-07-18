@@ -36,6 +36,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if inflation <= 1.0 {
         anyhow::bail!("--inflation must be greater than 1.0, got {}", inflation);
     }
+    if max_iter == 0 {
+        anyhow::bail!("--max-iter must be greater than 0");
+    }
     let outfile = crate::cmd_necom::args::get_outfile(args);
 
     let mut writer = necom::writer(outfile)

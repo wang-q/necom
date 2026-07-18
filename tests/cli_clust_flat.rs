@@ -522,3 +522,37 @@ fn command_clust_mcl_invalid_inflation() {
         stderr
     );
 }
+
+#[test]
+fn command_clust_mcl_invalid_max_iter() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t1.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "mcl", input.to_str().unwrap(), "--max-iter", "0"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("max-iter"),
+        "expected max-iter error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_kmedoids_invalid_k_too_large() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "k-medoids", input.to_str().unwrap(), "-k", "10"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("samples"),
+        "expected samples error, got: {}",
+        stderr
+    );
+}

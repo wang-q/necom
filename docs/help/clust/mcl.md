@@ -14,7 +14,7 @@ Notes:
 * The input must contain similarities, not distances.
 * `--inflation <V>`: inflation parameter (default: `2.0`).
 * `--prune <V>`: pruning threshold; matrix entries smaller than this are set to zero (default: `1e-5`).
-* `--max-iter <N>`: maximum number of iterations (default: `100`).
+* `--max-iter <N>`: maximum number of iterations (default: `100`). Must be greater than 0.
 * `--same <V>`: default score of identical element pairs (default: `1.0`).
 * `--missing <V>`: default score of missing pairs (default: `0.0`).
 * The representative point is selected by `--rep`:

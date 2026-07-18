@@ -44,6 +44,12 @@ where
     /// * `min_points` - The minimal number of points in a neighborhood for a
     ///   point to be considered as a core point.
     pub fn new(eps: T, min_points: usize) -> Self {
+        if eps <= T::default() {
+            panic!("eps must be a positive number");
+        }
+        if min_points == 0 {
+            panic!("min_points must be at least 1");
+        }
         Dbscan {
             eps,
             min_points,

@@ -73,7 +73,7 @@ impl KMedoids {
         matrix: &crate::libs::pairmat::ScoringMatrix<f32>,
     ) -> Vec<Vec<usize>> {
         let n = matrix.size();
-        if n == 0 || self.k == 0 || self.runs == 0 {
+        if n == 0 || self.k == 0 || self.runs == 0 || self.max_iter == 0 {
             return vec![];
         }
         if self.k >= n {

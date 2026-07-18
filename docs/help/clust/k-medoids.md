@@ -12,7 +12,7 @@ Output:
 Notes:
 
 * The input must contain distances, not similarities.
-* `--k <N>`: number of clusters (required).
+* `--k <N>`: number of clusters (required). Must not exceed the number of samples.
 * `--runs <N>`: number of random initializations (default: `10`).
 * `--max-iter <N>`: maximum number of iterations (default: `100`).
 * `--seed <N>`: random seed for reproducible initialization.

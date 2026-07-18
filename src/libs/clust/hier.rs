@@ -305,26 +305,39 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
 
         // Process children
         for &child_cluster_id in &[step.cluster1, step.cluster2] {
-            if let Some(&child_node_id) = cluster_to_node.get(&child_cluster_id) {
-                let h_child = *heights.get(&child_cluster_id).unwrap_or(&0.0);
+            let &child_node_id =
+                cluster_to_node.get(&child_cluster_id).ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "step {} references unknown cluster {}",
+                        step_idx,
+                        child_cluster_id
+                    )
+                })?;
+            let h_child = *heights.get(&child_cluster_id).ok_or_else(|| {
+                anyhow::anyhow!(
+                    "step {} references unknown cluster {}",
+                    step_idx,
+                    child_cluster_id
+                )
+            })?;
 
-                // Calculate branch length
-                // Use distance/2.0 as node height for ultrametric-like appearance
-                let node_height = step.distance / 2.0;
-                // Centroid and median linkage can produce non-monotonic (inverted)
-                // merge heights; clamp negative branch lengths to zero so the
-                // resulting Newick tree remains valid.
-                let len = (node_height - h_child).max(0.0);
+            // Calculate branch length
+            // Use distance/2.0 as node height for ultrametric-like appearance
+            let node_height = step.distance / 2.0;
+            // Centroid and median linkage can produce non-monotonic (inverted)
+            // merge heights; clamp negative branch lengths to zero so the
+            // resulting Newick tree remains valid.
+            let len = (node_height - h_child).max(0.0);
 
-                // Set length on child and link to parent
-                if let Some(child_node) = tree.get_node_mut(child_node_id) {
-                    child_node.set_length(len as f64);
-                }
+            // Set length on child and link to parent
+            let child_node = tree
+                .get_node_mut(child_node_id)
+                .ok_or_else(|| anyhow::anyhow!("node {} not found", child_node_id))?;
+            child_node.set_length(len as f64);
 
-                // Link in tree structure
-                tree.add_child(parent_node_id, child_node_id)
-                    .map_err(|e| anyhow::anyhow!(e))?;
-            }
+            // Link in tree structure
+            tree.add_child(parent_node_id, child_node_id)
+                .map_err(|e| anyhow::anyhow!(e))?;
         }
 
         heights.insert(new_cluster_id, step.distance / 2.0);
@@ -888,6 +901,20 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn test_to_tree_unknown_cluster_id() {
+        // Step references cluster id 99 which does not exist.
+        let steps = vec![Step {
+            cluster1: 0,
+            cluster2: 99,
+            distance: 1.0,
+            size: 2,
+        }];
+        let names = vec!["A".to_string(), "B".to_string()];
+        let result = to_tree(&steps, &names);
+        assert!(result.is_err());
     }
 
     #[test]

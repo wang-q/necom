@@ -74,6 +74,9 @@ impl Mcl {
     /// If convergence is not reached within this limit, the algorithm stops.
     /// Default is 100.
     pub fn set_max_iter(&mut self, max_iter: usize) {
+        if max_iter == 0 {
+            panic!("max_iter must be greater than 0");
+        }
         self.max_iter = max_iter;
     }
 
