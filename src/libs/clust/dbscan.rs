@@ -34,7 +34,7 @@ pub struct Dbscan<T> {
 
 impl<T> Dbscan<T>
 where
-    T: Default + Copy + PartialOrd + std::ops::AddAssign,
+    T: Default + Copy + PartialOrd,
 {
     /// Creates a new DBSCAN instance.
     ///
@@ -319,5 +319,41 @@ mod tests {
             clustering2.iter().all(|c| c.is_none()),
             "no core points when self-distance exceeds eps"
         );
+    }
+
+    #[test]
+    fn test_all_points_become_noise_then_singletons() {
+        // Five points all separated by distances greater than eps=0.5.
+        // None can become a core point, so every point is noise.
+        // `results_cluster` must promote each noise point to its own
+        // single-member cluster, matching the flat-clustering convention.
+        let mut dbscan = Dbscan::new(0.5_f32, 2).unwrap();
+        let mut m = crate::libs::pairmat::ScoringMatrix::<f32>::with_size_and_defaults(
+            5, 0.0, 100.0,
+        );
+        // Pairwise distances all > eps.
+        m.set(0, 1, 1.0);
+        m.set(0, 2, 1.0);
+        m.set(0, 3, 1.0);
+        m.set(0, 4, 1.0);
+        m.set(1, 2, 1.0);
+        m.set(1, 3, 1.0);
+        m.set(1, 4, 1.0);
+        m.set(2, 3, 1.0);
+        m.set(2, 4, 1.0);
+        m.set(3, 4, 1.0);
+
+        dbscan.perform_clustering(&m);
+        let clusters = dbscan.results_cluster();
+
+        // Each point becomes its own single-member cluster.
+        assert_eq!(clusters.len(), 5);
+        for c in &clusters {
+            assert_eq!(c.len(), 1);
+        }
+        // Every original point index 0..5 must appear exactly once.
+        let mut all_members: Vec<usize> = clusters.into_iter().flatten().collect();
+        all_members.sort();
+        assert_eq!(all_members, vec![0, 1, 2, 3, 4]);
     }
 }

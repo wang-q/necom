@@ -33,9 +33,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let inflation = *args.get_one::<f64>("inflation").unwrap();
     let prune = *args.get_one::<f64>("prune").unwrap();
     let max_iter = *args.get_one::<usize>("max_iter").unwrap();
-    if inflation <= 1.0 {
-        anyhow::bail!("--inflation must be greater than 1.0, got {}", inflation);
-    }
     if max_iter == 0 {
         anyhow::bail!("--max-iter must be greater than 0");
     }
@@ -53,7 +50,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     )?;
 
     // 3. Clustering
-    let mut mcl = necom::libs::clust::mcl::Mcl::new(inflation);
+    // Mcl::new validates inflation > 1.0 (returns Err otherwise).
+    let mut mcl = necom::libs::clust::mcl::Mcl::new(inflation)?;
     mcl.set_prune_limit(prune);
     mcl.set_max_iter(max_iter)?;
     let mut clusters = mcl.perform_clustering(&sm);

@@ -44,14 +44,8 @@ pub fn upgma(matrix: &NamedMatrix) -> Result<Tree> {
         cluster_sizes.push(1);
     }
 
-    // Initialize distance matrix (mutable, f64)
-    // We use a dense matrix for simplicity, though it grows with new nodes.
-    // However, we only need distances between *active* nodes.
-    // A simpler approach: maintain a full N*N matrix and update it?
-    // UPGMA creates N-1 new nodes. Total nodes = 2N-1.
-    // We can use a HashMap<(usize, usize), f64> to store distances between NodeIds.
-    // This is flexible.
-
+    // Distance matrix keyed by (min_id, max_id) NodeId pairs. HashMap is used
+    // because distances are accessed sparsely between active nodes only.
     let mut dists = std::collections::HashMap::new();
 
     for i in 0..n {
@@ -165,8 +159,8 @@ pub fn upgma(matrix: &NamedMatrix) -> Result<Tree> {
             active_nodes.remove(idx1);
         }
 
-        // Clean up old distances (optional, but good for memory)
-        // We could just leave them there, they won't be accessed since ids are removed from active.
+        // Stale distance entries are intentionally kept; they are unreachable
+        // since merged ids are removed from active_nodes.
 
         // Add new node and distances
         active_nodes.push(new_node);

@@ -1,6 +1,5 @@
 use crate::libs::pairmat::{CondensedMatrix, NamedMatrix};
 use crate::libs::phylo::tree::Tree;
-use std::collections::HashMap;
 
 /// Linkage method for hierarchical clustering.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -266,10 +265,10 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
         return Ok(tree);
     }
 
-    // Map original cluster ID to Tree NodeId
-    // IDs 0..n-1 are leaves (original sequences)
-    // IDs n..n+steps.len()-1 are internal nodes (merges)
-    let mut cluster_to_node: HashMap<usize, usize> = HashMap::new();
+    // Cluster IDs are dense 0..2n-1: leaves are 0..n-1, internal nodes are
+    // n..2n-2 (one per merge step). Use Vec for O(1) direct indexing instead
+    // of HashMap, avoiding hashing overhead and entry metadata.
+    let mut cluster_to_node: Vec<usize> = vec![0; 2 * n];
 
     // Create leaf nodes
     for (i, name) in names.iter().enumerate() {
@@ -277,14 +276,11 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
         if let Some(node) = tree.get_node_mut(node_id) {
             node.set_name(name.clone());
         }
-        cluster_to_node.insert(i, node_id);
+        cluster_to_node[i] = node_id;
     }
 
-    // Track height of each cluster (original ID -> height)
-    let mut heights: HashMap<usize, f32> = HashMap::new();
-    for i in 0..n {
-        heights.insert(i, 0.0);
-    }
+    // Track height of each cluster (original ID -> height). Leaves start at 0.
+    let mut heights: Vec<f32> = vec![0.0; 2 * n];
 
     let mut root_cluster_id = 0;
 
@@ -293,7 +289,7 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
 
         // Create parent node
         let parent_node_id = tree.add_node();
-        cluster_to_node.insert(new_cluster_id, parent_node_id);
+        cluster_to_node[new_cluster_id] = parent_node_id;
 
         // Node height for this merge step. Used as the parent height for both
         // children's branch-length computation and stored in `heights` for
@@ -302,21 +298,15 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
 
         // Process children
         for &child_cluster_id in &[step.cluster1, step.cluster2] {
-            let &child_node_id =
-                cluster_to_node.get(&child_cluster_id).ok_or_else(|| {
-                    anyhow::anyhow!(
-                        "step {} references unknown cluster {}",
-                        step_idx,
-                        child_cluster_id
-                    )
-                })?;
-            let h_child = *heights.get(&child_cluster_id).ok_or_else(|| {
-                anyhow::anyhow!(
+            if child_cluster_id >= cluster_to_node.len() {
+                anyhow::bail!(
                     "step {} references unknown cluster {}",
                     step_idx,
                     child_cluster_id
-                )
-            })?;
+                );
+            }
+            let child_node_id = cluster_to_node[child_cluster_id];
+            let h_child = heights[child_cluster_id];
 
             // Calculate branch length.
             // Centroid and median linkage can produce non-monotonic (inverted)
@@ -335,14 +325,12 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
                 .map_err(|e| anyhow::anyhow!(e))?;
         }
 
-        heights.insert(new_cluster_id, node_height);
+        heights[new_cluster_id] = node_height;
         root_cluster_id = new_cluster_id;
     }
 
     // Set root of the tree
-    let &root_node_id = cluster_to_node.get(&root_cluster_id).ok_or_else(|| {
-        anyhow::anyhow!("root cluster {} not found in node map", root_cluster_id)
-    })?;
+    let root_node_id = cluster_to_node[root_cluster_id];
     tree.set_root(root_node_id)?;
 
     Ok(tree)

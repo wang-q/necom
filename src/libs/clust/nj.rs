@@ -87,6 +87,8 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
                 let r1 = r[&id1];
                 let r2 = r[&id2];
 
+                // Saitou-Nei Q-matrix criterion (Saitou & Nei, 1987): the pair
+                // minimizing Q minimizes the total tree length at each step.
                 let q = (k as f64 - 2.0) * d - r1 - r2;
 
                 if q < min_q {
@@ -112,6 +114,7 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
         // Calculate branch lengths. For non-additive distance matrices the
         // raw NJ estimates can be negative; clamp to zero so the resulting
         // Newick tree remains valid.
+        // NJ branch length estimate: len(u) = d(u,v)/2 + (r(u)-r(v)) / (2*(k-2)).
         let len1 = (0.5 * d12 + (r1 - r2) / (2.0 * (k as f64 - 2.0))).max(0.0);
         let len2 = (d12 - len1).max(0.0);
 

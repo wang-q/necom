@@ -39,7 +39,13 @@ use std::collections::HashMap;
 /// to keep the matrix sparse without affecting clustering quality.
 const MCL_SPARSE_THRESHOLD: f64 = 1e-5;
 
+/// Minimum column sum required for normalization. Columns with smaller sums
+/// (e.g., all-zero columns) are skipped to avoid division by zero. Distinct
+/// from `MCL_SPARSE_THRESHOLD`, which controls sparsification.
+const NORMALIZE_SUM_EPS: f64 = 1e-9;
+
 /// Markov Clustering Algorithm configuration and execution.
+#[derive(Debug)]
 pub struct Mcl {
     /// Inflation parameter controlling cluster granularity.
     inflation: f64,
@@ -58,12 +64,20 @@ impl Mcl {
     ///   * Low values (e.g. 1.4) lead to coarser clusters.
     ///   * High values (e.g. 4.0) lead to tighter/more clusters.
     ///   * A common default is 2.0.
-    pub fn new(inflation: f64) -> Self {
-        Self {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `inflation` is not greater than 1.0, since values
+    /// <= 1.0 prevent the algorithm from converging to a sparse partition.
+    pub fn new(inflation: f64) -> anyhow::Result<Self> {
+        if inflation <= 1.0 {
+            anyhow::bail!("inflation must be greater than 1.0, got {}", inflation);
+        }
+        Ok(Self {
             inflation,
             prune_limit: 1e-5,
             max_iter: 100,
-        }
+        })
     }
 
     /// Set the threshold for pruning small values in the matrix.
@@ -134,6 +148,10 @@ impl Mcl {
             }
         }
 
+        // For an undirected graph, strongly connected components coincide with
+        // connected components. `tarjan_scc` returns Vec<Vec<NodeId>> directly,
+        // which is more convenient here than `petgraph::algo::connected_components`
+        // (the latter returns only a count, requiring manual BFS aggregation).
         petgraph::algo::tarjan_scc(&graph)
     }
 }
@@ -174,7 +192,7 @@ impl SparseMat {
     fn normalize(&mut self) {
         for col in &mut self.cols {
             let sum: f64 = col.iter().map(|(_, v)| *v).sum();
-            if sum > 1e-9 {
+            if sum > NORMALIZE_SUM_EPS {
                 for (_, v) in col.iter_mut() {
                     *v /= sum;
                 }
@@ -192,11 +210,11 @@ impl SparseMat {
 
             // For each non-zero entry (k, val_k) in col j of M
             for &(k, val_k) in &self.cols[j] {
+                // k is a valid row index by construction (see from_scoring_matrix).
+                let col_k = &self.cols[k];
                 // Add val_k * col_k(M) to accumulator
-                if let Some(col_k) = self.cols.get(k) {
-                    for &(row_i, val_i) in col_k {
-                        *accumulator.entry(row_i).or_insert(0.0) += val_i * val_k;
-                    }
+                for &(row_i, val_i) in col_k {
+                    *accumulator.entry(row_i).or_insert(0.0) += val_i * val_k;
                 }
             }
 
@@ -273,7 +291,7 @@ mod tests {
         sm.set(3, 4, 1.0);
         sm.set(4, 3, 1.0);
 
-        let mcl = Mcl::new(2.0);
+        let mcl = Mcl::new(2.0).unwrap();
         let clusters = mcl.perform_clustering(&sm);
 
         assert_eq!(clusters.len(), 2);
@@ -290,7 +308,7 @@ mod tests {
 
     #[test]
     fn test_mcl_parameter_config() {
-        let mut mcl = Mcl::new(2.0);
+        let mut mcl = Mcl::new(2.0).unwrap();
         mcl.set_prune_limit(1e-4);
         mcl.set_max_iter(50).unwrap();
 
@@ -308,7 +326,7 @@ mod tests {
         sm.set(2, 3, -5.0);
         sm.set(3, 2, -5.0);
 
-        let mcl = Mcl::new(2.0);
+        let mcl = Mcl::new(2.0).unwrap();
         let clusters = mcl.perform_clustering(&sm);
 
         // Nodes 0 and 1 should remain connected.
@@ -321,11 +339,30 @@ mod tests {
 
     #[test]
     fn test_mcl_set_max_iter_zero_fails() {
-        let mut mcl = Mcl::new(2.0);
+        let mut mcl = Mcl::new(2.0).unwrap();
         let err = mcl.set_max_iter(0).unwrap_err();
         assert!(
             err.to_string().contains("max_iter"),
             "error message should mention max_iter, got: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn test_mcl_new_invalid_inflation() {
+        // inflation == 1.0 must fail (no convergence to sparse partition).
+        let err = Mcl::new(1.0).unwrap_err();
+        assert!(
+            err.to_string().contains("inflation"),
+            "error message should mention inflation, got: {}",
+            err
+        );
+
+        // inflation < 1.0 must fail for the same reason.
+        let err = Mcl::new(0.5).unwrap_err();
+        assert!(
+            err.to_string().contains("inflation"),
+            "error message should mention inflation, got: {}",
             err
         );
     }

@@ -271,4 +271,13 @@ mod tests {
 
         assert!(clusters.is_empty());
     }
+
+    #[test]
+    fn test_kmedoids_empty_matrix() {
+        // n=0: no samples to cluster; result must be empty without panic.
+        let sm = ScoringMatrix::<f32>::with_size_and_defaults(0, 0.0, 1.0);
+        let kmedoids = KMedoids::new(2, 10, 1).with_seed(42);
+        let clusters = kmedoids.perform_clustering(&sm);
+        assert!(clusters.is_empty());
+    }
 }

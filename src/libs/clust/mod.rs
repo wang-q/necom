@@ -43,6 +43,10 @@ pub fn connected_components<R: BufRead>(
         graph.add_edge(a, b, ());
     }
 
+    // For an undirected graph, strongly connected components coincide with
+    // connected components. `tarjan_scc` returns Vec<Vec<NodeId>> directly,
+    // which is more convenient here than `petgraph::algo::connected_components`
+    // (the latter returns only a count, requiring manual BFS aggregation).
     let scc = petgraph::algo::tarjan_scc(&graph);
     let names_vec: Vec<String> = names.iter().cloned().collect();
     Ok((names_vec, scc))
