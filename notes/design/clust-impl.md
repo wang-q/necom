@@ -250,7 +250,7 @@
 1. **基础图聚类**：已完成 MCL、CC、DBSCAN、K-Medoids。
 2. **系统发育构树**：已完成 UPGMA、NJ、Hierarchical Clustering (hier)。
 3. **评估体系**：`eval partition` 已完成（从 `clust eval` 迁移）；树评估功能已纳入 `necom eval` 统一设计（见 [eval-planned.md](eval-planned.md)），尚未实现。
-4. **向量支持**：已完成。`libs/clust/feature.rs` 提供 `FeatureVector` 基础设施，被 `necom eval partition --coords`（Davies-Bouldin 指标）等内部评估逻辑复用。
+4. **向量支持**：已完成。`libs/feature.rs` 提供 `FeatureVector` 基础设施，被 `necom eval partition --coords`（Davies-Bouldin 指标）等内部评估逻辑复用。
 5. **统计聚类**：引入 GMM 实现，支持 BIC 模型选择（计划中，详见 §8.1）。
 6. **层次聚类扩展**：实现 HDBSCAN（计划中，详见 §8.2）。
 7. **大规模网络社区发现**：实现 Louvain / Leiden 算法（计划中，详见 §8.3）。

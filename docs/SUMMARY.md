@@ -35,6 +35,7 @@
 - [mat](help/mat.md)
 - [compare](help/mat/compare.md)
 - [format](help/mat/format.md)
+- [from-vector](help/mat/from-vector.md)
 - [subset](help/mat/subset.md)
 - [to-pair](help/mat/to-pair.md)
 - [to-phylip](help/mat/to-phylip.md)

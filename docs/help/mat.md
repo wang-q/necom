@@ -9,6 +9,7 @@ Notes:
 * Subcommands:
     * `compare`: compare two PHYLIP distance matrices.
     * `format`: convert between PHYLIP matrix variants.
+    * `from-vector`: calculate pairwise similarity/distance from vector inputs.
     * `subset`: extract a submatrix using a name list.
     * `to-pair`: flatten a PHYLIP matrix to pairwise TSV.
     * `to-phylip`: assemble pairwise TSV into a PHYLIP matrix.
