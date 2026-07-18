@@ -87,17 +87,14 @@ impl std::fmt::Display for FeatureVector {
     /// assert_eq!(entry.to_string(), "Es_coli_005008_GCF_013426115_1\t1,5,2,7,6,6\n");
     /// ```
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        writeln!(
-            f,
-            "{}\t{}",
-            self.name(),
-            self.list
-                .iter()
-                .map(|e| e.to_string())
-                .collect::<Vec<_>>()
-                .join(","),
-        )?;
-        Ok(())
+        write!(f, "{}\t", self.name())?;
+        for (i, e) in self.list.iter().enumerate() {
+            if i > 0 {
+                write!(f, ",")?;
+            }
+            write!(f, "{}", e)?;
+        }
+        writeln!(f)
     }
 }
 

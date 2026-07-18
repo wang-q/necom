@@ -34,6 +34,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_eps = *args.get_one::<f32>("eps").unwrap();
     let opt_min_points = *args.get_one::<usize>("min_points").unwrap();
 
+    if opt_eps <= 0.0 {
+        anyhow::bail!("--eps must be positive, got {}", opt_eps);
+    }
+    if opt_min_points == 0 {
+        anyhow::bail!("--min-points must be at least 1");
+    }
+
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer = necom::writer(outfile)
         .with_context(|| format!("Failed to open writer for {}", outfile))?;

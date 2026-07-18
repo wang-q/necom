@@ -33,6 +33,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let inflation = *args.get_one::<f64>("inflation").unwrap();
     let prune = *args.get_one::<f64>("prune").unwrap();
     let max_iter = *args.get_one::<usize>("max_iter").unwrap();
+    if inflation <= 1.0 {
+        anyhow::bail!("--inflation must be greater than 1.0, got {}", inflation);
+    }
     let outfile = crate::cmd_necom::args::get_outfile(args);
 
     let mut writer = necom::writer(outfile)

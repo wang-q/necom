@@ -51,7 +51,12 @@ where
                         }
                     }
                 }
-                write!(out, "{}", members.join("\t"))?;
+                for (i, name) in members.iter().enumerate() {
+                    if i > 0 {
+                        write!(out, "\t")?;
+                    }
+                    write!(out, "{}", name)?;
+                }
                 writeln!(out)?;
             }
         }

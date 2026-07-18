@@ -230,21 +230,6 @@ pub fn cut_med_clade(tree: &Tree, threshold: f64) -> Result<Partition> {
                     (my_pair_dists[mid - 1] + my_pair_dists[mid]) / 2.0
                 };
 
-                #[cfg(test)]
-                {
-                    // Get node name for debug
-                    let name = tree
-                        .get_node(u)
-                        .ok_or_else(|| anyhow::anyhow!("node {} not found", u))?
-                        .name
-                        .as_deref()
-                        .unwrap_or("?");
-                    println!(
-                        "DEBUG: Node {} ({}): Median {}, PairDists {:?}",
-                        u, name, median, my_pair_dists
-                    );
-                }
-
                 stats.insert(
                     u,
                     NodeStat {

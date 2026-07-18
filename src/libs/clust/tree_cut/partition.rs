@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Write as _;
 
 use crate::libs::phylo::node::NodeId;
 use crate::libs::phylo::tree::Tree;
@@ -184,14 +185,27 @@ pub fn format_clusters(clusters: &[Cluster], format: &str) -> anyhow::Result<Str
         "cluster" => {
             for c in clusters {
                 if let Some(rep_idx) = c.rep_index {
-                    let mut names: Vec<&str> =
+                    let names: Vec<&str> =
                         c.members.iter().map(|(_, n)| n.as_str()).collect();
                     if rep_idx != 0 {
-                        names.swap(0, rep_idx);
-                        names[1..].sort();
+                        // Write representative first, then remaining members sorted.
+                        write!(out, "{}", names[rep_idx])?;
+                        let mut rest: Vec<&str> = names[..rep_idx]
+                            .iter()
+                            .chain(&names[rep_idx + 1..])
+                            .copied()
+                            .collect();
+                        rest.sort();
+                        for name in rest {
+                            write!(out, "\t{}", name)?;
+                        }
+                    } else {
+                        write!(out, "{}", names[0])?;
+                        for &name in &names[1..] {
+                            write!(out, "\t{}", name)?;
+                        }
                     }
-                    out.push_str(&names.join("\t"));
-                    out.push('\n');
+                    writeln!(out)?;
                 }
             }
         }
@@ -218,7 +232,7 @@ pub fn format_scan_rows(
     partition: &Partition,
     tree: &Tree,
     group_label: &str,
-) -> String {
+) -> anyhow::Result<String> {
     let clusters_map = partition.get_clusters();
     let mut cluster_ids: Vec<usize> = clusters_map.keys().copied().collect();
     cluster_ids.sort();
@@ -237,11 +251,11 @@ pub fn format_scan_rows(
             }
             member_names.sort();
             for name in member_names {
-                out.push_str(&format!("{}\t{}\t{}\n", group_label, cluster_label, name));
+                writeln!(out, "{}\t{}\t{}", group_label, cluster_label, name)?;
             }
         }
     }
-    out
+    Ok(out)
 }
 
 #[cfg(test)]

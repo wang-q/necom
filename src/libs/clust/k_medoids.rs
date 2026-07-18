@@ -69,7 +69,7 @@ impl KMedoids {
         matrix: &crate::libs::pairmat::ScoringMatrix<f32>,
     ) -> Vec<Vec<usize>> {
         let n = matrix.size();
-        if n == 0 {
+        if n == 0 || self.k == 0 {
             return vec![];
         }
         if self.k >= n {
@@ -220,6 +220,15 @@ mod tests {
         let clusters = kmedoids.perform_clustering(&sm);
 
         assert_eq!(clusters.len(), 3);
+    }
+
+    #[test]
+    fn test_kmedoids_k_zero() {
+        let sm = ScoringMatrix::<f32>::with_size_and_defaults(3, 0.0, 1.0);
+        let kmedoids = KMedoids::new(0, 10, 1);
+        let clusters = kmedoids.perform_clustering(&sm);
+
+        assert!(clusters.is_empty());
     }
 
     #[test]

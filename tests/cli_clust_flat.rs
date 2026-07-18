@@ -212,8 +212,16 @@ fn command_clust_mcl_pair() {
 fn command_clust_dbscan_default_min_points() {
     let (stdout, _) = NecomCmd::new().args(&["clust", "dbscan", "--help"]).run();
 
-    // The help should show default value of 4 for --min-points
-    assert!(stdout.contains("4") || stdout.contains("default"));
+    // The help should show default value of 4 for --min-points.
+    let min_points_line = stdout
+        .lines()
+        .find(|l| l.contains("--min-points"))
+        .expect("--min-points line not found in help");
+    assert!(
+        min_points_line.contains("4"),
+        "expected default 4 in --min-points help, got: {}",
+        min_points_line
+    );
 }
 
 #[test]
@@ -433,4 +441,84 @@ fn command_clust_kmedoids_pair_rep_first() {
     let cluster_first_first_line = stdout_first_cluster.lines().next().unwrap();
     assert!(cluster_medoid_first_line.starts_with("B\t"));
     assert!(cluster_first_first_line.starts_with("A\t"));
+}
+
+#[test]
+fn command_clust_dbscan_invalid_eps() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "dbscan", input.to_str().unwrap(), "--eps", "0"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("eps"),
+        "expected eps error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_dbscan_invalid_min_points() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "dbscan",
+            input.to_str().unwrap(),
+            "--min-points",
+            "0",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("min-points"),
+        "expected min-points error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_kmedoids_invalid_k() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "k-medoids", input.to_str().unwrap(), "-k", "0"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("k"),
+        "expected k error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_mcl_invalid_inflation() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t1.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "mcl",
+            input.to_str().unwrap(),
+            "--inflation",
+            "1.0",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("inflation"),
+        "expected inflation error, got: {}",
+        stderr
+    );
 }

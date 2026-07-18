@@ -34,6 +34,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_k = *args
         .get_one::<usize>("k")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: k"))?;
+    if opt_k == 0 {
+        anyhow::bail!("--k must be greater than 0");
+    }
     // Remaining arguments have clap default values, so unwrap is safe.
     let opt_format = args.get_one::<String>("clust_format").unwrap();
     let opt_rep = args.get_one::<String>("flat_rep").unwrap().as_str();

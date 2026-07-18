@@ -18,6 +18,7 @@ Notes:
     * `medoid` (default): point with minimum sum of distances to other cluster members.
     * `first`: alphabetically first member.
 * In `cluster` format, the representative is placed first; in `pair` format, it is the first column.
+* The neighborhood count used by `--min-points` includes the point itself (self-distance is 0, which is always <= eps).
 
 Examples:
 

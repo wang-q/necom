@@ -199,13 +199,9 @@ fn test_clust_hier_empty_matrix() {
     let input = temp.path().join("empty.phy");
     std::fs::write(&input, "").unwrap();
 
-    let (stdout, stderr) = NecomCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["clust", "hier", input.to_str().unwrap()])
         .run();
-
-    if !stderr.is_empty() {
-        println!("STDERR: {}", stderr);
-    }
 
     assert!(
         stdout.trim().is_empty(),
@@ -220,13 +216,9 @@ fn test_clust_hier_single_sample() {
     let input = temp.path().join("single.phy");
     std::fs::write(&input, "1\nA 0.0\n").unwrap();
 
-    let (stdout, stderr) = NecomCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["clust", "hier", input.to_str().unwrap()])
         .run();
-
-    if !stderr.is_empty() {
-        println!("STDERR: {}", stderr);
-    }
 
     assert_eq!(stdout.trim(), "A;");
 }
@@ -247,9 +239,8 @@ fn test_clust_hier_invalid_method() {
         ])
         .run_fail();
 
-    let lower = stderr.to_lowercase();
     assert!(
-        lower.contains("method") || lower.contains("invalid"),
+        stderr.to_lowercase().contains("invalid"),
         "expected invalid method error, got: {}",
         stderr
     );
@@ -363,13 +354,9 @@ fn test_clust_hier_all_zero() {
     let content = "3\nA 0 0 0\nB 0 0 0\nC 0 0 0\n";
     std::fs::write(&input, content).unwrap();
 
-    let (stdout, stderr) = NecomCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["clust", "hier", input.to_str().unwrap()])
         .run();
-
-    if !stderr.is_empty() {
-        println!("STDERR: {}", stderr);
-    }
 
     let trimmed = stdout.trim();
     assert!(!trimmed.is_empty());
@@ -390,13 +377,9 @@ fn test_clust_hier_two_samples() {
     let content = "2\nA 0 0.5\nB 0.5 0\n";
     std::fs::write(&input, content).unwrap();
 
-    let (stdout, stderr) = NecomCmd::new()
+    let (stdout, _) = NecomCmd::new()
         .args(&["clust", "hier", input.to_str().unwrap()])
         .run();
-
-    if !stderr.is_empty() {
-        println!("STDERR: {}", stderr);
-    }
 
     let trimmed = stdout.trim();
     assert!(!trimmed.is_empty());

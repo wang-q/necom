@@ -20,6 +20,7 @@ Notes:
     * `medoid` (default): point with maximum sum of similarities to other cluster members.
     * `first`: alphabetically first member.
 * In `cluster` format, the representative is placed first; in `pair` format, it is the first column.
+* During initialization, input similarities smaller than or equal to `1e-5` (including negative values) are treated as zero and ignored. This initial filtering threshold is independent of the `--prune` threshold used during iterations.
 * Reference: Stijn van Dongen, Graph Clustering by Flow Simulation. PhD thesis, University of Utrecht, May 2000.
 
 Examples:

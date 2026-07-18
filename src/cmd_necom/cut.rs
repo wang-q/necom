@@ -308,7 +308,7 @@ fn run_scan(
             ))?;
         }
 
-        let rows = cut::format_scan_rows(&partition, tree, &group_label);
+        let rows = cut::format_scan_rows(&partition, tree, &group_label)?;
         writer.write_all(rows.as_bytes())?;
     }
 

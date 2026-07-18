@@ -156,19 +156,6 @@ fn test_clust_pipeline_full() {
 
     assert!(stderr.is_empty(), "eval partition failed: {}", stderr);
 
-    // Evaluate output format:
-    // Metric   Value
-    // ari      1.0000
-    // ...
-    println!("Eval Output:\n{}", stdout);
-
-    // Debug: Print cut file content if evaluation fails
-    if !stdout.contains("1.000000") {
-        // Check for perfect score
-        let cut_content = fs::read_to_string(&cut_file).unwrap_or_default();
-        println!("Cut File Content:\n{}", cut_content);
-    }
-
     let ari_line = stdout
         .lines()
         .find(|l| l.trim().starts_with("0.") || l.trim().starts_with("1."))
