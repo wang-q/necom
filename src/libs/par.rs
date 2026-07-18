@@ -94,9 +94,10 @@ where
     }
 }
 
-/// Iterate `entries1` x `entries2` in parallel (rayon), calling `pair_fn`
-/// for each pair. If `pair_fn` returns `Some(line)`, the line is buffered
-/// and flushed to `sender` every 1000 pairs (and at the end of each row).
+/// Iterate `entries1` x `entries2` in parallel (rayon), invoking `pair_fn`
+/// for each pair. `pair_fn` appends its output directly to the provided
+/// `&mut String` buffer (using `write!`/`writeln!`), which is flushed to
+/// `sender` every 1000 pairs (and at the end of each row).
 ///
 /// Errors from the writer channel are logged and the worker aborts its row;
 /// rayon's panic handler does not need to be involved.
@@ -107,18 +108,16 @@ pub fn par_run_pairs<E, F>(
     pair_fn: F,
 ) where
     E: Sync,
-    F: Fn(&E, &E) -> Option<String> + Sync + Send,
+    F: Fn(&E, &E, &mut String) + Sync + Send,
 {
     entries1.par_iter().for_each(|e1| {
         let mut lines = String::with_capacity(1024);
         for (i, e2) in entries2.iter().enumerate() {
-            if let Some(out_string) = pair_fn(e1, e2) {
-                lines.push_str(&out_string);
-                if i % 1000 == 0 && !lines.is_empty() {
-                    if let Err(e) = sender.send(std::mem::take(&mut lines)) {
-                        log::error!("writer channel closed: {}", e);
-                        break;
-                    }
+            pair_fn(e1, e2, &mut lines);
+            if i % 1000 == 0 && !lines.is_empty() {
+                if let Err(e) = sender.send(std::mem::take(&mut lines)) {
+                    log::error!("writer channel closed: {}", e);
+                    break;
                 }
             }
         }

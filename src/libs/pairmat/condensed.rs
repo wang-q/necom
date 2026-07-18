@@ -53,6 +53,7 @@ impl CondensedMatrix {
         Ok(Self { size, data })
     }
 
+    /// Number of rows/columns in the matrix.
     pub fn size(&self) -> usize {
         self.size
     }

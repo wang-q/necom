@@ -12,6 +12,7 @@ pub enum MatrixFormat {
 }
 
 impl MatrixFormat {
+    /// Parse a format name (`"full"` / `"lower"` / `"strict"`) into a `MatrixFormat`.
     pub fn from_mode(s: &str) -> anyhow::Result<Self> {
         match s {
             "full" => Ok(Self::Full),
@@ -119,8 +120,11 @@ pub fn extract_common_lower_triangle(
         .map(|s| s.to_string())
         .collect();
 
-    if common_names.is_empty() {
-        anyhow::bail!("No common sequence names found between matrices");
+    if common_names.len() < 2 {
+        anyhow::bail!(
+            "at least 2 common sequence names required for comparison, found {}",
+            common_names.len()
+        );
     }
 
     let mut values1 =

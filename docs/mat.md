@@ -27,7 +27,7 @@ Distance matrices and Newick trees do not carry genomic coordinates. If other `n
 
 The `PHYLIP` distance matrix format is a common format in phylogenetic analysis. `necom` provides a series of tools for processing this format.
 
-`necom` stores this internally using the `NamedMatrix` structure, backed by `CondensedMatrix` (a one-dimensional array storing the upper or lower triangle), with memory usage of approximately $O(N^2/2)$.
+`necom` stores this internally using the `NamedMatrix` structure, backed by `CondensedMatrix` (a one-dimensional array storing the upper triangle, excluding the diagonal), with memory usage of approximately $O(N^2/2)$.
 
 `necom` supports both Strict and Relaxed `PHYLIP` formats.
 

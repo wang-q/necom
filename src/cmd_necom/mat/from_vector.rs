@@ -1,4 +1,5 @@
 use clap::{Arg, ArgAction, ArgMatches, Command};
+use std::fmt::Write;
 use std::sync::{Arc, Mutex};
 
 use necom::libs::linalg;
@@ -57,11 +58,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let errors: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
     let errors_clone = errors.clone();
 
-    necom::libs::par::par_run_pairs(&entries1, &entries2, &sender, |e1, e2| {
+    necom::libs::par::par_run_pairs(&entries1, &entries2, &sender, |e1, e2, buf| {
         match linalg::vector_score(e1.list(), e2.list(), opt_mode, is_sim, is_dis) {
             Ok(score) => {
-                let line = format!("{}\t{}\t{:.6}\n", e1.name(), e2.name(), score);
-                Some(line)
+                let _ = writeln!(buf, "{}\t{}\t{:.6}", e1.name(), e2.name(), score);
             }
             Err(e) => {
                 let msg = format!("{} vs {}: {}", e1.name(), e2.name(), e);
@@ -69,7 +69,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     .lock()
                     .unwrap_or_else(|poisoned| poisoned.into_inner());
                 guard.push(msg);
-                None
             }
         }
     });

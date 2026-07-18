@@ -74,6 +74,7 @@ where
         }
     }
 
+    /// Creates a new matrix with a fixed size but no default `same`/`missing` values.
     pub fn with_size(size: usize) -> Self {
         ScoringMatrix {
             size: Some(size),
@@ -83,6 +84,7 @@ where
         }
     }
 
+    /// Effective matrix size: the declared size if set, otherwise inferred from data keys.
     pub fn size(&self) -> usize {
         self.size.unwrap_or_else(|| {
             self.data
@@ -135,6 +137,8 @@ where
 
 // Add a separate implementation for f32 specifically for from_pair_scores
 impl ScoringMatrix<f32> {
+    /// Load a `ScoringMatrix<f32>` and ordered name list from a 3-column pairwise TSV.
+    /// Self-pairs default to `same`; missing pairs default to `missing`.
     pub fn from_pair_scores(
         infile: &str,
         same: f32,

@@ -21,11 +21,11 @@ Input:
 
 Output:
 
-* Three-column TSV: `name1<tab>name2<tab>score`, one row per pair.
+* Three-column TSV: `name1<tab>name2<tab>score` (6 decimal places), one row per pair.
 
 Notes:
 
-* `--binary` treats non-zero values as 1 before computing the score.
+* `--binary` treats positive values as 1, all others as 0, before computing the score.
 * `--sim` converts a distance to a similarity; `--dis` converts a similarity to a dissimilarity.
 * `--parallel <N>` sets the number of worker threads (default 1).
 

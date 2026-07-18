@@ -71,6 +71,7 @@ impl NamedMatrix {
         }
     }
 
+    /// Number of rows/columns in the matrix.
     pub fn size(&self) -> usize {
         self.matrix.size()
     }
@@ -86,6 +87,7 @@ impl NamedMatrix {
         &self.matrix
     }
 
+    /// Get value at `(row, col)`. Returns the stored diagonal when `row == col`.
     pub fn get(&self, row: usize, col: usize) -> f32 {
         if row == col {
             if let Some(ref diags) = self.diags {
@@ -109,19 +111,23 @@ impl NamedMatrix {
         }
     }
 
+    /// Linear condensed index for `(row, col)`. Requires `row != col`.
     pub fn index(&self, row: usize, col: usize) -> usize {
         let (r, c) = if row < col { (row, col) } else { (col, row) };
         get_condensed_index(self.size(), r, c)
     }
 
+    /// Return all names in insertion order.
     pub fn get_names(&self) -> Vec<&String> {
         self.names.keys().collect()
     }
 
+    /// Return the row/column index for `name`, if present.
     pub fn get_index(&self, name: &str) -> Option<usize> {
         self.names.get(name).copied()
     }
 
+    /// Replace the diagonal vector. Length must equal `size()`.
     pub fn set_diags(&mut self, diags: Vec<f32>) -> anyhow::Result<()> {
         if diags.len() == self.size() {
             self.diags = Some(diags);
@@ -135,6 +141,7 @@ impl NamedMatrix {
         }
     }
 
+    /// Borrow the diagonal vector, if set.
     pub fn get_diags(&self) -> Option<&Vec<f32>> {
         self.diags.as_ref()
     }
@@ -188,6 +195,8 @@ impl NamedMatrix {
         }
     }
 
+    /// Build a NamedMatrix from a 3-column pairwise TSV (`name1<tab>name2<tab>score`).
+    /// Self-pairs default to `same`; missing pairs default to `missing`.
     pub fn from_pair_scores(
         infile: &str,
         same: f32,

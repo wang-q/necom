@@ -463,3 +463,72 @@ fn command_mat_format_lower_extra_values_warning() {
     // The extra value 0.999 must be ignored.
     assert!(lines[2].starts_with("B\t0.1\t0\t0.3"));
 }
+
+#[test]
+fn command_mat_compare_single_common_name() {
+    // Two matrices sharing only 1 common name should bail with a clear error
+    // rather than producing NaN metrics.
+    use std::io::Write;
+    let mut m1 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(m1, "2").unwrap();
+    writeln!(m1, "A 0.0 0.1").unwrap();
+    writeln!(m1, "B 0.1 0.0").unwrap();
+    m1.flush().unwrap();
+
+    let mut m2 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(m2, "2").unwrap();
+    writeln!(m2, "A 0.0 0.2").unwrap();
+    writeln!(m2, "C 0.2 0.0").unwrap();
+    m2.flush().unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            m1.path().to_str().unwrap(),
+            m2.path().to_str().unwrap(),
+            "--method",
+            "pearson",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("at least 2 common sequence names"),
+        "expected degenerate-case error in stderr, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_mat_compare_no_common_name() {
+    // Two matrices with no common names should also bail.
+    use std::io::Write;
+    let mut m1 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(m1, "2").unwrap();
+    writeln!(m1, "A 0.0 0.1").unwrap();
+    writeln!(m1, "B 0.1 0.0").unwrap();
+    m1.flush().unwrap();
+
+    let mut m2 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(m2, "2").unwrap();
+    writeln!(m2, "C 0.0 0.2").unwrap();
+    writeln!(m2, "D 0.2 0.0").unwrap();
+    m2.flush().unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            m1.path().to_str().unwrap(),
+            m2.path().to_str().unwrap(),
+            "--method",
+            "pearson",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("at least 2 common sequence names"),
+        "expected degenerate-case error in stderr, got: {}",
+        stderr
+    );
+}
