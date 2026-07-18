@@ -242,10 +242,10 @@ Combine `necom cut` scanning with `eval partition` batch evaluation to find the 
 # 1. Generate hierarchical clustering tree
 necom clust hier matrix.phy --method ward > tree.nwk
 
-# 2. Scan thresholds and evaluate internal metrics (Silhouette)
-# necom cut outputs a long table in scan mode, which can be piped directly to eval partition
-necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
-    necom eval partition - --input-format long --matrix matrix.phy > evaluation.tsv
+# 2. Scan thresholds, save to a file, and evaluate internal metrics (Silhouette)
+# necom cut outputs a long table in scan mode; write it to a file for eval partition
+necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 > partitions.tsv
+necom eval partition partitions.tsv --input-format long --matrix matrix.phy > evaluation.tsv
 
 # 3. Analyze evaluation.tsv to choose the best threshold (e.g., maximum Silhouette)
 # Assume the best threshold is 0.45

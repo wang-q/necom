@@ -51,8 +51,11 @@ After installation, the `necom` binary is available in your `PATH`:
 ```bash
 necom --help
 necom clust --help
+necom cut --help
+necom eval --help
 necom mat --help
 necom nwk --help
+necom pl --help
 ```
 
 ### Examples

@@ -21,6 +21,7 @@
 
 ## Clustering
 
+- [clust](help/clust.md)
 - [cc](help/clust/cc.md)
 - [dbscan](help/clust/dbscan.md)
 - [hier](help/clust/hier.md)
@@ -31,6 +32,7 @@
 
 ## Matrix
 
+- [mat](help/mat.md)
 - [compare](help/mat/compare.md)
 - [format](help/mat/format.md)
 - [subset](help/mat/subset.md)
@@ -40,6 +42,7 @@
 
 ## Newick
 
+- [nwk](help/nwk.md)
 - [comment](help/nwk/comment.md)
 - [distance](help/nwk/distance.md)
 - [indent](help/nwk/indent.md)
@@ -59,10 +62,12 @@
 
 ## Evaluation
 
+- [eval](help/eval.md)
 - [compare](help/eval/compare.md)
 - [partition](help/eval/partition.md)
 - [replicate](help/eval/replicate.md)
 
 ## Pipelines
 
+- [pl](help/pl.md)
 - [condense](help/pl/condense.md)
