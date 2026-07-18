@@ -101,7 +101,7 @@ Both compute Robinson-Foulds distances, but at different scopes and for differen
 
 **Rule of thumb**: If comparing two trees as a whole, use `eval compare`. If assessing whether a gene tree's clusters are consistent with a species tree, use `eval tree --ref`.
 
-### `eval quartet` vs `eval compare` (both planned or partially implemented)
+### `eval quartet` (future) vs `eval compare`
 
 *   `eval compare`: Topology-based (split-set symmetric difference). Pure structural comparison of whole trees.
 *   `eval quartet` (future): Quartet-based, can incorporate sequence alignment. Assesses branch-level support rather than overall distance.

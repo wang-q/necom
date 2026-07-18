@@ -138,7 +138,7 @@ necom eval <subcommand>
 - `b(x)`：对所有其他簇，取"与该簇所有成员的平均距离"的最小值
 - `s(x) = (b(x) - a(x)) / max(a(x), b(x))`
 - **聚合**: 计算全局平均值和每簇的均值/中位数。
-- **复用现有实现**：`libs/eval/distance.rs` 已提供 `silhouette_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix)`。`TreeDistance`（[distance.rs](../../src/libs/eval/distance.rs)）已实现 `DistanceMatrix` trait，包装 `Tree::get_distance`。复用路径：`TreeDistance::new(tree)` → `silhouette_score(&partition, &td)`，无需重写。
+- **复用现有实现**：`libs/eval/distance.rs` 已提供 `silhouette_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix)`。`TreeDistance`（[distance.rs](../../src/libs/eval/distance.rs)）已实现 `DistanceMatrix` trait，包装 `Tree::node_distance`。复用路径：`TreeDistance::new(tree)` → `silhouette_score(&partition, &td)`，无需重写。
 - **单例处理**：现有 `silhouette_score` 已遵循 scikit-learn 约定（大小为 1 的簇 `s(x)=0`）。早期草案"单例 s(x) 仅由 b(x) 决定"的说法会导致 `s(x)=1`，不正确。
 - **复杂度**：O(N²)（任意 partition）。`b(x)` 需对每个样本遍历所有其他簇的成员。对大树用 `--samples` 采样（**新增工作**：现有 `silhouette_score` 无采样参数，Phase 1 需扩展或在外层包装采样逻辑）。
 
@@ -242,7 +242,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
   - **外部指标**（[pairwise.rs](../../src/libs/eval/pairwise.rs)，12 个）：ARI、AMI、Homogeneity、Completeness、V-Measure、FMI、NMI、MI、RI、Jaccard、Precision、Recall。
   - **距离矩阵指标**（[distance.rs](../../src/libs/eval/distance.rs)，5 个）：`silhouette_score`（[distance.rs](../../src/libs/eval/distance.rs)）、`dunn_score`、`c_index_score`、`gamma_score`、`tau_score`。
   - **坐标指标**（[coordinates.rs](../../src/libs/eval/coordinates.rs)，6 个）：`davies_bouldin_score`、`calinski_harabasz_score`、`pbm_score`、`ball_hall_score`、`xie_beni_score`、`wemmert_gancarski_score`。
-  - **关键**：`TreeDistance`（[distance.rs](../../src/libs/eval/distance.rs)）已实现 `DistanceMatrix` trait，包装 `Tree::get_distance`。**所有 5 个距离矩阵指标可直接用于树评估**，无需重写。
+  - **关键**：`TreeDistance`（[distance.rs](../../src/libs/eval/distance.rs)）已实现 `DistanceMatrix` trait，包装 `Tree::node_distance`。**所有 5 个距离矩阵指标可直接用于树评估**，无需重写。
   - 已良好分层（`EvalTarget`/`DistanceMatrix`/`TreeDistance`/`run_single`/`run_batch`，见 [mod.rs](../../src/libs/eval/mod.rs)）。`eval partition` 使用；`eval tree` 复用 `silhouette_score` + `TreeDistance`。
   - **缺失（需新增）**：Purity、Entropy（Phase 2）、Cophenetic 相关系数（Phase 1）。
 - **`libs/phylo/cmp.rs`**：树拓扑比较（RF、WRF、KF）。`eval tree` 复用；`eval compare` 已迁移为顶级命令。
@@ -266,7 +266,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
   - CLI 入口为 [eval/compare.rs](../../src/cmd_necom/eval/compare.rs)，由 `nwk/compare.rs` 迁移而来。
 - **单系性检查**：
   - 复用 `Tree::is_clade`（[query.rs](../../src/libs/phylo/tree/query.rs)，要求 ≥2 节点）或 `Tree::is_monophyletic`（[query.rs](../../src/libs/phylo/tree/query.rs)，单节点也视为单系）。CLI 层（[nwk/label.rs](../../src/cmd_necom/nwk/label.rs) 和 [nwk/subtree.rs](../../src/cmd_necom/nwk/subtree.rs)）当前统一使用 `Tree::is_clade`。
-- **Silhouette 复用**：直接复用 `libs/eval/distance.rs::silhouette_score` + `TreeDistance`（[distance.rs](../../src/libs/eval/distance.rs)），无需重写。`TreeDistance::new(tree)` 包装 `Tree::get_distance` 并实现 `DistanceMatrix` trait。现有实现已遵循 sklearn 单例 `s(x)=0` 约定。`--samples` 采样为 Phase 1 新增工作。
+- **Silhouette 复用**：直接复用 `libs/eval/distance.rs::silhouette_score` + `TreeDistance`（[distance.rs](../../src/libs/eval/distance.rs)），无需重写。`TreeDistance::new(tree)` 包装 `Tree::node_distance` 并实现 `DistanceMatrix` trait。现有实现已遵循 sklearn 单例 `s(x)=0` 约定。`--samples` 采样为 Phase 1 新增工作。
 - **`tree_medoid`**：[query.rs](../../src/libs/phylo/tree/query.rs) 提供 `tree_medoid(tree, ids) -> Option<usize>`，O(N²) 调用 `get_distance`。当前注释标记 "Currently unused by the CLI"。`eval tree` 可考虑复用于 representative 选择或 Medoid-based 聚类评估。
 - **性能策略**：
   - clade 检测后分流，clade 走 O(N)，任意 partition 走 O(N²)。
