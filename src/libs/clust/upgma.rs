@@ -199,12 +199,12 @@ A 0 2 4
 B 2 0 4
 C 4 4 0
 ";
-        let filename = "test_upgma.phy";
-        let mut file = std::fs::File::create(filename).unwrap();
+        let temp = tempfile::TempDir::new().unwrap();
+        let filename = temp.path().join("test_upgma.phy");
+        let mut file = std::fs::File::create(&filename).unwrap();
         file.write_all(content.as_bytes()).unwrap();
 
-        let mat = NamedMatrix::from_relaxed_phylip(filename).unwrap();
-        std::fs::remove_file(filename).unwrap(); // Cleanup
+        let mat = NamedMatrix::from_relaxed_phylip(filename.to_str().unwrap()).unwrap();
 
         let tree = upgma(&mat).unwrap();
 

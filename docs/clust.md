@@ -6,7 +6,7 @@ The `necom clust` module provides a collection of clustering algorithms for sequ
 
 Commands are divided into two categories by input data type (consistent with `necom clust --help`):
 1.  **Tree**: Build phylogenetic or hierarchical structures from a distance matrix (`hier`, `nj`, `upgma`).
-2.  **Flat**: Generate groups directly from graphs or vectors (`cc`, `dbscan`, `k-medoids`, `mcl`).
+2.  **Flat**: Generate groups directly from pairwise relations, distances, or similarities (`cc`, `dbscan`, `k-medoids`, `mcl`).
 
 Flat partitions can also be derived from an existing tree using the separate `necom cut` command (see [`docs/cut.md`](cut.md)).
 
@@ -79,7 +79,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Principle**: A general bottom-up (agglomerative) clustering framework. Clusters are merged according to different linkage criteria (e.g., Ward minimum variance, Complete maximum distance), building a complete dendrogram hierarchy.
 - **Command**: `necom clust hier` (alias `hclust`)
 - **Characteristics**: General hierarchical clustering supporting `single`, `complete`, `average`, `weighted`, `centroid`, `median`, `ward`.
-- **Implementation status**: Implemented with $O(N^2)$ NN-chain optimization.
+- **Implementation status**: Implemented with $O(N^2)$ NN-chain optimization for reducible methods (`single`, `complete`, `average`, `weighted`, `ward`); `centroid` and `median` fall back to the primitive $O(N^3)$ implementation because they do not satisfy the reducibility property.
 - **Value**: Provides a general hierarchical view (not limited to biological evolution); combined with `necom cut` it yields flexible groupings at different granularities.
 - **Input**: PHYLIP distance matrix (strict or relaxed).
 - **Output**: Newick tree.
@@ -127,7 +127,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
   - Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.
   - Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).
   - Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of `necom cut --height`.
-- Numeric format: unified six decimal places with trailing zeros removed; consistent with the convention in `nwk distance`.
+- Numeric format: branch lengths are emitted with Rust's default float formatting. For a fixed-width, six-decimal view consistent with `nwk distance`, post-process the tree or use `nwk distance` on the resulting branch lengths.
 
 ### Notes
 

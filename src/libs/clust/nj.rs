@@ -219,12 +219,12 @@ B 7 0 6 9
 C 11 6 0 7
 D 14 9 7 0
 ";
-        let filename = "test_nj.phy";
-        let mut file = std::fs::File::create(filename).unwrap();
+        let temp = tempfile::TempDir::new().unwrap();
+        let filename = temp.path().join("test_nj.phy");
+        let mut file = std::fs::File::create(&filename).unwrap();
         file.write_all(content.as_bytes()).unwrap();
 
-        let mat = NamedMatrix::from_relaxed_phylip(filename).unwrap();
-        std::fs::remove_file(filename).unwrap(); // Cleanup
+        let mat = NamedMatrix::from_relaxed_phylip(filename.to_str().unwrap()).unwrap();
 
         let tree = nj(&mat).unwrap();
         let newick = tree.to_newick();
