@@ -277,14 +277,14 @@ When unsure about `K` or `t`, use `--scan` for parameter scanning.
 (Note: scanning only targets the **main threshold parameter** of the method. For `--inconsistent`, it scans the coefficient threshold `T`, while depth `--deep` remains fixed at the user-specified or default value.)
 
 **Output summary table**:
-| Group | Clusters | Singletons | Non-Singletons | Max Cluster Size |
+| Group | Clusters | Singletons | Non-Singletons | MaxSize |
 | :--- | :--- | :--- | :--- | :--- |
 | height=0.01 | 500 | 480 | 20 | 5 |
 | height=0.02 | 300 | 200 | 100 | 15 |
 | ... | ... | ... | ... | ... |
 
 - **Non-Singletons**: The metric that TreeCluster `argmax_clusters` tries to maximize.
-- **Max Cluster Size**: Helps judge whether a "super-cluster" exists (under-clustering).
+- **MaxSize**: Helps judge whether a "super-cluster" exists (under-clustering).
 
 ### Output Format in Scan Mode
 

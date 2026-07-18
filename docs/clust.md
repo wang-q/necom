@@ -83,7 +83,8 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Characteristics**: General hierarchical clustering supporting `single`, `complete`, `average`, `weighted`, `centroid`, `median`, `ward`.
 - **Default method**: `ward` (use `--method` to select other linkage criteria).
 - **Implementation status**: Implemented with $O(N^2)$ NN-chain optimization for reducible methods (`single`, `complete`, `average`, `weighted`, `ward`); `centroid` and `median` fall back to the primitive $O(N^3)$ implementation because they do not satisfy the reducibility property.
-- **Value**: Provides a general hierarchical view (not limited to biological evolution); combined with `necom cut` it yields flexible groupings at different granularities.
+- **Use cases**: General hierarchical clustering analysis; combined with `necom cut` for flexible groupings at different granularities.
+- **Advantages**: Supports multiple linkage methods; the default NN-chain implementation achieves $O(N^2)$ time for reducible methods.
 - **Input**: PHYLIP distance matrix (strict or relaxed).
 - **Output**: Newick tree.
 - **Details**: [Hierarchical Clustering Details](#hierarchical-clustering-details)

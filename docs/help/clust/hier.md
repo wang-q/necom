@@ -13,6 +13,7 @@ Notes:
 
 * The output tree uses the linkage distance (merge height) as node height.
 * `--method <METHOD>`: linkage method (default: `ward`). Supported: `single`, `complete`, `average`, `weighted`, `centroid`, `median`, `ward`.
+* For reducible methods (`single`, `complete`, `average`, `weighted`, `ward`), the default NN-chain implementation may produce a different merge order than the primitive algorithm, but the resulting partition sequence is equivalent. Branch lengths are clipped at `0.0` if non-monotonicity occurs.
 * For Ward's method, the input is assumed to be Euclidean distances or similar.
 * Alias: `necom clust hclust` is equivalent to `necom clust hier`.
 

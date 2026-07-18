@@ -67,6 +67,12 @@ necom mat compare tests/mat/IBPA.phy tests/mat/IBPA.71.phy
 # Tree statistics
 necom nwk stat tests/newick/catarrhini.nwk
 
+# Cut a tree into clusters by height
+necom cut --height 0.5 tests/newick/catarrhini.nwk
+
+# Evaluate a partition against ground truth
+necom eval partition result.tsv --other truth.tsv
+
 # Condense a tree by taxonomy
 necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
     tests/pipeline/minhash.reroot.newick
