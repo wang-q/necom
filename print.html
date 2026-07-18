@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a0934509.js";
+            window.path_to_searchindex_js = "searchindex-c8504623.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-01a6bffc.js"></script>
@@ -361,7 +361,7 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <li><strong>Goal</strong>: Statistically meaningful dendrograms (merge heights express the cost of the linkage criterion), without enforcing “evolution/molecular-clock” semantics.</li>
 <li><strong>Synergy with existing necom capabilities</strong>:
 <ul>
-<li>Tree building: <code>clust upgma</code> (rooted, ultrametric) and <code>clust nj</code> (additive, unrooted) already exist.</li>
+<li>Tree building: <code>clust upgma</code> (rooted, ultrametric) and <code>clust nj</code> (additive, midpoint-rooted) already exist.</li>
 <li>Cutting: tree-cut grouping via <code>necom cut</code>.</li>
 <li>Evaluation: <code>necom eval partition --matrix</code> / <code>--tree</code> / <code>--coords</code> (currently available); <code>necom eval tree</code> not yet implemented.</li>
 </ul>
@@ -1067,6 +1067,14 @@ necom eval partition partitions.tsv --input-format long --matrix dist.phy
 <li><code>--normalize</code>: scale values by diagonal elements before transformation.</li>
 <li><code>--input-format pair</code>: read pairwise TSV instead of PHYLIP.</li>
 </ul>
+<h4 id="necom-mat-from-vector"><a class="header" href="#necom-mat-from-vector"><code>necom mat from-vector</code></a></h4>
+<p>Calculate pairwise similarity/distance between vectors in input file(s). Reads the <code>name&lt;tab&gt;v1&lt;tab&gt;v2&lt;tab&gt;...</code> feature-vector format and emits a three-column pairwise TSV (<code>name1&lt;tab&gt;name2&lt;tab&gt;score</code>) suitable for piping into <code>necom mat to-phylip</code> or directly into clustering commands.</p>
+<ul>
+<li><code>--mode</code>: <code>euclid</code>, <code>cosine</code>, <code>jaccard</code>.</li>
+<li><code>--binary</code>: treat values as 0/1 before computing.</li>
+<li><code>--sim</code> / <code>--dis</code>: convert between distance and (dis)similarity.</li>
+<li>Accepts one file (self-comparison) or two files (cross-comparison).</li>
+</ul>
 <h4 id="conversion-models"><a class="header" href="#conversion-models">Conversion Models</a></h4>
 <p><code>necom mat transform</code> supports common similarity-to-distance conversions:</p>
 <h5 id="1-linear-inversion"><a class="header" href="#1-linear-inversion">1. Linear Inversion</a></h5>
@@ -1280,8 +1288,8 @@ neighbor &lt; input.infile
 <p><code>necom eval compare</code> treats non-finite branch lengths (<code>NaN</code>, positive/negative infinity), negative values, and zero values as <code>0.0</code> during computation. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.</p>
 <hr>
 <h2 id="planned-subcommands-1"><a class="header" href="#planned-subcommands-1">Planned Subcommands</a></h2>
-<p>The following subcommands are under design (see <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a>). Their CLI surface is not yet finalized; the descriptions below reflect the current design direction, not commitments.</p>
-<h3 id="tree"><a class="header" href="#tree">tree</a></h3>
+<p>The following subcommands are <strong>not yet implemented</strong>. Their CLI surface is not yet finalized; the descriptions below reflect the current design direction, not commitments. See <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a> for design status.</p>
+<h3 id="tree-not-implemented"><a class="header" href="#tree-not-implemented">tree (Not Implemented)</a></h3>
 <p>Multi-dimensional evaluation of a single phylogenetic tree. The tree is the positional primary input; a partition (<code>--part</code>), reference tree (<code>--ref</code>), trait map (<code>--traits</code>), or original distance matrix (<code>--dist</code>) may be supplied as auxiliary context.</p>
 <p>Four evaluation dimensions:</p>
 <ul>
@@ -1290,7 +1298,7 @@ neighbor &lt; input.infile
 <li><strong>Phylo</strong>: Local RF to reference tree, Monophyly Check, ConflictScore.</li>
 <li><strong>Fit</strong>: Cophenetic Correlation against an original distance matrix.</li>
 </ul>
-<h3 id="quartet-future-candidate"><a class="header" href="#quartet-future-candidate">quartet (future candidate)</a></h3>
+<h3 id="quartet-future-candidate-not-designed"><a class="header" href="#quartet-future-candidate-not-designed">quartet (Future Candidate, Not Designed)</a></h3>
 <p>Quartet-based consistency or support values for branches. <strong>Not yet designed; the namespace is not reserved.</strong> Boundary: if the goal is to <em>infer</em> a new tree from quartets, it belongs to <code>nwk</code>; if the goal is to <em>assess</em> branch support of a given tree, it belongs to <code>eval</code>.</p>
 <hr>
 <h2 id="overlapping-features-and-boundaries"><a class="header" href="#overlapping-features-and-boundaries">Overlapping Features and Boundaries</a></h2>
@@ -1699,11 +1707,11 @@ GeneC
 <p>Used by <code>eval partition --coords</code> (Davies-Bouldin Index) or future <code>kmeans/gmm</code>.</p>
 <h3 id="featurevector-format"><a class="header" href="#featurevector-format">FeatureVector Format</a></h3>
 <ul>
-<li><strong>Structure</strong>: <code>Name &lt;tab&gt; Val1,Val2,Val3...</code></li>
-<li><strong>Delimiters</strong>: <strong>Tab</strong> between name and vector; <strong>commas</strong> between numeric values.</li>
+<li><strong>Structure</strong>: <code>Name &lt;tab&gt; Val1 &lt;tab&gt; Val2 &lt;tab&gt; Val3 ...</code> (pure TSV)</li>
+<li><strong>Delimiters</strong>: <strong>Tab</strong> between every pair of adjacent fields.</li>
 <li><strong>Example</strong>:
-<pre><code class="language-text">GeneA	1.2,0.5,3.3
-GeneB	1.1,0.6,3.1
+<pre><code class="language-text">GeneA	1.2	0.5	3.3
+GeneB	1.1	0.6	3.1
 </code></pre>
 </li>
 <li><strong>Compatibility</strong>: A general feature-vector/coordinate representation format.</li>
@@ -1969,7 +1977,7 @@ GeneB	1.1,0.6,3.1
 <ul>
 <li>The input must contain similarities, not distances.</li>
 <li><code>--inflation &lt;V&gt;</code> / <code>-I</code>: inflation parameter (default: <code>2.0</code>).</li>
-<li><code>--prune &lt;V&gt;</code>: pruning threshold; matrix entries smaller than this are set to zero (default: <code>1e-5</code>).</li>
+<li><code>--prune &lt;V&gt;</code>: pruning threshold; matrix entries smaller than or equal to this are set to zero (default: <code>1e-5</code>).</li>
 <li><code>--max-iter &lt;N&gt;</code>: maximum number of iterations (default: <code>100</code>). Must be greater than 0.</li>
 <li><code>--same &lt;V&gt;</code>: default score of identical element pairs (default: <code>1.0</code>).</li>
 <li><code>--missing &lt;V&gt;</code>: default score of missing pairs (default: <code>0.0</code>).</li>

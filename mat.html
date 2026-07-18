@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a0934509.js";
+            window.path_to_searchindex_js = "searchindex-c8504623.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-01a6bffc.js"></script>
@@ -274,6 +274,14 @@
 <li><code>--offset &lt;V&gt;</code>: offset value for <code>linear</code> (default: <code>0.0</code>).</li>
 <li><code>--normalize</code>: scale values by diagonal elements before transformation.</li>
 <li><code>--input-format pair</code>: read pairwise TSV instead of PHYLIP.</li>
+</ul>
+<h4 id="necom-mat-from-vector"><a class="header" href="#necom-mat-from-vector"><code>necom mat from-vector</code></a></h4>
+<p>Calculate pairwise similarity/distance between vectors in input file(s). Reads the <code>name&lt;tab&gt;v1&lt;tab&gt;v2&lt;tab&gt;...</code> feature-vector format and emits a three-column pairwise TSV (<code>name1&lt;tab&gt;name2&lt;tab&gt;score</code>) suitable for piping into <code>necom mat to-phylip</code> or directly into clustering commands.</p>
+<ul>
+<li><code>--mode</code>: <code>euclid</code>, <code>cosine</code>, <code>jaccard</code>.</li>
+<li><code>--binary</code>: treat values as 0/1 before computing.</li>
+<li><code>--sim</code> / <code>--dis</code>: convert between distance and (dis)similarity.</li>
+<li>Accepts one file (self-comparison) or two files (cross-comparison).</li>
 </ul>
 <h4 id="conversion-models"><a class="header" href="#conversion-models">Conversion Models</a></h4>
 <p><code>necom mat transform</code> supports common similarity-to-distance conversions:</p>

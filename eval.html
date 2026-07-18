@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a0934509.js";
+            window.path_to_searchindex_js = "searchindex-c8504623.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-01a6bffc.js"></script>
@@ -219,8 +219,8 @@
 <p><code>necom eval compare</code> treats non-finite branch lengths (<code>NaN</code>, positive/negative infinity), negative values, and zero values as <code>0.0</code> during computation. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.</p>
 <hr>
 <h2 id="planned-subcommands"><a class="header" href="#planned-subcommands">Planned Subcommands</a></h2>
-<p>The following subcommands are under design (see <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a>). Their CLI surface is not yet finalized; the descriptions below reflect the current design direction, not commitments.</p>
-<h3 id="tree"><a class="header" href="#tree">tree</a></h3>
+<p>The following subcommands are <strong>not yet implemented</strong>. Their CLI surface is not yet finalized; the descriptions below reflect the current design direction, not commitments. See <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a> for design status.</p>
+<h3 id="tree-not-implemented"><a class="header" href="#tree-not-implemented">tree (Not Implemented)</a></h3>
 <p>Multi-dimensional evaluation of a single phylogenetic tree. The tree is the positional primary input; a partition (<code>--part</code>), reference tree (<code>--ref</code>), trait map (<code>--traits</code>), or original distance matrix (<code>--dist</code>) may be supplied as auxiliary context.</p>
 <p>Four evaluation dimensions:</p>
 <ul>
@@ -229,7 +229,7 @@
 <li><strong>Phylo</strong>: Local RF to reference tree, Monophyly Check, ConflictScore.</li>
 <li><strong>Fit</strong>: Cophenetic Correlation against an original distance matrix.</li>
 </ul>
-<h3 id="quartet-future-candidate"><a class="header" href="#quartet-future-candidate">quartet (future candidate)</a></h3>
+<h3 id="quartet-future-candidate-not-designed"><a class="header" href="#quartet-future-candidate-not-designed">quartet (Future Candidate, Not Designed)</a></h3>
 <p>Quartet-based consistency or support values for branches. <strong>Not yet designed; the namespace is not reserved.</strong> Boundary: if the goal is to <em>infer</em> a new tree from quartets, it belongs to <code>nwk</code>; if the goal is to <em>assess</em> branch support of a given tree, it belongs to <code>eval</code>.</p>
 <hr>
 <h2 id="overlapping-features-and-boundaries"><a class="header" href="#overlapping-features-and-boundaries">Overlapping Features and Boundaries</a></h2>

@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a0934509.js";
+            window.path_to_searchindex_js = "searchindex-c8504623.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-01a6bffc.js"></script>
@@ -231,11 +231,11 @@ GeneC
 <p>Used by <code>eval partition --coords</code> (Davies-Bouldin Index) or future <code>kmeans/gmm</code>.</p>
 <h3 id="featurevector-format"><a class="header" href="#featurevector-format">FeatureVector Format</a></h3>
 <ul>
-<li><strong>Structure</strong>: <code>Name &lt;tab&gt; Val1,Val2,Val3...</code></li>
-<li><strong>Delimiters</strong>: <strong>Tab</strong> between name and vector; <strong>commas</strong> between numeric values.</li>
+<li><strong>Structure</strong>: <code>Name &lt;tab&gt; Val1 &lt;tab&gt; Val2 &lt;tab&gt; Val3 ...</code> (pure TSV)</li>
+<li><strong>Delimiters</strong>: <strong>Tab</strong> between every pair of adjacent fields.</li>
 <li><strong>Example</strong>:
-<pre><code class="language-text">GeneA	1.2,0.5,3.3
-GeneB	1.1,0.6,3.1
+<pre><code class="language-text">GeneA	1.2	0.5	3.3
+GeneB	1.1	0.6	3.1
 </code></pre>
 </li>
 <li><strong>Compatibility</strong>: A general feature-vector/coordinate representation format.</li>
