@@ -1,6 +1,11 @@
 use anyhow::Context;
 use clap::{Arg, ArgMatches, Command};
 use std::io::Write;
+
+/// All valid comparison methods, in the order used by `--method all`.
+const VALID_METHODS: &[&str] =
+    &["pearson", "spearman", "mae", "cosine", "jaccard", "euclid"];
+
 /// Build the clap subcommand for compare.
 pub fn make_subcommand() -> Command {
     Command::new("compare")
@@ -27,13 +32,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let matrix2_file = args.get_one::<String>("matrix2").unwrap();
     let method = args.get_one::<String>("mat_method").unwrap();
     let methods = if method == "all" {
-        "pearson,spearman,mae,cosine,jaccard,euclid"
+        VALID_METHODS.join(",")
     } else {
-        method.as_str()
+        method.clone()
     };
 
-    const VALID_METHODS: &[&str] =
-        &["pearson", "spearman", "mae", "cosine", "jaccard", "euclid"];
     let requested_methods: Vec<&str> = methods
         .split(',')
         .map(str::trim)
@@ -71,7 +74,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Calculate and output metrics
     for method in &requested_methods {
-        let result = match *method {
+        let score = match *method {
             "pearson" => necom::libs::linalg::pearson_correlation(&values1, &values2),
             "spearman" => necom::libs::linalg::spearman_correlation(&values1, &values2),
             "mae" => necom::libs::linalg::mean_absolute_error(&values1, &values2),
@@ -82,7 +85,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             "euclid" => necom::libs::linalg::euclidean_distance(&values1, &values2),
             _ => unreachable!("validated above"),
         };
-        writer.write_fmt(format_args!("{}\t{:.6}\n", method, result))?;
+        // Emit "NA" for non-finite scores (NaN/Inf) to keep TSV output parseable,
+        // matching the eval module's format_metrics_row convention.
+        if score.is_finite() {
+            writeln!(writer, "{}\t{:.6}", method, score)?;
+        } else {
+            writeln!(writer, "{}\tNA", method)?;
+        }
     }
 
     writer.flush()?;

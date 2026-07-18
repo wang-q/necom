@@ -45,3 +45,12 @@
 
 - [docs/mat.md](../../docs/mat.md)：用户面向的矩阵格式说明（PHYLIP / Pairwise）。
 - [clust-impl.md](clust-impl.md)：聚类模块实现分析，其中 §1 描述了三种结构在不同命令中的使用。
+
+## 6. 已知死代码
+
+以下公共 API 经全仓库 grep 确认无生产代码引用（仅自身 doc test 或完全无引用），按项目规则保留不删除：
+
+- `NamedMatrix::with_ids(size)`（`named.rs`）：创建数字命名矩阵，无调用方。
+- `NamedMatrix::matrix()`（`named.rs`）：返回底层 `CondensedMatrix` 引用，无调用方（调用方使用 `values()` 或 `into_parts()`）。
+- `NamedMatrix::new_from_values(names, values)`（`named.rs`）：从名称和上三角值创建，无调用方（调用方使用 `from_relaxed_phylip` 或 `from_pair_scores`）。
+- `ScoringMatrix::with_size(size)`（`scoring.rs`）：创建指定大小的空矩阵，无调用方（调用方使用 `with_size_and_defaults`）。

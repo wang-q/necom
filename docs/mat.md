@@ -168,9 +168,9 @@ For Cosine/Correlation distances, the workflow depends on the input form:
 ### Scenario A: Tree Inference from BLAST Results
 
 ```bash
-# 1. Parse BLAST results into pairwise distances (assuming distance = 1 - identity has already been computed)
-# Note: ensure both A-B and B-A are present, or rely on a single direction
-# Use OFS='\t' so the output is tab-separated (necom expects TSV, not whitespace-separated)
+# 1. Parse BLAST results (column 3 = percent identity) into pairwise distances.
+#    distance = 100 - identity. Only one direction (A-B) is needed; the matrix is symmetric.
+#    Use OFS='\t' so the output is tab-separated (necom expects TSV, not whitespace-separated)
 awk -v OFS='\t' '{print $1, $2, 100-$3}' blast.out > pairs.tsv
 
 # 2. Convert to PHYLIP matrix; set unaligned pairs to maximum distance 100

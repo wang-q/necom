@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use necom::libs::linalg;
 
-/// Build the clap subcommand for vector.
+/// Build the clap subcommand for from-vector.
 pub fn make_subcommand() -> Command {
     Command::new("from-vector")
         .about("Calculates similarity/distance between vectors")
@@ -32,7 +32,7 @@ pub fn make_subcommand() -> Command {
         .arg(crate::cmd_necom::args::outfile_arg())
 }
 
-/// Execute the vector command.
+/// Execute the from-vector command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_mode = args.get_one::<String>("mode").unwrap();
 

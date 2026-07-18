@@ -532,3 +532,41 @@ fn command_mat_compare_no_common_name() {
         stderr
     );
 }
+
+#[test]
+fn command_mat_compare_nan_emits_na() {
+    // Two matrices whose lower triangles are constant (zero variance).
+    // pearson_correlation of two constant vectors is NaN; the output must
+    // emit "NA" instead of "NaN" to keep the TSV parseable.
+    use std::io::Write;
+    let mut m1 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(m1, "3").unwrap();
+    writeln!(m1, "A 0.0 0.5 0.5").unwrap();
+    writeln!(m1, "B 0.5 0.0 0.5").unwrap();
+    writeln!(m1, "C 0.5 0.5 0.0").unwrap();
+    m1.flush().unwrap();
+
+    let mut m2 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(m2, "3").unwrap();
+    writeln!(m2, "A 0.0 0.9 0.9").unwrap();
+    writeln!(m2, "B 0.9 0.0 0.9").unwrap();
+    writeln!(m2, "C 0.9 0.9 0.0").unwrap();
+    m2.flush().unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            m1.path().to_str().unwrap(),
+            m2.path().to_str().unwrap(),
+            "--method",
+            "pearson",
+        ])
+        .run();
+
+    assert!(
+        stdout.contains("pearson\tNA"),
+        "expected 'pearson\\tNA' in stdout, got: {}",
+        stdout
+    );
+}
