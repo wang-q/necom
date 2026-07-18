@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4e9a4215.js";
+            window.path_to_searchindex_js = "searchindex-c6ea49b8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-87187837.js"></script>
+        <script src="toc-01a6bffc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -184,7 +184,7 @@
 <p>The <code>necom mat</code> module focuses on the manipulation and conversion of <strong>distance matrices</strong>. It is the upstream data preparation and preprocessing toolkit for <code>necom clust</code> (clustering and tree inference).</p>
 <h2 id="core-purpose"><a class="header" href="#core-purpose">Core Purpose</a></h2>
 <ul>
-<li><strong>Input/Output</strong>: Primarily handles <strong>PHYLIP</strong> format distance matrices (dense) and <strong>Pairwise TSV</strong> (sparse/list) format.</li>
+<li><strong>Input/Output</strong>: Primarily handles <strong>PHYLIP</strong> format distance matrices (dense) and <strong>Pairwise TSV</strong> (sparse list) format.</li>
 <li><strong>Functionality</strong>: Format conversion, subset extraction, matrix comparison, and standardization.</li>
 <li><strong>Goal</strong>: Provide standard, efficient data interfaces for phylogenetics and statistical clustering.</li>
 </ul>
@@ -228,7 +228,7 @@
 <li><strong>Full</strong>: Standard $N \times N$ matrix including the redundant symmetric portion.</li>
 <li><strong>Lower-triangular</strong>: Only the lower-triangle portion, reducing file size by half.</li>
 </ul>
-<h3 id="2-pairwise-tsv-sparselist-form"><a class="header" href="#2-pairwise-tsv-sparselist-form">2. Pairwise TSV (Sparse/List Form)</a></h3>
+<h3 id="2-pairwise-tsv-sparse-list-form"><a class="header" href="#2-pairwise-tsv-sparse-list-form">2. Pairwise TSV (Sparse List Form)</a></h3>
 <p>The <code>Pairwise</code> format is a simple three-column TSV format for representing pairwise distances between sequences, commonly used as an intermediate format or input for graph data.</p>
 <p>Sparse or list-form distance data, suitable for storing graph structures or only a subset of pairs.</p>
 <ul>

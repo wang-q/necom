@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-4e9a4215.js";
+            window.path_to_searchindex_js = "../../searchindex-c6ea49b8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-87187837.js"></script>
+        <script src="../../toc-01a6bffc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -201,7 +201,7 @@
 <li><code>--coords</code>: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski).</li>
 </ul>
 </li>
-<li>Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (<code>Group\tCluster\tSample</code>).</li>
+<li>Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (<code>Group\tClusterID\tSampleID</code>).</li>
 <li><code>--other</code> / <code>--truth</code>: second partition for external evaluation (synonyms).</li>
 <li><code>--no-singletons</code>: exclude singleton clusters from <code>--other</code> before external evaluation.</li>
 <li><code>--input-format</code>: supports <code>pair</code> (default), <code>cluster</code>, or <code>long</code> (required for batch mode).</li>
@@ -211,7 +211,7 @@
 <li>With ground truth: ARI or AMI.</li>
 <li>Without ground truth (distance matrix or tree): Silhouette.</li>
 <li>Without ground truth (coordinates): Davies-Bouldin or Calinski-Harabasz.</li>
-<li>See <code>docs/eval-partition.md</code> for detailed metric definitions and the full selection guide.</li>
+<li>See <a href="../../eval-partition.html"><code>docs/eval-partition.md</code></a> for detailed metric definitions and the full selection guide.</li>
 </ul>
 </li>
 <li>Typical batch workflow: generate candidates with <code>necom cut --scan</code>, evaluate with <code>--input-format long</code>, then select the best threshold.</li>

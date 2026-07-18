@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-4e9a4215.js";
+            window.path_to_searchindex_js = "../../searchindex-c6ea49b8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-87187837.js"></script>
+        <script src="../../toc-01a6bffc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -193,6 +193,8 @@
 <p>Notes:</p>
 <ul>
 <li>The input must contain distances, not similarities.</li>
+<li><code>--eps &lt;V&gt;</code>: neighborhood radius (default: <code>0.05</code>).</li>
+<li><code>--min-points &lt;N&gt;</code>: minimum number of points (including the point itself) to form a dense region (default: <code>4</code>).</li>
 <li><code>--same &lt;V&gt;</code>: default score of identical element pairs (default: <code>0.0</code>).</li>
 <li><code>--missing &lt;V&gt;</code>: default score of missing pairs (default: <code>1.0</code>).</li>
 <li>The representative point is selected by <code>--rep</code>:
@@ -202,6 +204,7 @@
 </ul>
 </li>
 <li>In <code>cluster</code> format, the representative is placed first; in <code>pair</code> format, it is the first column.</li>
+<li>The neighborhood count used by <code>--min-points</code> includes the point itself when <code>--same</code> is 0.0 (default), because self-distance is then 0 and is always &lt;= eps. Setting <code>--same</code> to a value greater than <code>eps</code> excludes the point from its own neighborhood.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -210,7 +213,7 @@
 <code>necom clust dbscan pairs.tsv</code></p>
 </li>
 <li>
-<p>Set epsilon and min points
+<p>Set epsilon and min-points (min-points default: 4; here set to 5)
 <code>necom clust dbscan pairs.tsv --eps 0.05 --min-points 5</code></p>
 </li>
 <li>

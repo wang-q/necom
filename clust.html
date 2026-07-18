@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4e9a4215.js";
+            window.path_to_searchindex_js = "searchindex-c6ea49b8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-87187837.js"></script>
+        <script src="toc-01a6bffc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,7 +186,7 @@
 <p>Commands are divided into two categories by input data type (consistent with <code>necom clust --help</code>):</p>
 <ol>
 <li><strong>Tree</strong>: Build phylogenetic or hierarchical structures from a distance matrix (<code>hier</code>, <code>nj</code>, <code>upgma</code>).</li>
-<li><strong>Flat</strong>: Generate groups directly from graphs or vectors (<code>cc</code>, <code>dbscan</code>, <code>k-medoids</code>, <code>mcl</code>).</li>
+<li><strong>Flat</strong>: Generate groups directly from pairwise relations, distances, or similarities (<code>cc</code>, <code>dbscan</code>, <code>k-medoids</code>, <code>mcl</code>).</li>
 </ol>
 <p>Flat partitions can also be derived from an existing tree using the separate <code>necom cut</code> command (see <a href="cut.html"><code>docs/cut.md</code></a>).</p>
 <h2 id="algorithm-list"><a class="header" href="#algorithm-list">Algorithm List</a></h2>
@@ -199,6 +199,8 @@
 <li><strong>Advantages</strong>: Robust to noise; handles complex network structures.</li>
 <li><strong>Input</strong>: Pairwise similarities <code>.tsv</code> (higher is better).</li>
 <li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
+<li><strong>Defaults</strong>: <code>--inflation 2.0</code>.</li>
+<li><strong>Note</strong>: <code>--max-iter</code> must be greater than 0.</li>
 </ul>
 <h3 id="connected-components-cc"><a class="header" href="#connected-components-cc">Connected Components (CC)</a></h3>
 <ul>
@@ -219,6 +221,7 @@
 <li><strong>Advantages</strong>: Robust to outliers; interpretable results because centers are real samples.</li>
 <li><strong>Input</strong>: Pairwise distances <code>.tsv</code> (lower is better).</li>
 <li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
+<li><strong>Note</strong>: <code>--k</code> must not exceed the number of samples.</li>
 </ul>
 <h3 id="dbscan"><a class="header" href="#dbscan">DBSCAN</a></h3>
 <ul>
@@ -229,6 +232,8 @@
 <li><strong>Advantages</strong>: Does not require specifying the number of clusters K; identifies noise.</li>
 <li><strong>Input</strong>: Pairwise distances <code>.tsv</code> (lower is better).</li>
 <li><strong>Output</strong>: <code>cluster</code> (one cluster per line, first element is the representative) or <code>pair</code> (representative–member pairs).</li>
+<li><strong>Defaults</strong>: <code>--eps 0.05</code>, <code>--min-points 4</code>.</li>
+<li><strong>Note on <code>--min-points</code></strong>: By default (<code>--same 0.0</code>), the neighborhood count includes the point itself because self-distance is 0 and is always &lt;= <code>eps</code>. If <code>--same</code> is set to a value greater than <code>eps</code>, the point is not counted as its own neighbor and may fail to become a core point.</li>
 <li><strong>Unimplemented options</strong>: Parameter scanning and scoring such as <code>--scan</code>, <code>--opt-eps</code>, <code>--min-pct</code> are not yet implemented; planning details are in <a href="../notes/design/dbscan-planned.html"><code>notes/design/dbscan-planned.md</code></a>. They may be provided later as subcommands of <code>necom clust dbscan</code> or standalone scripts.</li>
 </ul>
 <h3 id="upgma"><a class="header" href="#upgma">UPGMA</a></h3>
@@ -240,33 +245,34 @@
 <li><strong>Advantages</strong>: Produces a hierarchical structure with branch heights carrying clear distance meaning.</li>
 <li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
 <li><strong>Output</strong>: Newick tree.</li>
+<li><strong>Note</strong>: For input that violates the ultrametric assumption, branch lengths are clamped to 0 so the output remains a valid Newick tree.</li>
 </ul>
 <h3 id="nj-neighbor-joining"><a class="header" href="#nj-neighbor-joining">NJ (Neighbor-Joining)</a></h3>
 <ul>
 <li><strong>Principle</strong>: Neighbor-Joining. Iteratively merges the pair of nodes with the smallest net divergence by minimizing total tree length (based on the Q-matrix-corrected distances). Does not assume a molecular clock and allows different evolutionary rates across branches.</li>
 <li><strong>Command</strong>: <code>necom clust nj</code></li>
-<li><strong>Characteristics</strong>: Distance-matrix tree-building algorithm that outputs an <strong>unrooted tree</strong>.</li>
+<li><strong>Characteristics</strong>: Distance-matrix tree-building algorithm that outputs a <strong>midpoint-rooted Newick tree</strong>.</li>
 <li><strong>Use cases</strong>: General additive distances (no molecular-clock assumption); evolutionary tree construction.</li>
 <li><strong>Advantages</strong>: Fast; robust to different evolutionary rates.</li>
 <li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
-<li><strong>Output</strong>: Newick tree.</li>
+<li><strong>Output</strong>: Midpoint-rooted Newick tree.</li>
+<li><strong>Note</strong>: For non-additive distances, negative branch lengths are clamped to 0 so the output remains a valid Newick tree.</li>
 </ul>
 <h3 id="hierarchical-clustering"><a class="header" href="#hierarchical-clustering">Hierarchical Clustering</a></h3>
 <ul>
 <li><strong>Principle</strong>: A general bottom-up (agglomerative) clustering framework. Clusters are merged according to different linkage criteria (e.g., Ward minimum variance, Complete maximum distance), building a complete dendrogram hierarchy.</li>
 <li><strong>Command</strong>: <code>necom clust hier</code> (alias <code>hclust</code>)</li>
 <li><strong>Characteristics</strong>: General hierarchical clustering supporting <code>single</code>, <code>complete</code>, <code>average</code>, <code>weighted</code>, <code>centroid</code>, <code>median</code>, <code>ward</code>.</li>
-<li><strong>Implementation status</strong>: Implemented with $O(N^2)$ NN-chain optimization.</li>
-<li><strong>Value</strong>: Provides a general hierarchical view (not limited to biological evolution); combined with <code>necom cut</code> it yields flexible groupings at different granularities.</li>
+<li><strong>Default method</strong>: <code>ward</code> (use <code>--method</code> to select other linkage criteria).</li>
+<li><strong>Implementation status</strong>: Implemented with $O(N^2)$ NN-chain optimization for reducible methods (<code>single</code>, <code>complete</code>, <code>average</code>, <code>weighted</code>, <code>ward</code>); <code>centroid</code> and <code>median</code> fall back to the primitive $O(N^3)$ implementation because they do not satisfy the reducibility property.</li>
+<li><strong>Use cases</strong>: General hierarchical clustering analysis; combined with <code>necom cut</code> for flexible groupings at different granularities.</li>
+<li><strong>Advantages</strong>: Supports multiple linkage methods; the default NN-chain implementation achieves $O(N^2)$ time for reducible methods.</li>
 <li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
 <li><strong>Output</strong>: Newick tree.</li>
 <li><strong>Details</strong>: <a href="#hierarchical-clustering-details">Hierarchical Clustering Details</a></li>
 </ul>
-<h3 id="tree-cutting"><a class="header" href="#tree-cutting">Tree Cutting</a></h3>
-<p>The <code>necom cut</code> command splits an existing Newick tree (phylogenetic or hierarchical clustering tree) into flat partitions according to distance, topological, or statistical criteria. It is documented separately in <a href="cut.html"><code>docs/cut.md</code></a> because it operates on trees rather than running a clustering algorithm.</p>
-<p>Trees built by <code>necom clust hier</code>, <code>necom clust upgma</code>, <code>necom clust nj</code>, or external tools can be passed directly to <code>necom cut</code>. The resulting partitions can be evaluated with <code>necom eval partition</code>.</p>
 <h2 id="hierarchical-clustering-details"><a class="header" href="#hierarchical-clustering-details">Hierarchical Clustering Details</a></h2>
-<p><code>necom clust hier</code> (alias <code>hclust</code>) provides general hierarchical clustering (dendrogram) generation, supporting <code>single/complete/average/ward</code> and other methods, outputting Newick format for downstream <code>necom cut</code>.</p>
+<p><code>necom clust hier</code> (alias <code>hclust</code>) provides general hierarchical clustering (dendrogram) generation, supporting <code>single</code>, <code>complete</code>, <code>average</code>, <code>weighted</code>, <code>centroid</code>, <code>median</code>, and <code>ward</code> methods, outputting Newick format for downstream <code>necom cut</code>.</p>
 <h3 id="background-and-positioning"><a class="header" href="#background-and-positioning">Background and Positioning</a></h3>
 <ul>
 <li><strong>Module</strong>: <code>clust</code>, alongside <code>k-medoids</code>, <code>mcl</code>, etc.</li>
@@ -290,7 +296,7 @@
 </li>
 <li>Relationship to NJ:
 <ul>
-<li>NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an “additive minimum-length tree” that does not belong to the linkage-update paradigm and usually outputs an unrooted tree.</li>
+<li>NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an “additive minimum-length tree” that does not belong to the linkage-update paradigm and outputs a <strong>midpoint-rooted Newick tree</strong>.</li>
 <li>For general additive distances, NJ is more robust than UPGMA; if the distances are ultrametric, UPGMA/hclust-average and NJ usually agree topologically (unrooted view).</li>
 </ul>
 </li>
@@ -316,13 +322,14 @@
 <ul>
 <li>Outputs Newick dendrogram:
 <ul>
+<li>Merges are emitted in the order they are performed by the linkage algorithm (merge-order output). The internal node IDs increase with the merge sequence, matching the convention used by R <code>hclust</code> and SciPy <code>linkage</code>.</li>
 <li>Internal node height is half the merge distance (<code>height = distance / 2</code>), and branch length from child to parent is <code>parent_height - child_height</code>.</li>
 <li>Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.</li>
 <li>Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).</li>
 <li>Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of <code>necom cut --height</code>.</li>
 </ul>
 </li>
-<li>Numeric format: unified six decimal places with trailing zeros removed; consistent with the convention in <code>nwk distance</code>.</li>
+<li>Numeric format: branch lengths are emitted with Rust’s default float formatting. For a fixed-width, six-decimal view consistent with <code>necom nwk distance</code>, post-process the tree or use <code>necom nwk distance</code> on the resulting branch lengths.</li>
 </ul>
 <h3 id="notes"><a class="header" href="#notes">Notes</a></h3>
 <ul>
@@ -330,7 +337,8 @@
 <li><code>ward</code> updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.</li>
 <li><code>ward</code> theoretically assumes Euclidean or near-Euclidean distances; on general biological distances the statistical interpretation of “minimum variance” is weaker.</li>
 <li><code>centroid</code> and <code>median</code> linkage may produce non-monotonic merge heights (inversions); this is an algorithmic characteristic of these methods.</li>
-<li>Ties are broken by alphabetical order to ensure deterministic output.</li>
+<li>For reducible methods (<code>single</code>, <code>complete</code>, <code>average</code>, <code>weighted</code>, <code>ward</code>), the default NN-chain implementation produces the same dendrogram as the primitive $O(N^3)$ algorithm, but the concrete merge order may differ. Consequently, the Newick string may have a different internal node ordering than <code>clust upgma</code> for the same method, even though the underlying clustering is equivalent.</li>
+<li>Ties in nearest-neighbor selection are broken deterministically by cluster index; because <code>hier</code> operates on the indexed distance matrix, this is independent of sample name alphabetical order.</li>
 </ul>
 <h3 id="recommended-hier-workflow"><a class="header" href="#recommended-hier-workflow">Recommended Hier Workflow</a></h3>
 <ul>
@@ -377,7 +385,7 @@ necom clust gmm input.tsv --k 5 --cov full &gt; clusters.tsv
 <li><code>necom</code> could provide <code>clust gmm --scan-k 2..20</code>, automatically computing and outputting a BIC curve to help users choose the best K (usually the BIC minimum or elbow).</li>
 </ul>
 </li>
-<li><strong>Silhouette / Calinski-Harabasz</strong> [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (<code>eval partition</code> already supports distance-matrix Silhouette; tree-based Silhouette is planned for <code>necom eval tree</code> [planned]).</li>
+<li><strong>Silhouette / Calinski-Harabasz</strong> [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (<code>eval partition</code> already supports distance-matrix Silhouette; tree-based Silhouette is planned for <code>necom eval tree</code> [Planned]).</li>
 </ul>
 <h2 id="large-scale-data-strategy"><a class="header" href="#large-scale-data-strategy">Large-Scale Data Strategy</a></h2>
 <p>For large-scale data with $N &gt; 20,000$, the memory ($O(N^2)$) and computation ($O(N^2)$) costs of fully connected hierarchical clustering increase sharply.</p>
@@ -418,68 +426,16 @@ necom clust mcl pairs.tsv --inflation 2.0 &gt; families.tsv
 <pre><code class="language-bash"># 1. Generate hierarchical clustering tree
 necom clust hier matrix.phy --method ward &gt; tree.nwk
 
-# 2. Scan thresholds and evaluate internal metrics (Silhouette)
-# necom cut outputs a long table in scan mode, which can be piped directly to eval partition
-necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
-    necom eval partition - --input-format long --matrix matrix.phy &gt; evaluation.tsv
+# 2. Scan thresholds, save to a file, and evaluate internal metrics (Silhouette)
+# necom cut outputs a long table in scan mode; write it to a file for eval partition
+necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 &gt; partitions.tsv
+necom eval partition partitions.tsv --input-format long --matrix matrix.phy &gt; evaluation.tsv
 
 # 3. Analyze evaluation.tsv to choose the best threshold (e.g., maximum Silhouette)
 # Assume the best threshold is 0.45
 necom cut tree.nwk --height 0.45 &gt; final_clusters.tsv
 </code></pre>
-<h2 id="inputoutput-format-conventions"><a class="header" href="#inputoutput-format-conventions">Input/Output Format Conventions</a></h2>
-<p>The <code>necom clust</code> family of commands involves multiple data formats; the following standard formats are used for interoperability.</p>
-<h3 id="1-partition-files"><a class="header" href="#1-partition-files">1. Partition Files</a></h3>
-<p>Used to represent clustering results (sample-to-cluster mapping). Three formats are supported via the <code>--format</code> option.</p>
-<h4 id="pair-format-default---format-pair"><a class="header" href="#pair-format-default---format-pair">Pair Format (default, <code>--format pair</code>)</a></h4>
-<p>The most general long-table format; each line indicates which cluster a sample belongs to.</p>
-<ul>
-<li><strong>Structure</strong>: <code>ClusterID &lt;tab&gt; Item</code></li>
-<li><strong>Representative selection</strong>: For <code>dbscan</code>/<code>mcl</code>/<code>k-medoids</code>, controlled by <code>--rep {medoid|first}</code>; default <code>medoid</code> (extreme of sum of distances/similarities), <code>first</code> is the alphabetically first member in the cluster. This option also affects the first column of <code>cluster</code> format. <code>cc</code> does not read weights and always uses <code>first</code>.</li>
-<li><strong>Characteristics</strong>: Easy to parse; supports streaming.</li>
-<li><strong>Example</strong>:
-<pre><code class="language-text"># Numeric ID
-1	GeneA
-1	GeneB
-2	GeneC
-
-# Representative as ID
-GeneA	GeneA
-GeneA	GeneB
-GeneC	GeneC
-</code></pre>
-</li>
-</ul>
-<h4 id="cluster-format---format-cluster"><a class="header" href="#cluster-format---format-cluster">Cluster Format (<code>--format cluster</code>)</a></h4>
-<p>Wide-table format; each line represents a cluster containing all its members.</p>
-<ul>
-<li><strong>Structure</strong>: <code>Item1 &lt;space/tab&gt; Item2 ...</code></li>
-<li><strong>Characteristics</strong>: Human-readable; suitable for inspecting results. The line number (1-based) is the ClusterID.</li>
-<li><strong>Example</strong>:
-<pre><code class="language-text">GeneA GeneB
-GeneC
-</code></pre>
-</li>
-</ul>
-<h4 id="long-format-batch---format-long"><a class="header" href="#long-format-batch---format-long">Long Format (batch, <code>--format long</code>)</a></h4>
-<p>A dedicated TSV format (<code>Group\tClusterID\tItem</code>) for batch evaluation, auto-emitted by <code>necom cut --scan</code> and consumed by <code>necom eval partition --input-format long</code>. See <a href="cut.html#output-format-in-scan-mode"><code>docs/cut.md</code></a> for the full specification.</p>
-<h3 id="2-distance-matrix"><a class="header" href="#2-distance-matrix">2. Distance Matrix</a></h3>
-<p>Used by <code>clust hier</code>, <code>nj</code>, <code>upgma</code>, and <code>eval --matrix</code>.</p>
-<h4 id="phylip-format-relaxed"><a class="header" href="#phylip-format-relaxed">PHYLIP Format (relaxed)</a></h4>
-<p><code>necom</code> accepts a relaxed PHYLIP format (arbitrary whitespace, optional header). See <a href="mat.html#1-phylip-distance-matrix-dense"><code>docs/mat.md</code></a> for full structure, strict vs relaxed variants, and lower-triangular form.</p>
-<h3 id="3-coordinates--feature-vectors"><a class="header" href="#3-coordinates--feature-vectors">3. Coordinates / Feature Vectors</a></h3>
-<p>Used by <code>eval partition --coords</code> (Davies-Bouldin Index) or future <code>kmeans/gmm</code>.</p>
-<h4 id="featurevector-format"><a class="header" href="#featurevector-format">FeatureVector Format</a></h4>
-<ul>
-<li><strong>Structure</strong>: <code>Name &lt;tab&gt; Val1,Val2,Val3...</code></li>
-<li><strong>Delimiters</strong>: <strong>Tab</strong> between name and vector; <strong>commas</strong> between numeric values.</li>
-<li><strong>Example</strong>:
-<pre><code class="language-text">GeneA	1.2,0.5,3.3
-GeneB	1.1,0.6,3.1
-</code></pre>
-</li>
-<li><strong>Compatibility</strong>: A general feature-vector/coordinate representation format.</li>
-</ul>
+<p>For input/output format conventions used by <code>necom clust</code> and other commands, see <a href="formats.html"><code>docs/formats.md</code></a>.</p>
 
                     </main>
 

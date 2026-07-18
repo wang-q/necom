@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4e9a4215.js";
+            window.path_to_searchindex_js = "searchindex-c6ea49b8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-87187837.js"></script>
+        <script src="toc-01a6bffc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,7 +183,7 @@
                         <h1 id="necom--nwk-clust-and-mat-toolkit"><a class="header" href="#necom--nwk-clust-and-mat-toolkit">necom — NWK, CLUST, and MAT Toolkit</a></h1>
 <p><a href="https://github.com/wang-q/necom/actions"><img src="https://github.com/wang-q/necom/actions/workflows/build.yml/badge.svg" alt="Build"></a>
 <a href="https://codecov.io/gh/wang-q/necom"><img src="https://codecov.io/gh/wang-q/necom/branch/master/graph/badge.svg" alt="codecov"></a>
-<a href="https://github.com//wang-q/necom"><img src="https://img.shields.io/github/license/wang-q/necom" alt="license"></a>
+<a href="https://github.com/wang-q/necom"><img src="https://img.shields.io/github/license/wang-q/necom" alt="license"></a>
 <a href="https://wang-q.github.io/necom/"><img src="https://img.shields.io/badge/docs-online-blue" alt="Documentation"></a></p>
 <p><code>necom</code> is a command-line toolkit for <strong>clustering</strong>, <strong>distance-matrix processing</strong>, and <strong>phylogenetic-tree
 manipulation</strong>.</p>
@@ -192,8 +192,8 @@ alphabetical order. It also echoes the Latin <em>nexum</em> (“tie” or “bon
 between clusters, matrix entries, and tree nodes.</p>
 <h2 id="features"><a class="header" href="#features">Features</a></h2>
 <ul>
-<li><strong>Clustering</strong> (<code>necom clust</code>): hierarchical clustering, DBSCAN, K-medoids, MCL, connected components, and evaluation
-metrics.</li>
+<li><strong>Clustering</strong> (<code>necom clust</code>): hierarchical clustering, DBSCAN, K-medoids, MCL, connected components.</li>
+<li><strong>Evaluation</strong> (<code>necom eval</code>): partition and tree comparison metrics, branch support assignment.</li>
 <li><strong>Tree cutting</strong> (<code>necom cut</code>): split Newick trees into flat partitions by height, diameter, dynamic cut, and other
 criteria.</li>
 <li><strong>Matrix utilities</strong> (<code>necom mat</code>): format conversion, subsetting, comparison, and mathematical transformations for
@@ -207,19 +207,22 @@ subcommands.</li>
 </ul>
 <h2 id="install"><a class="header" href="#install">Install</a></h2>
 <p>Current release: 0.3.0</p>
-<p><code>necom</code> uses unstable Rust features (notably <code>portable_simd</code>), so a <strong>nightly</strong> toolchain is required:</p>
-<pre><code class="language-bash">rustup toolchain install nightly
-rustup run nightly cargo install --path . --force
+<p><code>necom</code> uses unstable Rust features (notably <code>portable_simd</code>), so a <strong>nightly</strong> toolchain is required. The exact nightly is pinned by <code>rust-toolchain.toml</code> (<code>nightly-2026-01-26</code>); install it once, then use plain <code>cargo</code>:</p>
+<pre><code class="language-bash">rustup toolchain install nightly-2026-01-26
+cargo install --path . --force
 </code></pre>
 <h2 id="test"><a class="header" href="#test">Test</a></h2>
-<pre><code class="language-bash">rustup run nightly cargo test
+<pre><code class="language-bash">cargo test
 </code></pre>
 <h2 id="quick-start"><a class="header" href="#quick-start">Quick start</a></h2>
 <p>After installation, the <code>necom</code> binary is available in your <code>PATH</code>:</p>
 <pre><code class="language-bash">necom --help
 necom clust --help
+necom cut --help
+necom eval --help
 necom mat --help
 necom nwk --help
+necom pl --help
 </code></pre>
 <h3 id="examples"><a class="header" href="#examples">Examples</a></h3>
 <pre><code class="language-bash"># Hierarchical clustering from a PHYLIP distance matrix
@@ -230,6 +233,12 @@ necom mat compare tests/mat/IBPA.phy tests/mat/IBPA.71.phy
 
 # Tree statistics
 necom nwk stat tests/newick/catarrhini.nwk
+
+# Cut a tree into clusters by height
+necom cut --height 0.5 tests/newick/catarrhini.nwk
+
+# Evaluate a partition against ground truth
+necom eval partition result.tsv --other truth.tsv
 
 # Condense a tree by taxonomy
 necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
@@ -242,7 +251,10 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <li><a href="cut.html"><code>docs/cut.md</code></a> — tree cutting</li>
 <li><a href="mat.html"><code>docs/mat.md</code></a> — matrix utilities</li>
 <li><a href="nwk.html"><code>docs/nwk.md</code></a> — Newick tree operations</li>
+<li><a href="eval.html"><code>docs/eval.md</code></a> — evaluation overview (partition &amp; tree comparison)</li>
+<li><a href="eval-partition.html"><code>docs/eval-partition.md</code></a> — partition evaluation deep dive</li>
 <li><a href="pl.html"><code>docs/pl.md</code></a> — integrated pipelines</li>
+<li><a href="formats.html"><code>docs/formats.md</code></a> — shared file format conventions</li>
 </ul>
 <h2 id="author"><a class="header" href="#author">Author</a></h2>
 <p>Qiang Wang <a href="mailto:wang-q@outlook.com">wang-q@outlook.com</a></p>

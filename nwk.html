@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4e9a4215.js";
+            window.path_to_searchindex_js = "searchindex-c6ea49b8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-87187837.js"></script>
+        <script src="toc-01a6bffc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -258,7 +258,8 @@
 <li>Unquoted labels are trimmed: leading and trailing whitespace is removed. Internal whitespace is preserved only when the label is quoted with single or double quotes.</li>
 <li>Labels containing Newick reserved characters (<code>( ) : ; , [ ]</code>) or whitespace must be quoted to round-trip correctly.</li>
 <li>Single quotes inside single-quoted labels are escaped by doubling (<code>''</code>), and double quotes inside double-quoted labels are escaped by doubling (<code>""</code>).</li>
-<li>Name-based selection filters (<code>-n</code>, <code>-l</code>, <code>-x</code>, <code>--lca</code>) log a warning and continue when a requested name is not found, rather than aborting. This applies to commands such as <code>rename</code>, <code>subtree</code>, <code>comment</code>, and <code>prune</code>.</li>
+<li>Name-based selection filters (<code>-n</code>, <code>-l</code>, <code>-x</code>, <code>--lca</code>, <code>--name-list</code>) generally log a warning and continue when a requested name is not found, rather than abort. This applies to commands such as <code>rename</code>, <code>subtree</code>, <code>comment</code>, <code>prune</code>, and <code>order</code>.</li>
+<li><code>reroot</code> is an exception: if none of the names specified with <code>--node</code> are found, it reports an error and exits, because there is no valid target for rerooting.</li>
 </ul>
 <hr>
 <h2 id="branch-length-handling"><a class="header" href="#branch-length-handling">Branch Length Handling</a></h2>
@@ -279,7 +280,7 @@
 <ul>
 <li><code>condense</code>: Tree condensation functionality is currently provided by <code>necom nwk subtree --condense</code>; no standalone <code>condense</code> subcommand is planned at this time.</li>
 <li><code>match</code>, <code>ed</code>, <code>gen</code>, <code>duration</code>: Mapped from <code>newick_utils</code> but not yet implemented in <code>necom nwk</code>; no concrete plan at this time.</li>
-<li>Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level command <code>necom eval</code>. The <code>compare</code> and <code>partition</code> subcommands have been migrated to <code>necom eval</code>; see <a href="eval.html"><code>docs/eval.md</code></a>. The <code>tree</code> subcommand remains in design — see <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a>.</li>
+<li>Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level command <code>necom eval</code>. <code>nwk compare</code> and <code>nwk support</code> have been migrated to <code>necom eval compare</code> and <code>necom eval replicate</code>; see <a href="eval.html"><code>docs/eval.md</code></a>. The <code>eval tree</code> subcommand remains in design — see <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a>.</li>
 </ul>
 
                     </main>
@@ -290,7 +291,7 @@
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="pl.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="eval.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -304,7 +305,7 @@
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="pl.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="eval.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

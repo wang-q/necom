@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-4e9a4215.js";
+            window.path_to_searchindex_js = "../../searchindex-c6ea49b8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-87187837.js"></script>
+        <script src="../../toc-01a6bffc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -184,7 +184,7 @@
 <p>Input:</p>
 <ul>
 <li>A PHYLIP format distance matrix (strict or relaxed).</li>
-<li>For pairwise list input (<code>name1 name2 dist</code>), use <code>necom mat to-phylip</code> first.</li>
+<li>For pairwise list input (<code>name1\tname2\tdist</code>), use <code>necom mat to-phylip</code> first.</li>
 </ul>
 <p>Output:</p>
 <ul>
@@ -193,6 +193,9 @@
 <p>Notes:</p>
 <ul>
 <li>The output tree uses the linkage distance (merge height) as node height.</li>
+<li><code>--method &lt;METHOD&gt;</code>: linkage method (default: <code>ward</code>). Supported: <code>single</code>, <code>complete</code>, <code>average</code> (<code>upgma</code>), <code>weighted</code> (<code>wpgma</code>), <code>centroid</code> (<code>upgmc</code>), <code>median</code> (<code>wpgmc</code>), <code>ward</code> (<code>ward.d2</code>).</li>
+<li>For reducible methods (<code>single</code>, <code>complete</code>, <code>average</code>, <code>weighted</code>, <code>ward</code>), the default NN-chain implementation may produce a different merge order than the primitive algorithm, but the resulting partition sequence is equivalent.</li>
+<li><code>centroid</code> and <code>median</code> linkage may produce non-monotonic merge heights (inversions); branch lengths are clamped at <code>0.0</code> so the resulting Newick tree remains valid. The same clamp is applied to all methods as a safety net.</li>
 <li>For Ward’s method, the input is assumed to be Euclidean distances or similar.</li>
 <li>Alias: <code>necom clust hclust</code> is equivalent to <code>necom clust hier</code>.</li>
 </ul>
