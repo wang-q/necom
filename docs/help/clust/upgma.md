@@ -6,7 +6,7 @@ Input:
 
 Output:
 
-* A Newick tree.
+* A rooted Newick tree.
 
 Notes:
 

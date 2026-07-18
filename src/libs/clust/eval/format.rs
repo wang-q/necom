@@ -9,6 +9,7 @@ use super::{
     dunn_score, gamma_score, pbm_score, silhouette_score, tau_score,
     wemmert_gancarski_score, xie_beni_score,
 };
+use std::fmt::Write as _;
 
 /// External (pairwise) evaluation metric names, in output column order.
 pub const EXTERNAL_METRIC_NAMES: &[&str] = &[
@@ -86,9 +87,35 @@ pub fn coord_metric_values(partition: &LabelMap, coords: &Coordinates) -> Vec<f6
 
 /// Format a slice of f64 values as tab-separated `{:.6}` strings.
 pub fn format_metrics_row(values: &[f64]) -> String {
-    values
-        .iter()
-        .map(|v| format!("{:.6}", v))
-        .collect::<Vec<_>>()
-        .join("\t")
+    let mut out = String::with_capacity(values.len() * 16);
+    for (i, v) in values.iter().enumerate() {
+        if i > 0 {
+            write!(out, "\t").unwrap();
+        }
+        write!(out, "{:.6}", v).unwrap();
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_metrics_row_basic() {
+        let values = vec![1.0, 2.5, 3.14159265];
+        assert_eq!(format_metrics_row(&values), "1.000000\t2.500000\t3.141593");
+    }
+
+    #[test]
+    fn test_format_metrics_row_empty() {
+        let values: Vec<f64> = vec![];
+        assert_eq!(format_metrics_row(&values), "");
+    }
+
+    #[test]
+    fn test_format_metrics_row_negative_and_large() {
+        let values = vec![-0.1234567, 1e9 + 0.5];
+        assert_eq!(format_metrics_row(&values), "-0.123457\t1000000000.500000");
+    }
 }

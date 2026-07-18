@@ -109,10 +109,10 @@ pub fn upgma(matrix: &NamedMatrix) -> Result<Tree> {
 
         tree.get_node_mut(id1)
             .ok_or_else(|| anyhow::anyhow!("node {} not found", id1))?
-            .length = Some(len1);
+            .set_length(len1);
         tree.get_node_mut(id2)
             .ok_or_else(|| anyhow::anyhow!("node {} not found", id2))?
-            .length = Some(len2);
+            .set_length(len2);
 
         // Update cluster size
         let size1 = cluster_sizes[id1];

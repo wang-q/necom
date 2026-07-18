@@ -309,7 +309,7 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
 
                 // Set length on child and link to parent
                 if let Some(child_node) = tree.get_node_mut(child_node_id) {
-                    child_node.length = Some(len as f64);
+                    child_node.set_length(len as f64);
                 }
 
                 // Link in tree structure

@@ -121,10 +121,10 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
 
         tree.get_node_mut(id1)
             .ok_or_else(|| anyhow::anyhow!("node {} not found", id1))?
-            .length = Some(len1);
+            .set_length(len1);
         tree.get_node_mut(id2)
             .ok_or_else(|| anyhow::anyhow!("node {} not found", id2))?
-            .length = Some(len2);
+            .set_length(len2);
 
         // 4. Update distances
         let mut new_dists = Vec::new();
@@ -189,10 +189,10 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
         let len = d / 2.0;
         tree.get_node_mut(id1)
             .ok_or_else(|| anyhow::anyhow!("node {} not found", id1))?
-            .length = Some(len);
+            .set_length(len);
         tree.get_node_mut(id2)
             .ok_or_else(|| anyhow::anyhow!("node {} not found", id2))?
-            .length = Some(len);
+            .set_length(len);
     }
 
     Ok(tree)
