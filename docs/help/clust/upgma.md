@@ -11,7 +11,7 @@ Output:
 Notes:
 
 * UPGMA assumes an ultrametric (molecular clock): all leaves are equidistant from the root.
-* When the input distances violate ultrametricity, the tree is still produced but branch lengths may not reflect true evolutionary distances.
+* When the input distances violate ultrametricity, the tree is still produced; negative branch lengths are clamped to 0 so the output remains a valid Newick tree.
 * For non-ultrametric data, consider `necom clust nj` (neighbor-joining) instead.
 
 Examples:

@@ -309,8 +309,8 @@ necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-o
 
 `necom cut` and `necom eval partition` work together through the Long format, supporting two evaluation modes:
 
-* **Batch internal evaluation**: pipe scan output to `necom eval partition --input-format long` with `--matrix`, `--tree`, or `--coords` to score every threshold without Ground Truth.
-* **Targeted external evaluation**: first use `--scan` to locate promising threshold ranges, then generate partitions for selected thresholds and compare them to Ground Truth with `necom eval partition --other`.
+- **Batch internal evaluation**: pipe scan output to `necom eval partition --input-format long` with `--matrix`, `--tree`, or `--coords` to score every threshold without Ground Truth.
+- **Targeted external evaluation**: first use `--scan` to locate promising threshold ranges, then generate partitions for selected thresholds and compare them to Ground Truth with `necom eval partition --other`.
 
 Concrete command examples are kept in `docs/clust.md` to avoid duplication.
 

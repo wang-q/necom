@@ -273,8 +273,8 @@ graph LR
     *   `node_distance()`: 计算节点间距离；分支长度之和绝对值超过 `1e-9` 时使用加权距离，否则回退到拓扑边数。
     *   `get_subtree()`: 获取子树节点集合。
     *   `find_nodes()`, `get_node_by_name()`: 查找节点。
-    *   按名查找以第一次出现为准；存在重复节点名时，`get_node_by_name` 返回第一个匹配，`get_name_id`/`BTreeMap`  likewise 记录第一个匹配的 ID。
-*   `get_height()`: 计算节点高度 (到最远叶子的距离)。
+    *   按名查找以第一次出现为准；存在重复节点名时，`get_node_by_name` 返回第一个匹配，`get_name_id`/`BTreeMap` likewise 记录第一个匹配的 ID。
+    *   `get_height()`: 计算节点高度 (到最远叶子的距离)。
     *   `is_monophyletic()`: 判断是否为单系群（数学定义：空集返回 false，单个节点返回 true）。
     *   `is_clade()`: 判断是否为演化支；要求至少两个节点且构成单系群。
 *   **修改**:

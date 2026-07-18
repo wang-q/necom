@@ -95,7 +95,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 
 ## Hierarchical Clustering Details
 
-`necom clust hier` (alias `hclust`) provides general hierarchical clustering (dendrogram) generation, supporting `single/complete/average/ward` and other methods, outputting Newick format for downstream `necom cut`.
+`necom clust hier` (alias `hclust`) provides general hierarchical clustering (dendrogram) generation, supporting `single`, `complete`, `average`, `weighted`, `centroid`, `median`, and `ward` methods, outputting Newick format for downstream `necom cut`.
 
 ### Background and Positioning
 
@@ -191,7 +191,7 @@ How to determine the number of clusters (K) or the best model complexity?
 - **BIC (Bayesian Information Criterion)** [Planned]:
   - In GMM, BIC trades off log-likelihood (goodness of fit) against the number of parameters (complexity).
   - `necom` could provide `clust gmm --scan-k 2..20`, automatically computing and outputting a BIC curve to help users choose the best K (usually the BIC minimum or elbow).
-- **Silhouette / Calinski-Harabasz** [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (`eval partition` already supports distance-matrix Silhouette; tree-based Silhouette is planned for `necom eval tree` [planned]).
+- **Silhouette / Calinski-Harabasz** [Partially supported]: Geometry-based evaluation metrics suitable for K-means or general distance clustering (`eval partition` already supports distance-matrix Silhouette; tree-based Silhouette is planned for `necom eval tree` [Planned]).
 
 ## Large-Scale Data Strategy
 

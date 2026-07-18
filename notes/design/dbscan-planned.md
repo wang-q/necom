@@ -1,6 +1,6 @@
 # clust dbscan 规划
 
-> **实现状态注记**：本文档列出 `necom clust dbscan` 尚未实现的规划功能（`--scan`/`--opt-eps`/`--min-pct` 等）。当前已实现基本的 `--eps`/`--min_points` 密度聚类。
+> **实现状态注记**：本文档列出 `necom clust dbscan` 尚未实现的规划功能（`--scan`/`--opt-eps`/`--min-pct` 等）。当前已实现基本的 `--eps`/`--min-points` 密度聚类。
 > 截至 2026-07-16，扫描、自动选优、比例参数及距离矩阵版 Silhouette/DBIndex 仍未实现。
 
 ## 1. 扫描与评分
@@ -27,7 +27,7 @@
 ## 2. 代表点与比例参数
 
 - 代表点（`cluster`/`pair` 通用）：维持现状（medoid），并在 `pair` 中输出 `(medoid, member)`
-- 新增 `--min-pct <0..1>`：按样本比例折算为 `min_points`，与 `--min_points` 二选一
+- 新增 `--min-pct <0..1>`：按样本比例折算为 `min_points`，与 `--min-points` 二选一
 
 ## 3. 评分实现（距离矩阵版本）
 
@@ -57,7 +57,7 @@
 
 - 单元测试
   - 距离矩阵版 Silhouette/DBIndex 的正确性（小矩阵、可手算）
-  - `--min-pct` 与 `--min_points` 的互斥与折算
+  - `--min-pct` 与 `--min-points` 的互斥与折算
   - 噪声计数与聚类数的统计正确性
 - 集成测试
   - `--scan` 输出 TSV 字段与排序一致性
@@ -69,7 +69,7 @@
 
 ```bash
 # 1) 基本聚类（pairwise 距离输入）
-necom clust dbscan pairs.tsv --eps 0.15 --min_points 3 -o clusters.tsv
+necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 -o clusters.tsv
 
 # 2) 扫描 eps 并输出评分曲线（TSV）
 necom clust dbscan pairs.tsv --scan 0.05,0.5,100 -o scan.tsv
@@ -81,5 +81,5 @@ necom clust dbscan pairs.tsv --scan 0.05,0.5,100 --opt-eps silhouette -o best.ts
 necom clust dbscan pairs.tsv --eps 0.15 --min-pct 0.02 -o clusters.tsv
 
 # 5) 输出 pair 格式，便于后续评估
-necom clust dbscan pairs.tsv --eps 0.15 --min_points 3 --format pair -o pairs.out.tsv
+necom clust dbscan pairs.tsv --eps 0.15 --min-points 3 --format pair -o pairs.out.tsv
 ```
