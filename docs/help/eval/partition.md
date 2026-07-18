@@ -17,7 +17,7 @@ Notes:
 * Internal Evaluation (Partition + Matrix/Tree/Coords): evaluates a single partition without ground truth.
     * `--matrix` / `--tree`: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau).
     * `--coords`: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski).
-* Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (`Group\tCluster\tSample`).
+* Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (`Group\tClusterID\tSampleID`).
 * `--other` / `--truth`: second partition for external evaluation (synonyms).
 * `--no-singletons`: exclude singleton clusters from `--other` before external evaluation.
 * `--input-format`: supports `pair` (default), `cluster`, or `long` (required for batch mode).
@@ -26,7 +26,7 @@ Notes:
     * With ground truth: ARI or AMI.
     * Without ground truth (distance matrix or tree): Silhouette.
     * Without ground truth (coordinates): Davies-Bouldin or Calinski-Harabasz.
-    * See `docs/eval-partition.md` for detailed metric definitions and the full selection guide.
+    * See [`docs/eval-partition.md`](../../eval-partition.md) for detailed metric definitions and the full selection guide.
 * Typical batch workflow: generate candidates with `necom cut --scan`, evaluate with `--input-format long`, then select the best threshold.
 
 Examples:

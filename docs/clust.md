@@ -135,7 +135,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
   - Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.
   - Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).
   - Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of `necom cut --height`.
-- Numeric format: branch lengths are emitted with Rust's default float formatting. For a fixed-width, six-decimal view consistent with `nwk distance`, post-process the tree or use `nwk distance` on the resulting branch lengths.
+- Numeric format: branch lengths are emitted with Rust's default float formatting. For a fixed-width, six-decimal view consistent with `necom nwk distance`, post-process the tree or use `necom nwk distance` on the resulting branch lengths.
 
 ### Notes
 
