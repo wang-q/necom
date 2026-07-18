@@ -12,6 +12,7 @@ Output:
 Notes:
 
 * The output tree uses the linkage distance (merge height) as node height.
+* `--method <METHOD>`: linkage method (default: `ward`). Supported: `single`, `complete`, `average`, `weighted`, `centroid`, `median`, `ward`.
 * For Ward's method, the input is assumed to be Euclidean distances or similar.
 * Alias: `necom clust hclust` is equivalent to `necom clust hier`.
 

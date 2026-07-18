@@ -14,8 +14,8 @@ between clusters, matrix entries, and tree nodes.
 
 ## Features
 
-- **Clustering** (`necom clust`): hierarchical clustering, DBSCAN, K-medoids, MCL, connected components, and evaluation
-  metrics.
+- **Clustering** (`necom clust`): hierarchical clustering, DBSCAN, K-medoids, MCL, connected components.
+- **Evaluation** (`necom eval`): partition and tree comparison metrics, branch support assignment.
 - **Tree cutting** (`necom cut`): split Newick trees into flat partitions by height, diameter, dynamic cut, and other
   criteria.
 - **Matrix utilities** (`necom mat`): format conversion, subsetting, comparison, and mathematical transformations for

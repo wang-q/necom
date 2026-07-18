@@ -12,20 +12,14 @@ Used to represent clustering results (sample-to-cluster mapping). Three formats 
 
 ### Pair Format (`--format pair`)
 
-The most general long-table format; each line indicates which cluster a sample belongs to.
+The most general long-table format; each line is a `(representative, member)` pair.
 
-* **Structure**: `ClusterID <tab> Item`
-* **Representative selection**: For `dbscan` / `mcl` / `k-medoids`, controlled by `--rep {medoid|first}`; default `medoid` (extreme of sum of distances/similarities), `first` is the alphabetically first member in the cluster. This option also affects the first column of `cluster` format. `cc` does not read weights and always uses `first`.
+* **Structure**: `Representative <tab> Member`
+* **Representative selection**: For `dbscan` / `mcl` / `k-medoids`, controlled by `--rep {medoid|first}`; default `medoid`. `cc` does not read weights and always uses the alphabetically first member. The representative is written to the first column; the member to the second column. Singletons appear as `Name <tab> Name`.
 * **Default format**: The default output format for flat clustering commands is `cluster`; use `--format pair` to emit this long-table representation.
 * **Characteristics**: Easy to parse; supports streaming.
 * **Example**:
   ```text
-  # Numeric ID
-  1	GeneA
-  1	GeneB
-  2	GeneC
-
-  # Representative as ID
   GeneA	GeneA
   GeneA	GeneB
   GeneC	GeneC
@@ -35,11 +29,11 @@ The most general long-table format; each line indicates which cluster a sample b
 
 Wide-table format; each line represents a cluster containing all its members.
 
-* **Structure**: `Item1 <space/tab> Item2 ...`
-* **Characteristics**: Human-readable; suitable for inspecting results. The line number (1-based) is the ClusterID.
+* **Structure**: tab-separated items, one cluster per line.
+* **Characteristics**: Human-readable; suitable for inspecting results. The line number (1-based) is the ClusterID. The first item is the cluster representative when representative selection applies.
 * **Example**:
   ```text
-  GeneA GeneB
+  GeneA	GeneB
   GeneC
   ```
 

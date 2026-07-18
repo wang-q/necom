@@ -12,6 +12,7 @@ Output:
 Notes:
 
 * The input must contain distances, not similarities.
+* `--k <N>`: number of clusters (required).
 * `--runs <N>`: number of random initializations (default: `10`).
 * `--max-iter <N>`: maximum number of iterations (default: `100`).
 * `--same <V>`: default score of identical element pairs (default: `0.0`).

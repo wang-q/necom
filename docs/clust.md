@@ -79,6 +79,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Principle**: A general bottom-up (agglomerative) clustering framework. Clusters are merged according to different linkage criteria (e.g., Ward minimum variance, Complete maximum distance), building a complete dendrogram hierarchy.
 - **Command**: `necom clust hier` (alias `hclust`)
 - **Characteristics**: General hierarchical clustering supporting `single`, `complete`, `average`, `weighted`, `centroid`, `median`, `ward`.
+- **Default method**: `ward` (use `--method` to select other linkage criteria).
 - **Implementation status**: Implemented with $O(N^2)$ NN-chain optimization for reducible methods (`single`, `complete`, `average`, `weighted`, `ward`); `centroid` and `median` fall back to the primitive $O(N^3)$ implementation because they do not satisfy the reducibility property.
 - **Value**: Provides a general hierarchical view (not limited to biological evolution); combined with `necom cut` it yields flexible groupings at different granularities.
 - **Input**: PHYLIP distance matrix (strict or relaxed).

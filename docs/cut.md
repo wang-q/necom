@@ -20,7 +20,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
   Implements basic cuts by cluster count (`--k`) and height (`--height`), with logic consistent with `SciPy.cluster.hierarchy` and R `cutree`; it also fully ports TreeCluster's biological-constraint algorithms (e.g., `--max-clade`, `--med-clade`), optimized for phylogenetic trees.
 
 - **Performance and usability improvements**:
-  - **High performance**: Rust-based implementation with no external dependencies, handling large trees more efficiently.
+  - **High performance**: Rust-based implementation with no Python/R runtime dependencies, handling large trees more efficiently.
   - **Standardized**: Unifies terminology differences across source algorithms (e.g., consistently using `--height`, `--single-linkage`), reducing cognitive load.
   - **Composable**: As part of the `necom` toolchain, it can directly cooperate with `eval partition` for clustering evaluation.
 

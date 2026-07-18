@@ -13,6 +13,7 @@ Notes:
 
 * The input must contain distances, not similarities.
 * `--eps <V>`: neighborhood radius (default: `0.05`).
+* `--min-points <N>`: minimum number of points (including the point itself) to form a dense region (default: `4`).
 * `--same <V>`: default score of identical element pairs (default: `0.0`).
 * `--missing <V>`: default score of missing pairs (default: `1.0`).
 * The representative point is selected by `--rep`:

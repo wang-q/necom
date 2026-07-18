@@ -6,9 +6,10 @@ Input:
 
 Notes:
 
-* By default, prints the tree indented with two spaces.
+* By default, prints the tree indented with two spaces (`--text "  "`).
+* Use `--text` to customize the indentation string.
+* Use `--compact` / `-c` to output the tree as a single line.
 * The default output is valid Newick.
-* Use `--compact` to output the tree as a single line.
 * Using non-whitespace characters for `--text` may produce invalid Newick.
 
 Examples:

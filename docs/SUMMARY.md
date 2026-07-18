@@ -8,9 +8,9 @@
 - [Tree Cutting](cut.md)
 - [Matrix Processing](mat.md)
 - [Newick Trees](nwk.md)
-- [Pipelines](pl.md)
 - [Evaluation](eval.md)
 - [Partition Evaluation Deep Dive](eval-partition.md)
+- [Pipelines](pl.md)
 - [File Formats](formats.md)
 
 # Command Reference
