@@ -838,11 +838,13 @@ mod tests {
     }
 
     #[test]
-    fn test_nn_chain_non_monotonic_no_panic() {
-        // Centroid and Median can produce non-monotonic merge distances
-        // (inversions). The algorithm must still finish and produce a valid
-        // tree without panicking, even when a later step has a smaller distance
-        // than an earlier step.
+    fn test_centroid_median_non_monotonic_no_panic() {
+        // Centroid and Median do not satisfy the reducibility property, so
+        // `Algorithm::NnChain` falls back to the primitive O(N^3) implementation
+        // (see `linkage_core`). This test verifies that the fallback path
+        // completes without panicking on a matrix that can produce non-monotonic
+        // merge distances (inversions). Negative branch lengths from inversions
+        // are clamped at 0.0 in `to_tree`.
         let mut m = create_test_matrix(4);
         m.set(0, 1, 1.0);
         m.set(2, 3, 1.0);
