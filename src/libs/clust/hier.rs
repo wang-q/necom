@@ -193,16 +193,14 @@ fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step
         // Check if NN(k) is already the previous element in chain (Reciprocal NN)
         if chain.len() >= 2 && nn == chain[chain.len() - 2] {
             // RNN found: merge k and nn
-            let u = chain.pop().unwrap(); // k
-            let v = chain.pop().unwrap(); // nn (which is also NN(k))
+            let u = chain
+                .pop()
+                .expect("RNN merge: chain non-empty by invariant"); // k
+            let v = chain
+                .pop()
+                .expect("RNN merge: chain non-empty by invariant"); // nn (which is also NN(k))
 
-            // Ensure u < v for consistent indexing updates if needed,
-            // though condensed matrix handles (u,v) order.
-            // Let's stick to: we merge v into u (keep u, disable v) or vice versa.
-            // Standard convention: keep the one with smaller index to minimize shifts?
-            // Actually, we usually merge into one and mark other inactive.
-            // Let's merge `u` and `v`.
-            // Swap so u < v to keep smaller index active (arbitrary choice, but clean)
+            // Merge v into u (u < v keeps the smaller index active).
             let (u, v) = if u < v { (u, v) } else { (v, u) };
 
             // Distance between u and v
@@ -245,12 +243,7 @@ fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step
             cluster_ids[u] = new_id;
             active[v] = false;
 
-            // Since `v` is inactive, it must be removed from chain if present (it was just popped).
-            // `u` is active and updated, it was also popped.
-            // If `u` is still in chain (it isn't, we popped it), we'd need to check.
-            // But we just popped both.
-            // If `chain` is not empty, its new top might need to be re-evaluated against `u`.
-            // So we loop back.
+            // Both u and v were popped; chain top will be re-evaluated on next loop.
         } else {
             // Not RNN, push NN to chain
             chain.push(nn);

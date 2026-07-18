@@ -73,11 +73,16 @@ impl Mcl {
     ///
     /// If convergence is not reached within this limit, the algorithm stops.
     /// Default is 100.
-    pub fn set_max_iter(&mut self, max_iter: usize) {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `max_iter` is zero.
+    pub fn set_max_iter(&mut self, max_iter: usize) -> anyhow::Result<()> {
         if max_iter == 0 {
-            panic!("max_iter must be greater than 0");
+            anyhow::bail!("max_iter must be greater than 0");
         }
         self.max_iter = max_iter;
+        Ok(())
     }
 
     /// Perform MCL clustering on the given ScoringMatrix.
@@ -280,7 +285,7 @@ mod tests {
     fn test_mcl_parameter_config() {
         let mut mcl = Mcl::new(2.0);
         mcl.set_prune_limit(1e-4);
-        mcl.set_max_iter(50);
+        mcl.set_max_iter(50).unwrap();
 
         assert_eq!(mcl.prune_limit, 1e-4);
         assert_eq!(mcl.max_iter, 50);

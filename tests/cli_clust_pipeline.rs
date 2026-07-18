@@ -40,7 +40,6 @@ fn generate_blobs(
         truth_out.push_str(&format!("3\t{}\n", id));
     }
 
-    fs::create_dir_all("tests/pipeline")?;
     fs::write(data_file, data_out)?;
     fs::write(truth_file, truth_out)?;
     Ok(())

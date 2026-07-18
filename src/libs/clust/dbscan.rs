@@ -13,7 +13,8 @@
 //! Output formats:
 //! * Cluster labels: Some(id) or None (noise)
 //! * Cluster groups: Vec<Vec<point_indices>>
-// Adopt from https://blog.petrzemek.net/2017/01/01/implementing-dbscan-from-distance-matrix-in-rust/
+//!
+//! Adapted from <https://blog.petrzemek.net/2017/01/01/implementing-dbscan-from-distance-matrix-in-rust/>.
 use std::collections::{HashMap, VecDeque};
 
 /// DBSCAN clustering from a distance matrix.
@@ -40,23 +41,27 @@ where
     /// # Parameters
     ///
     /// * `eps` - The maximum distance between two points for them to be in the
-    ///   same neighborhood.
+    ///   same neighborhood. Must be positive.
     /// * `min_points` - The minimal number of points in a neighborhood for a
-    ///   point to be considered as a core point.
-    pub fn new(eps: T, min_points: usize) -> Self {
+    ///   point to be considered as a core point. Must be at least 1.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `eps` is non-positive or `min_points` is zero.
+    pub fn new(eps: T, min_points: usize) -> anyhow::Result<Self> {
         if eps <= T::default() {
-            panic!("eps must be a positive number");
+            anyhow::bail!("eps must be a positive number");
         }
         if min_points == 0 {
-            panic!("min_points must be at least 1");
+            anyhow::bail!("min_points must be at least 1");
         }
-        Dbscan {
+        Ok(Dbscan {
             eps,
             min_points,
             clusters: Vec::new(),
             visited: Vec::new(),
             current_cluster: 0,
-        }
+        })
     }
 
     /// Performs DBSCAN clustering from the given distance matrix.
@@ -73,7 +78,7 @@ where
     /// # use necom::libs::clust::dbscan::Dbscan;
     /// # use necom::libs::pairmat::ScoringMatrix;
     ///
-    /// let mut dbscan = Dbscan::new(1, 2);
+    /// let mut dbscan = Dbscan::new(1, 2).unwrap();
     /// let mut m = ScoringMatrix::<i8>::with_size_and_defaults(5, 0, 100);
     /// m.set(0, 1, 1);
     /// m.set(0, 2, 9);
@@ -202,7 +207,7 @@ mod tests {
 
     #[test]
     fn test_all_points_are_in_single_cluster_when_their_distance_is_zero() {
-        let mut dbscan = Dbscan::new(1, 2);
+        let mut dbscan = Dbscan::new(1, 2).unwrap();
         let m =
             crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(2, 0, 1);
 
@@ -214,7 +219,7 @@ mod tests {
 
     #[test]
     fn test_points_are_correctly_clustered_based_on_their_distance() {
-        let mut dbscan = Dbscan::new(1, 2);
+        let mut dbscan = Dbscan::new(1, 2).unwrap();
         let mut m =
             crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(5, 0, 100);
         m.set(0, 1, 1);
@@ -254,7 +259,7 @@ mod tests {
         // we ensure that even when the first point (0) has already been
         // marked as visited, it is put into the cluster because it is not
         // yet a member of any other cluster.
-        let mut dbscan = Dbscan::new(1, 3);
+        let mut dbscan = Dbscan::new(1, 3).unwrap();
         let mut m =
             crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(3, 0, 100);
         m.set(0, 1, 1);
@@ -270,7 +275,7 @@ mod tests {
 
     #[test]
     fn test_points_that_do_not_belong_to_any_cluster_are_none() {
-        let mut dbscan = Dbscan::new(1, 2);
+        let mut dbscan = Dbscan::new(1, 2).unwrap();
         let m =
             crate::libs::pairmat::ScoringMatrix::<i8>::with_size_and_defaults(1, 0, 100);
 
@@ -285,7 +290,7 @@ mod tests {
         // eps=1.5, min_points=3.
         // With self-distance 0, each point counts itself plus two others and
         // becomes a core point, so all points end up in one cluster.
-        let mut dbscan = Dbscan::new(1.5_f32, 3);
+        let mut dbscan = Dbscan::new(1.5_f32, 3).unwrap();
         let mut m = crate::libs::pairmat::ScoringMatrix::<f32>::with_size_and_defaults(
             3, 0.0, 100.0,
         );
@@ -301,7 +306,7 @@ mod tests {
 
         // With self-distance 2.0 (> eps), each point only sees two neighbors
         // and fails the min_points threshold, so no core points exist.
-        let mut dbscan2 = Dbscan::new(1.5_f32, 3);
+        let mut dbscan2 = Dbscan::new(1.5_f32, 3).unwrap();
         let mut m2 = crate::libs::pairmat::ScoringMatrix::<f32>::with_size_and_defaults(
             3, 2.0, 100.0,
         );

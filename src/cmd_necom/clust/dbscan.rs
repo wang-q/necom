@@ -55,7 +55,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     )?;
 
     // 3. Clustering
-    let mut dbscan = necom::libs::clust::dbscan::Dbscan::new(opt_eps, opt_min_points);
+    let mut dbscan = necom::libs::clust::dbscan::Dbscan::new(opt_eps, opt_min_points)?;
     dbscan.perform_clustering(&matrix);
     let mut clusters = dbscan.results_cluster();
 

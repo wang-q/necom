@@ -207,4 +207,36 @@ mod tests {
         assert!(result.is_err());
         Ok(())
     }
+
+    #[test]
+    fn test_load_feature_vectors_binarize() -> anyhow::Result<()> {
+        let temp = tempfile::TempDir::new()?;
+        let path = temp.path().join("features.tsv");
+        let mut file = std::fs::File::create(&path)?;
+        writeln!(file, "A\t5.0,0.0,-3.0,2.5")?;
+        writeln!(file, "B\t0.0,-0.1,0.1,100.0")?;
+
+        let entries = load_feature_vectors(path.to_str().unwrap(), true)?;
+        assert_eq!(entries.len(), 2);
+
+        // All values must be 0.0 or 1.0 after binarization.
+        for entry in &entries {
+            for v in entry.list() {
+                assert!(
+                    *v == 0.0 || *v == 1.0,
+                    "binarized value should be 0.0 or 1.0, got {}",
+                    v
+                );
+            }
+        }
+
+        // Verify specific binarization outcomes: >0.0 -> 1.0, else 0.0.
+        assert_eq!(entries[0].name(), "A");
+        assert_eq!(entries[0].list(), &vec![1.0, 0.0, 0.0, 1.0]);
+
+        assert_eq!(entries[1].name(), "B");
+        assert_eq!(entries[1].list(), &vec![0.0, 0.0, 1.0, 1.0]);
+
+        Ok(())
+    }
 }

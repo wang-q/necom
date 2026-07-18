@@ -6,30 +6,30 @@
 //! designated as the center of that cluster. In contrast to the K-Means algorithm, K-Medoids
 //! chooses actual data points as centers (medoids), and is thereby more robust to noise and outliers.
 //!
-/// # Example
-///
-/// ```ignore
-/// use necom::libs::clust::k_medoids::KMedoids;
-/// use necom::libs::pairmat::ScoringMatrix;
-///
-/// // Create a distance matrix for 5 points
-/// let mut sm = ScoringMatrix::<f32>::with_size_and_defaults(5, 0.0, 100.0);
-///
-/// // Cluster 1: {0, 1}
-/// sm.set(0, 1, 1.0);
-///
-/// // Cluster 2: {2, 3, 4}
-/// sm.set(2, 3, 1.0);
-/// sm.set(2, 4, 1.0);
-/// sm.set(3, 4, 1.0);
-///
-/// // Distances between clusters are large (default 100.0)
-///
-/// let kmedoids = KMedoids::new(2, 100, 5);
-/// let clusters = kmedoids.perform_clustering(&sm);
-///
-/// assert_eq!(clusters.len(), 2);
-/// ```
+//! # Example
+//!
+//! ```ignore
+//! use necom::libs::clust::k_medoids::KMedoids;
+//! use necom::libs::pairmat::ScoringMatrix;
+//!
+//! // Create a distance matrix for 5 points
+//! let mut sm = ScoringMatrix::<f32>::with_size_and_defaults(5, 0.0, 100.0);
+//!
+//! // Cluster 1: {0, 1}
+//! sm.set(0, 1, 1.0);
+//!
+//! // Cluster 2: {2, 3, 4}
+//! sm.set(2, 3, 1.0);
+//! sm.set(2, 4, 1.0);
+//! sm.set(3, 4, 1.0);
+//!
+//! // Distances between clusters are large (default 100.0)
+//!
+//! let kmedoids = KMedoids::new(2, 100, 5);
+//! let clusters = kmedoids.perform_clustering(&sm);
+//!
+//! assert_eq!(clusters.len(), 2);
+//! ```
 use rand::prelude::*;
 
 /// K-Medoids Clustering (Lloyd-like algorithm).
@@ -190,7 +190,7 @@ mod tests {
         sm.set(0, 1, 1.0);
         sm.set(2, 3, 1.0);
 
-        let kmedoids = KMedoids::new(2, 100, 10);
+        let kmedoids = KMedoids::new(2, 100, 10).with_seed(42);
         let clusters = kmedoids.perform_clustering(&sm);
 
         assert_eq!(clusters.len(), 2);
@@ -209,7 +209,7 @@ mod tests {
     fn test_kmedoids_trivial() {
         // k=1
         let sm = ScoringMatrix::<f32>::with_size_and_defaults(3, 0.0, 1.0);
-        let kmedoids = KMedoids::new(1, 10, 1);
+        let kmedoids = KMedoids::new(1, 10, 1).with_seed(42);
         let clusters = kmedoids.perform_clustering(&sm);
 
         assert_eq!(clusters.len(), 1);
@@ -220,7 +220,7 @@ mod tests {
     fn test_kmedoids_k_equals_n() {
         // k=n
         let sm = ScoringMatrix::<f32>::with_size_and_defaults(3, 0.0, 1.0);
-        let kmedoids = KMedoids::new(3, 10, 1);
+        let kmedoids = KMedoids::new(3, 10, 1).with_seed(42);
         let clusters = kmedoids.perform_clustering(&sm);
 
         assert_eq!(clusters.len(), 3);
