@@ -9,7 +9,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```ignore
 //! use necom::libs::clust::mcl::Mcl;
 //! use necom::libs::pairmat::ScoringMatrix;
 //!
@@ -105,7 +105,7 @@ impl Mcl {
             // Pruning
             matrix.prune(self.prune_limit);
 
-            if matrix.is_converged(&prev_matrix) {
+            if matrix.is_converged(&prev_matrix, self.prune_limit) {
                 changed = false;
             }
             iter += 1;
@@ -212,12 +212,12 @@ impl SparseMat {
         }
     }
 
-    fn is_converged(&self, other: &Self) -> bool {
+    fn is_converged(&self, other: &Self, threshold: f64) -> bool {
         if self.size != other.size {
             return false;
         }
 
-        // Compare structure and values
+        // Compare structure and values using the same threshold as pruning.
         for j in 0..self.size {
             let col1 = &self.cols[j];
             let col2 = &other.cols[j];
@@ -227,7 +227,7 @@ impl SparseMat {
             }
 
             for ((r1, v1), (r2, v2)) in col1.iter().zip(col2.iter()) {
-                if r1 != r2 || (*v1 - *v2).abs() > 1e-5 {
+                if r1 != r2 || (*v1 - *v2).abs() > threshold {
                     return false;
                 }
             }

@@ -71,7 +71,9 @@ pub fn silhouette_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> 
     let n = partition.len();
 
     for (item_i, &cluster_i) in partition {
-        let cluster_i_members = clusters.get(&cluster_i).unwrap();
+        let cluster_i_members = clusters
+            .get(&cluster_i)
+            .expect("cluster id from partition must exist in cluster map");
 
         // Sklearn convention: s(i) = 0 if |C_i| == 1
         if cluster_i_members.len() == 1 {
@@ -181,11 +183,15 @@ pub fn dunn_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> f64 {
     let cluster_ids: Vec<u32> = clusters.keys().cloned().collect();
     for i in 0..cluster_ids.len() {
         let cid_i = cluster_ids[i];
-        let members_i = clusters.get(&cid_i).unwrap();
+        let members_i = clusters
+            .get(&cid_i)
+            .expect("cluster id from partition must exist in cluster map");
 
         for cid_j in cluster_ids.iter().skip(i + 1) {
             let cid_j = *cid_j;
-            let members_j = clusters.get(&cid_j).unwrap();
+            let members_j = clusters
+                .get(&cid_j)
+                .expect("cluster id from partition must exist in cluster map");
 
             // Find min dist between C_i and C_j
             for item_i in members_i {

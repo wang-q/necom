@@ -98,7 +98,12 @@ fn linkage_core(
 ) -> Vec<Step> {
     match algo {
         Algorithm::Primitive => linkage_primitive(condensed, method),
-        Algorithm::NnChain => linkage_nn_chain(condensed, method),
+        // NN-chain is only valid for reducible methods. Centroid and Median do
+        // not satisfy reducibility, so fall back to the primitive algorithm.
+        Algorithm::NnChain => match method {
+            Method::Centroid | Method::Median => linkage_primitive(condensed, method),
+            _ => linkage_nn_chain(condensed, method),
+        },
         Algorithm::Auto => match method {
             // Primitive O(N^3) is safest for Centroid/Median which don't satisfy reducibility
             Method::Centroid | Method::Median => linkage_primitive(condensed, method),

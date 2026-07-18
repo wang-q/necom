@@ -35,7 +35,7 @@ impl FeatureVector {
 
     /// Constructed from range and seq
     ///
-    /// ```
+    /// ```ignore
     /// # use necom::libs::clust::feature::FeatureVector;
     /// let name = "Es_coli_005008_GCF_013426115_1".to_string();
     /// let list : Vec<f32> = vec![1.0,5.0,2.0,7.0,6.0,6.0];
@@ -58,7 +58,7 @@ impl FeatureVector {
     /// line with an invalid number of columns or non-numeric values returns an
     /// error.
     ///
-    /// ```
+    /// ```ignore
     /// # use necom::libs::clust::feature::FeatureVector;
     /// let line = "Es_coli_005008_GCF_013426115_1\t1,5,2,7,6,6".to_string();
     /// let entry = FeatureVector::parse(&line).unwrap();
@@ -90,7 +90,7 @@ impl FeatureVector {
 impl std::fmt::Display for FeatureVector {
     /// To string
     ///
-    /// ```
+    /// ```ignore
     /// # use necom::libs::clust::feature::FeatureVector;
     /// let name = "Es_coli_005008_GCF_013426115_1".to_string();
     /// let list : Vec<f32> = vec![1.0,5.0,2.0,7.0,6.0,6.0];

@@ -30,7 +30,6 @@ D 14 9 7 0
         .success();
 
     let nwk = std::fs::read_to_string(&output).unwrap();
-    // println!("{}", nwk); // For debugging
     assert!(nwk.contains("A:"));
     assert!(nwk.contains("B:"));
     assert!(nwk.contains("C:"));

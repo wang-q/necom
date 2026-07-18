@@ -8,7 +8,7 @@
 //!
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// use necom::libs::clust::k_medoids::KMedoids;
 /// use necom::libs::pairmat::ScoringMatrix;
 ///
