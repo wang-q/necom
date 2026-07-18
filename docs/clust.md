@@ -103,7 +103,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Module**: `clust`, alongside `k-medoids`, `mcl`, etc.
 - **Goal**: Statistically meaningful dendrograms (merge heights express the cost of the linkage criterion), without enforcing "evolution/molecular-clock" semantics.
 - **Synergy with existing necom capabilities**:
-  - Tree building: `clust upgma` (rooted, ultrametric) and `clust nj` (additive, unrooted) already exist.
+  - Tree building: `clust upgma` (rooted, ultrametric) and `clust nj` (additive, midpoint-rooted) already exist.
   - Cutting: tree-cut grouping via `necom cut`.
   - Evaluation: `necom eval partition --matrix` / `--tree` / `--coords` (currently available); `necom eval tree` not yet implemented.
 

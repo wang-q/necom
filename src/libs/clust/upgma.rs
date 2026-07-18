@@ -1,6 +1,6 @@
 use crate::libs::pairmat::NamedMatrix;
 use crate::libs::phylo::tree::Tree;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 
 /// Build a tree from a distance matrix using the UPGMA algorithm.
 ///
@@ -135,7 +135,7 @@ pub fn upgma(matrix: &NamedMatrix) -> Result<Tree> {
             let d1 = *dists
                 .get(&(id1.min(other_id), id1.max(other_id)))
                 .ok_or_else(|| {
-                    anyhow!(
+                    anyhow::anyhow!(
                         "missing distance for pair ({}, {})",
                         id1.min(other_id),
                         id1.max(other_id)
@@ -144,7 +144,7 @@ pub fn upgma(matrix: &NamedMatrix) -> Result<Tree> {
             let d2 = *dists
                 .get(&(id2.min(other_id), id2.max(other_id)))
                 .ok_or_else(|| {
-                    anyhow!(
+                    anyhow::anyhow!(
                         "missing distance for pair ({}, {})",
                         id2.min(other_id),
                         id2.max(other_id)

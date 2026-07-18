@@ -43,7 +43,7 @@ const MCL_SPARSE_THRESHOLD: f64 = 1e-5;
 pub struct Mcl {
     /// Inflation parameter controlling cluster granularity.
     inflation: f64,
-    /// Matrix entries smaller than this value are set to zero during pruning.
+    /// Matrix entries smaller than or equal to this value are set to zero during pruning.
     prune_limit: f64,
     /// Maximum number of expansion/inflation iterations.
     max_iter: usize,
@@ -68,7 +68,7 @@ impl Mcl {
 
     /// Set the threshold for pruning small values in the matrix.
     ///
-    /// Matrix entries smaller than this value will be set to zero to maintain sparsity
+    /// Matrix entries smaller than or equal to this value will be set to zero to maintain sparsity
     /// and improve performance. Default is 1e-5.
     pub fn set_prune_limit(&mut self, limit: f64) {
         self.prune_limit = limit;

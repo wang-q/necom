@@ -1,6 +1,6 @@
 use crate::libs::pairmat::NamedMatrix;
 use crate::libs::phylo::tree::Tree;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 
 /// Build a tree from a distance matrix using the Neighbor-Joining algorithm.
 ///
@@ -66,7 +66,7 @@ pub fn nj(matrix: &NamedMatrix) -> Result<Tree> {
                 }
                 let key = (id.min(other), id.max(other));
                 sum_d += *dists.get(&key).ok_or_else(|| {
-                    anyhow!("missing distance for pair ({}, {})", key.0, key.1)
+                    anyhow::anyhow!("missing distance for pair ({}, {})", key.0, key.1)
                 })?;
             }
             r.insert(id, sum_d);

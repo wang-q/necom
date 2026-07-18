@@ -1,5 +1,6 @@
 use crate::libs::pairmat::{CondensedMatrix, NamedMatrix};
 use crate::libs::phylo::tree::Tree;
+use std::collections::HashMap;
 
 /// Linkage method for hierarchical clustering.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -268,8 +269,7 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
     // Map original cluster ID to Tree NodeId
     // IDs 0..n-1 are leaves (original sequences)
     // IDs n..n+steps.len()-1 are internal nodes (merges)
-    let mut cluster_to_node: std::collections::HashMap<usize, usize> =
-        std::collections::HashMap::new();
+    let mut cluster_to_node: HashMap<usize, usize> = HashMap::new();
 
     // Create leaf nodes
     for (i, name) in names.iter().enumerate() {
@@ -281,8 +281,7 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
     }
 
     // Track height of each cluster (original ID -> height)
-    let mut heights: std::collections::HashMap<usize, f32> =
-        std::collections::HashMap::new();
+    let mut heights: HashMap<usize, f32> = HashMap::new();
     for i in 0..n {
         heights.insert(i, 0.0);
     }
@@ -295,6 +294,11 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
         // Create parent node
         let parent_node_id = tree.add_node();
         cluster_to_node.insert(new_cluster_id, parent_node_id);
+
+        // Node height for this merge step. Used as the parent height for both
+        // children's branch-length computation and stored in `heights` for
+        // future merges that reference this cluster.
+        let node_height = step.distance / 2.0;
 
         // Process children
         for &child_cluster_id in &[step.cluster1, step.cluster2] {
@@ -314,9 +318,7 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
                 )
             })?;
 
-            // Calculate branch length
-            // Use distance/2.0 as node height for ultrametric-like appearance
-            let node_height = step.distance / 2.0;
+            // Calculate branch length.
             // Centroid and median linkage can produce non-monotonic (inverted)
             // merge heights; clamp negative branch lengths to zero so the
             // resulting Newick tree remains valid.
@@ -333,7 +335,7 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
                 .map_err(|e| anyhow::anyhow!(e))?;
         }
 
-        heights.insert(new_cluster_id, step.distance / 2.0);
+        heights.insert(new_cluster_id, node_height);
         root_cluster_id = new_cluster_id;
     }
 
