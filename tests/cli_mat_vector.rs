@@ -26,6 +26,25 @@ fn command_mat_from_vector() {
         .run();
 
     assert_eq!(stdout.lines().count(), 16);
-    assert!(stdout.contains("A\tA\t1.0000"));
-    assert!(stdout.contains("A\tB\t0.3333"));
+    assert!(stdout.contains("A\tA\t1.000000"));
+    assert!(stdout.contains("A\tB\t0.333333"));
+}
+
+#[test]
+fn command_mat_from_vector_length_mismatch() {
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "A\t1\t2\t3").unwrap();
+    writeln!(tmp, "B\t1\t2").unwrap(); // different column count
+    let path = tmp.path().to_str().unwrap().to_string();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["mat", "from-vector", &path, "--mode", "euclid"])
+        .run_fail();
+
+    assert!(
+        stderr.contains("length mismatch"),
+        "expected 'length mismatch' in stderr, got: {}",
+        stderr
+    );
 }

@@ -17,6 +17,11 @@ const LANES: usize = 8;
 /// # Returns
 /// The Euclidean distance between `a` and `b`.
 ///
+/// # Contract
+/// Caller must ensure `a.len() == b.len()`; otherwise the result is silently
+/// incorrect (SIMD `zip` truncates to the shorter slice). Use
+/// [`vector_score`] for a length-checked entry point.
+///
 /// # Examples
 /// ```
 /// let a = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
@@ -44,6 +49,10 @@ pub fn euclidean_distance(a: &[f32], b: &[f32]) -> f32 {
 }
 
 /// Computes the dot product of two vectors `a` and `b`.
+///
+/// # Contract
+/// Caller must ensure `a.len() == b.len()`; otherwise the result is silently
+/// incorrect. Use [`vector_score`] for a length-checked entry point.
 ///
 /// # Arguments
 /// * `a` - The first vector.
@@ -179,6 +188,10 @@ pub fn mean(a: &[f32]) -> f32 {
 /// Computes the Jaccard intersection of two vectors `a` and `b`.
 /// The Jaccard intersection is the sum of the minimum values of corresponding elements.
 ///
+/// # Contract
+/// Caller must ensure `a.len() == b.len()`; otherwise the result is silently
+/// incorrect. Use [`vector_score`] for a length-checked entry point.
+///
 /// # Arguments
 /// * `a` - The first vector.
 /// * `b` - The second vector.
@@ -212,6 +225,10 @@ pub fn jaccard_intersection(a: &[f32], b: &[f32]) -> f32 {
 
 /// Computes the Jaccard union of two vectors `a` and `b`.
 /// The Jaccard union is the sum of the maximum values of corresponding elements.
+///
+/// # Contract
+/// Caller must ensure `a.len() == b.len()`; otherwise the result is silently
+/// incorrect. Use [`vector_score`] for a length-checked entry point.
 ///
 /// # Arguments
 /// * `a` - The first vector.
@@ -367,6 +384,10 @@ pub fn spearman_correlation(a: &[f32], b: &[f32]) -> f32 {
 }
 
 /// Computes the mean absolute error between two vectors.
+///
+/// # Contract
+/// Caller must ensure `a.len() == b.len()`; otherwise the result is silently
+/// incorrect (`zip` truncates and the divisor uses `a.len()`).
 pub fn mean_absolute_error(a: &[f32], b: &[f32]) -> f32 {
     a.iter()
         .zip(b.iter())
@@ -389,6 +410,10 @@ pub fn to_dissimilarity(sim: f32) -> f32 {
 }
 
 /// Compute a vector similarity/distance score for the given mode.
+///
+/// Returns a friendly error if `l1` and `l2` have different lengths, so a
+/// malformed vector file (rows with differing column counts) cannot produce
+/// silently wrong results.
 pub fn vector_score(
     l1: &[f32],
     l2: &[f32],
@@ -396,6 +421,9 @@ pub fn vector_score(
     is_sim: bool,
     is_dis: bool,
 ) -> anyhow::Result<f32> {
+    if l1.len() != l2.len() {
+        anyhow::bail!("vector length mismatch: {} vs {}", l1.len(), l2.len());
+    }
     let mut score = match mode {
         "euclid" => euclidean_distance(l1, l2),
         "cosine" => cosine_similarity(l1, l2),
@@ -443,5 +471,36 @@ mod tests {
         let a: [f32; 0] = [];
         let b: [f32; 0] = [];
         assert!(spearman_correlation(&a, &b).is_nan());
+    }
+
+    #[test]
+    fn test_vector_score_length_mismatch_errors() {
+        let a = [1.0, 2.0, 3.0];
+        let b = [1.0, 2.0];
+        let result = vector_score(&a, &b, "euclid", false, false);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("length mismatch"), "unexpected error: {}", err);
+        assert!(err.contains("3"), "should report l1 length: {}", err);
+        assert!(err.contains("2"), "should report l2 length: {}", err);
+    }
+
+    #[test]
+    fn test_vector_score_unknown_mode_errors() {
+        let a = [1.0, 2.0];
+        let b = [1.0, 2.0];
+        let result = vector_score(&a, &b, "manhattan", false, false);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("unknown mode"), "unexpected error: {}", err);
+    }
+
+    #[test]
+    fn test_vector_score_equal_length_ok() {
+        let a = [1.0, 2.0, 3.0];
+        let b = [1.0, 2.0, 3.0];
+        // euclidean distance of identical vectors is 0
+        let result = vector_score(&a, &b, "euclid", false, false).unwrap();
+        assert_eq!(result, 0.0);
     }
 }

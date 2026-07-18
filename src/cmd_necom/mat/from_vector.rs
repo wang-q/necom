@@ -50,6 +50,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let (entries1, entries2) =
         necom::libs::par::load_two_sets(&infiles, false, |paths| {
+            // is_list=false guarantees paths has exactly one element
             necom::libs::feature::load_feature_vectors(&paths[0], is_bin)
         })?;
 
@@ -59,12 +60,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     necom::libs::par::par_run_pairs(&entries1, &entries2, &sender, |e1, e2| {
         match linalg::vector_score(e1.list(), e2.list(), opt_mode, is_sim, is_dis) {
             Ok(score) => {
-                let line = format!("{}\t{}\t{:.4}\n", e1.name(), e2.name(), score);
+                let line = format!("{}\t{}\t{:.6}\n", e1.name(), e2.name(), score);
                 Some(line)
             }
             Err(e) => {
                 let msg = format!("{} vs {}: {}", e1.name(), e2.name(), e);
-                log::error!("{}", msg);
                 let mut guard = errors_clone
                     .lock()
                     .unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -76,22 +76,21 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Drop the sender to signal the writer thread to exit
     drop(sender);
-    // Wait for the writer thread to finish
-    writer_thread.join().map_err(|e| {
-        let msg = e
-            .downcast_ref::<String>()
-            .map(|s| s.as_str())
-            .or_else(|| e.downcast_ref::<&str>().copied())
-            .unwrap_or("<non-string panic payload>");
-        anyhow::anyhow!("writer thread panicked: {}", msg)
-    })?;
+    // Wait for the writer thread to finish. The writer thread logs IO errors
+    // instead of panicking, so join only fails if the thread itself panicked.
+    writer_thread
+        .join()
+        .map_err(|_| anyhow::anyhow!("writer thread panicked"))?;
 
     let errors = errors
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
     if !errors.is_empty() {
+        for e in errors.iter() {
+            log::error!("{}", e);
+        }
         anyhow::bail!(
-            "vector scoring failed for {} pair(s): {}",
+            "vector scoring failed for {} pair(s); see log for details. First error: {}",
             errors.len(),
             errors[0]
         );

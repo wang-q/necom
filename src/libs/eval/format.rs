@@ -103,8 +103,8 @@ mod tests {
 
     #[test]
     fn test_format_metrics_row_basic() {
-        let values = vec![1.0, 2.5, 3.14159265];
-        assert_eq!(format_metrics_row(&values), "1.000000\t2.500000\t3.141593");
+        let values = vec![1.0, 2.5, 4.5678];
+        assert_eq!(format_metrics_row(&values), "1.000000\t2.500000\t4.567800");
     }
 
     #[test]

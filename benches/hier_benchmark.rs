@@ -6,7 +6,8 @@ use rand::Rng;
 fn create_random_matrix(size: usize) -> NamedMatrix {
     let mut rng = rand::rng();
     let names: Vec<String> = (0..size).map(|i| i.to_string()).collect();
-    let mut matrix = NamedMatrix::new(names);
+    let mut matrix =
+        NamedMatrix::new(names).expect("numeric names 0..size are guaranteed unique");
 
     for i in 0..size {
         for j in (i + 1)..size {
@@ -96,11 +97,7 @@ fn bench_hier(c: &mut Criterion) {
         Method::Average,
         Method::Weighted,
         Method::Ward,
-        // Centroid/Median might fallback to Primitive if not Reducible?
-        // Actually NN-Chain works for them if we ignore reducibility issues or if they are reducible in geometric sense?
-        // Wait, Centroid/Median are NOT reducible, so necom might fallback to Primitive automatically?
-        // Let's check: Algorithm::Auto does that. But here we force NN-Chain or use Auto?
-        // Let's use Auto to see real-world performance.
+        // Centroid/Median are non-reducible; Algorithm::Auto falls back to Primitive.
     ]
     .iter()
     {

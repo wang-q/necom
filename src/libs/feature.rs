@@ -187,7 +187,7 @@ mod tests {
         let mut file = std::fs::File::create(&path)?;
         writeln!(file, "A\t1.0\t2.0")?;
         writeln!(file, "# comment")?;
-        writeln!(file, "")?;
+        writeln!(file)?;
         writeln!(file, "B\t3.0\t4.0")?;
 
         let entries = load_feature_vectors(path.to_str().unwrap(), false)?;

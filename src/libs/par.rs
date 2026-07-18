@@ -11,6 +11,9 @@ use std::thread::JoinHandle;
 
 /// Spawn a writer thread draining a channel and configure the global rayon
 /// pool with `num_threads`. Returns the sender and the writer join handle.
+///
+/// Note: `build_global` mutates the global rayon pool; calling this function
+/// more than once per process will error on the second `build_global` call.
 pub fn spawn_writer_and_pool(
     outfile: &str,
     num_threads: usize,
@@ -19,9 +22,18 @@ pub fn spawn_writer_and_pool(
 
     let output = outfile.to_string();
     let writer_thread = std::thread::spawn(move || {
-        let mut writer = crate::writer(&output).unwrap();
+        let mut writer = match crate::writer(&output) {
+            Ok(w) => w,
+            Err(e) => {
+                log::error!("failed to open writer for {}: {}", output, e);
+                return;
+            }
+        };
         for result in receiver {
-            writer.write_all(result.as_bytes()).unwrap();
+            if let Err(e) = writer.write_all(result.as_bytes()) {
+                log::error!("writer write_all failed: {}", e);
+                return;
+            }
         }
     });
 
@@ -85,6 +97,9 @@ where
 /// Iterate `entries1` x `entries2` in parallel (rayon), calling `pair_fn`
 /// for each pair. If `pair_fn` returns `Some(line)`, the line is buffered
 /// and flushed to `sender` every 1000 pairs (and at the end of each row).
+///
+/// Errors from the writer channel are logged and the worker aborts its row;
+/// rayon's panic handler does not need to be involved.
 pub fn par_run_pairs<E, F>(
     entries1: &[E],
     entries2: &[E],
@@ -99,14 +114,18 @@ pub fn par_run_pairs<E, F>(
         for (i, e2) in entries2.iter().enumerate() {
             if let Some(out_string) = pair_fn(e1, e2) {
                 lines.push_str(&out_string);
-                if i > 1 && i % 1000 == 0 {
-                    sender.send(lines.clone()).unwrap();
-                    lines.clear();
+                if i % 1000 == 0 && !lines.is_empty() {
+                    if let Err(e) = sender.send(std::mem::take(&mut lines)) {
+                        log::error!("writer channel closed: {}", e);
+                        break;
+                    }
                 }
             }
         }
         if !lines.is_empty() {
-            sender.send(lines).unwrap();
+            if let Err(e) = sender.send(lines) {
+                log::error!("writer channel closed: {}", e);
+            }
         }
     });
 }
