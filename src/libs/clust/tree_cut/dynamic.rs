@@ -3,6 +3,10 @@ use crate::libs::phylo::node::NodeId;
 use crate::libs::phylo::tree::Tree;
 use std::collections::HashMap;
 
+/// Maximum iterations for the dynamic tree deep-split loop. Acts as a safety
+/// break against pathological non-convergence; normal inputs converge in <10.
+const MAX_DEEP_SPLIT_ITERATIONS: usize = 100;
+
 /// Parameters for Dynamic Tree Cut
 pub struct DynamicTreeOptions {
     pub min_module_size: usize,
@@ -158,7 +162,7 @@ pub fn cutree_dynamic_tree(
             if !options.deep_split || !changed {
                 break;
             }
-            if loop_count > 100 {
+            if loop_count > MAX_DEEP_SPLIT_ITERATIONS {
                 break;
             } // Safety break
         }

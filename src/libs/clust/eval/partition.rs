@@ -29,9 +29,10 @@ impl std::str::FromStr for PartitionFormat {
 /// Supports two formats:
 /// 1. Cluster-based: Each line is a cluster, items separated by whitespace.
 ///    The first item is treated as the cluster representative/ID.
-/// 2. Pair-based: Two columns.
-///    - If 2 columns: ClusterID `tab` Item
-///    - If > 2 columns: Treated as Cluster-based.
+/// 2. Pair-based: Two or more whitespace-separated columns.
+///    - First column: Cluster label (string).
+///    - Second column: Item name.
+///    - Additional columns are ignored.
 /// 3. Long-based: Treated as Batch LabelMap (returns empty map here, use load_batch_partitions).
 pub fn load_partition<P: AsRef<Path>>(
     path: P,

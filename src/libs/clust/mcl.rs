@@ -34,6 +34,11 @@
 
 use std::collections::HashMap;
 
+/// Minimum similarity retained when constructing the initial sparse MCL
+/// matrix. Values below this (including negatives and float noise) are dropped
+/// to keep the matrix sparse without affecting clustering quality.
+const MCL_SPARSE_THRESHOLD: f64 = 1e-5;
+
 /// Markov Clustering Algorithm configuration and execution.
 pub struct Mcl {
     /// Inflation parameter controlling cluster granularity.
@@ -151,8 +156,10 @@ impl SparseMat {
         for i in 0..size {
             for j in 0..size {
                 let val = sm.get(i, j) as f64;
-                // MCL assumes non-negative similarities; treat negatives as zero.
-                if val > 1e-5 {
+                // MCL assumes non-negative similarities; drop negatives and
+                // float noise below the sparse threshold to keep the matrix
+                // sparse without affecting clustering quality.
+                if val > MCL_SPARSE_THRESHOLD {
                     cols[j].push((i, val));
                 }
             }

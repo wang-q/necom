@@ -179,25 +179,31 @@ pub fn partition_to_clusters(
 
 /// Format clusters into output string.
 /// `format` must be "cluster" or "pair".
+///
+/// Semantics mirror `format_flat_clusters`: in "cluster" format the
+/// representative (if any) is moved to the first column via remove+insert so
+/// the alphabetical order of the remaining members is preserved; clusters are
+/// always written even when no representative is selected.
 pub fn format_clusters(clusters: &[Cluster], format: &str) -> anyhow::Result<String> {
     let mut out = String::new();
     match format {
         "cluster" => {
             for c in clusters {
+                let mut names: Vec<&str> =
+                    c.members.iter().map(|(_, n)| n.as_str()).collect();
                 if let Some(rep_idx) = c.rep_index {
-                    let mut names: Vec<&str> =
-                        c.members.iter().map(|(_, n)| n.as_str()).collect();
                     if rep_idx > 0 {
-                        names.swap(0, rep_idx);
+                        let rep_name = names.remove(rep_idx);
+                        names.insert(0, rep_name);
                     }
-                    for (i, name) in names.iter().enumerate() {
-                        if i > 0 {
-                            write!(out, "\t")?;
-                        }
-                        write!(out, "{}", name)?;
-                    }
-                    writeln!(out)?;
                 }
+                for (i, name) in names.iter().enumerate() {
+                    if i > 0 {
+                        write!(out, "\t")?;
+                    }
+                    write!(out, "{}", name)?;
+                }
+                writeln!(out)?;
             }
         }
         "pair" => {
@@ -326,5 +332,40 @@ mod tests {
     fn test_format_clusters_unsupported_format() {
         let clusters = Vec::new();
         assert!(format_clusters(&clusters, "unknown").is_err());
+    }
+
+    #[test]
+    fn test_format_clusters_move_to_front_preserves_order() {
+        // Members sorted alphabetically: A, B, C, D. Representative is C
+        // (index 2). Move-to-front must yield "C A B D" (preserving the
+        // alphabetical order of the remaining members), NOT "C B A D" which
+        // a swap(0, rep_idx) would produce.
+        let clusters = vec![Cluster {
+            members: vec![
+                (0, "A".to_string()),
+                (1, "B".to_string()),
+                (2, "C".to_string()),
+                (3, "D".to_string()),
+            ],
+            rep_index: Some(2),
+        }];
+        let out = format_clusters(&clusters, "cluster").unwrap();
+        assert_eq!(out, "C\tA\tB\tD\n");
+    }
+
+    #[test]
+    fn test_format_clusters_no_representative() {
+        // When rep_index is None the cluster must still be written, in the
+        // original (alphabetical) member order.
+        let clusters = vec![Cluster {
+            members: vec![
+                (0, "A".to_string()),
+                (1, "B".to_string()),
+                (2, "C".to_string()),
+            ],
+            rep_index: None,
+        }];
+        let out = format_clusters(&clusters, "cluster").unwrap();
+        assert_eq!(out, "A\tB\tC\n");
     }
 }

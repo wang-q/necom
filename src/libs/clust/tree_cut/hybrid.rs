@@ -401,8 +401,6 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
         assignment.entry(node_id).or_insert(0);
     }
 
-    let _num_clusters = medoids.keys().len(); // Approximate, some might be empty now?
-                                              // Recalculate strict num_clusters
     let max_cid = assignment
         .values()
         .filter(|&&v| v > 0)

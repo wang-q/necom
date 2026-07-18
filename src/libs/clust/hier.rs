@@ -907,10 +907,14 @@ mod tests {
     }
 
     #[test]
-    fn test_nn_chain_merge_order_matches_primitive() {
-        // Without post-merge distance sorting, reducible methods should
-        // produce identical merge sequences from both implementations,
-        // including cluster IDs and merge order.
+    fn test_nn_chain_matches_primitive_on_specific_matrix() {
+        // NOTE: In general NN-chain and the primitive algorithm may produce
+        // different merge orders even for reducible methods; they are only
+        // guaranteed to yield equivalent partition sequences (identical sorted
+        // merge-distance spectra). This particular 5x5 matrix happens to have
+        // a unique closest-pair at every step, so the two implementations
+        // coincide exactly here. For the general equivalence check, compare
+        // sorted merge-distance spectra instead of step-by-step equality.
         let mut m = create_test_matrix(5);
         m.set(0, 1, 1.0);
         m.set(0, 2, 4.0);

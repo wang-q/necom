@@ -5,6 +5,14 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
+/// Large finite proxy for infinity used when inter-centroid distance is zero
+/// in Davies-Bouldin (avoids division by zero while keeping finite arithmetic).
+const DB_INFINITY_PROXY: f64 = 1e10;
+
+/// Penalty applied in Wemmert-Gancarski when a point coincides with another
+/// centroid (inter-cluster distance collapses to zero).
+const WG_COINCIDENT_PENALTY: f64 = 10.0;
+
 /// Represents a set of coordinates for items: Item -> Vector
 #[derive(Debug, Clone)]
 pub struct Coordinates {
@@ -138,7 +146,7 @@ pub fn davies_bouldin_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
                 if stat_i.scatter + stat_j.scatter == 0.0 {
                     0.0
                 } else {
-                    1e10 // Large number proxy for infinity
+                    DB_INFINITY_PROXY
                 }
             } else {
                 (stat_i.scatter + stat_j.scatter) / dist_centroids
@@ -560,7 +568,7 @@ pub fn wemmert_gancarski_score(partition: &LabelMap, coords: &Coordinates) -> f6
                 sum_r += dist_intra / min_dist_inter;
             } else {
                 // Point coincides with another centroid (bad separation).
-                sum_r += 10.0; // Large penalty
+                sum_r += WG_COINCIDENT_PENALTY;
             }
         }
 
