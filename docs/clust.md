@@ -53,7 +53,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Input**: Pairwise distances `.tsv` (lower is better).
 - **Output**: `cluster` (one cluster per line, first element is the representative) or `pair` (representative–member pairs).
 - **Defaults**: `--eps 0.05`, `--min-points 4`.
-- **Note on `--min-points`**: The neighborhood count includes the point itself, because self-distance is 0 and is always <= `eps`.
+- **Note on `--min-points`**: By default (`--same 0.0`), the neighborhood count includes the point itself because self-distance is 0 and is always <= `eps`. If `--same` is set to a value greater than `eps`, the point is not counted as its own neighbor and may fail to become a core point.
 - **Unimplemented options**: Parameter scanning and scoring such as `--scan`, `--opt-eps`, `--min-pct` are not yet implemented; planning details are in [`notes/design/dbscan-planned.md`](../notes/design/dbscan-planned.md). They may be provided later as subcommands of `necom clust dbscan` or standalone scripts.
 
 ### UPGMA
@@ -65,6 +65,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Advantages**: Produces a hierarchical structure with branch heights carrying clear distance meaning.
 - **Input**: PHYLIP distance matrix (strict or relaxed).
 - **Output**: Newick tree.
+- **Note**: For input that violates the ultrametric assumption, branch lengths are clamped to 0 so the output remains a valid Newick tree.
 
 ### NJ (Neighbor-Joining)
 

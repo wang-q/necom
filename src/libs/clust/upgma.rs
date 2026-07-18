@@ -93,12 +93,15 @@ pub fn upgma(matrix: &NamedMatrix) -> Result<Tree> {
 
         let new_node = tree.add_node();
 
-        // Calculate heights and branch lengths
+        // Calculate heights and branch lengths.
+        // UPGMA assumes ultrametric input; when this is violated, child
+        // heights can exceed the new parent height and produce negative branch
+        // lengths. Clamp to zero so the resulting Newick tree remains valid.
         let height = min_dist / 2.0;
         node_heights.push(height); // id matches index in tree.nodes
 
-        let len1 = height - node_heights[id1];
-        let len2 = height - node_heights[id2];
+        let len1 = (height - node_heights[id1]).max(0.0);
+        let len2 = (height - node_heights[id2]).max(0.0);
 
         // Add children
         // Note: id1 and id2 are already in the tree. We set their parent to new_node.
@@ -277,5 +280,43 @@ C 4 4 0
             let node = tree.get_node(leaf).unwrap();
             assert!((node.length.unwrap() - 1.0).abs() < 1e-6);
         }
+    }
+
+    #[test]
+    fn test_upgma_non_ultrametric_no_negative_lengths() {
+        // A matrix that strongly violates the ultrametric assumption and can
+        // produce negative branch lengths without clamping.
+        let content = "4
+A 0 1 0.1 0.1
+B 1 0 0.1 0.1
+C 0.1 0.1 0 1
+D 0.1 0.1 1 0
+";
+        let temp = tempfile::TempDir::new().unwrap();
+        let filename = temp.path().join("test_upgma_non_ultra.phy");
+        let mut file = std::fs::File::create(&filename).unwrap();
+        file.write_all(content.as_bytes()).unwrap();
+
+        let mat = NamedMatrix::from_relaxed_phylip(filename.to_str().unwrap()).unwrap();
+        let tree = upgma(&mat).unwrap();
+
+        // All assigned branch lengths must be non-negative (allow tiny FP noise).
+        for id in 0..tree.len() {
+            if let Some(node) = tree.get_node(id) {
+                if let Some(len) = node.length {
+                    assert!(
+                        len >= 0.0 || len.abs() < 1e-12,
+                        "negative branch length {} on node {:?}",
+                        len,
+                        node.name
+                    );
+                }
+            }
+        }
+
+        // The resulting Newick string must remain parseable.
+        let nwk = tree.to_newick();
+        let reparsed = Tree::from_newick(&nwk).unwrap();
+        assert_eq!(reparsed.len(), tree.len());
     }
 }

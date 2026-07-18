@@ -272,4 +272,41 @@ mod tests {
 
         assert_eq!(clustering[0], None);
     }
+
+    #[test]
+    fn test_self_distance_affects_core_point_status() {
+        // Three points on a line with pairwise distances 1 and 2.
+        // eps=1.5, min_points=3.
+        // With self-distance 0, each point counts itself plus two others and
+        // becomes a core point, so all points end up in one cluster.
+        let mut dbscan = Dbscan::new(1.5_f32, 3);
+        let mut m = crate::libs::pairmat::ScoringMatrix::<f32>::with_size_and_defaults(
+            3, 0.0, 100.0,
+        );
+        m.set(0, 1, 1.0);
+        m.set(0, 2, 2.0);
+        m.set(1, 2, 1.0);
+
+        let clustering = dbscan.perform_clustering(&m);
+        assert!(
+            clustering.iter().all(|c| c.is_some()),
+            "all points should be core with self-distance 0"
+        );
+
+        // With self-distance 2.0 (> eps), each point only sees two neighbors
+        // and fails the min_points threshold, so no core points exist.
+        let mut dbscan2 = Dbscan::new(1.5_f32, 3);
+        let mut m2 = crate::libs::pairmat::ScoringMatrix::<f32>::with_size_and_defaults(
+            3, 2.0, 100.0,
+        );
+        m2.set(0, 1, 1.0);
+        m2.set(0, 2, 2.0);
+        m2.set(1, 2, 1.0);
+
+        let clustering2 = dbscan2.perform_clustering(&m2);
+        assert!(
+            clustering2.iter().all(|c| c.is_none()),
+            "no core points when self-distance exceeds eps"
+        );
+    }
 }
