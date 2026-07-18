@@ -9,7 +9,7 @@ pub fn make_subcommand() -> Command {
         .visible_alias("km")
         .after_help(include_str!("../../../docs/help/clust/k-medoids.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
-            "Input file containing pairwise distances in .tsv format",
+            "Input file containing pairwise distances in .tsv format. [stdin] for standard input",
         ))
         .arg(crate::cmd_necom::args::k_arg().required(true))
         .arg(crate::cmd_necom::args::format_arg())

@@ -27,7 +27,7 @@ Examples:
 1. Run DBSCAN with defaults
    `necom clust dbscan pairs.tsv`
 
-2. Set epsilon and min points (custom value; default is 4)
+2. Set epsilon and min-points (min-points default: 4; here set to 5)
    `necom clust dbscan pairs.tsv --eps 0.05 --min-points 5`
 
 3. Output as pairs

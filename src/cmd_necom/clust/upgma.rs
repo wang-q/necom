@@ -9,7 +9,7 @@ pub fn make_subcommand() -> Command {
         .about("Constructs a phylogenetic tree using UPGMA")
         .after_help(include_str!("../../../docs/help/clust/upgma.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
-            "Input PHYLIP matrix file. [stdin] for standard input",
+            "Input PHYLIP distance matrix file. [stdin] for standard input",
         ))
         .arg(crate::cmd_necom::args::outfile_arg())
 }

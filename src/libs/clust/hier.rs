@@ -224,18 +224,18 @@ fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step
 
             // Update distances (Lance-Williams)
             // Merge v into u
-            for k in 0..n {
-                if !active[k] || k == u || k == v {
+            for j in 0..n {
+                if !active[j] || j == u || j == v {
                     continue;
                 }
 
-                let d_uk = condensed.get(u, k);
-                let d_vk = condensed.get(v, k);
+                let d_uk = condensed.get(u, j);
+                let d_vk = condensed.get(v, j);
 
                 let new_dist =
-                    lance_williams(method, d_uk, d_vk, d_uv, size1, size2, size[k]);
+                    lance_williams(method, d_uk, d_vk, d_uv, size1, size2, size[j]);
 
-                condensed.set(u, k, new_dist);
+                condensed.set(u, j, new_dist);
             }
 
             // Update state
@@ -420,19 +420,19 @@ fn linkage_primitive(condensed: &mut CondensedMatrix, method: Method) -> Vec<Ste
 
         // 3. Update distances (Lance-Williams)
         // We merge v into u. u becomes the new cluster. v becomes inactive.
-        for k in 0..n {
-            if !active[k] || k == u || k == v {
+        for j in 0..n {
+            if !active[j] || j == u || j == v {
                 continue;
             }
 
-            let d_uk = condensed.get(u, k);
-            let d_vk = condensed.get(v, k);
+            let d_uk = condensed.get(u, j);
+            let d_vk = condensed.get(v, j);
             let d_uv = min_dist;
 
             let new_dist =
-                lance_williams(method, d_uk, d_vk, d_uv, size1, size2, size[k]);
+                lance_williams(method, d_uk, d_vk, d_uv, size1, size2, size[j]);
 
-            condensed.set(u, k, new_dist);
+            condensed.set(u, j, new_dist);
         }
 
         // 4. Update state

@@ -3,7 +3,7 @@ Perform agglomerative hierarchical clustering on a distance matrix.
 Input:
 
 * A PHYLIP format distance matrix (strict or relaxed).
-* For pairwise list input (`name1 name2 dist`), use `necom mat to-phylip` first.
+* For pairwise list input (`name1\tname2\tdist`), use `necom mat to-phylip` first.
 
 Output:
 

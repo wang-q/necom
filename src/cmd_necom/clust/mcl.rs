@@ -8,7 +8,7 @@ pub fn make_subcommand() -> Command {
         .about("Clusters entries via Markov Clustering (MCL)")
         .after_help(include_str!("../../../docs/help/clust/mcl.md"))
         .arg(crate::cmd_necom::args::infile_arg_required_with_help(
-            "Input file containing pairwise similarities (edge weights) in .tsv format",
+            "Input file containing pairwise similarities (edge weights) in .tsv format. [stdin] for standard input",
         ))
         .arg(crate::cmd_necom::args::format_arg())
         .arg(crate::cmd_necom::args::flat_rep_arg())
