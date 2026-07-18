@@ -8,7 +8,7 @@ Output:
 
 * TSV with a header row.
 * External evaluation: one row of pair-based metrics (ARI, AMI, V-Measure, etc.).
-* Internal evaluation: one row per partition with Silhouette, Dunn, Davies-Bouldin, etc.
+* Internal evaluation: one row of distance-based or coordinate-based metrics (Silhouette, Dunn, ... or Davies-Bouldin, Calinski-Harabasz, ...).
 * Batch mode (`--input-format long`): one row per `Group`, with the `Group` column preserved as the first column.
 
 Notes:
@@ -21,6 +21,7 @@ Notes:
 * `--other` / `--truth`: second partition for external evaluation (synonyms).
 * `--no-singletons`: exclude singleton clusters from `--other` before external evaluation.
 * `--input-format`: supports `pair` (default), `cluster`, or `long` (required for batch mode).
+* `--other-format`: format for the `--other` file (`cluster` or `pair`). Defaults to the value of `--input-format` in single mode, or `cluster` in batch mode (since the truth file is a single partition, not Long).
 * In batch mode, the `Group` column is preserved as the first column of the output.
 * Quick metric selection:
     * With ground truth: ARI or AMI.

@@ -334,6 +334,69 @@ fn test_internal_indices_simple() {
         wg,
         expected_wg
     );
+
+    // Dunn = min_inter / max_intra_diameter = 4.0 / 1.0 = 4.0
+    // (min inter-cluster distance is B-C=4.0; max intra diameter is max(1.0, 1.0)=1.0)
+    let dunn = dunn_score(&p, &dist_mat);
+    assert!((dunn - 4.0).abs() < 1e-6, "Dunn was {}", dunn);
+
+    // Gamma (Pearson correlation between distance and binary same/diff).
+    // Pairs: (1,0),(1,0),(4,1),(5,1),(5,1),(6,1). Hand-computed ≈ 0.956183.
+    // Value differs slightly from 32/sqrt(1120) because the implementation
+    // computes sqrt(var_x)*sqrt(var_y) rather than sqrt(var_x*var_y).
+    let gamma = gamma_score(&p, &dist_mat);
+    assert!((gamma - 0.9561828875).abs() < 1e-6, "Gamma was {}", gamma);
+
+    // Tau (Kendall tau-b). Ties in distance (1.0 x2, 5.0 x2) and in Y
+    // (2 same, 4 diff) reduce tau from 1.0. Hand-computed ≈ 0.784465.
+    let tau = tau_score(&p, &dist_mat);
+    assert!((tau - 0.7844645406).abs() < 1e-6, "Tau was {}", tau);
+}
+
+#[test]
+fn test_gamma_tau_sign() {
+    // Perfect separation with NO ties in distance: all intra < all inter.
+    // Cluster 1: A, B (intra=1.0); Cluster 2: C, D (intra=2.0).
+    // Inter: A-C=3, A-D=4, B-C=5, B-D=6.
+    //
+    // Gamma (Pearson) is positive but < 1.0 because the binary Y variable
+    // (2 same, 4 diff) is not perfectly correlated with distance.
+    // Tau-b is positive but < 1.0 because ties in Y reduce the denominator.
+    let mut p = LabelMap::new();
+    p.insert("A".to_string(), 1);
+    p.insert("B".to_string(), 1);
+    p.insert("C".to_string(), 2);
+    p.insert("D".to_string(), 2);
+
+    let names = vec![
+        "A".to_string(),
+        "B".to_string(),
+        "C".to_string(),
+        "D".to_string(),
+    ];
+    let mut dist_mat = NamedMatrix::new(names).unwrap();
+    dist_mat.set_by_name("A", "B", 1.0).unwrap();
+    dist_mat.set_by_name("C", "D", 2.0).unwrap();
+    dist_mat.set_by_name("A", "C", 3.0).unwrap();
+    dist_mat.set_by_name("A", "D", 4.0).unwrap();
+    dist_mat.set_by_name("B", "C", 5.0).unwrap();
+    dist_mat.set_by_name("B", "D", 6.0).unwrap();
+
+    // Gamma = 24 / sqrt(105 * 8) = 24 / sqrt(840) ≈ 0.828079
+    let gamma = gamma_score(&p, &dist_mat);
+    assert!((gamma - 0.8280786712).abs() < 1e-6, "Gamma was {}", gamma);
+    assert!(
+        gamma > 0.0,
+        "Gamma should be positive for well-separated clusters"
+    );
+
+    // Tau-b = 8 / sqrt(15 * 8) = 8 / sqrt(120) ≈ 0.730297
+    let tau = tau_score(&p, &dist_mat);
+    assert!((tau - 0.7302967433).abs() < 1e-6, "Tau was {}", tau);
+    assert!(
+        tau > 0.0,
+        "Tau should be positive for well-separated clusters"
+    );
 }
 
 #[test]

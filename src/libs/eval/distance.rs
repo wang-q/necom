@@ -33,6 +33,8 @@ pub struct TreeDistance {
 }
 
 impl TreeDistance {
+    /// Construct a `TreeDistance` from a `Tree`, pre-building the name→id map
+    /// for O(1) lookups in subsequent `get_distance` calls.
     pub fn new(tree: Tree) -> Self {
         let name_map: HashMap<String, usize> = tree.get_name_id().into_iter().collect();
         Self { tree, name_map }

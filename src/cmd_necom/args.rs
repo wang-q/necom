@@ -431,7 +431,7 @@ pub fn other_partition_arg() -> Arg {
 /// `--tree` argument for internal evaluation using patristic distance.
 pub fn tree_arg() -> Arg {
     Arg::new("tree").long("tree").num_args(1).help(
-        "Tree file (for internal evaluation: Silhouette, using patristic distance)",
+        "Tree file (for internal evaluation: Silhouette, Dunn, C-Index, Gamma, Tau)",
     )
 }
 
@@ -440,7 +440,7 @@ pub fn coords_arg() -> Arg {
     Arg::new("coords")
         .long("coords")
         .num_args(1)
-        .help("Coordinate matrix file (for internal evaluation: Davies-Bouldin)")
+        .help("Coordinate matrix file (for internal evaluation: Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski)")
 }
 
 /// `--no-singletons` flag for external evaluation.

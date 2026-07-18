@@ -17,7 +17,7 @@ Notes:
     * `WRF`: Weighted Robinson-Foulds distance (branch length difference). Trivial splits (single-leaf branches) are excluded by default.
     * `KF`: Kuhner-Felsenstein (Branch Score) distance. Trivial splits are excluded by default.
 * Use `--include-trivial` to include single-leaf splits in WRF/KF calculations.
-* Single-file pairwise mode requires at least 2 trees. With only 1 tree, a warning is emitted and the output contains only the header.
+* Single-file pairwise mode requires at least 2 trees; with fewer, the command errors out with a clear message.
 
 Examples:
 

@@ -29,11 +29,14 @@ impl std::str::FromStr for PartitionFormat {
 ///
 /// Supported formats:
 /// 1. Cluster-based: Each line is a cluster, items separated by whitespace.
-///    The first item is treated as the cluster representative/ID.
+///    All items on a line are inserted as members of that cluster (by
+///    `necom clust` convention, the first item is the cluster representative,
+///    but it is treated as a regular member).
 /// 2. Pair-based: Two or more whitespace-separated columns.
 ///    - First column: Cluster label (string).
 ///    - Second column: Item name.
-///    - Additional columns are ignored.
+///
+///    Additional columns are ignored.
 /// 3. Long: Returns an error — Long format contains multiple partitions and
 ///    must be loaded via [`load_batch_partitions`] instead.
 pub fn load_partition<P: AsRef<Path>>(
