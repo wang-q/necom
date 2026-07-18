@@ -46,7 +46,7 @@ necom eval <subcommand>
 
 详细指标定义见 [§4](eval-planned.md#4-eval-tree-详细设计)。
 
-**与 `eval partition --tree` 的边界**：`eval partition` 子命令已提供 `--tree` 选项（[args.rs:418](../../src/cmd_necom/args.rs#L418)），通过 `TreeDistance` 包装树距离做内部 Silhouette 评估。`eval tree` 与之差异在于：(1) 单棵树作为**主输入**（位置参数），而非距离来源选项；(2) 对 clade 分组与任意 partition **分流优化**（前者 O(N)、后者 O(N²)）；(3) 引入 Cophenetic 拟合度、性状纯度、参考树对比等多维度评估，这些在 partition 评估中不存在。两者关系互补：partition 评估以分组为中心、树为辅助；tree 评估以树为中心、分组为辅助。
+**与 `eval partition --tree` 的边界**：`eval partition` 子命令已提供 `--tree` 选项（[args.rs:418](../../src/cmd_necom/args.rs)），通过 `TreeDistance` 包装树距离做内部 Silhouette 评估。`eval tree` 与之差异在于：(1) 单棵树作为**主输入**（位置参数），而非距离来源选项；(2) 对 clade 分组与任意 partition **分流优化**（前者 O(N)、后者 O(N²)）；(3) 引入 Cophenetic 拟合度、性状纯度、参考树对比等多维度评估，这些在 partition 评估中不存在。两者关系互补：partition 评估以分组为中心、树为辅助；tree 评估以树为中心、分组为辅助。
 
 ### 3.4 `necom eval quartet`（未来候选，不预留命名空间）
 
@@ -78,7 +78,7 @@ necom eval <subcommand>
 - **多层次评估**：支持从纯数学指标到引入外部生物学知识（分类表、参考树、地理分布）的深度评估。
 - **基因树 vs 物种树**：承认并量化由 ILS、HGT 或基因重复/丢失引起的不一致性。
 - **性状映射**：支持将叶子节点映射到分类层级或地理区域，计算分组的"纯度"和"熵"。
-- **距离定义**：优先采用分支长度（Patristic distance）；当长度缺失时，以边数作为距离替代（见 [query.rs:124](../../src/libs/phylo/tree/query.rs#L124) `node_distance` 的现有约定）。
+- **距离定义**：优先采用分支长度（Patristic distance）；当长度缺失时，以边数作为距离替代（见 [query.rs:124](../../src/libs/phylo/tree/query.rs) `node_distance` 的现有约定）。
 
 ### 4.2 输入与输出
 
@@ -93,7 +93,7 @@ necom eval <subcommand>
 
 > **命名说明**：`eval tree` 使用 `--ref`（参考树）和 `--part`（分组），与 `eval partition` 的 `--other`（参考分区）命名不同。这是因为两者的语义不同：partition 评估比较两个对等的分区，tree 评估比较一棵目标树与一棵权威参考树。`--ref` 在 tree 语境下是新增参数，不与 partition 评估冲突。
 >
-> **`--part` vs `--tree` 角色**：`eval tree` 的 `--part`（待评估的分组）与 `eval partition` 的 `--tree`（patristic 距离来源，[args.rs:418](../../src/cmd_necom/args.rs#L418)）角色相反。两者命名差异反映语义差异：partition 评估以分组为主、树为辅；tree 评估以树为主、分组为辅。用户不应混淆。
+> **`--part` vs `--tree` 角色**：`eval tree` 的 `--part`（待评估的分组）与 `eval partition` 的 `--tree`（patristic 距离来源，[args.rs:418](../../src/cmd_necom/args.rs)）角色相反。两者命名差异反映语义差异：partition 评估以分组为主、树为辅；tree 评估以树为主、分组为辅。用户不应混淆。
 
 #### 输出
 
@@ -110,7 +110,7 @@ necom eval <subcommand>
 #### 4.3.1 几何/拓扑指标
 *无需外部信息，仅基于输入树的边长和拓扑。*
 
-设树上任意两个叶子的距离为 `d(x, y)`，由 [query.rs:79](../../src/libs/phylo/tree/query.rs#L79) `get_distance` 或 [query.rs:124](../../src/libs/phylo/tree/query.rs#L124) `node_distance` 计算。
+设树上任意两个叶子的距离为 `d(x, y)`，由 [query.rs:79](../../src/libs/phylo/tree/query.rs) `get_distance` 或 [query.rs:124](../../src/libs/phylo/tree/query.rs) `node_distance` 计算。
 
 **关键复杂度约束 — clade vs 任意 partition**：
 
@@ -119,14 +119,14 @@ necom eval <subcommand>
 - **Clade 分组**（如 `necom cut` 的输出）：每个簇的成员恰好构成一个子树。此时可用 O(N) 自底向上聚合（见 §5.1）。
 - **任意 partition**（如 dbscan/mcl 输出、外部 ground truth）：簇成员可能跨多个子树。此时 avg/diameter/Silhouette 的 `b(x)` 本质是 O(N²)（每对叶子可能跨子树，需逐对计算 LCA 距离）。
 
-**实施策略**：对每个簇先用 `Tree::is_clade`（[query.rs:182](../../src/libs/phylo/tree/query.rs#L182)）检测；clade 走 O(N) 路径，非 clade 走 O(N²) 路径。对大树提供 `--samples <N>` 对 Silhouette 采样。
+**实施策略**：对每个簇先用 `Tree::is_clade`（[query.rs:182](../../src/libs/phylo/tree/query.rs)）检测；clade 走 O(N) 路径，非 clade 走 O(N²) 路径。对大树提供 `--samples <N>` 对 Silhouette 采样。
 
 **簇内紧密性（Cohesion）**
 - **簇内平均两两距离**: `mean(d_intra) = 平均{ d(x, y) | x, y ∈ C, x≠y }`
-  - Clade 路径：复用 [balance.rs:96](../../src/libs/phylo/tree/balance.rs#L96) `compute_avg_clade_distances` 的 O(N) 聚合。
+  - Clade 路径：复用 [balance.rs:96](../../src/libs/phylo/tree/balance.rs) `compute_avg_clade_distances` 的 O(N) 聚合。
   - 任意路径：O(|C|²) 次两两 `node_distance` 调用。
 - **簇直径**: `diameter(C) = max{ d(x, y) | x, y ∈ C }`
-  - **注意**：代码库当前**不存在**簇内直径的 O(N) 算法。`stat.rs::diameter`（[stat.rs:153](../../src/libs/phylo/tree/stat.rs#L153)）是全树双 BFS（Dijkstra 风格 BinaryHeap），不是簇内直径。Phase 1 需新增 `max_pairwise_distance` 函数到 `libs/phylo/tree/`。对 clade 可用自底向上聚合（维护子树内最长两条根-叶路径），对任意 partition 退化为 O(|C|²)。
+  - **注意**：代码库当前**不存在**簇内直径的 O(N) 算法。`stat.rs::diameter`（[stat.rs:153](../../src/libs/phylo/tree/stat.rs)）是全树双 BFS（Dijkstra 风格 BinaryHeap），不是簇内直径。Phase 1 需新增 `max_pairwise_distance` 函数到 `libs/phylo/tree/`。对 clade 可用自底向上聚合（维护子树内最长两条根-叶路径），对任意 partition 退化为 O(|C|²)。
 
 **簇间分离度（Separation）**
 - **最近簇间距离**: `d_min_inter(Ci) = min_{j≠i} min_{x∈Ci, y∈Cj} d(x, y)`
@@ -138,7 +138,7 @@ necom eval <subcommand>
 - `b(x)`：对所有其他簇，取"与该簇所有成员的平均距离"的最小值
 - `s(x) = (b(x) - a(x)) / max(a(x), b(x))`
 - **聚合**: 计算全局平均值和每簇的均值/中位数。
-- **复用现有实现**：`libs/clust/eval/distance.rs:57` 已提供 `silhouette_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix)`。`TreeDistance`（[distance.rs:20](../../src/libs/clust/eval/distance.rs#L20)）已实现 `DistanceMatrix` trait，包装 `Tree::get_distance`。复用路径：`TreeDistance::new(tree)` → `silhouette_score(&partition, &td)`，无需重写。
+- **复用现有实现**：`libs/clust/eval/distance.rs:57` 已提供 `silhouette_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix)`。`TreeDistance`（[distance.rs:20](../../src/libs/clust/eval/distance.rs)）已实现 `DistanceMatrix` trait，包装 `Tree::get_distance`。复用路径：`TreeDistance::new(tree)` → `silhouette_score(&partition, &td)`，无需重写。
 - **单例处理**：现有 `silhouette_score` 已遵循 scikit-learn 约定（大小为 1 的簇 `s(x)=0`）。早期草案"单例 s(x) 仅由 b(x) 决定"的说法会导致 `s(x)=1`，不正确。
 - **复杂度**：O(N²)（任意 partition）。`b(x)` 需对每个样本遍历所有其他簇的成员。对大树用 `--samples` 采样（**新增工作**：现有 `silhouette_score` 无采样参数，Phase 1 需扩展或在外层包装采样逻辑）。
 
@@ -164,19 +164,19 @@ necom eval <subcommand>
 
 **叶子集匹配前置处理**：
 
-[cmp.rs:90](../../src/libs/phylo/cmp.rs#L90) `check_leaves_and_build_map` 要求两棵树叶子集**完全相等**，否则直接 `bail!`。基因树 vs 物种树的真实场景中，基因树常只采样部分 taxa。因此在计算 RF 前必须：
+[cmp.rs:90](../../src/libs/phylo/cmp.rs) `check_leaves_and_build_map` 要求两棵树叶子集**完全相等**，否则直接 `bail!`。基因树 vs 物种树的真实场景中，基因树常只采样部分 taxa。因此在计算 RF 前必须：
 
 1. 计算两棵树叶集的交集 L = L_gene ∩ L_species。
-2. 若 |L| < min(|L_gene|, |L_species|)，发出警告并 prune 两棵树到 L。现有工具需组合：`algo::compute_keep_set`（[algo.rs:285](../../src/libs/phylo/tree/algo.rs#L285)，计算保留集 = 交集叶子 ∪ 祖先）+ `algo::prune_nodes`（[algo.rs:343](../../src/libs/phylo/tree/algo.rs#L343)，彻底 prune + `compact()`）。**注意**：`algo::prune_nodes` 调用后 NodeId 失效（因 `compact()` 物理回收），后续操作需基于 prune 后的新树重建映射。Phase 3 需新增 `intersect_leaves(t1, t2) -> (Tree, Tree)` 封装此流程。
+2. 若 |L| < min(|L_gene|, |L_species|)，发出警告并 prune 两棵树到 L。现有工具需组合：`algo::compute_keep_set`（[algo.rs:285](../../src/libs/phylo/tree/algo.rs)，计算保留集 = 交集叶子 ∪ 祖先）+ `algo::prune_nodes`（[algo.rs:343](../../src/libs/phylo/tree/algo.rs)，彻底 prune + `compact()`）。**注意**：`algo::prune_nodes` 调用后 NodeId 失效（因 `compact()` 物理回收），后续操作需基于 prune 后的新树重建映射。Phase 3 需新增 `intersect_leaves(t1, t2) -> (Tree, Tree)` 封装此流程。
 3. 若 |L| 过小（如 < 4），RF 距离无统计意义，应报错退出。
 
 此项 prune 逻辑是 `eval tree --ref` 的必要前置步骤，非可选优化。
 
 **指标**：
 
-- **Local RF Distance**: 簇内子树与参考树对应子集的 Robinson-Foulds 距离。复用 [cmp.rs:183](../../src/libs/phylo/cmp.rs#L183) `robinson_foulds`。
+- **Local RF Distance**: 簇内子树与参考树对应子集的 Robinson-Foulds 距离。复用 [cmp.rs:183](../../src/libs/phylo/cmp.rs) `robinson_foulds`。
 - **Monophyly Check**: 基因树上的簇成员，在物种树上是否也聚集成单系群？
-  - 复用 `Tree::is_clade`（[query.rs:182](../../src/libs/phylo/tree/query.rs#L182)，要求 ≥2 节点）或 `Tree::is_monophyletic`（[query.rs:140](../../src/libs/phylo/tree/query.rs#L140)，单节点也视为单系）。`is_clade` 是 `is_monophyletic` 的严格包装。CLI 层（[nwk/label.rs:112](../../src/cmd_necom/nwk/label.rs#L112)、[nwk/subtree.rs:70](../../src/cmd_necom/nwk/subtree.rs#L70)）当前统一使用 `Tree::is_clade`，未直接调用 `is_monophyletic`。
+  - 复用 `Tree::is_clade`（[query.rs:182](../../src/libs/phylo/tree/query.rs)，要求 ≥2 节点）或 `Tree::is_monophyletic`（[query.rs:140](../../src/libs/phylo/tree/query.rs)，单节点也视为单系）。`is_clade` 是 `is_monophyletic` 的严格包装。CLI 层（[nwk/label.rs:112](../../src/cmd_necom/nwk/label.rs)、[nwk/subtree.rs:70](../../src/cmd_necom/nwk/subtree.rs)）当前统一使用 `Tree::is_clade`，未直接调用 `is_monophyletic`。
   - 若基因树聚类但物种树分散 -> 可能暗示 HGT 或 LBA（长枝吸引）。
 
 #### 4.3.4 高级树比较（未来候选，不纳入 Phase 1）
@@ -229,7 +229,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 #### Phase 3：参考树对比（待 Phase 2 稳定后启动）
 - [ ] 实现 `--ref` 叶子集交集 prune 前置处理。新增 `intersect_leaves(t1, t2) -> (Tree, Tree)` 工具函数（封装 `algo::compute_keep_set` + `algo::prune_nodes`），返回 prune 后的新树。注意 `algo::prune_nodes` 后 NodeId 失效，需重建映射。
-- [ ] 接入 RF 距离（复用 [cmp.rs:183](../../src/libs/phylo/cmp.rs#L183)）与单系性检查（复用 [query.rs:182](../../src/libs/phylo/tree/query.rs#L182) `is_clade`）到 eval 输出。
+- [ ] 接入 RF 距离（复用 [cmp.rs:183](../../src/libs/phylo/cmp.rs)）与单系性检查（复用 [query.rs:182](../../src/libs/phylo/tree/query.rs) `is_clade`）到 eval 输出。
 
 #### Phase 4：未来方向（不预设时间表）
 - NCBI Taxonomy Dump 支持、Tanglegram、Baker Gamma 等。仅在出现具体需求时启动单独设计文档。
@@ -240,14 +240,14 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 - **`libs/clust/eval/`**：分区级指标，三类共 23 个：
   - **外部指标**（[pairwise.rs](../../src/libs/clust/eval/pairwise.rs)，12 个）：ARI、AMI、Homogeneity、Completeness、V-Measure、FMI、NMI、MI、RI、Jaccard、Precision、Recall。
-  - **距离矩阵指标**（[distance.rs](../../src/libs/clust/eval/distance.rs)，5 个）：`silhouette_score`（[distance.rs:57](../../src/libs/clust/eval/distance.rs#L57)）、`dunn_score`、`c_index_score`、`gamma_score`、`tau_score`。
+  - **距离矩阵指标**（[distance.rs](../../src/libs/clust/eval/distance.rs)，5 个）：`silhouette_score`（[distance.rs:57](../../src/libs/clust/eval/distance.rs)）、`dunn_score`、`c_index_score`、`gamma_score`、`tau_score`。
   - **坐标指标**（[coordinates.rs](../../src/libs/clust/eval/coordinates.rs)，6 个）：`davies_bouldin_score`、`calinski_harabasz_score`、`pbm_score`、`ball_hall_score`、`xie_beni_score`、`wemmert_gancarski_score`。
-  - **关键**：`TreeDistance`（[distance.rs:20](../../src/libs/clust/eval/distance.rs#L20)）已实现 `DistanceMatrix` trait，包装 `Tree::get_distance`。**所有 5 个距离矩阵指标可直接用于树评估**，无需重写。
-  - 已良好分层（`EvalTarget`/`DistanceMatrix`/`TreeDistance`/`run_single`/`run_batch`，见 [mod.rs:33](../../src/libs/clust/eval/mod.rs#L33)）。`eval partition` 使用；`eval tree` 复用 `silhouette_score` + `TreeDistance`。
+  - **关键**：`TreeDistance`（[distance.rs:20](../../src/libs/clust/eval/distance.rs)）已实现 `DistanceMatrix` trait，包装 `Tree::get_distance`。**所有 5 个距离矩阵指标可直接用于树评估**，无需重写。
+  - 已良好分层（`EvalTarget`/`DistanceMatrix`/`TreeDistance`/`run_single`/`run_batch`，见 [mod.rs:33](../../src/libs/clust/eval/mod.rs)）。`eval partition` 使用；`eval tree` 复用 `silhouette_score` + `TreeDistance`。
   - **缺失（需新增）**：Purity、Entropy（Phase 2）、Cophenetic 相关系数（Phase 1）。
 - **`libs/phylo/cmp.rs`**：树拓扑比较（RF、WRF、KF）。`eval tree` 复用；`eval compare` 已迁移为顶级命令。
-- **`libs/phylo/tree/balance.rs`**：`compute_avg_clade_distances`（[balance.rs:96](../../src/libs/phylo/tree/balance.rs#L96)）的 O(N) 自底向上聚合，`stat.rs` 仅 re-export。当前唯一消费者是 [tree_cut/clade.rs:93](../../src/libs/clust/tree_cut/clade.rs#L93)（即 `necom cut` 的底层）。
-- **`libs/phylo/tree/query.rs`**：叶子间距离（`get_distance`/`node_distance`，[query.rs:79](../../src/libs/phylo/tree/query.rs#L79)）、LCA、`is_monophyletic`/`is_clade`（[query.rs:140](../../src/libs/phylo/tree/query.rs#L140)）。
+- **`libs/phylo/tree/balance.rs`**：`compute_avg_clade_distances`（[balance.rs:96](../../src/libs/phylo/tree/balance.rs)）的 O(N) 自底向上聚合，`stat.rs` 仅 re-export。当前唯一消费者是 [tree_cut/clade.rs:93](../../src/libs/clust/tree_cut/clade.rs)（即 `necom cut` 的底层）。
+- **`libs/phylo/tree/query.rs`**：叶子间距离（`get_distance`/`node_distance`，[query.rs:79](../../src/libs/phylo/tree/query.rs)）、LCA、`is_monophyletic`/`is_clade`（[query.rs:140](../../src/libs/phylo/tree/query.rs)）。
 - **`libs/phylo/tree/stat.rs`**：树统计（`diameter` 全树双 BFS、`compute_node_heights`、`TreeSummary` 等）。**注意**：`stat.rs::diameter` 不是簇内直径。
 - **`libs/phylo/tree/distance.rs`**：CLI 输出辅助（`dist_root`/`dist_pairwise`/`dist_phylip` 等），**不是**叶子间距离 API。早期草案将其与 `Tree::get_distance` 混淆，已订正。
 - **`libs/clust/feature.rs`**：`FeatureVector` 基础设施，供基于坐标的指标复用。
@@ -255,24 +255,24 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 ### 5.1 实现备注（`eval tree`）
 
 - **距离计算**：
-  - 基础：复用 `Tree::node_distance`（[query.rs:124](../../src/libs/phylo/tree/query.rs#L124)，自动在枝长和与边数间切换）。
-  - **clade 路径优化**：对 AvgDist，复用 [balance.rs:96](../../src/libs/phylo/tree/balance.rs#L96) `compute_avg_clade_distances` 的 O(N) 聚合（返回 `HashMap<NodeId, f64>`，键为子树根）。该算法已在 [tree_cut/clade.rs:93](../../src/libs/clust/tree_cut/clade.rs#L93) 中使用。
+  - 基础：复用 `Tree::node_distance`（[query.rs:124](../../src/libs/phylo/tree/query.rs)，自动在枝长和与边数间切换）。
+  - **clade 路径优化**：对 AvgDist，复用 [balance.rs:96](../../src/libs/phylo/tree/balance.rs) `compute_avg_clade_distances` 的 O(N) 聚合（返回 `HashMap<NodeId, f64>`，键为子树根）。该算法已在 [tree_cut/clade.rs:93](../../src/libs/clust/tree_cut/clade.rs) 中使用。
   - **任意 partition 路径**：无 O(N) 折中，必须 O(|C|²) 调用 `node_distance`。
 - **簇直径（max_clade）**：
   - **当前代码库不存在此算法**。`stat.rs::diameter` 是全树双 BFS，不适用。
   - Phase 1 需新增：对 clade 用自底向上聚合（每个节点维护子树内最长/次长根-叶路径，直径 = max(子直径, 最长+次长)）；对任意 partition 退化为 O(|C|²)。
 - **拓扑比较**：
-  - RF 距离：核心逻辑在 [cmp.rs:183](../../src/libs/phylo/cmp.rs#L183)（`TreeComparison` trait 提供 `robinson_foulds`/`weighted_robinson_foulds`/`kuhner_felsenstein`），优化入口 `compute_tree_metrics` 在 [cmp.rs:290](../../src/libs/phylo/cmp.rs#L290)。
+  - RF 距离：核心逻辑在 [cmp.rs:183](../../src/libs/phylo/cmp.rs)（`TreeComparison` trait 提供 `robinson_foulds`/`weighted_robinson_foulds`/`kuhner_felsenstein`），优化入口 `compute_tree_metrics` 在 [cmp.rs:290](../../src/libs/phylo/cmp.rs)。
   - CLI 入口为 [eval/compare.rs](../../src/cmd_necom/eval/compare.rs)，由 `nwk/compare.rs` 迁移而来。
 - **单系性检查**：
-  - 复用 `Tree::is_clade`（[query.rs:182](../../src/libs/phylo/tree/query.rs#L182)，要求 ≥2 节点）或 `Tree::is_monophyletic`（[query.rs:140](../../src/libs/phylo/tree/query.rs#L140)，单节点也视为单系）。CLI 层（[nwk/label.rs:112](../../src/cmd_necom/nwk/label.rs#L112) 和 [nwk/subtree.rs:70](../../src/cmd_necom/nwk/subtree.rs#L70)）当前统一使用 `Tree::is_clade`。
-- **Silhouette 复用**：直接复用 `libs/clust/eval/distance.rs::silhouette_score` + `TreeDistance`（[distance.rs:20](../../src/libs/clust/eval/distance.rs#L20)），无需重写。`TreeDistance::new(tree)` 包装 `Tree::get_distance` 并实现 `DistanceMatrix` trait。现有实现已遵循 sklearn 单例 `s(x)=0` 约定。`--samples` 采样为 Phase 1 新增工作。
-- **`tree_medoid`**：[query.rs:267](../../src/libs/phylo/tree/query.rs#L267) 提供 `tree_medoid(tree, ids) -> Option<usize>`，O(N²) 调用 `get_distance`。当前注释标记 "Currently unused by the CLI"。`eval tree` 可考虑复用于 representative 选择或 Medoid-based 聚类评估。
+  - 复用 `Tree::is_clade`（[query.rs:182](../../src/libs/phylo/tree/query.rs)，要求 ≥2 节点）或 `Tree::is_monophyletic`（[query.rs:140](../../src/libs/phylo/tree/query.rs)，单节点也视为单系）。CLI 层（[nwk/label.rs:112](../../src/cmd_necom/nwk/label.rs) 和 [nwk/subtree.rs:70](../../src/cmd_necom/nwk/subtree.rs)）当前统一使用 `Tree::is_clade`。
+- **Silhouette 复用**：直接复用 `libs/clust/eval/distance.rs::silhouette_score` + `TreeDistance`（[distance.rs:20](../../src/libs/clust/eval/distance.rs)），无需重写。`TreeDistance::new(tree)` 包装 `Tree::get_distance` 并实现 `DistanceMatrix` trait。现有实现已遵循 sklearn 单例 `s(x)=0` 约定。`--samples` 采样为 Phase 1 新增工作。
+- **`tree_medoid`**：[query.rs:267](../../src/libs/phylo/tree/query.rs) 提供 `tree_medoid(tree, ids) -> Option<usize>`，O(N²) 调用 `get_distance`。当前注释标记 "Currently unused by the CLI"。`eval tree` 可考虑复用于 representative 选择或 Medoid-based 聚类评估。
 - **性能策略**：
   - clade 检测后分流，clade 走 O(N)，任意 partition 走 O(N²)。
   - 对于 Silhouette 和 Cophenetic，**明确承认 O(N²) 是本质开销**，不试图用遍历聚合规避；对大树通过 `--samples` 采样。
   - **避免**构建全距离矩阵的场景仅限 clade 分组。
-- **数值格式**：统一到六位小数，移除尾随零（复用 [cmp.rs:350](../../src/libs/phylo/cmp.rs#L350) `format_float`，与 `eval compare` 保持一致）。
+- **数值格式**：统一到六位小数，移除尾随零（复用 [cmp.rs:350](../../src/libs/phylo/cmp.rs) `format_float`，与 `eval compare` 保持一致）。
 
 ## 6. 输入输出约定
 
@@ -288,7 +288,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 ### 6.2 通用输出格式
 
 - 统一为 **TSV**，首行为列名。
-- 数值精度：默认六位小数，移除尾随零（复用 [cmp.rs:350](../../src/libs/phylo/cmp.rs#L350) `format_float`）。
+- 数值精度：默认六位小数，移除尾随零（复用 [cmp.rs:350](../../src/libs/phylo/cmp.rs) `format_float`）。
 - 当输出包含多类指标时，可用 `--metrics` 控制输出列，避免冗余。
 
 ## 7. 迁移计划
@@ -300,7 +300,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 > **状态（2026-07）**：步骤 1-2 已完成；步骤 3（`eval tree` Phase 1）仍待办。
 
 1. ✅ 创建 `src/cmd_necom/eval/` 目录：已含 `mod.rs` + `compare.rs` + `partition.rs`（`tree.rs` 尚未创建）。
-2. ✅ 顶层命令注册：[necom.rs:20](../../src/necom.rs#L20) `.subcommand(cmd_necom::eval::make_subcommand())`、[necom.rs:51](../../src/necom.rs#L51) dispatch、[necom.rs:33-34](../../src/necom.rs#L33-L34) after_help 文本 `* eval - Metrics: compare, partition`。
+2. ✅ 顶层命令注册：[necom.rs:20](../../src/necom.rs) `.subcommand(cmd_necom::eval::make_subcommand())`、[necom.rs:51](../../src/necom.rs) dispatch、[necom.rs:33-34](../../src/necom.rs) after_help 文本 `* eval - Metrics: compare, partition`。
 3. ☐ 实现 `necom eval tree` 的 Phase 1（几何核心），它没有已存在的 CLI 需要兼容。
 
 ### 阶段 4：扩展 `eval tree`

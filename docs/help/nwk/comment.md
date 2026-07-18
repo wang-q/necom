@@ -9,7 +9,7 @@ Notes:
 * Comments are stored in an NHX-like format (`:key=value`).
 * For named nodes, use `--node`.
 * For unnamed internal nodes, use `--lca` with two comma-separated names, e.g. `--lca A,B`.
-* Use `--string` to add a free-form string as the `comment` property.
+* Use `--string` to add a free-form string stored under the `string` property.
 * Visualization options:
     * `--color`, `--label`, and `--comment-text` each take one argument.
     * `--dot`, `--bar`, `--rec`, and `--tri` take zero or one argument.

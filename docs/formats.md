@@ -43,7 +43,7 @@ A dedicated TSV format (`Group\tClusterID\tItem`) for batch evaluation, auto-emi
 
 ## Distance Matrix
 
-Used by `clust hier`, `nj`, `upgma`, `eval --matrix`, and `cut --dynamic-hybrid`.
+Used by `clust hier`, `nj`, `upgma`, `eval partition --matrix`, and `cut --dynamic-hybrid`.
 
 ### PHYLIP Format
 

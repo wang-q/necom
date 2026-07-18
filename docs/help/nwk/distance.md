@@ -16,7 +16,7 @@ Notes:
 * Use `-I` to exclude internal nodes and `-L` to exclude leaf nodes.
 * Use `-n` / `-l` / `-x` to restrict reported nodes to a name, name-list file, or regex.
 * When no name-based filter is given, all selected nodes (respecting `-I`/`-L`) are reported.
-* `--mode phylip` requires all selected nodes to be named.
+* `--mode phylip` requires all selected nodes to be named; node names cannot contain whitespace characters.
 
 Examples:
 
