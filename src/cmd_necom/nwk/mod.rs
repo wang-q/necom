@@ -22,20 +22,7 @@ pub mod topo;
 pub fn make_subcommand() -> Command {
     Command::new("nwk")
         .about("Manipulates, analyzes, and visualizes Newick trees")
-        .after_help(
-            r###"
-This suite of tools provides a comprehensive set of operations for phylogenetic trees in Newick format.
-
-Subcommand groups:
-* Information: stat / label / distance
-* Manipulation: order / prune / rename / replace / reroot / subtree / topo
-* Visualization: comment / indent / to-dot / to-forest / to-svg / to-tex
-
-Notes:
-* Reads from stdin if input file is 'stdin'
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/nwk.md"))
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(comment::make_subcommand())

@@ -13,6 +13,8 @@ Notes:
     * `species`: appends as species name (`:S=<replacement>`) in NHX.
     * `asis`: appends as comments/properties. Values containing `=` are parsed as `key=value` pairs; bare values are stored as keys with empty values.
 * Columns 3+ are always appended to the node's comments/properties. Key-value pairs (e.g., `color=red`) are stored as properties; simple tags (e.g., `highlight`) are stored as keys with empty values.
+* `-I, --internal`: skip internal nodes (don't replace/annotate them).
+* `-L, --leaf`: skip leaf nodes (don't replace/annotate them).
 
 Examples:
 

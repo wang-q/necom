@@ -6,6 +6,7 @@ use clap::{ArgMatches, Command};
 pub fn make_subcommand() -> Command {
     Command::new("pl")
         .about("Runs integrated pipelines")
+        .after_help(include_str!("../../../docs/help/pl.md"))
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(condense::make_subcommand())

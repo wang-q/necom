@@ -8,21 +8,7 @@ pub mod replicate;
 pub fn make_subcommand() -> Command {
     Command::new("eval")
         .about("Evaluates clustering partitions and phylogenetic trees")
-        .after_help(
-            r###"
-This suite of tools provides evaluation metrics for clustering partitions
-and phylogenetic trees.
-
-Subcommand groups:
-* Tree comparison: compare
-* Partition evaluation: partition
-* Branch support: replicate
-
-Notes:
-* Reads from stdin if input file is 'stdin'
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/eval.md"))
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(compare::make_subcommand())

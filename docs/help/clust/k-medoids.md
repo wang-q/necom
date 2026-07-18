@@ -15,6 +15,7 @@ Notes:
 * `--k <N>`: number of clusters (required).
 * `--runs <N>`: number of random initializations (default: `10`).
 * `--max-iter <N>`: maximum number of iterations (default: `100`).
+* `--seed <N>`: random seed for reproducible initialization.
 * `--same <V>`: default score of identical element pairs (default: `0.0`).
 * `--missing <V>`: default score of missing pairs (default: `1.0`).
 * Alias: `necom clust km` is equivalent to `necom clust k-medoids`.

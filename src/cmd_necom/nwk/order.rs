@@ -45,7 +45,7 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("deladderize")
                 .long("deladderize")
-                .alias("dl")
+                .visible_alias("dl")
                 .action(ArgAction::SetTrue)
                 .help("De-ladderize (alternate) the tree"),
         )

@@ -10,6 +10,7 @@ pub mod transform;
 pub fn make_subcommand() -> Command {
     Command::new("mat")
         .about("Operates on matrices")
+        .after_help(include_str!("../../../docs/help/mat.md"))
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(compare::make_subcommand())
