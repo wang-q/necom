@@ -123,11 +123,13 @@ pub fn load_batch_partitions<P: AsRef<Path>>(
 
     for line in reader.lines() {
         let line = line?;
-        if line.trim().is_empty()
-            || line.starts_with('#')
-            || line.starts_with("Threshold")
-            || line.starts_with("Group")
-        {
+        if line.trim().is_empty() || line.starts_with('#') {
+            continue;
+        }
+        // Skip the exact header line emitted by `necom cut --scan`. Do NOT
+        // use prefix matching — user group IDs may legitimately start with
+        // "Group" (e.g., "Group1") and would be silently dropped.
+        if line == "Group\tClusterID\tSampleID" {
             continue;
         }
 
@@ -286,6 +288,43 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
         assert!(err.contains("long format"), "unexpected error: {}", err);
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_batch_partitions_group_prefixed_id() -> anyhow::Result<()> {
+        // Regression test: previously the parser skipped any line starting
+        // with "Group" or "Threshold", which silently dropped user group IDs
+        // like "Group1" or "ThresholdHigh". Only the exact header line
+        // "Group\tClusterID\tSampleID" should be skipped.
+        let mut file = tempfile::NamedTempFile::new()?;
+        writeln!(file, "Group\tClusterID\tSampleID")?; // exact header, skipped
+        writeln!(file, "Group1\t1\tA")?; // group ID starting with "Group"
+        writeln!(file, "Group1\t1\tB")?;
+        writeln!(file, "Group1\t2\tC")?;
+        writeln!(file, "ThresholdHigh\t1\tD")?; // group ID starting with "Threshold"
+        writeln!(file, "ThresholdHigh\t1\tE")?;
+
+        let batches = load_batch_partitions(file.path())?;
+        assert_eq!(
+            batches.len(),
+            2,
+            "both groups must be parsed, got {}",
+            batches.len()
+        );
+
+        let (g1, p1) = &batches[0];
+        assert_eq!(g1, "Group1");
+        assert_eq!(p1.len(), 3);
+        assert_eq!(p1.get("A"), Some(&1));
+        assert_eq!(p1.get("B"), Some(&1));
+        assert_eq!(p1.get("C"), Some(&2));
+
+        let (g2, p2) = &batches[1];
+        assert_eq!(g2, "ThresholdHigh");
+        assert_eq!(p2.len(), 2);
+        assert_eq!(p2.get("D"), Some(&1));
+        assert_eq!(p2.get("E"), Some(&1));
         Ok(())
     }
 

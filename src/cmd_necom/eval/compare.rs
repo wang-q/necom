@@ -46,21 +46,23 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         &trees1
     };
 
-    // 3. Output writer
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
-    let include_trivial = args.get_flag("include_trivial");
-
     // Single-file mode requires at least 2 trees for pairwise comparison.
     // Two-file mode can proceed with a single tree on each side.
+    // Check before opening the writer so a failed run does not leave an
+    // empty output file behind.
     if compare_file.is_none() && trees1.len() < 2 {
         anyhow::bail!(
             "need at least 2 trees for pairwise comparison, got {}",
             trees1.len()
         );
     }
+
+    // 3. Output writer
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
+
+    let include_trivial = args.get_flag("include_trivial");
 
     // 4. Compare
     // Header

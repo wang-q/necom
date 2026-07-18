@@ -135,7 +135,7 @@ Clustering evaluation metrics usually fall into two categories: **external valid
 
 - **Hubert's Gamma**
   - **Principle**: Correlation between the distance matrix and a binary clustering matrix (0 = same cluster, 1 = different clusters).
-  - **Range**: `[-1, 1]`. **Larger is better** (note that in the definition Y=1 means different clusters; confirm sign direction for the specific implementation; in `necom` larger means better discriminability).
+  - **Range**: `[-1, 1]`. **Larger is better** (Y=1 means different clusters; larger Gamma means between-cluster distances exceed within-cluster distances more strongly).
 
 - **Kendall's Tau**
   - **Principle**: Rank correlation coefficient between the distance matrix and the clustering matrix.
