@@ -84,12 +84,6 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Output**: Newick tree.
 - **Details**: [Hierarchical Clustering Details](#hierarchical-clustering-details)
 
-### Tree Cutting
-
-The `necom cut` command splits an existing Newick tree (phylogenetic or hierarchical clustering tree) into flat partitions according to distance, topological, or statistical criteria. It is documented separately in [`docs/cut.md`](cut.md) because it operates on trees rather than running a clustering algorithm.
-
-Trees built by `necom clust hier`, `necom clust upgma`, `necom clust nj`, or external tools can be passed directly to `necom cut`. The resulting partitions can be evaluated with `necom eval partition`.
-
 ## Hierarchical Clustering Details
 
 `necom clust hier` (alias `hclust`) provides general hierarchical clustering (dendrogram) generation, supporting `single/complete/average/ward` and other methods, outputting Newick format for downstream `necom cut`.
@@ -249,65 +243,4 @@ necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 | \
 necom cut tree.nwk --height 0.45 > final_clusters.tsv
 ```
 
-## Input/Output Format Conventions
-
-The `necom clust` family of commands involves multiple data formats; the following standard formats are used for interoperability.
-
-### 1. Partition Files
-
-Used to represent clustering results (sample-to-cluster mapping). Three formats are supported via the `--format` option.
-
-#### Pair Format (`--format pair`)
-The most general long-table format; each line indicates which cluster a sample belongs to.
-- **Structure**: `ClusterID <tab> Item`
-- **Representative selection**: For `dbscan`/`mcl`/`k-medoids`, controlled by `--rep {medoid|first}`; default `medoid` (extreme of sum of distances/similarities), `first` is the alphabetically first member in the cluster. This option also affects the first column of `cluster` format. `cc` does not read weights and always uses `first`.
-- **Default format**: The default output format for flat clustering commands is `cluster`; use `--format pair` to emit this long-table representation.
-- **Characteristics**: Easy to parse; supports streaming.
-- **Example**:
-  ```text
-  # Numeric ID
-  1	GeneA
-  1	GeneB
-  2	GeneC
-
-  # Representative as ID
-  GeneA	GeneA
-  GeneA	GeneB
-  GeneC	GeneC
-  ```
-
-#### Cluster Format (`--format cluster`)
-Wide-table format; each line represents a cluster containing all its members.
-- **Structure**: `Item1 <space/tab> Item2 ...`
-- **Characteristics**: Human-readable; suitable for inspecting results. The line number (1-based) is the ClusterID.
-- **Example**:
-  ```text
-  GeneA GeneB
-  GeneC
-  ```
-
-#### Long Format (batch, `--format long`)
-
-A dedicated TSV format (`Group\tClusterID\tItem`) for batch evaluation, auto-emitted by `necom cut --scan` and consumed by `necom eval partition --input-format long`. See [`docs/cut.md`](cut.md#output-format-in-scan-mode) for the full specification.
-
-### 2. Distance Matrix
-
-Used by `clust hier`, `nj`, `upgma`, and `eval --matrix`.
-
-#### PHYLIP Format (relaxed)
-
-`necom` accepts a relaxed PHYLIP format (arbitrary whitespace, optional header). See [`docs/mat.md`](mat.md#1-phylip-distance-matrix-dense) for full structure, strict vs relaxed variants, and lower-triangular form.
-
-### 3. Coordinates / Feature Vectors
-
-Used by `eval partition --coords` (Davies-Bouldin Index) or future `kmeans/gmm`.
-
-#### FeatureVector Format
-- **Structure**: `Name <tab> Val1,Val2,Val3...`
-- **Delimiters**: **Tab** between name and vector; **commas** between numeric values.
-- **Example**:
-  ```text
-  GeneA	1.2,0.5,3.3
-  GeneB	1.1,0.6,3.1
-  ```
-- **Compatibility**: A general feature-vector/coordinate representation format.
+For input/output format conventions used by `necom clust` and other commands, see [`docs/formats.md`](formats.md).

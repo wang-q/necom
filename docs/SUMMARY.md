@@ -11,6 +11,7 @@
 - [Pipelines](pl.md)
 - [Evaluation](eval.md)
 - [Partition Evaluation Deep Dive](eval-partition.md)
+- [File Formats](formats.md)
 
 # Command Reference
 
