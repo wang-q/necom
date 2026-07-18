@@ -387,3 +387,94 @@ fn test_clust_hier_two_samples() {
     assert!(stdout.contains("A:"));
     assert!(stdout.contains("B:"));
 }
+
+#[test]
+fn test_clust_hier_hclust_alias() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("input.phy");
+    let content = "4\nA 0 7 11 14\nB 7 0 6 9\nC 11 6 0 7\nD 14 9 7 0\n";
+    std::fs::write(&input, content).unwrap();
+
+    let out_hier = temp.path().join("hier.nwk");
+    NecomCmd::new()
+        .args(&[
+            "clust",
+            "hier",
+            input.to_str().unwrap(),
+            "-o",
+            out_hier.to_str().unwrap(),
+        ])
+        .assert()
+        .success();
+
+    let out_hclust = temp.path().join("hclust.nwk");
+    NecomCmd::new()
+        .args(&[
+            "clust",
+            "hclust",
+            input.to_str().unwrap(),
+            "-o",
+            out_hclust.to_str().unwrap(),
+        ])
+        .assert()
+        .success();
+
+    let nwk_hier = std::fs::read_to_string(&out_hier).unwrap();
+    let nwk_hclust = std::fs::read_to_string(&out_hclust).unwrap();
+    assert_eq!(
+        nwk_hier, nwk_hclust,
+        "hclust alias should produce identical output to hier"
+    );
+}
+
+#[test]
+fn test_clust_hier_method_aliases() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("input.phy");
+    let content = "4\nA 0 7 11 14\nB 7 0 6 9\nC 11 6 0 7\nD 14 9 7 0\n";
+    std::fs::write(&input, content).unwrap();
+
+    for (canonical, alias) in [
+        ("average", "upgma"),
+        ("weighted", "wpgma"),
+        ("centroid", "upgmc"),
+        ("median", "wpgmc"),
+        ("ward", "ward.d2"),
+    ] {
+        let out_canonical = temp.path().join(format!("{}.nwk", canonical));
+        NecomCmd::new()
+            .args(&[
+                "clust",
+                "hier",
+                input.to_str().unwrap(),
+                "--method",
+                canonical,
+                "-o",
+                out_canonical.to_str().unwrap(),
+            ])
+            .assert()
+            .success();
+
+        let out_alias = temp.path().join(format!("{}.nwk", alias));
+        NecomCmd::new()
+            .args(&[
+                "clust",
+                "hier",
+                input.to_str().unwrap(),
+                "--method",
+                alias,
+                "-o",
+                out_alias.to_str().unwrap(),
+            ])
+            .assert()
+            .success();
+
+        let nwk_canonical = std::fs::read_to_string(&out_canonical).unwrap();
+        let nwk_alias = std::fs::read_to_string(&out_alias).unwrap();
+        assert_eq!(
+            nwk_canonical, nwk_alias,
+            "method '{}' and alias '{}' should produce identical output",
+            canonical, alias
+        );
+    }
+}

@@ -309,7 +309,7 @@ pub fn flat_rep_arg() -> Arg {
             builder::PossibleValue::new("first"),
         ])
         .default_value("medoid")
-        .help("Representative selection for pair output")
+        .help("Representative selection method")
 }
 
 /// `--scan` argument for parameter sweep (format: start,end,step).
