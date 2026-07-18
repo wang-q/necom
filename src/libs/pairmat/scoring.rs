@@ -144,7 +144,8 @@ impl ScoringMatrix<f32> {
         let mut matrix = Self::with_defaults(same, missing);
 
         let reader = crate::reader(infile)?;
-        for line in reader.lines().map_while(Result::ok) {
+        for line in reader.lines() {
+            let line = line?;
             let fields: Vec<&str> = line.split('\t').collect();
             if fields.len() < 3 {
                 log::warn!(
@@ -175,15 +176,10 @@ impl ScoringMatrix<f32> {
                 }
             };
 
-            names.insert(n1.clone());
-            names.insert(n2.clone());
-
-            let i1 = names
-                .get_index_of(&n1)
-                .ok_or_else(|| anyhow::anyhow!("name not found: {n1}"))?;
-            let i2 = names
-                .get_index_of(&n2)
-                .ok_or_else(|| anyhow::anyhow!("name not found: {n2}"))?;
+            // insert_full returns (index, was_newly_inserted) in one lookup;
+            // we only need the index here.
+            let (i1, _) = names.insert_full(n1.clone());
+            let (i2, _) = names.insert_full(n2.clone());
 
             let key = if i1 <= i2 { (i1, i2) } else { (i2, i1) };
             if let Some(&existing) = matrix.data.get(&key) {

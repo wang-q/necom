@@ -21,7 +21,27 @@
 - **底层存储**：`IndexMap`（名称索引）+ `CondensedMatrix` + 可选对角向量。
 - **特点**：组合包装器，通过名称索引访问底层 `CondensedMatrix`；支持可选对角存储（`mat transform --normalize` 需要）；$N=10{,}000$ 时约 200MB。
 
-## 4. 参见
+## 4. 公共 API
+
+`pairmat` 模块通过 `mod.rs` 的 `pub use` 暴露以下函数与类型（按职责分组）：
+
+- **数据结构**：
+  - `CondensedMatrix`、`NamedMatrix`、`ScoringMatrix<T>`：见 §1-§3。
+  - `get_condensed_index(size, row, col)`：上三角线性索引计算（`condensed.rs`）。
+
+- **I/O 与格式**：
+  - `MatrixFormat`：`Full` / `Lower` / `Strict` 三种 PHYLIP 输出变体（`output.rs`）。
+  - `MatrixFormat::from_mode(s)`：从字符串（`"full"` / `"lower"` / `"strict"`）解析。
+  - `write_phylip_matrix(m, fmt, precision, writer)`：按指定格式写出 PHYLIP 矩阵。
+  - `write_subset(m, names, writer)`：按给定名称子集写出子矩阵，返回缺失名称列表。
+  - `extract_common_lower_triangle(m1, m2)`：抽取两个矩阵公共名称的下三角值对，供 `mat compare` 使用。
+  - `NamedMatrix::from_relaxed_phylip(infile)`：从 Relaxed PHYLIP 文件加载。
+  - `NamedMatrix::from_pair_scores(infile, same, missing)`：从 Pairwise TSV 构建（自对角默认 `same`，缺失对默认 `missing`）。
+
+- **变换**：
+  - `transform_matrix(matrix, method, max_val, scale, offset, normalize)`：元素级数学变换（`transform.rs`），支持 `linear` / `inv-linear` / `log` / `exp` / `square` / `sqrt`，可选按对角线归一化。
+
+## 5. 参见
 
 - [docs/mat.md](../../docs/mat.md)：用户面向的矩阵格式说明（PHYLIP / Pairwise）。
 - [clust-impl.md](clust-impl.md)：聚类模块实现分析，其中 §1 描述了三种结构在不同命令中的使用。

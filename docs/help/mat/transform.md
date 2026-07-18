@@ -18,6 +18,7 @@ Notes:
 * Use `--normalize` to normalize based on diagonal elements before transformation: `x_norm(i, j) = x(i, j) / sqrt(x(i, i) * x(j, j))`.
   * `--normalize` requires diagonal data in the input; if absent, results will be `0`.
   * Diagonal values less than or equal to `1e-9` are treated as zero, producing `0` for the corresponding row/column.
+  * Normalization is applied before the transformation op: off-diagonal `x(i,j) / sqrt(d_i*d_j)` then `--op`, diagonal normalized to `1.0` (or `0.0` if `d_i <= 1e-9`) then `--op`.
 * When `--input-format pair` is used, `--same` and `--missing` control default diagonal and missing-pair values.
 * Default parameter values: `--max-val 1.0`, `--scale 1.0`, `--offset 0.0`.
 

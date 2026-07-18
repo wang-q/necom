@@ -70,8 +70,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     writer.write_all(b"Method\tScore\n")?;
 
     // Calculate and output metrics
-    for method in methods.split(',').map(str::trim).filter(|s| !s.is_empty()) {
-        let result = match method {
+    for method in &requested_methods {
+        let result = match *method {
             "pearson" => necom::libs::linalg::pearson_correlation(&values1, &values2),
             "spearman" => necom::libs::linalg::spearman_correlation(&values1, &values2),
             "mae" => necom::libs::linalg::mean_absolute_error(&values1, &values2),
@@ -80,7 +80,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 necom::libs::linalg::weighted_jaccard_similarity(&values1, &values2)
             }
             "euclid" => necom::libs::linalg::euclidean_distance(&values1, &values2),
-            _ => anyhow::bail!("unknown method: {}", method),
+            _ => unreachable!("validated above"),
         };
         writer.write_fmt(format_args!("{}\t{:.6}\n", method, result))?;
     }

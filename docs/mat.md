@@ -158,7 +158,10 @@ The following conversions are not yet implemented:
 * **Cosine Similarity**: $D = 1 - \cos(\theta)$.
 * **Correlation**: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.
 
-For Cosine/Correlation distances, compute them in Python (SciPy) and export as a PHYLIP matrix.
+For Cosine/Correlation distances, the workflow depends on the input form:
+
+* **Vector-level** (one row per sequence with a feature vector): use `necom mat from-vector --mode cosine` to produce a pairwise TSV directly.
+* **Matrix-level** (already assembled PHYLIP similarity matrix): no built-in conversion is provided; compute in Python (SciPy) and export as a PHYLIP matrix.
 
 ## Recommended Workflows
 
@@ -167,7 +170,8 @@ For Cosine/Correlation distances, compute them in Python (SciPy) and export as a
 ```bash
 # 1. Parse BLAST results into pairwise distances (assuming distance = 1 - identity has already been computed)
 # Note: ensure both A-B and B-A are present, or rely on a single direction
-awk '{print $1, $2, 100-$3}' blast.out > pairs.tsv
+# Use OFS='\t' so the output is tab-separated (necom expects TSV, not whitespace-separated)
+awk -v OFS='\t' '{print $1, $2, 100-$3}' blast.out > pairs.tsv
 
 # 2. Convert to PHYLIP matrix; set unaligned pairs to maximum distance 100
 necom mat to-phylip pairs.tsv --missing 100 -o matrix.phy

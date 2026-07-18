@@ -22,10 +22,9 @@ impl NamedMatrix {
         let matrix = CondensedMatrix::new(size);
         let mut names_map = indexmap::IndexMap::with_capacity(size);
         for (i, name) in names.into_iter().enumerate() {
-            if names_map.contains_key(&name) {
+            if names_map.insert(name.clone(), i).is_some() {
                 anyhow::bail!("duplicate sequence name: {}", name);
             }
-            names_map.insert(name, i);
         }
 
         Ok(NamedMatrix {
@@ -45,10 +44,9 @@ impl NamedMatrix {
 
         let mut names_map = indexmap::IndexMap::with_capacity(size);
         for (i, name) in names.into_iter().enumerate() {
-            if names_map.contains_key(&name) {
+            if names_map.insert(name.clone(), i).is_some() {
                 anyhow::bail!("duplicate sequence name: {}", name);
             }
-            names_map.insert(name, i);
         }
 
         Ok(NamedMatrix {
@@ -203,7 +201,7 @@ impl NamedMatrix {
         let mut matrix = NamedMatrix::new(index_name.into_iter().collect())?;
         let mut diags = vec![same; size];
 
-        for (i, d) in diags.iter_mut().enumerate().take(size) {
+        for (i, d) in diags.iter_mut().enumerate() {
             *d = scoring_matrix.get(i, i);
             for j in (i + 1)..size {
                 matrix.set(i, j, scoring_matrix.get(i, j));
@@ -213,16 +211,11 @@ impl NamedMatrix {
         Ok(matrix)
     }
 
-    /// Creates a new matrix from a relaxed PHYLIP format file
+    /// Creates a new matrix from a relaxed PHYLIP format file.
     ///
-    /// ```
-    /// # use necom::libs::pairmat::NamedMatrix;
-    /// let content = "3\nA 0.0 1.0 2.0\nB 1.0 0.0 3.0\nC 2.0 3.0 0.0\n";
-    /// std::fs::write("input.phy", content).unwrap();
-    /// let matrix = NamedMatrix::from_relaxed_phylip("input.phy").unwrap();
-    /// assert_eq!(matrix.get_names(), vec!["A", "B", "C"]);
-    /// # std::fs::remove_file("input.phy").ok();
-    /// ```
+    /// Accepts full, lower-triangular-with-diagonal, or lower-triangular-without-diagonal
+    /// layouts. The optional first line may declare the sequence count; if absent, it is
+    /// inferred from the data rows.
     pub fn from_relaxed_phylip(infile: &str) -> anyhow::Result<Self> {
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         enum Layout {
@@ -239,7 +232,8 @@ impl NamedMatrix {
         let mut lines = reader.lines();
 
         // Read the optional sequence count line
-        if let Some(Ok(line)) = lines.next() {
+        if let Some(line_res) = lines.next() {
+            let line = line_res?;
             if let Ok(size) = line.trim().parse::<usize>() {
                 declared_size = Some(size);
             } else if let Some((name, values)) = Self::process_phylip_line(&line)? {
@@ -251,7 +245,8 @@ impl NamedMatrix {
         }
 
         // Process remaining lines
-        for line in lines.map_while(Result::ok) {
+        for line in lines {
+            let line = line?;
             if let Some((name, values)) = Self::process_phylip_line(&line)? {
                 if !seen.insert(name.clone()) {
                     anyhow::bail!("duplicate sequence name in PHYLIP matrix: {}", name);

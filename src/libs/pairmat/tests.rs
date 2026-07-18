@@ -352,3 +352,170 @@ fn test_matrix_format_from_mode_invalid() {
         Ok(_) => panic!("invalid format should return an error"),
     }
 }
+
+#[test]
+fn test_from_relaxed_phylip_basic_full_matrix() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "3").unwrap();
+    writeln!(tmp, "A 0.0 1.0 2.0").unwrap();
+    writeln!(tmp, "B 1.0 0.0 3.0").unwrap();
+    writeln!(tmp, "C 2.0 3.0 0.0").unwrap();
+    tmp.flush().unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    assert_eq!(matrix.get_names(), vec!["A", "B", "C"]);
+    assert_eq!(matrix.get_by_name("A", "B"), Some(1.0));
+    assert_eq!(matrix.get_by_name("A", "C"), Some(2.0));
+    assert_eq!(matrix.get_by_name("B", "C"), Some(3.0));
+}
+
+#[test]
+fn test_transform_linear() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full 2x2: off-diag = 0.5, diags = 1.0
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A 1.0 0.5").unwrap();
+    writeln!(tmp, "B 0.5 1.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    // val = val * scale + offset; scale=2.0, offset=1.0
+    let transformed =
+        super::transform_matrix(&matrix, "linear", 1.0, 2.0, 1.0, false).unwrap();
+
+    // Off-diagonal: 0.5 * 2.0 + 1.0 = 2.0
+    assert_eq!(transformed.get(0, 1), 2.0);
+    // Diagonal: 1.0 * 2.0 + 1.0 = 3.0
+    assert_eq!(transformed.get(0, 0), 3.0);
+    assert_eq!(transformed.get(1, 1), 3.0);
+}
+
+#[test]
+fn test_transform_exp() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full 2x2: off-diag = 0.5, diags = 0.0
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A 0.0 0.5").unwrap();
+    writeln!(tmp, "B 0.5 0.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    let transformed =
+        super::transform_matrix(&matrix, "exp", 1.0, 1.0, 0.0, false).unwrap();
+
+    // Off-diagonal: exp(-0.5)
+    assert!((transformed.get(0, 1) - (-0.5f32).exp()).abs() < 1e-6);
+    // Diagonal: exp(-0.0) = 1.0
+    assert_eq!(transformed.get(0, 0), 1.0);
+    assert_eq!(transformed.get(1, 1), 1.0);
+}
+
+#[test]
+fn test_transform_square() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full 2x2: off-diag = 0.5, diags = 2.0
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A 2.0 0.5").unwrap();
+    writeln!(tmp, "B 0.5 2.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    let transformed =
+        super::transform_matrix(&matrix, "square", 1.0, 1.0, 0.0, false).unwrap();
+
+    // Off-diagonal: 0.5 * 0.5 = 0.25
+    assert_eq!(transformed.get(0, 1), 0.25);
+    // Diagonal: 2.0 * 2.0 = 4.0
+    assert_eq!(transformed.get(0, 0), 4.0);
+    assert_eq!(transformed.get(1, 1), 4.0);
+}
+
+#[test]
+fn test_transform_normalize_with_linear() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full 3x3 with distinct diagonals; one diagonal is zero to exercise the <=1e-9 branch.
+    // d_A = 4.0, d_B = 9.0, d_C = 0.0
+    // off-diag: A-B = 6.0, A-C = 0.0, B-C = 5.0
+    writeln!(tmp, "3").unwrap();
+    writeln!(tmp, "A 4.0 6.0 0.0").unwrap();
+    writeln!(tmp, "B 6.0 9.0 5.0").unwrap();
+    writeln!(tmp, "C 0.0 5.0 0.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    // normalize then linear with scale=2.0, offset=1.0
+    let transformed =
+        super::transform_matrix(&matrix, "linear", 1.0, 2.0, 1.0, true).unwrap();
+
+    // A-B: 6.0 / sqrt(4*9) = 6.0/6.0 = 1.0 -> 1.0*2.0+1.0 = 3.0
+    assert_eq!(transformed.get(0, 1), 3.0);
+    // A-C: d_C = 0.0 -> branch sets val = 0.0 -> 0.0*2.0+1.0 = 1.0
+    assert_eq!(transformed.get(0, 2), 1.0);
+    // B-C: 5.0 / sqrt(9*0.0) -> d_C = 0.0 branch -> val = 0.0 -> 1.0
+    assert_eq!(transformed.get(1, 2), 1.0);
+    // Diagonal: A: d=4.0>1e-9 -> 1.0 -> 3.0
+    assert_eq!(transformed.get(0, 0), 3.0);
+    // Diagonal: B: d=9.0>1e-9 -> 1.0 -> 3.0
+    assert_eq!(transformed.get(1, 1), 3.0);
+    // Diagonal: C: d=0.0 -> 0.0 -> 0.0*2.0+1.0 = 1.0
+    assert_eq!(transformed.get(2, 2), 1.0);
+}
+
+#[test]
+fn test_empty_matrix_boundary() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "0").unwrap();
+    tmp.flush().unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    assert_eq!(matrix.size(), 0);
+    assert!(matrix.get_names().is_empty());
+
+    // write_phylip_matrix should emit just the count line "0\n".
+    let mut buf = Vec::new();
+    super::output::write_phylip_matrix(
+        &matrix,
+        super::output::MatrixFormat::Full,
+        Some(6),
+        &mut buf,
+    )
+    .unwrap();
+    assert_eq!(b"0\n", buf.as_slice());
+}
+
+#[test]
+fn test_single_element_matrix_boundary() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "1").unwrap();
+    writeln!(tmp, "A 0.0").unwrap();
+    tmp.flush().unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    assert_eq!(matrix.size(), 1);
+    assert_eq!(matrix.get_names(), vec!["A"]);
+
+    // No off-diagonal elements; get(0,0) returns the stored diagonal.
+    assert_eq!(matrix.get(0, 0), 0.0);
+
+    // write_phylip_matrix Full: "1\nA\t0.000000\n"
+    let mut buf = Vec::new();
+    super::output::write_phylip_matrix(
+        &matrix,
+        super::output::MatrixFormat::Full,
+        Some(6),
+        &mut buf,
+    )
+    .unwrap();
+    let expected = "1\nA\t0.000000\n";
+    assert_eq!(expected.as_bytes(), buf.as_slice());
+}

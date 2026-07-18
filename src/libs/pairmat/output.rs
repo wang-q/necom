@@ -4,6 +4,7 @@ use std::io::Write;
 use super::NamedMatrix;
 
 /// PHYLIP matrix output format.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MatrixFormat {
     Full,
     Lower,
@@ -35,50 +36,41 @@ pub fn write_phylip_matrix<W: Write>(
     let names = m.get_names();
     let size = m.size();
 
-    writer.write_fmt(format_args!("{:>4}\n", size))?;
+    writeln!(writer, "{}", size)?;
 
     for (i, name) in names.iter().enumerate().take(size) {
         match fmt {
             MatrixFormat::Full => {
-                writer.write_fmt(format_args!("{}", name))?;
+                write!(writer, "{}", name)?;
                 for j in 0..size {
-                    writer.write_fmt(format_args!(
-                        "\t{}",
-                        format_value(m.get(i, j), precision)
-                    ))?;
+                    writer.write_all(b"\t")?;
+                    match precision {
+                        Some(p) => write!(writer, "{:.1$}", m.get(i, j), p)?,
+                        None => write!(writer, "{}", m.get(i, j))?,
+                    }
                 }
             }
             MatrixFormat::Lower => {
-                writer.write_fmt(format_args!("{}", name))?;
+                write!(writer, "{}", name)?;
                 for j in 0..i {
-                    writer.write_fmt(format_args!(
-                        "\t{}",
-                        format_value(m.get(i, j), precision)
-                    ))?;
+                    writer.write_all(b"\t")?;
+                    match precision {
+                        Some(p) => write!(writer, "{:.1$}", m.get(i, j), p)?,
+                        None => write!(writer, "{}", m.get(i, j))?,
+                    }
                 }
             }
             MatrixFormat::Strict => {
-                writer.write_fmt(format_args!(
-                    "{:<10}",
-                    name.chars().take(10).collect::<String>()
-                ))?;
+                write!(writer, "{:<10}", name.chars().take(10).collect::<String>())?;
                 for j in 0..size {
-                    writer.write_fmt(format_args!(" {:.6}", m.get(i, j)))?;
+                    write!(writer, " {:.6}", m.get(i, j))?;
                 }
             }
         }
-        writer.write_fmt(format_args!("\n"))?;
+        writeln!(writer)?;
     }
 
     Ok(())
-}
-
-/// Format a single matrix value with optional fixed precision.
-fn format_value(value: f32, precision: Option<usize>) -> String {
-    match precision {
-        Some(p) => format!("{:.1$}", value, p),
-        None => format!("{}", value),
-    }
 }
 
 /// Write a submatrix restricted to `names`. Returns the list of names not found in `m`.
@@ -98,14 +90,15 @@ pub fn write_subset<W: Write>(
         }
     }
 
-    writer.write_fmt(format_args!("{}\n", indices.len()))?;
+    writeln!(writer, "{}", indices.len())?;
 
     for &i in &indices {
-        writer.write_fmt(format_args!("{}", all_names[i]))?;
+        write!(writer, "{}", all_names[i])?;
         for &j in &indices {
-            writer.write_fmt(format_args!("\t{}", m.get(i, j)))?;
+            writer.write_all(b"\t")?;
+            write!(writer, "{}", m.get(i, j))?;
         }
-        writer.write_fmt(format_args!("\n"))?;
+        writeln!(writer)?;
     }
 
     Ok(missing)
