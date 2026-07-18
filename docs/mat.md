@@ -4,7 +4,7 @@ The `necom mat` module focuses on the manipulation and conversion of **distance 
 
 ## Core Purpose
 
-- **Input/Output**: Primarily handles **PHYLIP** format distance matrices (dense) and **Pairwise TSV** (sparse/list) format.
+- **Input/Output**: Primarily handles **PHYLIP** format distance matrices (dense) and **Pairwise TSV** (sparse list) format.
 - **Functionality**: Format conversion, subset extraction, matrix comparison, and standardization.
 - **Goal**: Provide standard, efficient data interfaces for phylogenetics and statistical clustering.
 
@@ -48,7 +48,7 @@ Variants:
 - **Full**: Standard $N \times N$ matrix including the redundant symmetric portion.
 - **Lower-triangular**: Only the lower-triangle portion, reducing file size by half.
 
-### 2. Pairwise TSV (Sparse/List Form)
+### 2. Pairwise TSV (Sparse List Form)
 
 The `Pairwise` format is a simple three-column TSV format for representing pairwise distances between sequences, commonly used as an intermediate format or input for graph data.
 

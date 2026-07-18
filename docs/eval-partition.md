@@ -6,19 +6,19 @@ This document describes the design philosophy, metrics, and selection guidance f
 
 `necom` adopts a **componentized** design philosophy, separating cluster **generation** from **evaluation**. This differs from the integrated design of the Python package `clusteval`:
 
-*   **Python `clusteval`**: The `fit()` method internally performs Grid Search (trying different $k$ or $\epsilon$), computes internal metrics (e.g., Silhouette), and returns the optimal result.
-*   **`necom` workflow**:
+-   **Python `clusteval`**: The `fit()` method internally performs Grid Search (trying different $k$ or $\epsilon$), computes internal metrics (e.g., Silhouette), and returns the optimal result.
+-   **`necom` workflow**:
     1.  **Generate**: Use `necom cut --scan` to generate a series of candidate partitions (`necom clust dbscan`'s `--scan` is not yet implemented).
     2.  **Evaluate**: Use `necom eval partition` to compute evaluation metrics for these candidates in batch.
     3.  **Decide**: The user selects the optimal parameters based on metrics (e.g., Silhouette peak, Elbow point).
 
-* **Complementary**:
-  * `necom eval tree` [planned]: Focuses on consistency between tree structure and grouping (geometry/evolution).
-  * `necom eval partition`: Focuses on the statistical validity of partitions, supporting external (two-group comparison) and internal (single group + matrix/coordinates/tree) evaluation.
-* **Scenarios**:
-  * **Algorithm comparison**: Compare result differences between MCL and K-Medoids on the same dataset.
-  * **Benchmarking**: Compare clustering results against known standard classifications (Ground Truth) to compute accuracy.
-  * **Parameter tuning**: Compare stability of clustering results under different parameters (e.g., `eps` or `inflation`).
+- **Complementary**:
+  - `necom eval tree` [planned]: Focuses on consistency between tree structure and grouping (geometry/evolution).
+  - `necom eval partition`: Focuses on the statistical validity of partitions, supporting external (two-group comparison) and internal (single group + matrix/coordinates/tree) evaluation.
+- **Scenarios**:
+  - **Algorithm comparison**: Compare result differences between MCL and K-Medoids on the same dataset.
+  - **Benchmarking**: Compare clustering results against known standard classifications (Ground Truth) to compute accuracy.
+  - **Parameter tuning**: Compare stability of clustering results under different parameters (e.g., `eps` or `inflation`).
 
 This design allows evaluation tools to exist independently of clustering algorithms, supporting clustering results from any source.
 
@@ -186,5 +186,5 @@ Clustering evaluation metrics usually fall into two categories: **external valid
 
 ## See Also
 
-* [`necom clust`](clust.md) for command overview, supported algorithms, and partition/matrix/coordinate format conventions.
-* [`docs/help/eval/partition.md`](help/eval/partition.md) for the command-line help text, including available options and usage examples.
+- [`necom clust`](clust.md) for command overview, supported algorithms, and partition/matrix/coordinate format conventions.
+- [`docs/help/eval/partition.md`](help/eval/partition.md) for the command-line help text, including available options and usage examples.

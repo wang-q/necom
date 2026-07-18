@@ -51,7 +51,7 @@ Used by `clust hier`, `nj`, `upgma`, `eval partition --matrix`, and `cut --dynam
 
 ### Pairwise TSV
 
-A sparse/list representation of pairwise distances or similarities:
+A sparse list representation of pairwise distances or similarities:
 
 * **Format**: tab-separated three columns: `name1\tname2\tdistance`
 * **Characteristics**: Suitable for sparse graphs or as an exchange format with other tools (e.g., BLAST/MMseqs2).

@@ -31,17 +31,17 @@ between clusters, matrix entries, and tree nodes.
 
 Current release: 0.3.0
 
-`necom` uses unstable Rust features (notably `portable_simd`), so a **nightly** toolchain is required:
+`necom` uses unstable Rust features (notably `portable_simd`), so a **nightly** toolchain is required. The exact nightly is pinned by `rust-toolchain.toml` (`nightly-2026-01-26`); install it once, then use plain `cargo`:
 
 ```bash
-rustup toolchain install nightly
-rustup run nightly cargo install --path . --force
+rustup toolchain install nightly-2026-01-26
+cargo install --path . --force
 ```
 
 ## Test
 
 ```bash
-rustup run nightly cargo test
+cargo test
 ```
 
 ## Quick start
