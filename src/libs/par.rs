@@ -1,4 +1,4 @@
-//! Parallel pipeline primitives shared by `pgr dist` subcommands.
+//! Parallel pipeline primitives shared by `necom mat` subcommands.
 //!
 //! Provides a writer thread + rayon pool pair, list/path resolution, two-set
 //! entry loading, and a generic parallel pairwise iteration helper. None of
@@ -14,8 +14,8 @@ use std::thread::JoinHandle;
 pub fn spawn_writer_and_pool(
     outfile: &str,
     num_threads: usize,
-) -> anyhow::Result<(crossbeam::channel::Sender<String>, JoinHandle<()>)> {
-    let (sender, receiver) = crossbeam::channel::bounded::<String>(256);
+) -> anyhow::Result<(crossbeam_channel::Sender<String>, JoinHandle<()>)> {
+    let (sender, receiver) = crossbeam_channel::bounded::<String>(256);
 
     let output = outfile.to_string();
     let writer_thread = std::thread::spawn(move || {
@@ -88,7 +88,7 @@ where
 pub fn par_run_pairs<E, F>(
     entries1: &[E],
     entries2: &[E],
-    sender: &crossbeam::channel::Sender<String>,
+    sender: &crossbeam_channel::Sender<String>,
     pair_fn: F,
 ) where
     E: Sync,

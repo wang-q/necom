@@ -553,3 +553,41 @@ pub fn color_arg(default: Option<&'static str>, help: &'static str) -> Arg {
     }
     .help(help)
 }
+
+// ============================================================================
+// mat from-vector shared builders
+// ============================================================================
+
+/// Positional `infiles` argument accepting 1-2 files for pairwise comparison.
+pub fn pair_infiles_arg() -> Arg {
+    Arg::new("infiles")
+        .required(true)
+        .num_args(1..=2)
+        .help("Input vector file(s). One for self-comparison, two for cross-comparison")
+}
+
+/// `--sim` flag to convert distance to similarity.
+pub fn sim_arg() -> Arg {
+    Arg::new("sim")
+        .long("sim")
+        .action(ArgAction::SetTrue)
+        .help("Convert distance to similarity")
+}
+
+/// `--parallel <N>` argument for thread count, default 1.
+pub fn parallel_arg() -> Arg {
+    Arg::new("parallel")
+        .long("parallel")
+        .short('p')
+        .num_args(1)
+        .default_value("1")
+        .value_parser(clap::value_parser!(usize))
+        .help("Number of parallel threads")
+}
+
+/// Collect positional `infiles` values from `args` as `Vec<&str>`.
+pub fn collect_infiles(args: &ArgMatches) -> Vec<&str> {
+    args.get_many::<String>("infiles")
+        .map(|vals| vals.map(|s| s.as_str()).collect())
+        .unwrap_or_default()
+}

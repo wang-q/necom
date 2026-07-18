@@ -2,10 +2,10 @@
 #[path = "common/mod.rs"]
 mod common;
 
-use common::PgrCmd;
+use common::NecomCmd;
 use std::path::PathBuf;
 
-/// Return the absolute path to a fixture in `tests/dist/input`.
+/// Return the absolute path to a fixture in `tests/mat`.
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests/mat")
@@ -13,11 +13,11 @@ fn fixture(name: &str) -> PathBuf {
 }
 
 #[test]
-fn command_dist_vector() {
-    let (stdout, _) = PgrCmd::new()
+fn command_mat_from_vector() {
+    let (stdout, _) = NecomCmd::new()
         .args(&[
-            "dist",
-            "vector",
+            "mat",
+            "from-vector",
             fixture("vector.tsv").to_str().unwrap(),
             "--mode",
             "jaccard",

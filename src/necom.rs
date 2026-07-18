@@ -34,7 +34,7 @@ fn main() -> anyhow::Result<()> {
     * eval - Metrics: compare, partition, replicate
 
 * Matrix:
-    * mat   - Processing: compare, format, subset, to-pair, to-phylip, transform
+    * mat   - Processing: compare, format, from-vector, subset, to-pair, to-phylip, transform
 
 * Phylogeny:
     * nwk   - Newick tools: stat, distance, reroot, prune, label, order, indent, comment, rename, replace, subtree, topo, to-dot, to-forest, to-svg, to-tex

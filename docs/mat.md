@@ -108,6 +108,15 @@ Clustering algorithms (UPGMA, NJ, Ward) and multidimensional scaling require a *
 * `--normalize`: scale values by diagonal elements before transformation.
 * `--input-format pair`: read pairwise TSV instead of PHYLIP.
 
+#### `necom mat from-vector`
+
+Calculate pairwise similarity/distance between vectors in input file(s). Reads the `name<tab>v1,v2,...` feature-vector format and emits a three-column pairwise TSV (`name1<tab>name2<tab>score`) suitable for piping into `necom mat to-phylip` or directly into clustering commands.
+
+* `--mode`: `euclid`, `cosine`, `jaccard`.
+* `--binary`: treat values as 0/1 before computing.
+* `--sim` / `--dis`: convert between distance and (dis)similarity.
+* Accepts one file (self-comparison) or two files (cross-comparison).
+
 #### Conversion Models
 
 `necom mat transform` supports common similarity-to-distance conversions:

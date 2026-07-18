@@ -1,44 +1,15 @@
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::sync::{Arc, Mutex};
 
-use pgr::libs::linalg;
+use necom::libs::linalg;
 
 /// Build the clap subcommand for vector.
 pub fn make_subcommand() -> Command {
-    Command::new("vector")
+    Command::new("from-vector")
         .about("Calculates similarity/distance between vectors")
-        .after_help(
-            r###"
-This command calculates pairwise similarity/distance between vectors in input file(s).
-
-modes:
-    * euclidean distance
-        * --mode euclid
-    * euclidean distance to similarity
-        * --mode euclid --sim
-    * binary euclidean distance
-        * --mode euclid --binary
-    * binary euclidean distance to dissimilarity
-        * --mode euclid --binary --sim --dis
-
-    * cosine similarity, -1 -- 1
-        * --mode cosine
-    * cosine distance, 0 -- 2
-        * --mode cosine --dis
-    * binary cosine similarity
-        * --mode cosine --binary
-    * binary cosine similarity
-        * --mode cosine --binary --dis
-
-    * jaccard index
-        * --mode jaccard --binary
-    * weighted jaccard similarity
-        * --mode jaccard
-
-"###,
-        )
-        .arg(crate::cmd_pgr::args::pair_infiles_arg())
-        .arg(crate::cmd_pgr::args::mode_arg(
+        .after_help(include_str!("../../../docs/help/mat/from-vector.md"))
+        .arg(crate::cmd_necom::args::pair_infiles_arg())
+        .arg(crate::cmd_necom::args::mode_arg(
             "euclid",
             &["euclid", "cosine", "jaccard"],
             "Mode of calculation",
@@ -49,15 +20,15 @@ modes:
                 .action(ArgAction::SetTrue)
                 .help("Treat values in list as binary (0 or 1)"),
         )
-        .arg(crate::cmd_pgr::args::sim_arg())
+        .arg(crate::cmd_necom::args::sim_arg())
         .arg(
             Arg::new("dis")
                 .long("dis")
                 .action(ArgAction::SetTrue)
                 .help("Convert to dissimilarity"),
         )
-        .arg(crate::cmd_pgr::args::parallel_arg())
-        .arg(crate::cmd_pgr::args::outfile_arg())
+        .arg(crate::cmd_necom::args::parallel_arg())
+        .arg(crate::cmd_necom::args::outfile_arg())
 }
 
 /// Execute the vector command.
@@ -70,25 +41,23 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
 
-    let infiles = crate::cmd_pgr::args::collect_infiles(args);
+    let infiles = crate::cmd_necom::args::collect_infiles(args);
 
-    let (sender, writer_thread) = pgr::libs::par::spawn_writer_and_pool(
-        crate::cmd_pgr::args::get_outfile(args),
+    let (sender, writer_thread) = necom::libs::par::spawn_writer_and_pool(
+        crate::cmd_necom::args::get_outfile(args),
         opt_parallel,
     )?;
 
-    let (entries1, entries2) = pgr::libs::par::load_two_sets(&infiles, false, |paths| {
-        pgr::libs::clust::feature::load_feature_vectors(&paths[0], is_bin)
-    })?;
+    let (entries1, entries2) =
+        necom::libs::par::load_two_sets(&infiles, false, |paths| {
+            necom::libs::clust::feature::load_feature_vectors(&paths[0], is_bin)
+        })?;
 
     let errors: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
     let errors_clone = errors.clone();
 
-    pgr::libs::par::par_run_pairs(
-        &entries1,
-        &entries2,
-        &sender,
-        |e1, e2| match linalg::vector_score(e1.list(), e2.list(), opt_mode, is_sim, is_dis) {
+    necom::libs::par::par_run_pairs(&entries1, &entries2, &sender, |e1, e2| {
+        match linalg::vector_score(e1.list(), e2.list(), opt_mode, is_sim, is_dis) {
             Ok(score) => {
                 let line = format!("{}\t{}\t{:.4}\n", e1.name(), e2.name(), score);
                 Some(line)
@@ -102,8 +71,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 guard.push(msg);
                 None
             }
-        },
-    );
+        }
+    });
 
     // Drop the sender to signal the writer thread to exit
     drop(sender);
