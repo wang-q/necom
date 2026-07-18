@@ -318,4 +318,15 @@ mod tests {
         // Nodes 2 and 3 must not be grouped together because their similarity is negative.
         assert!(!clusters.iter().any(|c| c.contains(&2) && c.contains(&3)));
     }
+
+    #[test]
+    fn test_mcl_set_max_iter_zero_fails() {
+        let mut mcl = Mcl::new(2.0);
+        let err = mcl.set_max_iter(0).unwrap_err();
+        assert!(
+            err.to_string().contains("max_iter"),
+            "error message should mention max_iter, got: {}",
+            err
+        );
+    }
 }

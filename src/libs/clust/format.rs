@@ -114,4 +114,66 @@ mod tests {
             format_flat_clusters(&mut clusters, &names, "unknown", |_| None).is_err()
         );
     }
+
+    #[test]
+    fn test_format_flat_clusters_multiple_ordering() {
+        // Two clusters of different sizes: larger cluster must come first.
+        let mut clusters = vec![vec![0, 1], vec![2, 3, 4]];
+        let names = vec![
+            "A".to_string(),
+            "B".to_string(),
+            "C".to_string(),
+            "D".to_string(),
+            "E".to_string(),
+        ];
+
+        let out =
+            format_flat_clusters(&mut clusters, &names, "cluster", |_| None).unwrap();
+        // Larger cluster (C,D,E) first, then smaller (A,B).
+        assert_eq!(out, "C\tD\tE\nA\tB\n");
+
+        // Two clusters of equal size: order by first member name ascending.
+        let mut clusters = vec![vec![2, 3], vec![0, 1]];
+        let out =
+            format_flat_clusters(&mut clusters, &names, "cluster", |_| None).unwrap();
+        // After member sort: cluster [2,3] -> [C,D], cluster [0,1] -> [A,B].
+        // Equal size, so order by first member name: A < C, so [A,B] comes first.
+        assert_eq!(out, "A\tB\nC\tD\n");
+    }
+
+    #[test]
+    fn test_format_flat_clusters_no_rep_cluster() {
+        // rep_fn returns None: members stay in alphabetical order, no rep moved to front.
+        let mut clusters = vec![vec![2, 0, 1]];
+        let names = vec!["A".to_string(), "B".to_string(), "C".to_string()];
+
+        let out =
+            format_flat_clusters(&mut clusters, &names, "cluster", |_| None).unwrap();
+        // Members sorted alphabetically: A, B, C (no representative promoted).
+        assert_eq!(out, "A\tB\tC\n");
+    }
+
+    #[test]
+    fn test_format_flat_clusters_no_rep_pair() {
+        // rep_fn returns None: cluster is skipped entirely in pair format.
+        let mut clusters = vec![vec![0, 1], vec![2, 3]];
+        let names = vec![
+            "A".to_string(),
+            "B".to_string(),
+            "C".to_string(),
+            "D".to_string(),
+        ];
+
+        // Return Some only for the second cluster ([2,3] -> C,D after sort).
+        let out = format_flat_clusters(&mut clusters, &names, "pair", |c| {
+            if c.contains(&2) {
+                Some(c[0])
+            } else {
+                None
+            }
+        })
+        .unwrap();
+        // Only the second cluster is emitted; first is skipped.
+        assert_eq!(out, "C\tC\nC\tD\n");
+    }
 }

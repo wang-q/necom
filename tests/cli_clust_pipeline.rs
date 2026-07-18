@@ -1,5 +1,8 @@
+#[macro_use]
+#[path = "common/mod.rs"]
 mod common;
-use crate::common::*;
+
+use common::NecomCmd;
 use std::fs;
 
 // --- Helper: Generate Synthetic Blobs ---

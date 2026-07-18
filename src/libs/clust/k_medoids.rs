@@ -258,4 +258,17 @@ mod tests {
 
         assert_eq!(clusters1, clusters2);
     }
+
+    #[test]
+    fn test_kmedoids_max_iter_zero() {
+        // max_iter=0 short-circuits to an empty result, matching k=0 and runs=0.
+        let mut sm = ScoringMatrix::<f32>::with_size_and_defaults(4, 0.0, 10.0);
+        sm.set(0, 1, 1.0);
+        sm.set(2, 3, 1.0);
+
+        let kmedoids = KMedoids::new(2, 0, 1).with_seed(42);
+        let clusters = kmedoids.perform_clustering(&sm);
+
+        assert!(clusters.is_empty());
+    }
 }
