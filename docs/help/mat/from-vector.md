@@ -15,7 +15,7 @@ Behavior:
 
 Input:
 
-* One or two vector files in `name<tab>v1,v2,...` format.
+* One or two vector files in `name<tab>v1<tab>v2<tab>...` format (pure TSV).
 * One file: self-comparison (all pairs including diagonal).
 * Two files: cross-comparison between the two sets.
 

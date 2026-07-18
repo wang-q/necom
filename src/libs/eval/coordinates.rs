@@ -1,5 +1,5 @@
 use super::LabelMap;
-use crate::libs::clust::feature::FeatureVector;
+use crate::libs::feature::FeatureVector;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -22,7 +22,7 @@ pub struct Coordinates {
 
 impl Coordinates {
     /// Load coordinates from a FeatureVector file.
-    /// Format: Name `tab` Val1,Val2,Val3...
+    /// Format: Name `tab` Val1 `tab` Val2 `tab` Val3 ... (pure TSV)
     pub fn from_path<P: AsRef<Path>>(path: P) -> anyhow::Result<Self> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
@@ -35,7 +35,7 @@ impl Coordinates {
                 continue;
             }
 
-            // Only support FeatureVector format: name \t v1,v2,v3
+            // Only support FeatureVector format: name \t v1 \t v2 \t v3 (pure TSV)
             let fv = FeatureVector::parse(&line)?;
             if !fv.name().is_empty() {
                 let vec: Vec<f64> = fv.list().iter().map(|&v| v as f64).collect();
@@ -52,7 +52,7 @@ impl Coordinates {
                 data.insert(fv.name().clone(), vec);
             } else {
                 return Err(anyhow::anyhow!(
-                    "Invalid FeatureVector format at line {}: expected 'Name<tab>Val1,Val2...'",
+                    "Invalid FeatureVector format at line {}: expected 'Name<tab>Val1<tab>Val2...'",
                     i + 1
                 ));
             }

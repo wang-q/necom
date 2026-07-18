@@ -50,7 +50,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let (entries1, entries2) =
         necom::libs::par::load_two_sets(&infiles, false, |paths| {
-            necom::libs::clust::feature::load_feature_vectors(&paths[0], is_bin)
+            necom::libs::feature::load_feature_vectors(&paths[0], is_bin)
         })?;
 
     let errors: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));

@@ -63,12 +63,12 @@ Used by `eval partition --coords` (Davies-Bouldin Index) or future `kmeans/gmm`.
 
 ### FeatureVector Format
 
-* **Structure**: `Name <tab> Val1,Val2,Val3...`
-* **Delimiters**: **Tab** between name and vector; **commas** between numeric values.
+* **Structure**: `Name <tab> Val1 <tab> Val2 <tab> Val3 ...` (pure TSV)
+* **Delimiters**: **Tab** between every pair of adjacent fields.
 * **Example**:
   ```text
-  GeneA	1.2,0.5,3.3
-  GeneB	1.1,0.6,3.1
+  GeneA	1.2	0.5	3.3
+  GeneB	1.1	0.6	3.1
   ```
 * **Compatibility**: A general feature-vector/coordinate representation format.
 

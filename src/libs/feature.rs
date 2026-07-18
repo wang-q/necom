@@ -1,8 +1,9 @@
-//! Feature vector for distance-based clustering.
+//! Named feature vector for clustering and distance computation.
 //!
-//! A `FeatureVector` pairs a name with a list of float coordinates, used
-//! by `libs/clust/eval.rs` for distance
-//! computation and cluster evaluation.
+//! A `FeatureVector` pairs a name with a list of float coordinates. It is
+//! shared across modules: `mat from-vector` uses it to compute pairwise
+//! distance matrices, and `libs/eval` uses it for internal cluster
+//! evaluation metrics (Davies-Bouldin, Calinski-Harabasz, etc.).
 
 use anyhow::anyhow;
 use std::io::BufRead;
@@ -36,7 +37,7 @@ impl FeatureVector {
     /// Constructed from range and seq
     ///
     /// ```ignore
-    /// # use necom::libs::clust::feature::FeatureVector;
+    /// # use necom::libs::feature::FeatureVector;
     /// let name = "Es_coli_005008_GCF_013426115_1".to_string();
     /// let list : Vec<f32> = vec![1.0,5.0,2.0,7.0,6.0,6.0];
     /// let entry = FeatureVector::from(&name, &list);
@@ -52,15 +53,15 @@ impl FeatureVector {
 
     /// Parse a feature vector from a tab-separated line.
     ///
-    /// Format: `name\tval1,val2,...`.
-    /// Empty lines and lines starting with `#` are accepted and return an empty
-    /// vector (callers such as `load_feature_vectors` skip them). Any other
-    /// line with an invalid number of columns or non-numeric values returns an
-    /// error.
+    /// Format: `name\tval1\tval2\t...` (pure TSV: one tab between each pair of
+    /// adjacent fields). Empty lines and lines starting with `#` are accepted
+    /// and return an empty vector (callers such as `load_feature_vectors` skip
+    /// them). Any other line with fewer than two columns or non-numeric values
+    /// returns an error.
     ///
     /// ```ignore
-    /// # use necom::libs::clust::feature::FeatureVector;
-    /// let line = "Es_coli_005008_GCF_013426115_1\t1,5,2,7,6,6".to_string();
+    /// # use necom::libs::feature::FeatureVector;
+    /// let line = "Es_coli_005008_GCF_013426115_1\t1\t5\t2\t7\t6\t6".to_string();
     /// let entry = FeatureVector::parse(&line).unwrap();
     /// # assert_eq!(*entry.name(), "Es_coli_005008_GCF_013426115_1");
     /// # assert_eq!(*entry.list().get(1).unwrap(), 5f32);
@@ -71,12 +72,14 @@ impl FeatureVector {
             return Ok(Self::new());
         }
         let fields: Vec<&str> = trimmed.split('\t').collect();
-        if fields.len() != 2 {
-            anyhow::bail!("expected two tab-separated columns, got {}", fields.len());
+        if fields.len() < 2 {
+            anyhow::bail!(
+                "expected at least two tab-separated columns (name + values), got {}",
+                fields.len()
+            );
         }
         let name = fields[0].to_string();
-        let parts: Vec<&str> = fields[1].split(',').collect();
-        let list: Vec<f32> = parts
+        let list: Vec<f32> = fields[1..]
             .iter()
             .map(|e| {
                 e.parse::<f32>()
@@ -91,19 +94,16 @@ impl std::fmt::Display for FeatureVector {
     /// To string
     ///
     /// ```ignore
-    /// # use necom::libs::clust::feature::FeatureVector;
+    /// # use necom::libs::feature::FeatureVector;
     /// let name = "Es_coli_005008_GCF_013426115_1".to_string();
     /// let list : Vec<f32> = vec![1.0,5.0,2.0,7.0,6.0,6.0];
     /// let entry = FeatureVector::from(&name, &list);
-    /// assert_eq!(entry.to_string(), "Es_coli_005008_GCF_013426115_1\t1,5,2,7,6,6\n");
+    /// assert_eq!(entry.to_string(), "Es_coli_005008_GCF_013426115_1\t1\t5\t2\t7\t6\t6\n");
     /// ```
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}\t", self.name())?;
-        for (i, e) in self.list.iter().enumerate() {
-            if i > 0 {
-                write!(f, ",")?;
-            }
-            write!(f, "{}", e)?;
+        write!(f, "{}", self.name())?;
+        for e in self.list.iter() {
+            write!(f, "\t{}", e)?;
         }
         writeln!(f)
     }
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn test_parse_valid() {
-        let line = "A\t1.0,2.0,3.0";
+        let line = "A\t1.0\t2.0\t3.0";
         let fv = FeatureVector::parse(line).unwrap();
         assert_eq!(fv.name(), "A");
         assert_eq!(fv.list(), &vec![1.0, 2.0, 3.0]);
@@ -163,19 +163,21 @@ mod tests {
 
     #[test]
     fn test_parse_wrong_column_count() {
+        // Only name column, no values -> error
         assert!(FeatureVector::parse("A").is_err());
-        assert!(FeatureVector::parse("A\t1.0\t2.0").is_err());
+        // name + single value is valid in pure TSV
+        assert!(FeatureVector::parse("A\t1.0").is_ok());
     }
 
     #[test]
     fn test_parse_invalid_float() {
-        assert!(FeatureVector::parse("A\t1.0,foo,3.0").is_err());
+        assert!(FeatureVector::parse("A\t1.0\tfoo\t3.0").is_err());
     }
 
     #[test]
     fn test_display() {
         let fv = FeatureVector::from("A", &[1.0, 2.0, 3.0]);
-        assert_eq!(fv.to_string(), "A\t1,2,3\n");
+        assert_eq!(fv.to_string(), "A\t1\t2\t3\n");
     }
 
     #[test]
@@ -183,10 +185,10 @@ mod tests {
         let temp = tempfile::TempDir::new()?;
         let path = temp.path().join("features.tsv");
         let mut file = std::fs::File::create(&path)?;
-        writeln!(file, "A\t1.0,2.0")?;
+        writeln!(file, "A\t1.0\t2.0")?;
         writeln!(file, "# comment")?;
         writeln!(file, "")?;
-        writeln!(file, "B\t3.0,4.0")?;
+        writeln!(file, "B\t3.0\t4.0")?;
 
         let entries = load_feature_vectors(path.to_str().unwrap(), false)?;
         assert_eq!(entries.len(), 2);
@@ -200,7 +202,7 @@ mod tests {
         let temp = tempfile::TempDir::new()?;
         let path = temp.path().join("features.tsv");
         let mut file = std::fs::File::create(&path)?;
-        writeln!(file, "A\t1.0,2.0")?;
+        writeln!(file, "A\t1.0\t2.0")?;
         writeln!(file, "B\tbad")?;
 
         let result = load_feature_vectors(path.to_str().unwrap(), false);
@@ -213,8 +215,8 @@ mod tests {
         let temp = tempfile::TempDir::new()?;
         let path = temp.path().join("features.tsv");
         let mut file = std::fs::File::create(&path)?;
-        writeln!(file, "A\t5.0,0.0,-3.0,2.5")?;
-        writeln!(file, "B\t0.0,-0.1,0.1,100.0")?;
+        writeln!(file, "A\t5.0\t0.0\t-3.0\t2.5")?;
+        writeln!(file, "B\t0.0\t-0.1\t0.1\t100.0")?;
 
         let entries = load_feature_vectors(path.to_str().unwrap(), true)?;
         assert_eq!(entries.len(), 2);

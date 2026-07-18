@@ -1,7 +1,7 @@
 use anyhow::Context;
 use clap::{value_parser, Arg, ArgGroup, ArgMatches, Command};
-use necom::libs::clust::tree_cut::{self as cut, RepMode, METHOD_NAMES};
 use necom::libs::phylo::tree::Tree;
+use necom::libs::tree_cut::{self as cut, RepMode, METHOD_NAMES};
 use std::io::Write;
 /// Build the clap subcommand for cut.
 pub fn make_subcommand() -> Command {
@@ -146,7 +146,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     if let Some(&support_threshold) = args.get_one::<f64>("support") {
         for tree in &mut trees {
-            necom::libs::clust::tree_cut::apply_support_filter(tree, support_threshold);
+            necom::libs::tree_cut::apply_support_filter(tree, support_threshold);
         }
     }
 

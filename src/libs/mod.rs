@@ -1,7 +1,10 @@
 pub mod clust;
+pub mod eval;
+pub mod feature;
 pub mod io;
 pub mod linalg;
 pub mod pairmat;
 pub mod par;
 pub mod phylo;
 pub mod pl;
+pub mod tree_cut;

@@ -1,6 +1,6 @@
 use anyhow::Context;
 use clap::{Arg, ArgMatches, Command};
-use necom::libs::clust::eval::{
+use necom::libs::eval::{
     load_batch_partitions, load_partition, remove_singletons, run_batch, run_single,
     Coordinates, DistanceMatrix, EvalTarget, PartitionFormat, TreeDistance,
 };

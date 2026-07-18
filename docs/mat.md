@@ -110,7 +110,7 @@ Clustering algorithms (UPGMA, NJ, Ward) and multidimensional scaling require a *
 
 #### `necom mat from-vector`
 
-Calculate pairwise similarity/distance between vectors in input file(s). Reads the `name<tab>v1,v2,...` feature-vector format and emits a three-column pairwise TSV (`name1<tab>name2<tab>score`) suitable for piping into `necom mat to-phylip` or directly into clustering commands.
+Calculate pairwise similarity/distance between vectors in input file(s). Reads the `name<tab>v1<tab>v2<tab>...` feature-vector format and emits a three-column pairwise TSV (`name1<tab>name2<tab>score`) suitable for piping into `necom mat to-phylip` or directly into clustering commands.
 
 * `--mode`: `euclid`, `cosine`, `jaccard`.
 * `--binary`: treat values as 0/1 before computing.
