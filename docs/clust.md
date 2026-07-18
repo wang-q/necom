@@ -21,7 +21,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Advantages**: Robust to noise; handles complex network structures.
 - **Input**: Pairwise similarities `.tsv` (higher is better).
 - **Output**: `cluster` (default) or `pair` format, controlled by `--format`.
-- **Defaults**: `--inflation 2.0`.
+- **Defaults**: `--inflation 2.0`, `--max-iter 100`.
 - **Note**: `--max-iter` must be greater than 0.
 
 ### Connected Components (CC)
@@ -43,6 +43,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Advantages**: Robust to outliers; interpretable results because centers are real samples.
 - **Input**: Pairwise distances `.tsv` (lower is better).
 - **Output**: `cluster` (default) or `pair` format, controlled by `--format`.
+- **Defaults**: `--runs 10`, `--max-iter 100`.
 - **Note**: `--k` must not exceed the number of samples.
 
 ### DBSCAN

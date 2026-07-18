@@ -102,6 +102,9 @@ Clustering algorithms (UPGMA, NJ, Ward) and multidimensional scaling require a *
 **Key options**:
 
 * `--op`: `linear`, `inv-linear`, `log`, `exp`, `square`, `sqrt`.
+* `--max-val <V>`: maximum value for `inv-linear` (default: `1.0`).
+* `--scale <V>`: scale factor for `linear` (default: `1.0`).
+* `--offset <V>`: offset value for `linear` (default: `0.0`).
 * `--normalize`: scale values by diagonal elements before transformation.
 * `--input-format pair`: read pairwise TSV instead of PHYLIP.
 
