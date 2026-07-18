@@ -39,7 +39,10 @@ impl Coordinates {
             let fv = FeatureVector::parse(&line)?;
             if !fv.name().is_empty() {
                 let vec: Vec<f64> = fv.list().iter().map(|&v| v as f64).collect();
-                if i == 0 {
+                // Initialize dim on the first data row (not line index), so that
+                // leading comment/blank lines do not cause false "inconsistent
+                // dimensions" errors.
+                if dim == 0 {
                     dim = vec.len();
                 } else if vec.len() != dim {
                     return Err(anyhow::anyhow!(
@@ -238,11 +241,11 @@ pub fn calinski_harabasz_score(partition: &LabelMap, coords: &Coordinates) -> f6
     }
 
     if wgss == 0.0 {
-        if bgss == 0.0 {
-            1.0 // Single point?
-        } else {
-            f64::INFINITY // Perfect compact clusters
-        }
+        // All points coincide with their cluster centroids. BGSS is also 0
+        // when all cluster centroids equal the global centroid. This is a
+        // degenerate input (e.g., all points identical), not a "perfect"
+        // clustering — return 0.0 for consistency with other degenerate cases.
+        0.0
     } else {
         (bgss / (n_clusters as f64 - 1.0))
             / (wgss / (n_samples as f64 - n_clusters as f64))

@@ -49,9 +49,9 @@ Assign support values to internal nodes of a target tree based on replicate tree
 
 ## Planned Subcommands
 
-The following subcommands are under design (see [`notes/design/eval-planned.md`](../notes/design/eval-planned.md)). Their CLI surface is not yet finalized; the descriptions below reflect the current design direction, not commitments.
+The following subcommands are **not yet implemented**. Their CLI surface is not yet finalized; the descriptions below reflect the current design direction, not commitments. See [`notes/design/eval-planned.md`](../notes/design/eval-planned.md) for design status.
 
-### tree
+### tree (Not Implemented)
 
 Multi-dimensional evaluation of a single phylogenetic tree. The tree is the positional primary input; a partition (`--part`), reference tree (`--ref`), trait map (`--traits`), or original distance matrix (`--dist`) may be supplied as auxiliary context.
 
@@ -62,7 +62,7 @@ Four evaluation dimensions:
 *   **Phylo**: Local RF to reference tree, Monophyly Check, ConflictScore.
 *   **Fit**: Cophenetic Correlation against an original distance matrix.
 
-### quartet (future candidate)
+### quartet (Future Candidate, Not Designed)
 
 Quartet-based consistency or support values for branches. **Not yet designed; the namespace is not reserved.** Boundary: if the goal is to *infer* a new tree from quartets, it belongs to `nwk`; if the goal is to *assess* branch support of a given tree, it belongs to `eval`.
 

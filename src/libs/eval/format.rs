@@ -86,13 +86,25 @@ pub fn coord_metric_values(partition: &LabelMap, coords: &Coordinates) -> Vec<f6
 }
 
 /// Format a slice of f64 values as tab-separated `{:.6}` strings.
+///
+/// Non-finite values (`NaN`, `+Infinity`, `-Infinity`) are emitted as `NA`
+/// so that downstream TSV consumers (pandas, awk, R) can parse the column
+/// without encountering bare `NaN`/`inf` literals. The metrics functions in
+/// this module return `f64` (not `Result`), and signal degenerate inputs
+/// (e.g., single-cluster silhouette, zero within-cluster variance in CH)
+/// via `NaN` or `Infinity`; this formatter normalizes them to `NA`.
 pub fn format_metrics_row(values: &[f64]) -> String {
     let mut out = String::with_capacity(values.len() * 16);
     for (i, v) in values.iter().enumerate() {
         if i > 0 {
-            write!(out, "\t").unwrap();
+            out.push('\t');
         }
-        write!(out, "{:.6}", v).unwrap();
+        if v.is_finite() {
+            // Writing to a String never fails; ignore the Result.
+            let _ = write!(out, "{:.6}", v);
+        } else {
+            out.push_str("NA");
+        }
     }
     out
 }
@@ -117,5 +129,20 @@ mod tests {
     fn test_format_metrics_row_negative_and_large() {
         let values = vec![-0.1234567, 1e9 + 0.5];
         assert_eq!(format_metrics_row(&values), "-0.123457\t1000000000.500000");
+    }
+
+    #[test]
+    fn test_format_metrics_row_nan_inf() {
+        let values = vec![f64::NAN, f64::INFINITY, 1.5, f64::NEG_INFINITY];
+        assert_eq!(format_metrics_row(&values), "NA\tNA\t1.500000\tNA");
+    }
+
+    #[test]
+    fn test_format_metrics_row_negative_zero() {
+        // Rust's `{:.6}` preserves the sign of -0.0, emitting "-0.000000".
+        // This is harmless for downstream TSV consumers (awk/pandas treat
+        // -0.0 == 0.0 numerically) and consistent with C printf behavior.
+        let values = vec![-0.0, 0.0];
+        assert_eq!(format_metrics_row(&values), "-0.000000\t0.000000");
     }
 }

@@ -69,7 +69,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // 3. Build Leaf Map (from first replicate)
     let leaf_map = support::build_leaf_map(&replicates[0])
-        .map_err(|e| anyhow::anyhow!("build_leaf_map failed: {}", e))?;
+        .with_context(|| "build_leaf_map failed")?;
 
     // 3.5 Validate that all replicate trees share the same leaf set.
     let first_replicate_leaves = leaf_name_set(&replicates[0]);
@@ -110,7 +110,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // 4. Count Clades in Replicates
     let counts = support::count_clades(&replicates, &leaf_map)
-        .map_err(|e| anyhow::anyhow!("count_clades failed: {}", e))?;
+        .with_context(|| "count_clades failed")?;
 
     // 5. Annotate Target Trees
     for target in &mut targets {
@@ -122,7 +122,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             percent,
             override_root,
         )
-        .map_err(|e| anyhow::anyhow!("annotate_support failed: {}", e))?;
+        .with_context(|| "annotate_support failed")?;
         writer.write_fmt(format_args!("{}\n", target.to_newick()))?;
     }
 

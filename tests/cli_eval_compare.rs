@@ -34,18 +34,22 @@ fn command_nwk_compare_single_file() {
 }
 
 #[test]
-fn command_nwk_compare_single_file_one_tree_warns_and_prints_header_only() {
+fn command_nwk_compare_single_file_one_tree_bails() {
+    // Single-file mode with <2 trees bails with a clear error rather than
+    // warning and emitting an empty (header-only) table. This prevents users
+    // from mistaking an empty result for a successful run.
     let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
     writeln!(file, "((A,B),(C,D));").unwrap();
 
-    let (stdout, stderr) = NecomCmd::new()
+    let (_, stderr) = NecomCmd::new()
         .args(&["eval", "compare", file.path().to_str().unwrap()])
-        .run();
+        .run_fail();
 
-    assert!(stdout.contains("Tree1\tTree2\tRF_Dist\tWRF_Dist\tKF_Dist"));
-    // No data lines (the header is the only line).
-    assert_eq!(stdout.lines().count(), 1);
-    assert!(stderr.contains("need at least 2 trees for pairwise comparison"));
+    assert!(
+        stderr.contains("need at least 2 trees for pairwise comparison"),
+        "expected bail message, got stderr: {}",
+        stderr
+    );
 }
 
 #[test]

@@ -234,6 +234,21 @@ pub fn clust_input_format_arg() -> Arg {
         .help("Input format for partition files")
 }
 
+/// `--other-format` argument for the `--other` partition file (default: same as `--input-format`).
+///
+/// In batch mode (`--input-format long`), p1 is the Long multi-partition file
+/// while `--other` is a single truth partition; this option lets the user
+/// independently select `cluster` or `pair` for the truth file.
+pub fn other_format_arg() -> Arg {
+    Arg::new("other_format")
+        .long("other-format")
+        .value_parser([
+            builder::PossibleValue::new("cluster"),
+            builder::PossibleValue::new("pair"),
+        ])
+        .help("Format for the `--other` file (default: same as --input-format, or `cluster` in batch mode)")
+}
+
 /// `--eps` argument for DBSCAN (default: 0.05).
 pub fn eps_arg() -> Arg {
     Arg::new("eps")
@@ -404,11 +419,11 @@ pub fn max_tree_height_arg() -> Arg {
         )
 }
 
-/// `--other` argument for external partition evaluation (alias: `--truth`).
+/// `--other` argument for external partition evaluation (visible alias: `--truth`).
 pub fn other_partition_arg() -> Arg {
     Arg::new("other")
         .long("other")
-        .alias("truth")
+        .visible_alias("truth")
         .num_args(1)
         .help("Other partition file (for external evaluation)")
 }

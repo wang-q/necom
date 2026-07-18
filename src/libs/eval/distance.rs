@@ -3,7 +3,11 @@ use crate::libs::pairmat::NamedMatrix;
 use crate::libs::phylo::tree::Tree;
 use std::collections::HashMap;
 
-/// Trait for distance matrix access
+/// Trait for accessing pairwise distances by item name.
+///
+/// Missing pairs (e.g., item not present in the underlying source) yield
+/// `f64::NAN`. Implementations include `NamedMatrix` (PHYLIP-style) and
+/// `TreeDistance` (patristic / edge-count distance).
 pub trait DistanceMatrix {
     fn get_distance(&self, id1: &str, id2: &str) -> f64;
 }
@@ -16,7 +20,13 @@ impl DistanceMatrix for NamedMatrix {
     }
 }
 
-/// Wrapper for Tree to implement DistanceMatrix
+/// Wrapper for `Tree` to implement `DistanceMatrix`.
+///
+/// Uses `Tree::node_distance`, which returns the patristic distance (sum of
+/// branch lengths along the LCA path) when the absolute value exceeds `1e-9`,
+/// and otherwise falls back to the number of edges. This makes the wrapper
+/// meaningful for cladograms (trees with all-zero branch lengths), where a
+/// pure weighted sum would collapse every pair distance to zero.
 pub struct TreeDistance {
     tree: Tree,
     name_map: HashMap<String, usize>,
@@ -34,10 +44,7 @@ impl DistanceMatrix for TreeDistance {
         let n1 = self.name_map.get(id1);
         let n2 = self.name_map.get(id2);
         if let (Some(&id1), Some(&id2)) = (n1, n2) {
-            self.tree
-                .get_distance(id1, id2)
-                .map(|(d, _)| d)
-                .unwrap_or(f64::NAN)
+            self.tree.node_distance(id1, id2).unwrap_or(f64::NAN)
         } else {
             f64::NAN
         }

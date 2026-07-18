@@ -93,16 +93,16 @@ pub fn evaluate(p1: &LabelMap, p2: &LabelMap) -> Metrics {
     }
 }
 
-pub struct ConcordanceMatrix {
-    pub tp: f64,  // N_yy (Same cluster in both)
-    pub fn_: f64, // N_yn (Same in P1, Different in P2)
-    pub fp: f64,  // N_ny (Different in P1, Same in P2)
-    pub tn: f64,  // N_nn (Different in both)
-    pub total_pairs: f64,
+struct ConcordanceMatrix {
+    tp: f64,  // N_yy (Same cluster in both)
+    fn_: f64, // N_yn (Same in P1, Different in P2)
+    fp: f64,  // N_ny (Different in P1, Same in P2)
+    tn: f64,  // N_nn (Different in both)
+    total_pairs: f64,
 }
 
 impl ConcordanceMatrix {
-    pub fn calculate(
+    fn calculate(
         table: &HashMap<(u32, u32), usize>,
         a_counts: &[usize],
         b_counts: &[usize],
@@ -134,7 +134,7 @@ impl ConcordanceMatrix {
         }
     }
 
-    pub fn rand_index(&self) -> f64 {
+    fn rand_index(&self) -> f64 {
         if self.total_pairs == 0.0 {
             0.0
         } else {
@@ -142,7 +142,7 @@ impl ConcordanceMatrix {
         }
     }
 
-    pub fn jaccard_index(&self) -> f64 {
+    fn jaccard_index(&self) -> f64 {
         let denom = self.tp + self.fp + self.fn_;
         if denom == 0.0 {
             0.0
@@ -151,7 +151,7 @@ impl ConcordanceMatrix {
         }
     }
 
-    pub fn precision(&self) -> f64 {
+    fn precision(&self) -> f64 {
         let denom = self.tp + self.fp;
         if denom == 0.0 {
             0.0
@@ -160,7 +160,7 @@ impl ConcordanceMatrix {
         }
     }
 
-    pub fn recall(&self) -> f64 {
+    fn recall(&self) -> f64 {
         let denom = self.tp + self.fn_;
         if denom == 0.0 {
             0.0
@@ -169,7 +169,7 @@ impl ConcordanceMatrix {
         }
     }
 
-    pub fn fowlkes_mallows_index(&self) -> f64 {
+    fn fowlkes_mallows_index(&self) -> f64 {
         let prec = self.precision();
         let rec = self.recall();
         if prec * rec == 0.0 {
@@ -241,18 +241,7 @@ fn calculate_v_measure_and_mi(
     let h_b = entropy(b_counts, n_f);
 
     // Mutual Information MI(U, V)
-    // MI = sum_ij (n_ij/N) log ( (n_ij * N) / (a_i * b_j) )
-    let mut mi = 0.0;
-    for (&(u, v), &nij) in table {
-        if nij == 0 {
-            continue;
-        }
-        let nij_f = nij as f64;
-        let ai = a_counts[u as usize] as f64;
-        let bj = b_counts[v as usize] as f64;
-        let term = (nij_f / n_f) * ((nij_f * n_f) / (ai * bj)).ln();
-        mi += term;
-    }
+    let mi = compute_mi(table, a_counts, b_counts, n_f);
 
     // Normalized Mutual Information (NMI)
     // NMI = MI / sqrt(H(U) * H(V))
@@ -289,6 +278,30 @@ fn entropy(counts: &[usize], n: f64) -> f64 {
     h
 }
 
+/// Mutual Information MI(U, V) = sum_ij (n_ij/N) log ( (n_ij * N) / (a_i * b_j) ).
+///
+/// Shared by `calculate_v_measure_and_mi` (for homogeneity/completeness/NMI)
+/// and `calculate_ami` (as the raw MI to be adjusted by E[MI]).
+fn compute_mi(
+    table: &HashMap<(u32, u32), usize>,
+    a_counts: &[usize],
+    b_counts: &[usize],
+    n_f: f64,
+) -> f64 {
+    let mut mi = 0.0;
+    for (&(u, v), &nij) in table {
+        if nij == 0 {
+            continue;
+        }
+        let nij_f = nij as f64;
+        let ai = a_counts[u as usize] as f64;
+        let bj = b_counts[v as usize] as f64;
+        let term = (nij_f / n_f) * ((nij_f * n_f) / (ai * bj)).ln();
+        mi += term;
+    }
+    mi
+}
+
 /// Calculate Adjusted Mutual Information (AMI)
 /// AMI = (MI - E[MI]) / (mean(H(U), H(V)) - E[MI])
 fn calculate_ami(
@@ -303,17 +316,7 @@ fn calculate_ami(
     let h_a = entropy(a_counts, n_f);
     let h_b = entropy(b_counts, n_f);
 
-    let mut mi = 0.0;
-    for (&(u, v), &nij) in table {
-        if nij == 0 {
-            continue;
-        }
-        let nij_f = nij as f64;
-        let ai = a_counts[u as usize] as f64;
-        let bj = b_counts[v as usize] as f64;
-        let term = (nij_f / n_f) * ((nij_f * n_f) / (ai * bj)).ln();
-        mi += term;
-    }
+    let mi = compute_mi(table, a_counts, b_counts, n_f);
 
     let expected_mi = expected_mutual_info(a_counts, b_counts, n);
 

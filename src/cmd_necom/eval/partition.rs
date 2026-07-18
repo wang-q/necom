@@ -23,6 +23,7 @@ pub fn make_subcommand() -> Command {
         .arg(crate::cmd_necom::args::tree_arg())
         .arg(crate::cmd_necom::args::coords_arg())
         .arg(crate::cmd_necom::args::clust_input_format_arg())
+        .arg(crate::cmd_necom::args::other_format_arg())
         .arg(crate::cmd_necom::args::outfile_arg())
         .arg(crate::cmd_necom::args::no_singletons_arg())
 }
@@ -45,13 +46,41 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let remove_singletons_flag = args.get_flag("no_singletons");
 
+    // Enforce mutual exclusion of evaluation targets. This applies uniformly
+    // to both single and batch modes, so that users get an explicit error
+    // instead of silently dropped targets (single mode previously used an
+    // `else if` chain with priority `other > matrix > tree > coords`, while
+    // batch mode collected all targets — the two modes disagreed).
+    let provided: [&str; 4] = ["other", "matrix", "tree", "coords"];
+    let count = provided
+        .iter()
+        .filter(|k| args.get_one::<String>(k).is_some())
+        .count();
+    if count > 1 {
+        anyhow::bail!(
+            "only one of --other/--truth, --matrix, --tree, --coords may be provided; got {}",
+            count
+        );
+    }
+
     if format == PartitionFormat::Long {
         // Batch Mode
         let batches = load_batch_partitions(p1_path)?;
 
-        // Prepare resources (I/O stays in cmd layer)
+        // Determine the format for `--other`. In batch mode p1 is Long
+        // (multi-partition), so the truth file cannot also be Long.
+        // `--other-format` overrides; otherwise default to `Cluster`.
+        let other_format = match args.get_one::<String>("other_format") {
+            Some(s) => match s.parse::<PartitionFormat>() {
+                Ok(f) => f,
+                Err(e) => anyhow::bail!("Invalid --other-format: {}", e),
+            },
+            None => PartitionFormat::Cluster,
+        };
+
+        // Prepare resources (I/O stays in cmd layer).
         let p2 = if let Some(p2_path) = args.get_one::<String>("other") {
-            let mut truth = load_partition(p2_path, PartitionFormat::Pair)?;
+            let mut truth = load_partition(p2_path, other_format)?;
             if remove_singletons_flag {
                 remove_singletons(&mut truth);
             }
@@ -68,10 +97,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 if trees.len() != 1 {
                     anyhow::bail!("Tree file must contain exactly one tree.");
                 }
-                let tree = trees
-                    .into_iter()
-                    .next()
-                    .ok_or_else(|| anyhow::anyhow!("expected exactly one tree"))?;
+                // trees.len() == 1 verified above; .next() is guaranteed Some.
+                let tree = trees.into_iter().next().unwrap();
                 Some(Box::new(TreeDistance::new(tree)))
             } else {
                 None
@@ -108,8 +135,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Single Mode
     let p1 = load_partition(p1_path, format)?;
 
+    // `--other-format` overrides the format for the `--other` file in single
+    // mode too. Defaults to the same format as p1 when not specified.
+    let other_format = match args.get_one::<String>("other_format") {
+        Some(s) => match s.parse::<PartitionFormat>() {
+            Ok(f) => f,
+            Err(e) => anyhow::bail!("Invalid --other-format: {}", e),
+        },
+        None => format,
+    };
+
+    // Mutual exclusion is already enforced above, so at most one branch fires.
     if let Some(p2_path) = args.get_one::<String>("other") {
-        let mut p2 = load_partition(p2_path, format)?;
+        let mut p2 = load_partition(p2_path, other_format)?;
         if remove_singletons_flag {
             remove_singletons(&mut p2);
         }
@@ -122,10 +160,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         if trees.len() != 1 {
             anyhow::bail!("Tree file must contain exactly one tree.");
         }
-        let tree = trees
-            .into_iter()
-            .next()
-            .ok_or_else(|| anyhow::anyhow!("expected exactly one tree"))?;
+        // trees.len() == 1 verified above; .next() is guaranteed Some.
+        let tree = trees.into_iter().next().unwrap();
         let dist = TreeDistance::new(tree);
         run_single(&p1, EvalTarget::Matrix(&dist), &mut writer)?;
     } else if let Some(coords_path) = args.get_one::<String>("coords") {

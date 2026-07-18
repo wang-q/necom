@@ -53,9 +53,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let include_trivial = args.get_flag("include_trivial");
 
-    // Warn if single-file mode has fewer than 2 trees
+    // Single-file mode requires at least 2 trees for pairwise comparison.
+    // Two-file mode can proceed with a single tree on each side.
     if compare_file.is_none() && trees1.len() < 2 {
-        log::warn!(
+        anyhow::bail!(
             "need at least 2 trees for pairwise comparison, got {}",
             trees1.len()
         );

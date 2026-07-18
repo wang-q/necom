@@ -1,26 +1,36 @@
 use super::*;
 use crate::libs::pairmat::NamedMatrix;
 use crate::libs::phylo::tree::Tree;
+use std::io::Write;
+use std::path::PathBuf;
+
+/// Write content to a unique temporary file and return its path.
+/// The caller is responsible for cleanup (best-effort, temp_dir is OS-managed).
+fn write_temp_file(content: &str, suffix: &str) -> PathBuf {
+    let mut path = std::env::temp_dir();
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    path.push(format!("necom_eval_test_{}{}", nanos, suffix));
+    let mut f = std::fs::File::create(&path).unwrap();
+    f.write_all(content.as_bytes()).unwrap();
+    path
+}
 
 #[test]
 fn test_tree_distance() {
-    // ((A:2,B:4)g:2,(C:2,((D:3,E:1)h:1,F:2)i:1)j:1)k;
-    // Construct tree manually or parse from string?
-    // We don't have direct access to parser here easily unless we export it.
-    // Tree::from_newick is likely available if io module supports it.
-    // Tree::to_newick is available.
-    // Let's assume we can parse it.
-    // But Tree::from_file is available.
-    // Let's create a dummy tree manually.
-
+    // Manually constructed tree:
+    //   root
+    //   └── g (length 2.0)
+    //       ├── A (length 2.0)
+    //       └── B (length 4.0)
     let mut tree = Tree::new();
-    let root = tree.add_node(); // k
+    let root = tree.add_node();
     let _ = tree.set_root(root);
 
     let g = tree.add_node();
-    let j = tree.add_node();
     tree.add_child(root, g).unwrap();
-    tree.add_child(root, j).unwrap();
 
     let a = tree.add_node();
     let b = tree.add_node();
@@ -29,17 +39,44 @@ fn test_tree_distance() {
     tree.add_child(g, a).unwrap();
     tree.add_child(g, b).unwrap();
 
-    // Set lengths
-    // A:2, B:4. g:2 (to k?)
-    // If we treat edges as parent->child length.
     tree.get_node_mut(a).unwrap().length = Some(2.0);
     tree.get_node_mut(b).unwrap().length = Some(4.0);
     tree.get_node_mut(g).unwrap().length = Some(2.0);
 
     let td = TreeDistance::new(tree);
 
-    // Distance A-B = 2+4 = 6.
+    // Patristic distance A-B = 2 + 4 = 6.
     assert_eq!(td.get_distance("A", "B"), 6.0);
+
+    // Same-name query returns 0 (path of length zero from a node to itself).
+    assert_eq!(td.get_distance("A", "A"), 0.0);
+
+    // Missing names yield NaN (consistent with the DistanceMatrix contract).
+    assert!(td.get_distance("A", "X").is_nan());
+    assert!(td.get_distance("X", "A").is_nan());
+    assert!(td.get_distance("X", "Y").is_nan());
+}
+
+#[test]
+fn test_tree_distance_cladogram() {
+    // Cladogram with all-zero branch lengths. `Tree::node_distance` falls
+    // back to the edge count when the absolute patristic sum is <= 1e-9, so
+    // distances remain meaningful instead of collapsing to zero.
+    //
+    // Topology: ((A:0.0,B:0.0):0.0,C:0.0);
+    //   root
+    //   ├── AB (0.0)
+    //   │   ├── A (0.0)
+    //   │   └── B (0.0)
+    //   └── C (0.0)
+    //
+    // Path A -> AB -> root -> C crosses 3 edges, so distance is 3.0.
+    let tree = Tree::from_newick("((A:0.0,B:0.0):0.0,C:0.0);").unwrap();
+    let td = TreeDistance::new(tree);
+
+    assert_eq!(td.get_distance("A", "C"), 3.0);
+    assert_eq!(td.get_distance("A", "B"), 2.0);
+    assert_eq!(td.get_distance("A", "A"), 0.0);
 }
 
 #[test]
@@ -297,4 +334,85 @@ fn test_internal_indices_simple() {
         wg,
         expected_wg
     );
+}
+
+#[test]
+fn test_calinski_harabasz_all_points_identical() {
+    // Degenerate input: all points coincide at the same coordinate.
+    // Both WGSS (within-cluster scatter) and BGSS (between-cluster scatter)
+    // collapse to 0.0. Previously this returned 1.0 (misleadingly suggesting
+    // "perfect" clustering); now returns 0.0 for consistency with other
+    // degenerate cases (e.g., silhouette_score with n_clusters < 2).
+    let mut p = LabelMap::new();
+    p.insert("A".to_string(), 1);
+    p.insert("B".to_string(), 1);
+    p.insert("C".to_string(), 2);
+
+    let mut data = HashMap::new();
+    data.insert("A".to_string(), vec![1.0, 1.0]);
+    data.insert("B".to_string(), vec![1.0, 1.0]);
+    data.insert("C".to_string(), vec![1.0, 1.0]);
+
+    let coords = Coordinates { data, dim: 2 };
+
+    let score = calinski_harabasz_score(&p, &coords);
+    assert_eq!(score, 0.0);
+}
+
+#[test]
+fn test_coordinates_from_path_normal() {
+    let content = "A\t1.0\t2.0\t3.0\nB\t4.0\t5.0\t6.0\nC\t7.0\t8.0\t9.0\n";
+    let path = write_temp_file(content, ".tsv");
+    let coords = Coordinates::from_path(&path).unwrap();
+    assert_eq!(coords.dim, 3);
+    assert_eq!(coords.data.len(), 3);
+    assert_eq!(coords.data.get("A").unwrap(), &vec![1.0, 2.0, 3.0]);
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_coordinates_from_path_leading_comment() {
+    // Regression test: previously `if i == 0` initialized dim from the line index,
+    // not the first data row. A leading comment caused a false "Inconsistent
+    // dimensions" error because dim stayed 0.
+    let content = "# this is a comment\nA\t1.0\t2.0\t3.0\nB\t4.0\t5.0\t6.0\n";
+    let path = write_temp_file(content, ".tsv");
+    let coords = Coordinates::from_path(&path).unwrap();
+    assert_eq!(coords.dim, 3);
+    assert_eq!(coords.data.len(), 2);
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_coordinates_from_path_leading_blank_line() {
+    let content = "\n\nA\t1.0\t2.0\nB\t3.0\t4.0\n";
+    let path = write_temp_file(content, ".tsv");
+    let coords = Coordinates::from_path(&path).unwrap();
+    assert_eq!(coords.dim, 2);
+    assert_eq!(coords.data.len(), 2);
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_coordinates_from_path_inconsistent_dims() {
+    let content = "A\t1.0\t2.0\t3.0\nB\t4.0\t5.0\n";
+    let path = write_temp_file(content, ".tsv");
+    let result = Coordinates::from_path(&path);
+    assert!(result.is_err());
+    let msg = format!("{}", result.unwrap_err());
+    assert!(
+        msg.contains("Inconsistent dimensions"),
+        "expected dimension error, got: {}",
+        msg
+    );
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_coordinates_from_path_empty_file() {
+    let content = "# only a comment\n";
+    let path = write_temp_file(content, ".tsv");
+    let result = Coordinates::from_path(&path);
+    assert!(result.is_err());
+    let _ = std::fs::remove_file(&path);
 }

@@ -438,3 +438,60 @@ fn test_eval_missing_other_for_external() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_eval_partition_conflict_matrix_tree() -> anyhow::Result<()> {
+    // Mutual exclusion: providing both --matrix and --tree must error out
+    // rather than silently dropping one target.
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg("tests/clust/eval/simple.pair")
+        .arg("--matrix")
+        .arg("tests/clust/eval/simple.matrix.phy")
+        .arg("--tree")
+        .arg("tests/clust/eval/simple.matrix.phy") // any file, just to satisfy clap
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure when both --matrix and --tree are provided"
+    );
+    assert!(
+        stderr.contains("only one of"),
+        "Expected mutual exclusion error, got: {}",
+        stderr
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_conflict_other_coords() -> anyhow::Result<()> {
+    // Mutual exclusion: providing both --other and --coords must error out.
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg("tests/clust/eval/simple.pair")
+        .arg("--other")
+        .arg("tests/clust/eval/simple.pair")
+        .arg("--coords")
+        .arg("tests/clust/eval/db.coords.tsv")
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure when both --other and --coords are provided"
+    );
+    assert!(
+        stderr.contains("only one of"),
+        "Expected mutual exclusion error, got: {}",
+        stderr
+    );
+
+    Ok(())
+}
