@@ -5,7 +5,6 @@ use std::str::FromStr;
 
 use necom::libs::clust::hier::{linkage_inplace, to_tree, Method};
 use necom::libs::pairmat::NamedMatrix;
-use necom::libs::phylo::tree::io::to_newick;
 /// Build the clap subcommand for hier.
 pub fn make_subcommand() -> Command {
     Command::new("hier")
@@ -43,7 +42,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let tree = to_tree(&steps, &names)?;
 
     // Format output
-    let newick = to_newick(&tree);
+    let newick = tree.to_newick();
 
     // Write output
     let mut writer = necom::writer(outfile)

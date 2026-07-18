@@ -163,8 +163,12 @@ fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step
         }
 
         // Extend the chain from the top element
-        // Find NN of chain.last()
-        let k = *chain.last().unwrap();
+        // Find NN of chain.last(). The chain is guaranteed non-empty by the
+        // refill above, so this expect is a program-invariant guard.
+        let k = chain
+            .last()
+            .copied()
+            .expect("chain should not be empty after refill");
         let mut min_dist = f32::INFINITY;
         let mut nn = k; // Default to self if no other active found (shouldn't happen if >1 active)
 

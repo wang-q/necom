@@ -1,3 +1,8 @@
+//! Subcommand group for clustering algorithms.
+//!
+//! Provides tree-building (`hier`, `nj`, `upgma`) and flat-clustering
+//! (`cc`, `dbscan`, `k-medoids`, `mcl`) subcommands.
+
 pub mod cc;
 pub mod dbscan;
 pub mod hier;
@@ -7,18 +12,12 @@ pub mod nj;
 pub mod upgma;
 
 use clap::{ArgMatches, Command};
-/// Build the clap subcommand for clust.
+
+/// Build the clap subcommand for `clust`.
 pub fn make_subcommand() -> Command {
     Command::new("clust")
         .about("Clusters entries via various algorithms")
-        .after_help(
-            r###"Subcommand groups:
-
-* Tree: hier, nj, upgma
-* Flat: cc, dbscan, k-medoids, mcl
-
-"###,
-        )
+        .after_help(include_str!("../../../docs/help/clust.md"))
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(cc::make_subcommand())

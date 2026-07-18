@@ -179,7 +179,7 @@ pub(crate) fn compute_heights(
                     .get_node(child)
                     .ok_or_else(|| anyhow::anyhow!("node {} not found", child))?;
                 let len = child_node.length.unwrap_or(0.0); // If None, assume 0
-                let h = heights[&child] + len;
+                let h = heights.get(&child).copied().unwrap_or(0.0) + len;
                 if h > max_h {
                     max_h = h;
                 }
@@ -212,29 +212,39 @@ pub(crate) fn assign_clusters(
 
 /// Mask low-support internal nodes by setting branch length to infinity (TreeCluster semantics).
 pub fn apply_support_filter(tree: &mut Tree, threshold: f64) {
-    let len = tree.len();
-    for i in 0..len {
-        let should_mask = {
-            if let Some(node) = tree.get_node(i) {
-                if !node.children.is_empty() {
-                    let support = node
-                        .name
-                        .as_ref()
-                        .and_then(|n| n.parse::<f64>().ok())
-                        .unwrap_or(100.0);
-                    support < threshold
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
-        };
+    let root = match tree.get_root() {
+        Some(r) => r,
+        None => return,
+    };
 
-        if should_mask {
-            if let Some(node) = tree.get_node_mut(i) {
-                node.length = Some(f64::INFINITY);
+    // First pass: collect internal node IDs whose support is below the threshold.
+    // A tree traversal is used instead of `0..tree.len()` so the function does not
+    // rely on node IDs being contiguous.
+    let mut to_mask = Vec::new();
+    let mut stack = vec![root];
+    while let Some(id) = stack.pop() {
+        if let Some(node) = tree.get_node(id) {
+            if !node.children.is_empty() {
+                let support = node
+                    .name
+                    .as_ref()
+                    .and_then(|n| n.parse::<f64>().ok())
+                    .unwrap_or(100.0);
+                if support < threshold {
+                    to_mask.push(id);
+                }
             }
+            for &child in &node.children {
+                stack.push(child);
+            }
+        }
+    }
+
+    // Second pass: apply the mask. This is kept separate so the first pass can
+    // hold a shared borrow of the tree.
+    for id in to_mask {
+        if let Some(node) = tree.get_node_mut(id) {
+            node.length = Some(f64::INFINITY);
         }
     }
 }

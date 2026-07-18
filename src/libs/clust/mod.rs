@@ -1,3 +1,9 @@
+//! Clustering algorithms and helpers.
+//!
+//! Provides flat clustering (`cc`, `dbscan`, `k_medoids`, `mcl`), tree-building
+//! (`hier`, `nj`, `upgma`), evaluation metrics (`eval`), and tree-cutting
+//! utilities (`tree_cut`).
+
 pub mod dbscan;
 pub mod eval;
 pub mod feature;
