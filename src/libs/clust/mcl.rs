@@ -9,7 +9,7 @@
 //!
 //! # Example
 //!
-//! ```ignore
+//! ```rust
 //! use necom::libs::clust::mcl::Mcl;
 //! use necom::libs::pairmat::ScoringMatrix;
 //!
@@ -25,7 +25,7 @@
 //! sm.set(2, 3, 1.0);
 //! sm.set(3, 2, 1.0);
 //!
-//! let mcl = Mcl::new(2.0);
+//! let mcl = Mcl::new(2.0).unwrap();
 //! let clusters = mcl.perform_clustering(&sm);
 //!
 //! // Should find 2 clusters: {0,1} and {2,3}

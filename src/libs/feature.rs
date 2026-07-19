@@ -29,7 +29,7 @@ impl FeatureVector {
 
     /// Constructed from a name and a float vector.
     ///
-    /// ```ignore
+    /// ```rust
     /// # use necom::libs::feature::FeatureVector;
     /// let name = "Es_coli_005008_GCF_013426115_1".to_string();
     /// let list : Vec<f32> = vec![1.0,5.0,2.0,7.0,6.0,6.0];
@@ -52,7 +52,7 @@ impl FeatureVector {
     /// them). Any other line with fewer than two columns or non-numeric values
     /// returns an error.
     ///
-    /// ```ignore
+    /// ```rust
     /// # use necom::libs::feature::FeatureVector;
     /// let line = "Es_coli_005008_GCF_013426115_1\t1\t5\t2\t7\t6\t6".to_string();
     /// let entry = FeatureVector::parse(&line).unwrap();
@@ -86,7 +86,7 @@ impl FeatureVector {
 impl std::fmt::Display for FeatureVector {
     /// To string
     ///
-    /// ```ignore
+    /// ```rust
     /// # use necom::libs::feature::FeatureVector;
     /// let name = "Es_coli_005008_GCF_013426115_1".to_string();
     /// let list : Vec<f32> = vec![1.0,5.0,2.0,7.0,6.0,6.0];

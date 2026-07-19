@@ -74,7 +74,7 @@ where
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```rust
     /// # use necom::libs::clust::dbscan::Dbscan;
     /// # use necom::libs::pairmat::ScoringMatrix;
     ///
