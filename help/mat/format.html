@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "../../searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-3f52531c.js"></script>
+        <script src="../../toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,7 +180,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p>Convert a PHYLIP matrix between formats and normalize it while preserving all distance values.</p>
+                        <p>Convert a PHYLIP matrix between formats.</p>
 <p>Input:</p>
 <ul>
 <li>PHYLIP distance matrix (full or lower-triangular).</li>
@@ -218,9 +218,9 @@
 </ul>
 <p>Notes:</p>
 <ul>
-<li><code>strict</code> mode truncates names to 10 characters, which can cause name collisions if names share a 10-character prefix.</li>
+<li><code>strict</code> mode truncates names to 10 characters and formats distances to 6 decimal places, which can cause name collisions and precision loss.</li>
 <li><code>full</code> and <code>lower</code> preserve original names without truncation.</li>
-<li>All distance values are preserved exactly across all formats; only the layout differs.</li>
+<li><code>full</code> and <code>lower</code> preserve distance values as-is; <code>strict</code> may round them to 6 decimal places.</li>
 </ul>
 <p>Examples:</p>
 <ol>

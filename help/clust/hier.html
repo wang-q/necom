@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "../../searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-3f52531c.js"></script>
+        <script src="../../toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -192,7 +192,7 @@
 </ul>
 <p>Notes:</p>
 <ul>
-<li>The output tree uses the linkage distance (merge height) as node height.</li>
+<li>Internal node height is half the linkage distance (<code>height = distance / 2</code>); branch length from child to parent is <code>parent_height - child_height</code>.</li>
 <li><code>--method &lt;METHOD&gt;</code>: linkage method (default: <code>ward</code>). Supported: <code>single</code>, <code>complete</code>, <code>average</code> (<code>upgma</code>), <code>weighted</code> (<code>wpgma</code>), <code>centroid</code> (<code>upgmc</code>), <code>median</code> (<code>wpgmc</code>), <code>ward</code> (<code>ward.d2</code>).</li>
 <li>For reducible methods (<code>single</code>, <code>complete</code>, <code>average</code>, <code>weighted</code>, <code>ward</code>), the default NN-chain implementation may produce a different merge order than the primitive algorithm, but the resulting partition sequence is equivalent.</li>
 <li><code>centroid</code> and <code>median</code> linkage may produce non-monotonic merge heights (inversions); branch lengths are clamped at <code>0.0</code> so the resulting Newick tree remains valid. The same clamp is applied to all methods as a safety net.</li>

@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3f52531c.js"></script>
+        <script src="toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -203,10 +203,10 @@
 </div>
 <p>Distance matrices and Newick trees do not carry genomic coordinates. If other <code>necom</code> commands require coordinate-based input, this is documented separately in the corresponding command documentation.</p>
 <h2 id="supported-formats-and-data-structures"><a class="header" href="#supported-formats-and-data-structures">Supported Formats and Data Structures</a></h2>
-<p><code>necom</code> supports two external distance matrix file formats: <code>PHYLIP</code> and <code>Pairwise</code>. (Internal matrix data structures are documented in <a href="../notes/design/mat-impl.html"><code>notes/design/mat-impl.md</code></a>.)</p>
+<p><code>necom</code> supports two external distance matrix file formats: <code>PHYLIP</code> and <code>Pairwise</code>.</p>
 <h3 id="1-phylip-distance-matrix-dense"><a class="header" href="#1-phylip-distance-matrix-dense">1. PHYLIP Distance Matrix (Dense)</a></h3>
 <p>The <code>PHYLIP</code> distance matrix format is a common format in phylogenetic analysis. <code>necom</code> provides a series of tools for processing this format.</p>
-<p><code>necom</code> stores this internally using the <code>NamedMatrix</code> structure, backed by <code>CondensedMatrix</code> (a one-dimensional array storing the upper triangle, excluding the diagonal), with memory usage of approximately $O(N^2/2)$.</p>
+<p><code>necom</code> stores this internally using the <code>NamedMatrix</code> structure, backed by <code>CondensedMatrix</code> (a one-dimensional array storing the upper triangle, excluding the diagonal), with memory usage of approximately $N(N-1)/2$ values, i.e. $O(N^2)$.</p>
 <p><code>necom</code> supports both Strict and Relaxed <code>PHYLIP</code> formats.</p>
 <p><strong>Relaxed PHYLIP (default input support)</strong>:</p>
 <ul>
@@ -215,7 +215,7 @@
 <li>Separators: whitespace characters (spaces or tabs).</li>
 <li>Matrix form: supports full square matrix or lower triangular matrix. The lower-triangular form may either include the diagonal (row <code>i</code> has <code>i+1</code> values) or omit it (row <code>i</code> has <code>i</code> values), in which case the diagonal is assumed to be <code>0.0</code>.</li>
 <li>Name length: not restricted.</li>
-<li>Note: if the first data row starts with a numeric token (e.g. <code>123</code>), it may be mistaken for the optional sequence-count header. Use non-numeric prefixes or omit the header line to avoid ambiguity.</li>
+<li>Note: if the first data row starts with a numeric token (e.g. <code>123</code>), it may be mistaken for the optional sequence-count header. Use non-numeric prefixes, or prepend an explicit count header so the numeric name is not on the first line, to avoid ambiguity.</li>
 </ul>
 <p><strong>Strict PHYLIP (<code>strict</code> mode output)</strong>:</p>
 <ul>
@@ -245,6 +245,37 @@
 <li><strong>Matrix to Pair (<code>necom mat to-pair</code>)</strong>: flatten a <code>PHYLIP</code> matrix into a <code>Pairwise</code> list.</li>
 <li><strong>Pair to Matrix (<code>necom mat to-phylip</code>)</strong>: assemble a <code>Pairwise</code> list back into a <code>PHYLIP</code> matrix, supporting <code>--missing</code> and <code>--same</code> parameters.</li>
 </ul>
+<h3 id="internal-data-structures"><a class="header" href="#internal-data-structures">Internal Data Structures</a></h3>
+<p><code>necom</code> uses three internal matrix representations. Understanding their trade-offs
+helps explain why different commands expect different input formats and why some
+operations are more memory-efficient than others.</p>
+<h4 id="namedmatrix"><a class="header" href="#namedmatrix">NamedMatrix</a></h4>
+<p>A dense, named distance matrix used for PHYLIP input/output. It stores:</p>
+<ul>
+<li>An <code>IndexMap&lt;String, usize&gt;</code> mapping sequence names to row/column indices.</li>
+<li>A <code>CondensedMatrix</code> holding the upper-triangular pairwise values.</li>
+<li>An optional diagonal vector, required by transformations such as
+<code>necom mat transform --normalize</code>.</li>
+</ul>
+<p><code>NamedMatrix</code> is the in-memory representation after loading a PHYLIP file.
+For $N = 10{,}000$, the underlying <code>CondensedMatrix</code> holds roughly
+$N(N-1)/2 \approx 50$ million <code>f32</code> values, or about 200 MB.</p>
+<h4 id="condensedmatrix"><a class="header" href="#condensedmatrix">CondensedMatrix</a></h4>
+<p>A memory-efficient dense matrix used directly by hierarchical clustering
+algorithms such as <code>necom clust hier</code>. It stores only the upper triangle
+(excluding the diagonal) of a symmetric matrix in a single <code>Vec&lt;f32&gt;</code>:</p>
+<p>$$k = N \cdot i - \frac{i(i+1)}{2} + (j - i - 1) \quad \text{for} \quad i &lt; j$$</p>
+<p>The diagonal is implicitly <code>0.0</code>, and the matrix is symmetric. This is the
+standard condensed distance matrix layout used by many statistical packages
+(e.g., SciPy) and by the NN-chain implementation in <code>necom clust hier</code>.</p>
+<h4 id="scoringmatrix"><a class="header" href="#scoringmatrix">ScoringMatrix<t></t></a></h4>
+<p>A sparse matrix for graph-based algorithms (e.g., DBSCAN, MCL) and partial
+pairwise data. It stores only explicitly set values in a <code>HashMap&lt;usize, T&gt;</code>,
+using a single compressed key for the lower triangle including the diagonal:</p>
+<p>$$k = \frac{j(j+1)}{2} + i \quad \text{for} \quad i \le j$$</p>
+<p>Because this key depends only on <code>i</code> and <code>j</code>, not on the matrix size <code>N</code>,
+entries remain valid even when the inferred size grows as more samples are
+discovered.</p>
 <h2 id="subcommands-in-detail"><a class="header" href="#subcommands-in-detail">Subcommands in Detail</a></h2>
 <h3 id="format-conversion"><a class="header" href="#format-conversion">Format Conversion</a></h3>
 <h4 id="necom-mat-to-phylip"><a class="header" href="#necom-mat-to-phylip"><code>necom mat to-phylip</code></a></h4>
@@ -306,7 +337,7 @@
 <h4 id="future-work"><a class="header" href="#future-work">Future Work</a></h4>
 <p>The following conversions are not yet implemented:</p>
 <ul>
-<li><strong>Reciprocal</strong>: $D = 1/S - 1/Max$ (can be approximated with <code>--op linear</code>).</li>
+<li><strong>Reciprocal</strong>: $D = 1/S - 1/Max$ (cannot be approximated with <code>--op linear</code>, which is an affine transform).</li>
 <li><strong>Matrix-level Cosine Similarity conversion</strong>: $D = 1 - \cos(\theta)$.</li>
 <li><strong>Matrix-level Correlation conversion</strong>: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.</li>
 </ul>
@@ -345,12 +376,14 @@ necom clust hier sub_matrix.phy --method ward &gt; sub_tree.nwk
 <pre><code class="language-bash"># Compare distance matrices based on K-mer (mash) and alignment (ani)
 necom mat compare mash_dist.phy ani_dist.phy --method pearson,spearman
 
-# Example output:
+# stdout (tab-separated):
+Method	Score
+pearson	0.985432
+spearman	0.971234
+
+# stderr (info-level logging):
 # Sequences in matrices: 100 and 100
 # Common sequences: 100
-# Method    Score
-# pearson   0.985432
-# spearman  0.971234
 </code></pre>
 <h3 id="scenario-d-prepare-data-for-the-phylip-software-package"><a class="header" href="#scenario-d-prepare-data-for-the-phylip-software-package">Scenario D: Prepare Data for the Phylip Software Package</a></h3>
 <pre><code class="language-bash"># Convert a long-name matrix to strict Phylip format

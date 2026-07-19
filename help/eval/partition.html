@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "../../searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-3f52531c.js"></script>
+        <script src="../../toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,7 +183,8 @@
                         <p>Calculate clustering evaluation metrics for partitions. Supports external comparison to a reference partition and internal evaluation using a distance matrix, tree, or coordinate matrix.</p>
 <p>Input:</p>
 <ul>
-<li>A partition file (<code>p1</code>).</li>
+<li>A partition file (<code>p1</code>). Use <code>"stdin"</code> to read from standard input.</li>
+<li><code>--other</code> / <code>--truth</code>, <code>--matrix</code>, <code>--tree</code>, <code>--coords</code> also accept <code>"stdin"</code>.</li>
 </ul>
 <p>Output:</p>
 <ul>
@@ -194,13 +195,19 @@
 </ul>
 <p>Notes:</p>
 <ul>
-<li>External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, V-Measure, FMI, NMI, RI, Jaccard, Precision, and Recall.</li>
+<li>External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, Homogeneity, Completeness, V-Measure, FMI, NMI, MI, RI, Jaccard, Precision, and Recall.
+<ul>
+<li>The two partitions must cover exactly the same sample set. If one partition contains samples missing from the other, the command errors out instead of silently dropping them.</li>
+<li>With <code>--no-singletons</code>, singleton clusters are first removed from <code>--other</code>; any samples that become unreferenced are excluded from evaluation, and the remaining sample sets must still match.</li>
+</ul>
+</li>
 <li>Internal Evaluation (Partition + Matrix/Tree/Coords): evaluates a single partition without ground truth.
 <ul>
-<li><code>--matrix</code> / <code>--tree</code>: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau).</li>
+<li><code>--matrix</code> / <code>--tree</code>: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau). All samples in the partition must be present in the matrix or tree; otherwise the command errors out instead of producing <code>NaN</code> metrics.</li>
 <li><code>--coords</code>: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski). All samples in the partition must be present in the coordinate file.</li>
 </ul>
 </li>
+<li>Empty partitions are rejected (single mode and each batch group must contain at least one sample).</li>
 <li>Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (<code>Group\tClusterID\tSampleID</code>).</li>
 <li><code>--other</code> / <code>--truth</code>: second partition for external evaluation (synonyms).</li>
 <li><code>--no-singletons</code>: exclude singleton clusters from <code>--other</code> before external evaluation.</li>
@@ -215,7 +222,7 @@
 <li>See <a href="../../eval-partition.html"><code>docs/eval-partition.md</code></a> for detailed metric definitions and the full selection guide.</li>
 </ul>
 </li>
-<li>Typical batch workflow: generate candidates with <code>necom cut --scan</code>, evaluate with <code>--input-format long</code>, then select the best threshold.</li>
+<li>Typical batch workflow: generate candidates with <code>necom cut scan-simple</code>, evaluate with <code>--input-format long</code>, then select the best threshold.</li>
 </ul>
 <p>Examples:</p>
 <ol>

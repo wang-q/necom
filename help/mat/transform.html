@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "../../searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-3f52531c.js"></script>
+        <script src="../../toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -201,7 +201,7 @@
 <li>Useful for converting similarity matrices to distance matrices.</li>
 <li>Use <code>--normalize</code> to normalize based on diagonal elements before transformation: <code>x_norm(i, j) = x(i, j) / sqrt(x(i, i) * x(j, j))</code>.
 <ul>
-<li><code>--normalize</code> requires diagonal data in the input; if absent, results will be <code>0</code>.</li>
+<li><code>--normalize</code> requires diagonal data in the input; if absent, off-diagonal results will be <code>0</code>.</li>
 <li>Diagonal values less than or equal to <code>1e-9</code> are treated as zero, producing <code>0</code> for the corresponding row/column.</li>
 <li>Normalization is applied before the transformation op: off-diagonal <code>x(i,j) / sqrt(d_i*d_j)</code> then <code>--op</code>, diagonal normalized to <code>1.0</code> (or <code>0.0</code> if <code>d_i &lt;= 1e-9</code>) then <code>--op</code>.</li>
 </ul>

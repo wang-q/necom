@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "../../searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-3f52531c.js"></script>
+        <script src="../../toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -207,6 +207,7 @@
 <li>Useful for evaluating consistency between distance calculation methods, or measuring information loss before and after clustering (Cophenetic Correlation).</li>
 <li>Default method is <code>pearson</code>.</li>
 <li>Multiple methods can be requested as a comma-separated list.</li>
+<li>Non-finite scores (<code>NaN</code> / <code>Inf</code>) are emitted as <code>NA</code> to keep the TSV parseable.</li>
 </ul>
 <p>Examples:</p>
 <ol>

@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3f52531c.js"></script>
+        <script src="toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -215,9 +215,9 @@ GeneC
 </li>
 </ul>
 <h3 id="long-format-batch---format-long"><a class="header" href="#long-format-batch---format-long">Long Format (batch, <code>--format long</code>)</a></h3>
-<p>A dedicated TSV format (<code>Group\tClusterID\tSampleID</code>) for batch evaluation, auto-emitted by <code>necom cut --scan</code> and consumed by <code>necom eval partition --input-format long</code>. See <a href="cut.html#output-format-in-scan-mode"><code>docs/cut.md</code></a> for the full specification.</p>
+<p>A dedicated TSV format (<code>Group\tClusterID\tSampleID</code>) for batch evaluation, auto-emitted by <code>necom cut scan-simple</code> and <code>necom cut scan-dynamic</code> and consumed by <code>necom eval partition --input-format long</code>. See <a href="cut.html#output-format-in-scan-mode"><code>docs/cut.md</code></a> for the full specification.</p>
 <h2 id="distance-matrix"><a class="header" href="#distance-matrix">Distance Matrix</a></h2>
-<p>Used by <code>clust hier</code>, <code>nj</code>, <code>upgma</code>, <code>eval partition --matrix</code>, and <code>cut --dynamic-hybrid</code>.</p>
+<p>Used by <code>clust hier</code>, <code>nj</code>, <code>upgma</code>, <code>eval partition --matrix</code>, and <code>cut hybrid --matrix</code>.</p>
 <h3 id="phylip-format"><a class="header" href="#phylip-format">PHYLIP Format</a></h3>
 <p><code>necom</code> accepts a relaxed PHYLIP format (arbitrary whitespace, optional header). See <a href="mat.html#1-phylip-distance-matrix-dense"><code>docs/mat.md</code></a> for full structure, strict vs relaxed variants, and lower-triangular form.</p>
 <h3 id="pairwise-tsv"><a class="header" href="#pairwise-tsv">Pairwise TSV</a></h3>

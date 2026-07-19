@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3f52531c.js"></script>
+        <script src="toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -209,6 +209,7 @@
 <h2 id="partition-evaluation"><a class="header" href="#partition-evaluation">Partition Evaluation</a></h2>
 <h3 id="partition"><a class="header" href="#partition">partition</a></h3>
 <p>Evaluate clustering partition quality. Supports external comparison to a reference partition (ARI, AMI, V-Measure, FMI, NMI, Jaccard, etc.) and internal evaluation using a distance matrix, tree, or coordinate matrix (Silhouette, Dunn, Davies-Bouldin, Calinski-Harabasz, etc.). Batch mode evaluates multiple partitions from parameter scans.</p>
+<p>Input validation is strict: empty partitions are rejected, external evaluation requires matching sample sets, and internal evaluation requires every partition sample to be present in the supplied matrix, tree, or coordinate file. These checks prevent silent sample dropping and misleading <code>NaN</code> metrics.</p>
 <p>See <a href="eval-partition.html"><code>docs/eval-partition.md</code></a> for detailed metric definitions and the selection guide.</p>
 <hr>
 <h2 id="branch-support"><a class="header" href="#branch-support">Branch Support</a></h2>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "../searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-3f52531c.js"></script>
+        <script src="../toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,74 +181,38 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <p>Cut a Newick tree into flat clustering partitions.</p>
+<p><code>necom cut</code> is split into five focused subcommands. Run <code>necom cut &lt;subcommand&gt; --help</code> for detailed options.</p>
 <p>Input:</p>
 <ul>
-<li>A Newick tree file containing a single tree.</li>
+<li>A Newick file containing a single tree.</li>
 <li>Branch lengths are used by distance/height-based methods.</li>
 <li>Branch support values (optional) can be used as a non-crossable constraint via <code>--support</code>.</li>
 </ul>
-<p>Output:</p>
+<p>Subcommands:</p>
 <ul>
-<li><code>--format cluster</code> (default): each line contains points of one cluster; the first point is the representative.</li>
-<li><code>--format pair</code>: each line contains a <code>(representative, member)</code> pair.</li>
-</ul>
-<p>Notes:</p>
-<ul>
-<li>Cutting methods (mutually exclusive):
-<ul>
-<li><code>--k &lt;K&gt;</code>: cut into K clusters (top-down split by height).</li>
-<li><code>--height &lt;H&gt;</code>: cut at specific height (max distance to leaves).</li>
-<li><code>--root-dist &lt;D&gt;</code>: cut at specific distance from root.</li>
-<li><code>--max-clade &lt;T&gt;</code>: TreeCluster style (max pairwise distance in clade &lt;= T).</li>
-<li><code>--avg-clade &lt;T&gt;</code>: TreeCluster style (avg pairwise distance in clade &lt;= T).</li>
-<li><code>--med-clade &lt;T&gt;</code>: TreeCluster style (median pairwise distance in clade &lt;= T).</li>
-<li><code>--sum-branch &lt;T&gt;</code>: TreeCluster style (sum of branch lengths in clade &lt;= T).</li>
-<li><code>--leaf-dist-max &lt;T&gt;</code>: TreeCluster style (max distance from cluster root to any leaf &lt;= T). Approximate: uses global leaf depth statistics converted to a root-distance cut.</li>
-<li><code>--leaf-dist-min &lt;T&gt;</code>: TreeCluster style (min distance from cluster root to any leaf &lt;= T). Approximate: same conversion as <code>--leaf-dist-max</code>.</li>
-<li><code>--leaf-dist-avg &lt;T&gt;</code>: TreeCluster style (avg distance from cluster root to leaves &lt;= T). Approximate: same conversion as <code>--leaf-dist-max</code>.</li>
-<li><code>--max-edge &lt;T&gt;</code> / <code>--single-linkage &lt;T&gt;</code>: cut branches longer than threshold.</li>
-<li><code>--inconsistent &lt;T&gt;</code>: SciPy style (inconsistent coefficient &lt;= T).</li>
-<li><code>--dynamic-tree &lt;N&gt;</code>: Dynamic Tree Cut (top-down adaptive, N=min cluster size).</li>
-<li><code>--dynamic-hybrid &lt;N&gt;</code>: Hybrid Cut (Dynamic Tree + PAM, N=min cluster size).</li>
-</ul>
-</li>
-<li><code>--deep &lt;N&gt;</code>: depth for inconsistent coefficient calculation (default: <code>2</code>). Used with <code>--inconsistent</code>.</li>
-<li><code>--max-pam-dist &lt;D&gt;</code>: maximum distance to medoid for PAM reassignment. Used with <code>--dynamic-hybrid</code>.</li>
-<li><code>--no-pam-dendro</code>: disable dendrogram respect in PAM stage (allow assigning to clusters across high branches). Used with <code>--dynamic-hybrid</code>.</li>
-<li><code>--deep-split</code>: enable deep split for dynamic tree cut (default: false). More aggressive splitting. Used with <code>--dynamic-tree</code> / <code>--dynamic-hybrid</code>.</li>
-<li><code>--max-tree-height &lt;H&gt;</code>: maximum joining height for dynamic tree cut (default: 99% of tree height). Used with <code>--dynamic-tree</code> / <code>--dynamic-hybrid</code>.</li>
-<li>The representative is selected by <code>--rep</code>:
-<ul>
-<li><code>root</code> (default): member closest to root (alphabetical tie-break).</li>
-<li><code>medoid</code>: member with the smallest sum of distances to other members.</li>
-<li><code>first</code>: alphabetically first member.</li>
-</ul>
-</li>
-<li><code>--support &lt;S&gt;</code> treats edges with support <code>&lt; S</code> as effectively infinite length, forcing a cut. Nodes without explicit support default to <code>100.0</code>. The mask is applied before any cut method runs, so it affects all distance/height-based methods uniformly.</li>
-<li><code>--scan &lt;start&gt;,&lt;end&gt;,&lt;step&gt;</code> performs a parameter sweep. In scan mode, <code>--format</code> is ignored and output is always long format (<code>Group\tClusterID\tSampleID</code>). For <code>--dynamic-tree</code>, the scan value replaces the min cluster size at each step (the <code>--dynamic-tree</code> argument itself only selects the method).</li>
-<li><code>--stats-out &lt;FILE&gt;</code> writes scan summary statistics (<code>Group\tClusters\tSingletons\tNon-Singletons\tMaxSize</code>).</li>
-<li><code>--dynamic-hybrid</code> requires <code>--matrix</code>.</li>
-<li><code>--dynamic-tree</code> / <code>--dynamic-hybrid</code> may label leaves that fall below the minimum cluster size as unassigned (cluster <code>0</code>). Unassigned leaves are still emitted in the default output.</li>
-<li>In <code>--scan</code> output, cluster <code>0</code> keeps the label <code>0</code>; non-zero clusters are renumbered starting from <code>1</code>. The <code>--stats-out</code> <code>Clusters</code> column counts only non-zero clusters.</li>
-<li>Distance/height thresholds (<code>--height</code>, <code>--root-dist</code>, <code>--max-clade</code>, <code>--avg-clade</code>, <code>--med-clade</code>, <code>--sum-branch</code>, <code>--leaf-dist-*</code>, <code>--max-edge</code>, <code>--inconsistent</code>) must be non-negative.</li>
+<li><code>simple</code>: static threshold methods such as <code>k</code>, <code>height</code>, <code>max-clade</code>, <code>avg-clade</code>, <code>inconsistent</code>, etc.</li>
+<li><code>dynamic</code>: Dynamic Tree Cut (top-down adaptive, <code>--min-size</code>).</li>
+<li><code>hybrid</code>: Dynamic Hybrid Cut (tree + distance matrix, <code>--min-size</code>, <code>--matrix</code>).</li>
+<li><code>scan-simple</code>: parameter sweep over a static method threshold.</li>
+<li><code>scan-dynamic</code>: parameter sweep over dynamic-tree min cluster sizes.</li>
 </ul>
 <p>Examples:</p>
 <ol>
 <li>
 <p>Cut into 5 clusters
-<code>necom cut tree.nwk --k 5</code></p>
+<code>necom cut simple tree.nwk --k 5</code></p>
 </li>
 <li>
 <p>Cut at height 0.5
-<code>necom cut tree.nwk --height 0.5</code></p>
+<code>necom cut simple tree.nwk --height 0.5</code></p>
 </li>
 <li>
 <p>Dynamic Tree Cut with min cluster size 20
-<code>necom cut tree.nwk --dynamic-tree 20</code></p>
+<code>necom cut dynamic tree.nwk --min-size 20</code></p>
 </li>
 <li>
 <p>Scan thresholds and save statistics
-<code>necom cut tree.nwk --max-clade 0.5 --scan 0,0.5,0.01 -o partitions.tsv --stats-out stats.tsv</code></p>
+<code>necom cut scan-simple tree.nwk --max-clade --range 0,0.5,0.01</code></p>
 </li>
 </ol>
 
@@ -260,7 +224,7 @@
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../help/clust.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../help/cut/simple.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -274,7 +238,7 @@
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../help/clust.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../help/cut/simple.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

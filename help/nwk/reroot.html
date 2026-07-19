@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "../../searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-3f52531c.js"></script>
+        <script src="../../toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,7 +198,7 @@
 <li>Operations:
 <ul>
 <li>Reroot (default): creates a bifurcating root at the target edge.</li>
-<li><code>--deroot</code> / <code>-d</code>: splices out the ingroup to create a multifurcating root.</li>
+<li><code>--deroot</code> / <code>-d</code>: converts a bifurcating root into a multifurcating root by collapsing its internal children into the root. Takes priority over <code>--node</code> and <code>--lax</code> (which are ignored when <code>--deroot</code> is given).</li>
 </ul>
 </li>
 <li><code>--support-as-labels</code>: treat internal node labels as support values and shift them along the rerooting path to maintain split associations.</li>

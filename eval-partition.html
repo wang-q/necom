@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3f52531c.js"></script>
+        <script src="toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -191,7 +191,7 @@
 <li>
 <p><strong><code>necom</code> workflow</strong>:</p>
 <ol>
-<li><strong>Generate</strong>: Use <code>necom cut --scan</code> to generate a series of candidate partitions (<code>necom clust dbscan</code>’s <code>--scan</code> is not yet implemented).</li>
+<li><strong>Generate</strong>: Use <code>necom cut scan-simple</code> to generate a series of candidate partitions (<code>necom clust dbscan</code>’s <code>--scan</code> is not yet implemented).</li>
 <li><strong>Evaluate</strong>: Use <code>necom eval partition</code> to compute evaluation metrics for these candidates in batch.</li>
 <li><strong>Decide</strong>: The user selects the optimal parameters based on metrics (e.g., Silhouette peak, Elbow point).</li>
 </ol>
@@ -213,6 +213,14 @@
 </li>
 </ul>
 <p>This design allows evaluation tools to exist independently of clustering algorithms, supporting clustering results from any source.</p>
+<h2 id="input-validation"><a class="header" href="#input-validation">Input Validation</a></h2>
+<p><code>necom eval partition</code> validates inputs before computing metrics to avoid silent failures:</p>
+<ul>
+<li><strong>Empty partitions</strong>: A single partition or any batch group with no samples is rejected.</li>
+<li><strong>External evaluation</strong> (<code>--other</code> / <code>--truth</code>): The two partitions must contain exactly the same sample set. The command errors out rather than intersecting keys silently.</li>
+<li><strong>Internal evaluation</strong> (<code>--matrix</code>, <code>--tree</code>, <code>--coords</code>): Every sample in the partition must be present in the distance source. Missing samples produce a clear error instead of <code>NaN</code> metrics.</li>
+<li><strong><code>--no-singletons</code></strong>: Singleton clusters are removed from the reference partition first; samples that become unreferenced are excluded from evaluation, and the remaining sample sets are still required to match.</li>
+</ul>
 <h2 id="core-metrics"><a class="header" href="#core-metrics">Core Metrics</a></h2>
 <p>Clustering evaluation metrics usually fall into two categories: <strong>external validity</strong> (requires Ground Truth or a reference partition) and <strong>internal validity</strong> (depends only on the geometry/statistics of the data).</p>
 <h3 id="1-external-validity"><a class="header" href="#1-external-validity">1. External Validity</a></h3>
@@ -284,7 +292,7 @@
 <ul>
 <li><strong>Definition</strong>: Mutual Information corrected for chance.</li>
 <li><strong>Principle</strong>: Computes shared information between two partitions based on entropy, and subtracts the random expectation.</li>
-<li><strong>Range</strong>: <code>[0, 1]</code>. 1 means perfect agreement, 0 means random.</li>
+<li><strong>Range</strong>: <code>[-1, 1]</code> (typically <code>[0, 1]</code>). 1 means perfect agreement, 0 means random, negative values mean worse than random (e.g., anti-correlated partitions).</li>
 <li><strong>Advantages</strong>:
 <ul>
 <li>More robust when the number of clusters is very large (even close to the sample size).</li>
@@ -312,7 +320,7 @@
 <li><strong>Principle</strong>: $MI(U, V) = \sum \sum P(u,v) \log \frac{P(u,v)}{P(u)P(v)}$.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>.</li>
 <li><strong>Disadvantages</strong>: Difficult to interpret directly; strongly affected by partition entropy. Usually used as an intermediate step for AMI/NMI.</li>
-<li><strong>Implementation note</strong>: The implementation uses natural logarithms (matching scikit-learn), so the raw MI value is <code>ln(2)</code> times larger than a base-2 formulation. Normalized metrics (NMI, AMI, V-Measure) are unaffected because they are ratios.</li>
+<li><strong>Implementation note</strong>: The implementation uses natural logarithms (matching scikit-learn), so the raw MI value (in nats) equals the base-2 value (in bits) multiplied by <code>ln(2)</code> (≈ 0.693). Normalized metrics (NMI, AMI, V-Measure) are unaffected because they are ratios.</li>
 </ul>
 </li>
 <li>
@@ -411,6 +419,12 @@
 <li><strong>Principle</strong>: Ratio of between-cluster dispersion (BGSS) to within-cluster dispersion (WGSS).</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Larger is better</strong>.</li>
 <li><strong>Advantages</strong>: Fast to compute.</li>
+<li><strong>Boundary cases</strong>:
+<ul>
+<li>If every point is identical (WGSS == 0 and BGSS == 0), the input is degenerate and the score is <code>0.0</code>.</li>
+<li>If clusters are perfectly compact and well-separated (WGSS == 0 but BGSS &gt; 0), the score is infinite and is reported as <code>NA</code> to keep the TSV parseable.</li>
+</ul>
+</li>
 </ul>
 </li>
 <li>

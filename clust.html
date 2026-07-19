@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3f52531c.js"></script>
+        <script src="toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -199,7 +199,7 @@
 <li><strong>Advantages</strong>: Robust to noise; handles complex network structures.</li>
 <li><strong>Input</strong>: Pairwise similarities <code>.tsv</code> (higher is better).</li>
 <li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
-<li><strong>Defaults</strong>: <code>--inflation 2.0</code>, <code>--max-iter 100</code>.</li>
+<li><strong>Defaults</strong>: <code>--inflation 2.0</code>, <code>--prune 1e-5</code>, <code>--max-iter 100</code>.</li>
 <li><strong>Note</strong>: <code>--max-iter</code> must be greater than 0.</li>
 </ul>
 <h3 id="connected-components-cc"><a class="header" href="#connected-components-cc">Connected Components (CC)</a></h3>
@@ -209,7 +209,7 @@
 <li><strong>Characteristics</strong>: The most basic connected component clustering.</li>
 <li><strong>Use cases</strong>: Fast deduplication at very high similarity thresholds.</li>
 <li><strong>Advantages</strong>: Extremely fast (linear complexity).</li>
-<li><strong>Input</strong>: Pairwise relations in TSV format (<code>name1  name2  weight</code>); the weight column is ignored.</li>
+<li><strong>Input</strong>: Pairwise relations in TSV format (<code>name1\tname2\t[weight]</code>); the weight column is ignored.</li>
 <li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
 </ul>
 <h3 id="k-medoids"><a class="header" href="#k-medoids">K-Medoids</a></h3>
@@ -328,7 +328,7 @@
 <li>Internal node height is half the merge distance (<code>height = distance / 2</code>), and branch length from child to parent is <code>parent_height - child_height</code>.</li>
 <li>Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.</li>
 <li>Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).</li>
-<li>Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of <code>necom cut --height</code>.</li>
+<li>Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of <code>necom cut simple --height &lt;H&gt;</code>.</li>
 </ul>
 </li>
 <li>Numeric format: branch lengths are emitted with Rust’s default float formatting. For a fixed-width, six-decimal view consistent with <code>necom nwk distance</code>, post-process the tree or use <code>necom nwk distance</code> on the resulting branch lengths.</li>
@@ -353,7 +353,7 @@
 </li>
 <li>Cut and evaluate:
 <ul>
-<li>Cut: <code>necom cut --height H</code> or TreeCluster-style thresholds/constraints.</li>
+<li>Cut: <code>necom cut simple tree.nwk --height H</code> or TreeCluster-style thresholds/constraints.</li>
 <li>Internal evaluation (no Ground Truth): <code>necom eval partition --matrix ...</code> (Silhouette) (currently available); <code>necom eval tree</code> not yet implemented.</li>
 <li>External evaluation (with Ground Truth): <code>necom eval partition</code> (ARI/AMI/V-Measure).</li>
 </ul>
@@ -429,13 +429,13 @@ necom clust mcl pairs.tsv --inflation 2.0 &gt; families.tsv
 necom clust hier matrix.phy --method ward &gt; tree.nwk
 
 # 2. Scan thresholds, save to a file, and evaluate internal metrics (Silhouette)
-# necom cut outputs a long table in scan mode; write it to a file for eval partition
-necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 &gt; partitions.tsv
+# necom cut scan-simple outputs a long table; write it to a file for eval partition
+necom cut scan-simple tree.nwk --height --range 0,1.0,0.05 &gt; partitions.tsv
 necom eval partition partitions.tsv --input-format long --matrix matrix.phy &gt; evaluation.tsv
 
 # 3. Analyze evaluation.tsv to choose the best threshold (e.g., maximum Silhouette)
 # Assume the best threshold is 0.45
-necom cut tree.nwk --height 0.45 &gt; final_clusters.tsv
+necom cut simple tree.nwk --height 0.45 &gt; final_clusters.tsv
 </code></pre>
 <p>For input/output format conventions used by <code>necom clust</code> and other commands, see <a href="formats.html"><code>docs/formats.md</code></a>.</p>
 

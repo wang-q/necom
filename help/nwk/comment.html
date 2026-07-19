@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
+            window.path_to_searchindex_js = "../../searchindex-3fd5c070.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-3f52531c.js"></script>
+        <script src="../../toc-49c214f6.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -194,33 +194,41 @@
 <li>Visualization options:
 <ul>
 <li><code>--color</code>, <code>--label</code>, and <code>--comment-text</code> each take one argument.</li>
-<li><code>--dot</code>, <code>--bar</code>, <code>--rec</code>, and <code>--tri</code> take zero or one argument.</li>
+<li><code>--dot</code>, <code>--bar</code>, <code>--rec</code>, and <code>--tri</code> take zero or one argument. When no value is supplied they use their default color (see below); any other value is passed through as the color directly.</li>
+</ul>
+</li>
+<li>Defaults when no color is given:
+<ul>
+<li><code>--dot</code> / <code>--bar</code>: <code>black</code></li>
+<li><code>--rec</code>: <code>LemonChiffon</code></li>
+<li><code>--tri</code>: <code>white</code></li>
 </ul>
 </li>
 <li>Predefined colors for <code>--color</code>, <code>--dot</code>, and <code>--bar</code>:
 <ul>
-<li><code>red</code> {RGB}{188,36,46}</li>
-<li><code>black</code> {RGB}{26,25,25}</li>
-<li><code>grey</code> {RGB}{129,130,132}</li>
-<li><code>green</code> {RGB}{32,128,108}</li>
-<li><code>purple</code> {RGB}{160,90,150}</li>
+<li><code>red</code> (188,36,46)</li>
+<li><code>black</code> (26,25,25)</li>
+<li><code>grey</code> (129,130,132)</li>
+<li><code>brown</code> (121,37,0)</li>
+<li><code>green</code> (32,128,108)</li>
+<li><code>purple</code> (160,90,150)</li>
+<li><code>blue</code> (0,103,149)</li>
 </ul>
 </li>
-<li>Background rectangle colors for <code>--rec</code>:
+<li>Predefined background rectangle colors for <code>--rec</code>:
 <ul>
-<li><code>LemonChiffon</code> {RGB}{251,248,204}</li>
-<li><code>ChampagnePink</code> {RGB}{253,228,207}</li>
-<li><code>TeaRose</code> {RGB}{255,207,210}</li>
-<li><code>PinkLavender</code> {RGB}{241,192,232}</li>
-<li><code>Mauve</code> {RGB}{207,186,240}</li>
-<li><code>JordyBlue</code> {RGB}{163,196,243}</li>
-<li><code>NonPhotoBlue</code> {RGB}{144,219,244}</li>
-<li><code>ElectricBlue</code> {RGB}{142,236,245}</li>
-<li><code>Aquamarine</code> {RGB}{152,245,225}</li>
-<li><code>Celadon</code> {RGB}{185,251,192}</li>
+<li><code>LemonChiffon</code> (251,248,204)</li>
+<li><code>ChampagnePink</code> (253,228,207)</li>
+<li><code>TeaRose</code> (255,207,210)</li>
+<li><code>PinkLavender</code> (241,192,232)</li>
+<li><code>Mauve</code> (207,186,240)</li>
+<li><code>JordyBlue</code> (163,196,243)</li>
+<li><code>NonPhotoBlue</code> (144,219,244)</li>
+<li><code>ElectricBlue</code> (142,236,245)</li>
+<li><code>Aquamarine</code> (152,245,225)</li>
+<li><code>Celadon</code> (185,251,192)</li>
 </ul>
 </li>
-<li><code>--tri</code> places a triangle at the end of the branch (default color: <code>white</code>).</li>
 <li><code>--remove &lt;REGEX&gt;</code> scans all nodes and removes parts of comments matching the regex.</li>
 </ul>
 <p>Examples:</p>
