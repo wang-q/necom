@@ -43,7 +43,17 @@ pub fn cutree_dynamic_tree(
     };
 
     // 1. Build Height Sequence
-    let leaves = tree.get_leaves();
+    // Leaves must follow the dendrogram left-to-right order, which matches a
+    // preorder traversal. `tree.get_leaves()` returns a stack-based order and
+    // would break the contiguous-segment assumption of dynamic tree cut.
+    let leaves: Vec<NodeId> = crate::libs::phylo::tree::traversal::preorder(tree, root)
+        .into_iter()
+        .filter(|&id| {
+            tree.get_node(id)
+                .map(|n| n.children.is_empty())
+                .unwrap_or(false)
+        })
+        .collect();
 
     if leaves.is_empty() {
         return Ok(Partition::new());

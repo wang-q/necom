@@ -376,4 +376,4 @@ The design of `necom cut` draws on best practices from multiple fields:
   - `necom` fully implements its core algorithm set.
 
 - **R (`cutree`)**:
-  - Provides the most basic `h` (height) and `k` (
+  - Provides the most basic `h` (height) and `k` (number of clusters) cuts.

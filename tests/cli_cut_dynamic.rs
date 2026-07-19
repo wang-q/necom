@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use tempfile::Builder;
 
@@ -215,6 +215,58 @@ fn test_dynamic_tree_cut_with_support_filter() {
         !clusters_support.iter().any(|c| c.len() == 4),
         "support filter should break the quartet apart"
     );
+}
+
+#[test]
+fn test_dynamic_tree_cut_asymmetric_heights() {
+    let temp = Builder::new()
+        .prefix("necom_test_dynamic_asym")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("asym.nwk");
+
+    // Left clade (A,B) has height 10; right clade (C,D) has height 0.1.
+    // cut_height = 0.99 * 10.1 ≈ 9.999.
+    // Root and (A,B) exceed cut_height, so they are split; A and B fall
+    // below min_module_size 2 and become unassigned. They are emitted as
+    // a single cluster 0 line in the default output. (C,D) stays a cluster.
+    let tree_content = "((A:10,B:0.1):0.1,(C:0.1,D:0.1):0.1);";
+    fs::write(&tree_file, tree_content).unwrap();
+
+    let (stdout, _stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "dynamic",
+            tree_file.to_str().unwrap(),
+            "--min-size",
+            "2",
+            "--format",
+            "pair",
+        ])
+        .run();
+
+    // Group members by their cluster representative so unassigned leaves
+    // are captured as a single group rather than one line per leaf.
+    let mut rep_to_members: HashMap<String, HashSet<String>> = HashMap::new();
+    for line in stdout.lines() {
+        let mut parts = line.split_whitespace();
+        let rep = parts.next().unwrap().to_string();
+        let member = parts.next().unwrap().to_string();
+        rep_to_members.entry(rep).or_default().insert(member);
+    }
+
+    let mut clusters: Vec<HashSet<String>> = rep_to_members.into_values().collect();
+    clusters.sort_by(|a, b| {
+        let min_a = a.iter().min().unwrap();
+        let min_b = b.iter().min().unwrap();
+        min_a.cmp(min_b)
+    });
+
+    let expected: Vec<HashSet<String>> = vec![
+        ["A", "B"].iter().map(|s| s.to_string()).collect(),
+        ["C", "D"].iter().map(|s| s.to_string()).collect(),
+    ];
+    assert_eq!(clusters, expected);
 }
 
 #[test]

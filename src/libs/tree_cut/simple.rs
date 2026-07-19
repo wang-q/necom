@@ -145,7 +145,7 @@ pub fn cut_root_dist(tree: &Tree, d: f64) -> Result<Partition> {
         .ok_or_else(|| anyhow::anyhow!("Tree has no root"))?;
 
     // We traverse from root.
-    // If current_dist + edge_len >= d, then the edge crosses the threshold.
+    // If current_dist + edge_len > d, then the edge strictly exceeds the threshold.
     // The child node represents the cluster (or rather, the subtree at child).
     // Note: If root itself is already beyond d (unlikely if d>0), then root is cluster?
 
@@ -155,7 +155,7 @@ pub fn cut_root_dist(tree: &Tree, d: f64) -> Result<Partition> {
     while let Some((node_id, dist)) = stack.pop() {
         // If we are already past distance, this shouldn't happen with the logic below,
         // unless root starts past d.
-        if dist >= d {
+        if dist > d {
             clusters.push(node_id);
             continue;
         }
@@ -172,12 +172,12 @@ pub fn cut_root_dist(tree: &Tree, d: f64) -> Result<Partition> {
                 let child_node = tree
                     .get_node(child)
                     .ok_or_else(|| anyhow::anyhow!("node {} not found", child))?;
-                let len = child_node.length.unwrap_or(0.0);
+                let len = child_node.finite_length();
                 let child_dist = dist + len;
 
-                if child_dist >= d {
-                    // The edge to child crosses the threshold (or lands exactly on it)
-                    // So 'child' becomes the root of a new cluster
+                if child_dist > d {
+                    // The edge to child strictly exceeds the threshold, so cut here
+                    // and make 'child' the root of a new cluster.
                     clusters.push(child);
                 } else {
                     // Still within distance, continue traversing
@@ -281,6 +281,19 @@ mod tests {
         let tree = parse_tree("((A:1,B:1):1,C:1);");
         // d=1.5 is beyond the A/B internal edges, so every leaf becomes its own cluster.
         let part = cut_root_dist(&tree, 1.5).unwrap();
+        let mut clusters = cluster_names(&part, &tree);
+        clusters.sort();
+        assert_eq!(clusters, vec![vec!["A"], vec!["B"], vec!["C"]]);
+    }
+
+    #[test]
+    fn test_cut_root_dist_exact_threshold() {
+        // Tree: ((A:1,B:1):1,C:1);
+        // d=1 exactly matches the root-to-D and root-to-C edges, so those edges
+        // must NOT be cut. Traversal continues into D, where A/B edges (length 1)
+        // still sum to 2 > 1 and are cut, giving three singleton clusters.
+        let tree = parse_tree("((A:1,B:1):1,C:1);");
+        let part = cut_root_dist(&tree, 1.0).unwrap();
         let mut clusters = cluster_names(&part, &tree);
         clusters.sort();
         assert_eq!(clusters, vec![vec!["A"], vec!["B"], vec!["C"]]);

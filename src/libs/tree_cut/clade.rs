@@ -36,7 +36,7 @@ pub fn cut_max_clade(tree: &Tree, threshold: f64) -> Result<Partition> {
                 let child_node = tree
                     .get_node(child)
                     .ok_or_else(|| anyhow::anyhow!("node {} not found", child))?;
-                let len = child_node.length.unwrap_or(0.0);
+                let len = child_node.finite_length();
                 let d = max_depths[&child];
                 depths.push(d + len);
                 child_diams.push(diameters[&child]);
@@ -181,8 +181,7 @@ pub fn cut_med_clade(tree: &Tree, threshold: f64) -> Result<Partition> {
                 let len = tree
                     .get_node(v)
                     .ok_or_else(|| anyhow::anyhow!("node {} not found", v))?
-                    .length
-                    .unwrap_or(0.0);
+                    .finite_length();
 
                 // Add child's pair dists
                 my_pair_dists.extend_from_slice(&child_stat.pair_dists);
@@ -303,8 +302,7 @@ pub fn cut_sum_branch(tree: &Tree, threshold: f64) -> Result<Partition> {
                 let len = tree
                     .get_node(v)
                     .ok_or_else(|| anyhow::anyhow!("node {} not found", v))?
-                    .length
-                    .unwrap_or(0.0);
+                    .finite_length();
                 sum += child_sum + len;
             }
             sums.insert(u, sum);

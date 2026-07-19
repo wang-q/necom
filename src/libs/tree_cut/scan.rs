@@ -93,15 +93,7 @@ pub fn run_scan(
         }
 
         let dispatch = if params.dynamic_tree {
-            build_dynamic_tree_dispatch(
-                tree,
-                val,
-                deep,
-                max_tree_height,
-                deep_split,
-                no_pam_dendro,
-                max_pam_dist,
-            )?
+            build_dynamic_tree_dispatch(tree, val, max_tree_height, deep_split)?
         } else {
             // Standard method sweep. `method_name` is guaranteed to be Some
             // because the caller validates that a non-dynamic method is present.
@@ -161,11 +153,8 @@ fn compute_n_steps(start: f64, end: f64, step: f64) -> anyhow::Result<i64> {
 fn build_dynamic_tree_dispatch(
     tree: &Tree,
     val: f64,
-    deep: usize,
     max_tree_height: Option<f64>,
     deep_split: bool,
-    no_pam_dendro: bool,
-    max_pam_dist: Option<f64>,
 ) -> anyhow::Result<CutDispatch> {
     if !val.is_finite() || val < 0.0 || val > usize::MAX as f64 {
         anyhow::bail!("scan value out of range: {}", val);
@@ -177,13 +166,13 @@ fn build_dynamic_tree_dispatch(
         tree,
         None,
         val,
-        deep,
+        2,
         Some(val as usize),
         None,
         max_tree_height,
         deep_split,
-        no_pam_dendro,
-        max_pam_dist,
+        false,
+        None,
         None,
     )
 }

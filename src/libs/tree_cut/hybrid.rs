@@ -87,17 +87,34 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
     let abs_min_gap = rel_min_gap * (cut_height - ref_height);
 
     // 3. Map Leaves to Matrix Indices
+    if matrix.size() == 0 {
+        anyhow::bail!("distance matrix is empty");
+    }
+
     let mut node_to_mat_idx = HashMap::new();
     let mut mat_idx_to_node = HashMap::new();
+    let mut missing_names = Vec::new();
     for leaf_id in tree.get_leaves() {
         if let Some(node) = tree.get_node(leaf_id) {
             if let Some(name) = &node.name {
                 if let Some(idx) = matrix.get_index(name) {
                     node_to_mat_idx.insert(leaf_id, idx);
                     mat_idx_to_node.insert(idx, leaf_id);
+                } else {
+                    missing_names.push(name.clone());
                 }
+            } else {
+                missing_names.push(format!("unnamed leaf {}", leaf_id));
             }
         }
+    }
+
+    if !missing_names.is_empty() {
+        anyhow::bail!(
+            "distance matrix is missing {} tree leaf name(s): {}",
+            missing_names.len(),
+            missing_names.join(", ")
+        );
     }
 
     // 4. Bottom-Up Traversal (Core Detection)

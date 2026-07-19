@@ -33,7 +33,7 @@ pub fn cut_single_linkage(tree: &Tree, threshold: f64) -> Result<Partition> {
                 let child_node = tree
                     .get_node(v)
                     .ok_or_else(|| anyhow::anyhow!("node {} not found", v))?;
-                let len = child_node.length.unwrap_or(0.0);
+                let len = child_node.finite_length();
 
                 if len > threshold {
                     // Cut! v starts new cluster

@@ -169,3 +169,67 @@ fn test_hybrid_missing_min_size() {
         stderr
     );
 }
+
+#[test]
+fn test_hybrid_empty_matrix_rejected() {
+    let temp = Builder::new()
+        .prefix("necom_test_hybrid_empty")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("hybrid_empty.nwk");
+    let mat_file = temp.path().join("hybrid_empty.phy");
+
+    fs::write(&tree_file, "(A,B);").unwrap();
+    fs::write(&mat_file, "").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "hybrid",
+            tree_file.to_str().unwrap(),
+            "--matrix",
+            mat_file.to_str().unwrap(),
+            "--min-size",
+            "2",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("empty"),
+        "Expected empty matrix error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_hybrid_missing_leaf_name_rejected() {
+    let temp = Builder::new()
+        .prefix("necom_test_hybrid_missing_leaf")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("hybrid_missing_leaf.nwk");
+    let mat_file = temp.path().join("hybrid_missing_leaf.phy");
+
+    // Tree has leaves A, B, C but matrix only has A, B.
+    fs::write(&tree_file, "((A:0.1,B:0.1):0.8,C:0.1);").unwrap();
+    fs::write(&mat_file, "2\nA 0.0 1.0\nB 1.0 0.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "hybrid",
+            tree_file.to_str().unwrap(),
+            "--matrix",
+            mat_file.to_str().unwrap(),
+            "--min-size",
+            "2",
+        ])
+        .run_fail();
+
+    let lowered = stderr.to_lowercase();
+    assert!(
+        lowered.contains("missing") && lowered.contains("c"),
+        "Expected missing leaf name error for C, got: {}",
+        stderr
+    );
+}
