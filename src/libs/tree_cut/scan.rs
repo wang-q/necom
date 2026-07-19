@@ -4,7 +4,7 @@ use crate::libs::phylo::tree::Tree;
 use crate::libs::tree_cut::{self as cut, CutDispatch};
 use std::io::Write;
 
-/// Parameters controlling a `--scan` threshold sweep.
+/// Parameters controlling a scan threshold sweep.
 pub struct ScanParams {
     /// Starting threshold value.
     pub start: f64,
@@ -18,7 +18,7 @@ pub struct ScanParams {
     pub dynamic_tree: bool,
 }
 
-/// Parse a `--range` argument of the form `start,end,step`.
+/// Parse a `--range` argument of the form `start,end,step` for floating-point methods.
 pub fn parse_scan_range(scan_str: &str) -> anyhow::Result<(f64, f64, f64)> {
     let parts: Vec<&str> = scan_str.split(',').collect();
     if parts.len() != 3 {
@@ -32,6 +32,35 @@ pub fn parse_scan_range(scan_str: &str) -> anyhow::Result<(f64, f64, f64)> {
         anyhow::bail!("--range step must be positive");
     }
     Ok((start, end, step))
+}
+
+/// Parse a `--range` argument of the form `start,end,step` for integer methods.
+pub fn parse_scan_range_usize(scan_str: &str) -> anyhow::Result<(usize, usize, usize)> {
+    let parts: Vec<&str> = scan_str.split(',').collect();
+    if parts.len() != 3 {
+        anyhow::bail!("--range format must be start,end,step");
+    }
+
+    let labels = ["start", "end", "step"];
+    let mut values = [0usize; 3];
+    for (i, part) in parts.iter().enumerate() {
+        match part.parse::<usize>() {
+            Ok(v) => values[i] = v,
+            Err(_) => {
+                anyhow::bail!(
+                    "--range {} must be a non-negative integer, got {}",
+                    labels[i],
+                    part
+                );
+            }
+        }
+    }
+
+    if values[2] == 0 {
+        anyhow::bail!("--range step must be positive");
+    }
+
+    Ok((values[0], values[1], values[2]))
 }
 
 /// Run a parameter sweep over a single tree.

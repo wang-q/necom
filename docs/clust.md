@@ -246,7 +246,7 @@ necom clust hier matrix.phy --method ward > tree.nwk
 
 # 2. Scan thresholds, save to a file, and evaluate internal metrics (Silhouette)
 # necom cut scan-simple outputs a long table; write it to a file for eval partition
-necom cut scan-simple tree.nwk --method height --range 0,1.0,0.05 > partitions.tsv
+necom cut scan-simple tree.nwk --height --range 0,1.0,0.05 > partitions.tsv
 necom eval partition partitions.tsv --input-format long --matrix matrix.phy > evaluation.tsv
 
 # 3. Analyze evaluation.tsv to choose the best threshold (e.g., maximum Silhouette)

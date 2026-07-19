@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use clap::{ArgMatches, Command};
 use necom::libs::phylo::tree::Tree;
-use necom::libs::tree_cut::{self as cut, RepMode, METHOD_NAMES};
+use necom::libs::tree_cut::{self as cut, RepMode};
 use std::io::Write;
 
 pub mod dynamic;
@@ -104,17 +104,6 @@ pub fn init_stats_writer(args: &ArgMatches) -> Result<Option<Box<dyn Write>>> {
     } else {
         Ok(None)
     }
-}
-
-/// Normalize a user-provided method name to the internal underscore form and
-/// validate it against `METHOD_NAMES`.
-pub fn normalize_method_name(name: &str) -> Result<&'static str> {
-    let normalized = name.replace('-', "_");
-    METHOD_NAMES
-        .iter()
-        .find(|&&n| n == normalized)
-        .copied()
-        .ok_or_else(|| anyhow::anyhow!("unknown method: {}", name))
 }
 
 /// Command-layer builder wrapper around `tree_cut::build_dispatch`.

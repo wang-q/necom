@@ -24,8 +24,7 @@ fn test_scan_height() {
             "cut",
             "scan-simple",
             nwk_file,
-            "--method",
-            "height",
+            "--height",
             "--range",
             "0,0.2,0.1",
             "--stats-out",
@@ -86,8 +85,7 @@ fn test_scan_simple_bad_range_format() {
             "cut",
             "scan-simple",
             "tests/newick/abcde.nwk",
-            "--method",
-            "height",
+            "--height",
             "--range",
             "0,1",
         ])
@@ -108,8 +106,7 @@ fn test_scan_simple_non_positive_step() {
             "cut",
             "scan-simple",
             "tests/newick/abcde.nwk",
-            "--method",
-            "height",
+            "--height",
             "--range",
             "0,1,0",
         ])
@@ -119,6 +116,71 @@ fn test_scan_simple_non_positive_step() {
         stderr.to_lowercase().contains("step")
             && stderr.to_lowercase().contains("positive"),
         "Expected positive step error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_scan_k_integer_range() {
+    let nwk = "((A:0.1,B:0.1):0.1,C:0.2);";
+    let nwk_file = "tests/mat/scan_k_test.nwk";
+    if !std::path::Path::new("tests/mat").exists() {
+        fs::create_dir_all("tests/mat").unwrap();
+    }
+    fs::write(nwk_file, nwk).expect("Failed to write nwk");
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["cut", "scan-simple", nwk_file, "--k", "--range", "1,3,1"])
+        .run();
+
+    let out_lines: Vec<&str> = stdout.lines().collect();
+    assert!(out_lines.len() > 1);
+    assert_eq!(out_lines[0], "Group\tClusterID\tSampleID");
+    assert!(out_lines.iter().any(|line| line.starts_with("k=1\t")));
+    assert!(out_lines.iter().any(|line| line.starts_with("k=2\t")));
+    assert!(out_lines.iter().any(|line| line.starts_with("k=3\t")));
+
+    let _ = fs::remove_file(nwk_file);
+}
+
+#[test]
+fn test_scan_k_range_rejects_float() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "scan-simple",
+            "tests/newick/abcde.nwk",
+            "--k",
+            "--range",
+            "1.5,3,1",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("integer")
+            || stderr.to_lowercase().contains("invalid digit"),
+        "Expected integer range error for k, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_scan_k_range_rejects_zero_start() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "scan-simple",
+            "tests/newick/abcde.nwk",
+            "--k",
+            "--range",
+            "0,3,1",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("at least 1")
+            || stderr.to_lowercase().contains("cluster count"),
+        "Expected start >= 1 error for k scan, got: {}",
         stderr
     );
 }

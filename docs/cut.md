@@ -246,7 +246,7 @@ Evaluating clustering quality usually requires a reference standard (Ground Trut
 #### 1. Classic Phylogenetic Analysis
 ```bash
 # 1. Scan different parameters to generate multiple clustering results
-# necom cut scan-simple input.nwk --method max-clade --range 0.01,0.10,0.01 > partitions.tsv
+# necom cut scan-simple input.nwk --max-clade --range 0.01,0.10,0.01 > partitions.tsv
 
 # 2. Select the best threshold and generate final clusters
 necom cut simple input.nwk --max-clade 0.05 > final_cluster.tsv
@@ -282,7 +282,7 @@ When unsure about `K` or `t`, use `scan-simple` or `scan-dynamic` for parameter 
 `necom` provides explicit scanning capability through `necom cut scan-simple` and `necom cut scan-dynamic`.
 
 **Usage**:
-`necom cut scan-simple tree.nwk --method <NAME> --range <start>,<end>,<step>`
+`necom cut scan-simple tree.nwk --<NAME> --range <start>,<end>,<step>`
 (Note: scanning only targets the **main threshold parameter** of the method. For `inconsistent`, it scans the coefficient threshold `T`, while depth `--deep` remains fixed at the user-specified or default value.)
 
 **Output summary table**:
@@ -308,10 +308,10 @@ Scan subcommands always emit long format:
 Example:
 ```bash
 # 1. Output only the detailed partition table (for downstream analysis or evaluation)
-necom cut scan-simple tree.nwk --method max-clade --range 0,0.5,0.01 > partitions.tsv
+necom cut scan-simple tree.nwk --max-clade --range 0,0.5,0.01 > partitions.tsv
 
 # 2. Save statistics at the same time (for quick inspection)
-necom cut scan-simple tree.nwk --method max-clade --range 0,0.5,0.01 --stats-out stats.tsv > partitions.tsv
+necom cut scan-simple tree.nwk --max-clade --range 0,0.5,0.01 --stats-out stats.tsv > partitions.tsv
 ```
 
 ### Integration with `necom eval partition`
@@ -352,7 +352,7 @@ This is the most rigorous strategy, using `necom eval partition` to compute clus
 - **Operation**: Use together with `necom eval partition`.
   ```bash
   # Generate detailed list of all candidate partitions
-  necom cut scan-simple tree.nwk --method height --range ... > partitions.tsv
+  necom cut scan-simple tree.nwk --height --range ... > partitions.tsv
   # Batch evaluation
   necom eval partition partitions.tsv --input-format long --matrix dist.phy
   ```

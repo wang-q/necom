@@ -39,8 +39,7 @@ D 1.0 1.0 0.2 0.0
         .arg("cut")
         .arg("scan-simple")
         .arg(tree_file.path())
-        .arg("--method")
-        .arg("height")
+        .arg("--height")
         .arg("--range")
         .arg("0.0,0.6,0.2")
         .output()?;

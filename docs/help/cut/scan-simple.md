@@ -11,8 +11,9 @@ Output:
 
 Notes:
 
-* `--method` and `--range` are required.
-* `--range` format is `start,end,step` with comma separators and no spaces.
+* Exactly one method flag must be provided: `--k`, `--height`, `--root-dist`, `--max-clade`, `--avg-clade`, `--med-clade`, `--sum-branch`, `--leaf-dist-max`, `--leaf-dist-min`, `--leaf-dist-avg`, `--max-edge`, `--inconsistent`.
+* `--range` is required and must be `start,end,step` with comma separators and no spaces.
+* `--k --range` requires integer values and the start must be at least `1`.
 * `--deep` controls the depth for the `inconsistent` method (default: `2`).
 * `--support <S>` treats edges with support `< S` as effectively infinite length.
 * The `--format` and `--rep` options are not available in scan mode.
@@ -20,7 +21,10 @@ Notes:
 Examples:
 
 1. Scan heights and save statistics
-   `necom cut scan-simple tree.nwk --method height --range 0,1.0,0.05 --stats-out stats.tsv > partitions.tsv`
+   `necom cut scan-simple tree.nwk --height --range 0,1.0,0.05 --stats-out stats.tsv > partitions.tsv`
 
 2. Scan max-clade thresholds
-   `necom cut scan-simple tree.nwk --method max-clade --range 0,0.5,0.01`
+   `necom cut scan-simple tree.nwk --max-clade --range 0,0.5,0.01`
+
+3. Scan cluster counts
+   `necom cut scan-simple tree.nwk --k --range 1,5,1`

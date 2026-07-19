@@ -23,15 +23,15 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
     let tree = load_tree(args)?;
 
     let range_str = args.get_one::<String>("range").unwrap();
-    let (start, end, step) = parse_integer_range(range_str)?;
+    let (start, end, step) = cut::scan::parse_scan_range_usize(range_str)?;
 
     let deep_split = args.get_flag("deep_split");
     let max_tree_height = args.get_one::<f64>("max_tree_height").copied();
 
     let params = cut::scan::ScanParams {
-        start,
-        end,
-        step,
+        start: start as f64,
+        end: end as f64,
+        step: step as f64,
         method_name: None,
         dynamic_tree: true,
     };
@@ -50,37 +50,4 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
         false,
         None,
     )
-}
-
-/// Parse a scan range and validate that all three values are non-negative integers.
-fn parse_integer_range(range_str: &str) -> Result<(f64, f64, f64)> {
-    let parts: Vec<&str> = range_str.split(',').collect();
-    if parts.len() != 3 {
-        anyhow::bail!("--range format must be start,end,step");
-    }
-
-    let labels = ["start", "end", "step"];
-    let mut values = [0usize; 3];
-    for (i, part) in parts.iter().enumerate() {
-        match part.parse::<usize>() {
-            Ok(v) => values[i] = v,
-            Err(_) => {
-                anyhow::bail!(
-                    "--range {} must be a non-negative integer, got {}",
-                    labels[i],
-                    part
-                );
-            }
-        }
-    }
-
-    let start = values[0] as f64;
-    let end = values[1] as f64;
-    let step = values[2] as f64;
-
-    if step <= 0.0 {
-        anyhow::bail!("--range step must be positive");
-    }
-
-    Ok((start, end, step))
 }

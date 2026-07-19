@@ -28,4 +28,4 @@ Examples:
    `necom cut dynamic tree.nwk --min-size 20`
 
 4. Scan thresholds and save statistics
-   `necom cut scan-simple tree.nwk --method max-clade --range 0,0.5,0.01`
+   `necom cut scan-simple tree.nwk --max-clade --range 0,0.5,0.01`
