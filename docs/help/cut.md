@@ -21,9 +21,9 @@ Notes:
     * `--avg-clade <T>`: TreeCluster style (avg pairwise distance in clade <= T).
     * `--med-clade <T>`: TreeCluster style (median pairwise distance in clade <= T).
     * `--sum-branch <T>`: TreeCluster style (sum of branch lengths in clade <= T).
-    * `--leaf-dist-max <T>`: TreeCluster style (max distance from cluster root to any leaf <= T).
-    * `--leaf-dist-min <T>`: TreeCluster style (min distance from cluster root to any leaf <= T).
-    * `--leaf-dist-avg <T>`: TreeCluster style (avg distance from cluster root to leaves <= T).
+    * `--leaf-dist-max <T>`: TreeCluster style (max distance from cluster root to any leaf <= T). Approximate: uses global leaf depth statistics converted to a root-distance cut.
+    * `--leaf-dist-min <T>`: TreeCluster style (min distance from cluster root to any leaf <= T). Approximate: same conversion as `--leaf-dist-max`.
+    * `--leaf-dist-avg <T>`: TreeCluster style (avg distance from cluster root to leaves <= T). Approximate: same conversion as `--leaf-dist-max`.
     * `--max-edge <T>` / `--single-linkage <T>`: cut branches longer than threshold.
     * `--inconsistent <T>`: SciPy style (inconsistent coefficient <= T).
     * `--dynamic-tree <N>`: Dynamic Tree Cut (top-down adaptive, N=min cluster size).
@@ -37,8 +37,8 @@ Notes:
     * `root` (default): member closest to root (alphabetical tie-break).
     * `medoid`: member with the smallest sum of distances to other members.
     * `first`: alphabetically first member.
-* `--support <S>` treats edges with support `< S` as infinite length, forcing a cut. Nodes without explicit support default to `100.0`.
-* `--scan <start>,<end>,<step>` performs a parameter sweep. In scan mode, `--format` is ignored and output is always long format (`Group\tClusterID\tSampleID`).
+* `--support <S>` treats edges with support `< S` as effectively infinite length, forcing a cut. Nodes without explicit support default to `100.0`. The mask is applied before any cut method runs, so it affects all distance/height-based methods uniformly.
+* `--scan <start>,<end>,<step>` performs a parameter sweep. In scan mode, `--format` is ignored and output is always long format (`Group\tClusterID\tSampleID`). For `--dynamic-tree`, the scan value replaces the min cluster size at each step (the `--dynamic-tree` argument itself only selects the method).
 * `--stats-out <FILE>` writes scan summary statistics (`Group\tClusters\tSingletons\tNon-Singletons\tMaxSize`).
 * `--dynamic-hybrid` requires `--matrix`.
 

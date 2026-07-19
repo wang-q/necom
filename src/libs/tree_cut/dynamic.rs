@@ -39,7 +39,7 @@ pub fn cutree_dynamic_tree(
     };
 
     // 1. Build Height Sequence
-    let leaves = tree.get_leaves(); // This calls stat::get_leaves, check order.
+    let leaves = tree.get_leaves();
 
     if leaves.is_empty() {
         return Ok(Partition::new());

@@ -210,7 +210,23 @@ pub(crate) fn assign_clusters(
     Ok(part)
 }
 
-/// Mask low-support internal nodes by setting branch length to infinity (TreeCluster semantics).
+/// Branch length used to mask low-support edges.
+///
+/// Must be finite so that `Node::finite_length()` (used by stat/balance/query
+/// modules) propagates it as-is rather than collapsing it to 0.0. The value
+/// 1e20 is large enough to exceed any realistic cut threshold while staying
+/// within the finite range (1e20 + 1e20 = 2e20, no overflow).
+const SUPPORT_FILTER_SENTINEL: f64 = 1e20;
+
+/// Mask low-support internal nodes by setting branch length to a sentinel
+/// value that behaves as "effectively infinite" across all cut methods
+/// (TreeCluster semantics).
+///
+/// Uses a finite sentinel (`SUPPORT_FILTER_SENTINEL`) rather than `f64::INFINITY`
+/// because `Node::finite_length()` — used by `stat::compute_node_heights`,
+/// `balance::compute_avg_clade_distances`, `query::get_height`, etc. — maps
+/// non-finite lengths to `0.0`, which would silently disable the filter for
+/// `--avg-clade`, `--inconsistent`, `--dynamic-tree`, and `--dynamic-hybrid`.
 pub fn apply_support_filter(tree: &mut Tree, threshold: f64) {
     let root = match tree.get_root() {
         Some(r) => r,
@@ -244,7 +260,7 @@ pub fn apply_support_filter(tree: &mut Tree, threshold: f64) {
     // hold a shared borrow of the tree.
     for id in to_mask {
         if let Some(node) = tree.get_node_mut(id) {
-            node.length = Some(f64::INFINITY);
+            node.length = Some(SUPPORT_FILTER_SENTINEL);
         }
     }
 }

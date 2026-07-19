@@ -250,8 +250,7 @@ pub fn cut_med_clade(tree: &Tree, threshold: f64) -> Result<Partition> {
         let stat = stats
             .get(&u)
             .ok_or_else(|| anyhow::anyhow!("stats not found for node {}", u))?;
-        // Use epsilon for float comparison? TreeCluster uses <=
-        if stat.median <= threshold + 1e-9 {
+        if stat.median <= threshold {
             clusters.push(u);
         } else {
             if let Some(node) = tree.get_node(u) {
@@ -320,8 +319,7 @@ pub fn cut_sum_branch(tree: &Tree, threshold: f64) -> Result<Partition> {
         let sum = sums
             .get(&u)
             .ok_or_else(|| anyhow::anyhow!("sums not found for node {}", u))?;
-        // Use epsilon?
-        if *sum <= threshold + 1e-9 {
+        if *sum <= threshold {
             clusters.push(u);
         } else {
             if let Some(node) = tree.get_node(u) {

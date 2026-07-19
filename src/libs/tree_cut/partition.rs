@@ -61,7 +61,7 @@ impl Partition {
                 max_size = size;
             }
         }
-        (self.num_clusters, singletons, non_singletons, max_size)
+        (sizes.len(), singletons, non_singletons, max_size)
     }
 }
 
@@ -271,6 +271,21 @@ mod tests {
         part.assignment.insert(2, 2);
         part.num_clusters = 2;
         assert_eq!(part.get_stats(), (2, 1, 1, 2));
+    }
+
+    #[test]
+    fn test_partition_get_stats_non_contiguous() {
+        // Cluster IDs 1, 3, 5 (non-contiguous). sizes.len() = 3, but a naive
+        // max-id implementation would report 5.
+        let mut part = Partition::new();
+        part.assignment.insert(0, 1);
+        part.assignment.insert(1, 1);
+        part.assignment.insert(2, 3);
+        part.assignment.insert(3, 5);
+        part.num_clusters = 5; // legacy max-id value
+                               // (num_clusters, singletons, non_singletons, max_size)
+                               // Cluster 1 has 2 members (non-singleton); clusters 3 and 5 have 1 each.
+        assert_eq!(part.get_stats(), (3, 2, 1, 2));
     }
 
     #[test]

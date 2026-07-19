@@ -268,12 +268,11 @@ fn run_scan(
             break;
         }
 
-        let dispatch = if let Some(min_size) = dynamic_tree {
+        let dispatch = if dynamic_tree.is_some() {
             build_dynamic_tree_dispatch(
                 tree,
                 val,
                 deep,
-                min_size,
                 max_tree_height,
                 deep_split,
                 no_pam_dendro,
@@ -362,13 +361,12 @@ fn init_stats_writer(args: &ArgMatches) -> anyhow::Result<Option<Box<dyn Write>>
 }
 
 /// Build a dispatch for dynamic-tree scan values, validating that the value is
-/// a non-negative integer.
-#[allow(clippy::too_many_arguments)]
+/// a non-negative integer. The scan value replaces the min cluster size at
+/// each step (the `--dynamic-tree` argument itself only selects the method).
 fn build_dynamic_tree_dispatch(
     tree: &Tree,
     val: f64,
     deep: usize,
-    min_size: usize,
     max_tree_height: Option<f64>,
     deep_split: bool,
     no_pam_dendro: bool,
@@ -385,7 +383,7 @@ fn build_dynamic_tree_dispatch(
         None,
         val,
         deep,
-        Some(min_size),
+        Some(val as usize),
         None,
         max_tree_height,
         deep_split,

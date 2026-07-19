@@ -668,3 +668,92 @@ fn test_cut_missing_matrix_for_dynamic_hybrid() {
         stderr
     );
 }
+
+#[test]
+fn test_scan_dynamic_tree() {
+    // Tree with two well-separated pairs: ((A:0.1,B:0.1):0.8,(C:0.1,D:0.1):0.8);
+    // min_module_size=2 -> {A,B},{C,D}
+    // min_module_size=5 -> all unassigned (cluster 0)
+    let nwk = "((A:0.1,B:0.1):0.8,(C:0.1,D:0.1):0.8);";
+    let nwk_file = "tests/mat/scan_dyn_test.nwk";
+    if !std::path::Path::new("tests/mat").exists() {
+        fs::create_dir_all("tests/mat").unwrap();
+    }
+    fs::write(nwk_file, nwk).expect("Failed to write nwk");
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "cut",
+            nwk_file,
+            "--dynamic-tree",
+            "2", // placeholder; scan value overrides
+            "--scan",
+            "2,5,3", // val=2, then val=5
+        ])
+        .run();
+
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert!(lines.len() > 1);
+    assert_eq!(lines[0], "Group\tClusterID\tSampleID");
+
+    // Collect group labels
+    let groups: Vec<&str> = lines[1..]
+        .iter()
+        .map(|l| l.split('\t').next().unwrap_or(""))
+        .collect();
+    let unique_groups: std::collections::HashSet<&str> = groups.into_iter().collect();
+    // Must see two distinct scan groups (dynamic-tree=2 and dynamic-tree=5)
+    assert_eq!(
+        unique_groups.len(),
+        2,
+        "scan should produce 2 groups, got: {:?}",
+        unique_groups
+    );
+
+    let _ = fs::remove_file(nwk_file);
+}
+
+#[test]
+fn test_cut_support_avg_clade() {
+    // Tree: ((A:0.1,B:0.1)90:0.1,C:0.2);
+    // Internal node (A,B) has support 90.
+    // Avg clade distance at root = (0.2 + 1.0 + 1.0) / 3 ≈ 0.733.
+    // Without --support: threshold 0.8 keeps root -> 1 cluster {A,B,C}.
+    // With --support 95: edge (A,B)->Root masked to 1e20.
+    //   avg dist at root becomes (0.2 + ~1e20 + ~1e20) / 3 ≈ 6.7e19 > 0.8 -> split.
+    //   {A,B} (avg 0.2 <= 0.8) and {C}.
+    let nwk = "((A:0.1,B:0.1)90:0.1,C:0.2);";
+    let nwk_file = "tests/nwk/support_avg_test.nwk";
+    fs::create_dir_all("tests/nwk").unwrap();
+    fs::write(nwk_file, nwk).expect("Failed to write nwk");
+
+    // Without --support: 1 cluster
+    let (stdout, _) = NecomCmd::new()
+        .args(&["cut", nwk_file, "--avg-clade", "0.8"])
+        .run();
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(lines.len(), 1, "Expected 1 cluster without --support");
+    assert_eq!(lines[0], "A\tB\tC");
+
+    // With --support 95: 2 clusters
+    let (stdout, _) = NecomCmd::new()
+        .args(&["cut", nwk_file, "--avg-clade", "0.8", "--support", "95"])
+        .run();
+    let mut lines: Vec<&str> = stdout.lines().collect();
+    lines.sort();
+    assert_eq!(lines.len(), 2, "Expected 2 clusters with --support");
+    assert_eq!(lines[0], "A\tB");
+    assert_eq!(lines[1], "C");
+
+    let _ = fs::remove_file(nwk_file);
+}
+
+// NOTE: A `test_cut_support_dynamic_tree` test was originally planned to verify
+// Bug #2 (support filter sentinel) for `--dynamic-tree`. However, `dynamic.rs`
+// has a pre-existing bug where its private `compute_node_heights` only caches
+// the root's height, causing `cutree_static` to default all non-root nodes to
+// height 0.0 and always cut at the root's immediate children. This masks any
+// effect of the support filter on `--dynamic-tree` output, making the test
+// unable to distinguish between the old (f64::INFINITY) and new (1e20) sentinel.
+// Bug #2 is adequately covered by `test_cut_support_avg_clade`, which exercises
+// the `compute_avg_clade_distances` → `finite_length()` path.
