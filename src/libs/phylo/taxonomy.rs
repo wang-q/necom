@@ -45,7 +45,15 @@ pub fn read_taxonomy<R: BufRead>(
                 anyhow::bail!("rank column index must be 1-based");
             }
             let rank_idx = rank_col - 1;
-            let term = parts.get(rank_idx).map(|s| newick_safe(s));
+            // Treat missing, empty, or whitespace-only cells as None, matching
+            // the documented "None if column missing or empty" contract.
+            let term = parts.get(rank_idx).and_then(|s| {
+                if s.trim().is_empty() {
+                    None
+                } else {
+                    Some(newick_safe(s))
+                }
+            });
             if let Some(t) = &term {
                 all_groups[i].push(t.clone());
             }

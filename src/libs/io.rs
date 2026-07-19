@@ -23,22 +23,30 @@ pub fn writer<P: AsRef<Path>>(outfile: P) -> anyhow::Result<Box<dyn Write>> {
     }
 }
 
-/// Read lines from a file or stdin, skipping lines that fail to read.
+/// Read lines from a file or stdin, propagating IO errors (e.g. invalid UTF-8)
+/// instead of silently truncating the stream.
 pub fn read_lines<P: AsRef<Path>>(
     path: P,
-) -> anyhow::Result<impl Iterator<Item = String>> {
+) -> anyhow::Result<impl Iterator<Item = anyhow::Result<String>>> {
     let reader = reader(path)?;
-    Ok(reader.lines().map_while(Result::ok))
+    Ok(reader
+        .lines()
+        .map(|r| r.map_err(|e| anyhow::anyhow!("failed to read line: {}", e))))
 }
 
 /// Read whitespace-delimited names from a file or stdin.
 ///
 /// Empty lines and lines whose first non-whitespace character is `#` are ignored.
+/// IO errors (e.g. invalid UTF-8 bytes) are propagated rather than silently
+/// truncating the stream.
 pub fn read_names<C: FromIterator<String>>(file: &str) -> anyhow::Result<C> {
     let reader = reader(file)?;
-    let names: C = reader
+    let lines: Vec<String> = reader
         .lines()
-        .map_while(Result::ok)
+        .collect::<Result<_, _>>()
+        .map_err(|e| anyhow::anyhow!("failed to read line from {}: {}", file, e))?;
+    let names: C = lines
+        .iter()
         .filter(|line| {
             let trimmed = line.trim();
             !trimmed.is_empty() && !trimmed.starts_with('#')
@@ -62,6 +70,7 @@ pub fn read_replace_tsv_overwrite(
 ) -> anyhow::Result<BTreeMap<String, Vec<String>>> {
     let mut map = BTreeMap::new();
     for line in read_lines(file)? {
+        let line = line?;
         let parts: Vec<&str> = line.split('\t').collect();
         if parts.len() < 2 {
             log::warn!("skipping malformed line in replace file: {}", line);
