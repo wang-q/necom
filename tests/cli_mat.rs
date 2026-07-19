@@ -584,6 +584,37 @@ fn command_mat_to_phylip_empty_input() {
 }
 
 #[test]
+fn command_mat_to_phylip_crlf() {
+    // Pairwise TSV with CRLF line endings and extra whitespace should be parsed correctly.
+    let input = "A\tB\t0.1\r\n  B\tC\t0.2 \r\nC\tA\t0.3\r\n";
+
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["mat", "to-phylip", "stdin"])
+        .stdin(input)
+        .run();
+
+    assert!(stdout.contains("A\t0\t0.1\t0.3"));
+    assert!(stdout.contains("B\t0.1\t0\t0.2"));
+    assert!(stdout.contains("C\t0.3\t0.2\t0"));
+    assert!(!stderr.contains("skipping"));
+}
+
+#[test]
+fn command_mat_to_phylip_empty_name() {
+    // Lines with empty/whitespace names should be skipped without failing.
+    let input = "\tB\t0.1\nA\t \t0.2\nA\tC\t0.3\n";
+
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["mat", "to-phylip", "stdin"])
+        .stdin(input)
+        .run();
+
+    assert!(stderr.contains("skipping pairwise line with empty sequence name"));
+    assert!(stdout.contains("A\t0\t0.3"));
+    assert!(stdout.contains("C\t0.3\t0"));
+}
+
+#[test]
 fn command_mat_compare_empty_method_errors() {
     // Empty --method should bail with a clear error instead of emitting only
     // the header line.

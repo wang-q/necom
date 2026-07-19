@@ -21,7 +21,7 @@ Distance matrices and Newick trees do not carry genomic coordinates. If other `n
 
 ## Supported Formats and Data Structures
 
-`necom` supports two external distance matrix file formats: `PHYLIP` and `Pairwise`. (Internal matrix data structures are documented in [`notes/design/mat-impl.md`](../notes/design/mat-impl.md).)
+`necom` supports two external distance matrix file formats: `PHYLIP` and `Pairwise`.
 
 ### 1. PHYLIP Distance Matrix (Dense)
 
@@ -62,6 +62,52 @@ Sparse or list-form distance data, suitable for storing graph structures or only
 `necom` provides mutual conversion between matrix and `Pairwise` list:
 - **Matrix to Pair (`necom mat to-pair`)**: flatten a `PHYLIP` matrix into a `Pairwise` list.
 - **Pair to Matrix (`necom mat to-phylip`)**: assemble a `Pairwise` list back into a `PHYLIP` matrix, supporting `--missing` and `--same` parameters.
+
+### Internal Data Structures
+
+`necom` uses three internal matrix representations. Understanding their trade-offs
+helps explain why different commands expect different input formats and why some
+operations are more memory-efficient than others.
+
+#### NamedMatrix
+
+A dense, named distance matrix used for PHYLIP input/output. It stores:
+
+* An `IndexMap<String, usize>` mapping sequence names to row/column indices.
+* A `CondensedMatrix` holding the upper-triangular pairwise values.
+* An optional diagonal vector, required by transformations such as
+  `necom mat transform --normalize`.
+
+`NamedMatrix` is the in-memory representation after loading a PHYLIP file.
+For $N = 10{,}000$, the underlying `CondensedMatrix` holds roughly
+$N(N-1)/2 \approx 50$ million `f32` values, or about 200 MB.
+
+#### CondensedMatrix
+
+A memory-efficient dense matrix used directly by hierarchical clustering
+algorithms such as `necom clust hier`. It stores only the upper triangle
+(excluding the diagonal) of a symmetric matrix in a single `Vec<f32>`:
+
+$$k = N \cdot i - \frac{i(i+1)}{2} + (j - i - 1) \quad \text{for} \quad i < j$$
+
+The diagonal is implicitly `0.0`, and the matrix is symmetric. This is the
+standard condensed distance matrix layout used by many statistical packages
+(e.g., SciPy, R) and by the NN-chain implementation in `necom clust hier`.
+
+#### ScoringMatrix<T>
+
+A sparse matrix for graph-based algorithms (e.g., DBSCAN, MCL) and partial
+pairwise data. It stores only explicitly set values in a `HashMap<usize, T>`,
+using a single compressed key for the lower triangle including the diagonal:
+
+$$k = \frac{j(j+1)}{2} + i \quad \text{for} \quad i \le j$$
+
+Because this key depends only on `i` and `j`, not on the matrix size `N`,
+entries remain valid even when the inferred size grows as more samples are
+discovered.
+
+Detailed implementation notes, including the complete public API grouping and
+dead-code inventory, are kept in [`notes/design/mat-impl.md`](../notes/design/mat-impl.md).
 
 ## Subcommands in Detail
 
@@ -155,7 +201,7 @@ After normalization: $D = -\ln(S(x, y) / \sqrt{S(x, x) \cdot S(y, y)})$. Useful 
 
 The following conversions are not yet implemented:
 
-* **Reciprocal**: $D = 1/S - 1/Max$ (can be approximated with `--op linear`).
+* **Reciprocal**: $D = 1/S - 1/Max$ (cannot be approximated with `--op linear`, which is an affine transform).
 * **Matrix-level Cosine Similarity conversion**: $D = 1 - \cos(\theta)$.
 * **Matrix-level Correlation conversion**: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.
 

@@ -3,25 +3,18 @@ use std::io::BufRead;
 
 use super::MatrixView;
 
-/// Triangular number `T(i) = i * (i - 1) / 2`.
+/// Linear index into the lower triangle of an N×N matrix **including** the diagonal.
 ///
-/// Uses `saturating_sub` so that `T(0) == 0` without underflow on `usize`.
-fn triangular_number(i: usize) -> usize {
-    i * i.saturating_sub(1) / 2
-}
-
-/// Linear index into the upper triangle of an N×N matrix **including** the diagonal.
-///
-/// Assumes `i <= j` and `j < n`. The total number of stored elements is `n * (n + 1) / 2`.
-fn upper_index_with_diag(n: usize, i: usize, j: usize) -> usize {
-    debug_assert!(i <= j, "upper_index_with_diag requires i <= j");
-    debug_assert!(j < n, "upper_index_with_diag requires j < n");
-    i * n - triangular_number(i) + (j - i)
+/// Assumes `i <= j`. The index is independent of `N`, so entries inserted before
+/// the matrix size is known remain valid after the inferred size grows.
+fn condensed_index_with_diag(i: usize, j: usize) -> usize {
+    debug_assert!(i <= j, "condensed_index_with_diag requires i <= j");
+    j * (j + 1) / 2 + i
 }
 
 /// A symmetric scoring matrix parameterized over the value type `T`.
 ///
-/// Internally stores only the upper triangle (including the diagonal) using a
+/// Internally stores only the lower triangle (including the diagonal) using a
 /// single compressed `usize` key, reducing per-entry overhead compared to a
 /// `(usize, usize)` tuple key.
 #[derive(Debug, Clone)]
@@ -122,7 +115,7 @@ where
     /// # Panics
     ///
     /// Panics if entries have already been stored with indices larger than or
-    /// equal to `size`, because their compressed keys would no longer be valid.
+    /// equal to `size`, because those entries would become invisible to `get`.
     pub fn set_size(&mut self, size: usize) {
         assert!(
             self.max_index < size || self.data.is_empty(),
@@ -142,8 +135,7 @@ where
     /// # Panics
     ///
     /// Panics if the size has been fixed via [`set_size`](Self::set_size) and
-    /// either index is out of bounds, because the compressed key would no
-    /// longer be valid.
+    /// either index is out of bounds.
     pub fn set(&mut self, row: usize, col: usize, value: T) {
         let (i, j) = if row <= col { (row, col) } else { (col, row) };
         self.max_index = self.max_index.max(j);
@@ -156,7 +148,7 @@ where
             col,
             n
         );
-        let key = upper_index_with_diag(n, i, j);
+        let key = condensed_index_with_diag(i, j);
         self.data.insert(key, value);
     }
 
@@ -178,7 +170,7 @@ where
         }
 
         let (i, j) = if row <= col { (row, col) } else { (col, row) };
-        let key = upper_index_with_diag(n, i, j);
+        let key = condensed_index_with_diag(i, j);
         if let Some(&value) = self.data.get(&key) {
             return value;
         }
@@ -218,7 +210,11 @@ impl ScoringMatrix<f32> {
         let reader = crate::reader(infile)?;
         for line in reader.lines() {
             let line = line?;
-            let fields: Vec<&str> = line.split('\t').collect();
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            let fields: Vec<&str> = line.split('\t').map(str::trim).collect();
             if fields.len() < 3 {
                 log::warn!(
                     "skipping malformed pairwise line (expected 3 tab-separated fields): {}",
@@ -236,6 +232,10 @@ impl ScoringMatrix<f32> {
 
             let n1 = fields[0].to_string();
             let n2 = fields[1].to_string();
+            if n1.is_empty() || n2.is_empty() {
+                log::warn!("skipping pairwise line with empty sequence name: {}", line);
+                continue;
+            }
             let score: f32 = match fields[2].parse() {
                 Ok(v) => v,
                 Err(e) => {
@@ -265,7 +265,7 @@ impl ScoringMatrix<f32> {
             let i1 = name_to_index[&n1];
             let i2 = name_to_index[&n2];
             let (i, j) = if i1 <= i2 { (i1, i2) } else { (i2, i1) };
-            let key = upper_index_with_diag(size, i, j);
+            let key = condensed_index_with_diag(i, j);
             if let Some(&existing) = matrix.data.get(&key) {
                 if existing != score {
                     log::warn!(
@@ -281,5 +281,117 @@ impl ScoringMatrix<f32> {
         }
 
         Ok((matrix, names.into_iter().collect()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::condensed_index_with_diag;
+
+    /// Alternative computation of the lower-triangular-with-diagonal index.
+    ///
+    /// Sums the number of stored elements in rows `0..j` (`j` elements before row `j`,
+    /// each row `k` stores `k+1` elements) and adds `i`.
+    fn expected_index(i: usize, j: usize) -> usize {
+        assert!(i <= j, "expected_index requires i <= j");
+        (0..j).map(|k| k + 1).sum::<usize>() + i
+    }
+
+    #[test]
+    fn test_lower_triangular_index_correctness_n100() {
+        const N: usize = 100;
+        for j in 0..N {
+            for i in 0..=j {
+                let actual = condensed_index_with_diag(i, j);
+                let expected = expected_index(i, j);
+                assert_eq!(
+                    actual, expected,
+                    "index mismatch for ({}, {}): got {}, expected {}",
+                    i, j, actual, expected
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_lower_triangular_index_uniqueness_n100() {
+        const N: usize = 100;
+        let total = N * (N + 1) / 2;
+        let mut seen = std::collections::HashSet::with_capacity(total);
+
+        for j in 0..N {
+            for i in 0..=j {
+                let key = condensed_index_with_diag(i, j);
+                assert!(
+                    key < total,
+                    "key {} for ({}, {}) is out of expected range [0, {})",
+                    key,
+                    i,
+                    j,
+                    total
+                );
+                assert!(seen.insert(key), "duplicate key {} for ({}, {})", key, i, j);
+            }
+        }
+
+        assert_eq!(seen.len(), total, "expected {} unique keys", total);
+    }
+
+    #[test]
+    fn test_lower_triangular_index_boundary_cases() {
+        const N: usize = 100;
+
+        // First diagonal element.
+        assert_eq!(condensed_index_with_diag(0, 0), 0);
+
+        // Last diagonal element.
+        assert_eq!(condensed_index_with_diag(N - 1, N - 1), N * (N + 1) / 2 - 1);
+
+        // First row, last column.
+        assert_eq!(condensed_index_with_diag(0, N - 1), (N - 1) * N / 2);
+
+        // Second-to-last row, last column.
+        assert_eq!(
+            condensed_index_with_diag(N - 2, N - 1),
+            (N - 1) * N / 2 + (N - 2)
+        );
+    }
+
+    #[test]
+    fn test_lower_triangular_index_symmetry() {
+        // Callers normalize (row, col) to (i, j) where i <= j before calling
+        // condensed_index_with_diag. Verify both orderings produce the same key.
+        let (row, col) = (3, 7);
+        let (i, j) = if row <= col { (row, col) } else { (col, row) };
+        let (i2, j2) = if col <= row { (col, row) } else { (row, col) };
+        assert_eq!(
+            condensed_index_with_diag(i, j),
+            condensed_index_with_diag(i2, j2)
+        );
+    }
+
+    #[test]
+    fn test_lower_triangular_index_monotonicity() {
+        // Within the same row j, key increases with i.
+        for j in 1..100 {
+            for i in 1..=j {
+                assert!(
+                    condensed_index_with_diag(i, j)
+                        > condensed_index_with_diag(i - 1, j),
+                    "index should increase with i at row {}",
+                    j
+                );
+            }
+        }
+
+        // For the same diagonal position, key increases with j.
+        for j in 1..100 {
+            assert!(
+                condensed_index_with_diag(j, j)
+                    > condensed_index_with_diag(j - 1, j - 1),
+                "diagonal index should increase with j at {}",
+                j
+            );
+        }
     }
 }

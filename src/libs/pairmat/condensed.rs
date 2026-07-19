@@ -1,8 +1,9 @@
 /// A condensed distance matrix (upper triangle only, no diagonal).
 ///
 /// Stores only the upper triangular part of a symmetric matrix, reducing memory usage
-/// from N^2 to N(N-1)/2. This format is required by some hierarchical clustering algorithms
-/// (like `kodama`'s linkage) and is the core storage engine for `NamedMatrix`.
+/// from N^2 to N(N-1)/2. This is the standard condensed distance matrix layout used by
+/// hierarchical clustering algorithms (including `necom clust hier`) and is the core
+/// storage engine for `NamedMatrix`.
 ///
 /// # Storage Layout
 /// For N=3, indices (0,1), (0,2), (1,2) are stored at 0, 1, 2.
@@ -69,8 +70,11 @@ impl CondensedMatrix {
     }
 
     /// Get value at (row, col).
-    /// Returns 0.0 if row == col.
+    /// Returns 0.0 if row == col or if either index is out of bounds.
     pub fn get(&self, row: usize, col: usize) -> f32 {
+        if row >= self.size || col >= self.size {
+            return 0.0;
+        }
         if row == col {
             0.0
         } else if row < col {
@@ -81,8 +85,11 @@ impl CondensedMatrix {
     }
 
     /// Set value at (row, col).
-    /// Does nothing if row == col.
+    /// Does nothing if row == col or if either index is out of bounds.
     pub fn set(&mut self, row: usize, col: usize, value: f32) {
+        if row >= self.size || col >= self.size {
+            return;
+        }
         if row != col {
             let idx = if row < col {
                 get_condensed_index(self.size, row, col)

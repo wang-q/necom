@@ -1,32 +1,17 @@
 # mat 模块内部数据结构
 
-> **实现状态注记**：本文档记录 `necom mat` 与 `necom clust` 内部使用的三种矩阵数据结构，从 `docs/mat.md` 迁移而来，供开发者参考。
+> **实现状态注记**：本文档记录 `necom mat` 与 `necom clust` 内部使用的矩阵数据结构的开发者视角细节（公共 API、死代码等）。三种数据结构的概述、用途与索引公式见 [`docs/mat.md`](../../docs/mat.md)。
 
-## 1. ScoringMatrix
+## 1. 数据结构概述
 
-- **用途**：稀疏或按需计算的评分/距离矩阵。
-- **底层存储**：`HashMap<usize, T>`，key 为上三角（含对角线）的压缩线性索引 `i * N - i(i-1)/2 + (j-i)`（`i <= j`）。
-- **特点**：稀疏存储，仅保留显式设置的值；单 `usize` key 比 `(usize, usize)` tuple 更省内存；支持对角线和 non-diagonal 的默认值；逻辑对称（`get(i,j)` 等价于 `get(j,i)`）。
+三种矩阵数据结构的用途、存储布局与索引公式已迁移到用户文档 [`docs/mat.md`](../../docs/mat.md) 的 **Internal Data Structures** 小节。本文档不再重复，仅保留开发者视角的公共 API 清单与实现注记。
 
-## 2. CondensedMatrix
-
-- **用途**：高效层次聚类（如 `clust hier`），支持较大规模数据。
-- **底层存储**：`Vec<f32>`，仅存上三角（不含对角线），内存占用 $N(N-1)/2$。
-- **索引映射**：对于 $(i, j)$ 且 $i < j$ → $k = N \cdot i - i(i+1)/2 + (j - i - 1)$。
-- **特点**：强制对称，对角线假定为 0，不存储名称映射，纯数值计算。
-
-## 3. NamedMatrix
-
-- **用途**：带行列名的稠密距离矩阵（如 `PHYLIP` 的内存表示）。
-- **底层存储**：`IndexMap`（名称索引）+ `CondensedMatrix` + 可选对角向量。
-- **特点**：组合包装器，通过名称索引访问底层 `CondensedMatrix`；支持可选对角存储（`mat transform --normalize` 需要）；$N=10{,}000$ 时约 200MB。
-
-## 4. 公共 API
+## 2. 公共 API
 
 `pairmat` 模块通过 `mod.rs` 的 `pub use` 暴露以下函数与类型（按职责分组）：
 
 - **数据结构**：
-  - `CondensedMatrix`、`NamedMatrix`、`ScoringMatrix<T>`：见 §1-§3。
+  - `CondensedMatrix`、`NamedMatrix`、`ScoringMatrix<T>`：概述见 [`docs/mat.md`](../../docs/mat.md)。
   - `MatrixView<T>`：只读矩阵视图 trait，`ScoringMatrix` 与 `NamedMatrix` 均实现此接口，供聚类算法统一访问（`mod.rs`）。
   - `get_condensed_index(size, row, col)`：上三角线性索引计算（`condensed.rs`）。
 
@@ -42,12 +27,12 @@
 - **变换**：
   - `transform_matrix(matrix, method, max_val, scale, offset, normalize)`：元素级数学变换（`transform.rs`），支持 `linear` / `inv-linear` / `log` / `exp` / `square` / `sqrt`，可选按对角线归一化。
 
-## 5. 参见
+## 3. 参见
 
 - [docs/mat.md](../../docs/mat.md)：用户面向的矩阵格式说明（PHYLIP / Pairwise）。
 - [clust-impl.md](clust-impl.md)：聚类模块实现分析，其中 §1 描述了三种结构在不同命令中的使用。
 
-## 6. 已知死代码
+## 4. 已知死代码
 
 以下公共 API 经全仓库 grep 确认无生产代码引用（仅自身 doc test 或完全无引用），按项目规则保留不删除：
 

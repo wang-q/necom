@@ -610,3 +610,105 @@ fn test_scoring_matrix_set_out_of_bounds_panics() {
         msg
     );
 }
+
+#[test]
+fn test_condensed_matrix_out_of_bounds() {
+    let mut m = CondensedMatrix::new(3);
+    m.set(0, 1, 0.5);
+
+    // Out-of-bounds reads return 0.0 instead of panicking.
+    assert_eq!(m.get(0, 5), 0.0);
+    assert_eq!(m.get(5, 0), 0.0);
+    assert_eq!(m.get(5, 5), 0.0);
+
+    // Out-of-bounds writes are silently ignored.
+    m.set(0, 5, 9.0);
+    m.set(5, 0, 9.0);
+    m.set(5, 5, 9.0);
+    assert_eq!(m.get(0, 1), 0.5);
+}
+
+#[test]
+fn test_named_matrix_out_of_bounds() {
+    let names = vec!["A".to_string(), "B".to_string()];
+    let mut m = NamedMatrix::new(names).unwrap();
+    m.set(0, 1, 0.5);
+
+    // Out-of-bounds reads return 0.0 instead of panicking.
+    assert_eq!(m.get(0, 5), 0.0);
+    assert_eq!(m.get(5, 0), 0.0);
+    assert_eq!(m.get(5, 5), 0.0);
+
+    // Out-of-bounds writes are silently ignored.
+    m.set(0, 5, 9.0);
+    m.set(5, 0, 9.0);
+    m.set(5, 5, 9.0);
+    assert_eq!(m.get(0, 1), 0.5);
+}
+
+#[test]
+fn test_from_pair_scores_crlf() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // CRLF line endings with leading/trailing whitespace.
+    tmp.write_all(b"A\tB\t0.1\r\n  B\tC\t0.2 \r\nC\tA\t0.3\r\n")
+        .unwrap();
+
+    let matrix =
+        NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
+    assert_eq!(matrix.get_by_name("A", "B"), Some(0.1));
+    assert_eq!(matrix.get_by_name("B", "C"), Some(0.2));
+    assert_eq!(matrix.get_by_name("C", "A"), Some(0.3));
+}
+
+#[test]
+fn test_from_pair_scores_empty_name() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Empty first name and whitespace-only second name should be skipped.
+    writeln!(tmp, "\tB\t0.1").unwrap();
+    writeln!(tmp, "A\t \t0.2").unwrap();
+    writeln!(tmp, "A\tC\t0.3").unwrap();
+
+    let matrix =
+        NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
+    assert_eq!(matrix.size(), 2);
+    assert_eq!(matrix.get_by_name("A", "C"), Some(0.3));
+}
+
+#[test]
+fn test_scoring_matrix_from_pair_scores_crlf() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    tmp.write_all(b"A\tB\t0.1\r\nB\tC\t0.2\r\n").unwrap();
+
+    let (matrix, names) =
+        ScoringMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, -1.0)
+            .unwrap();
+    assert_eq!(
+        names,
+        vec!["A".to_string(), "B".to_string(), "C".to_string()]
+    );
+    // A=0, B=1, C=2 based on insertion order.
+    assert_eq!(matrix.get(0, 1), 0.1);
+    assert_eq!(matrix.get(1, 2), 0.2);
+    assert_eq!(matrix.get(0, 2), -1.0);
+}
+
+#[test]
+fn test_scoring_matrix_from_pair_scores_empty_name() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "\tB\t0.1").unwrap();
+    writeln!(tmp, "A\tC\t0.3").unwrap();
+
+    let (matrix, names) =
+        ScoringMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, -1.0)
+            .unwrap();
+    assert_eq!(names, vec!["A".to_string(), "C".to_string()]);
+    assert_eq!(matrix.get(0, 1), 0.3);
+}

@@ -89,7 +89,11 @@ impl NamedMatrix {
     }
 
     /// Get value at `(row, col)`. Returns the stored diagonal when `row == col`.
+    /// Returns 0.0 if either index is out of bounds.
     pub fn get(&self, row: usize, col: usize) -> f32 {
+        if row >= self.size() || col >= self.size() {
+            return 0.0;
+        }
         if row == col {
             if let Some(ref diags) = self.diags {
                 return diags[row];
@@ -102,7 +106,11 @@ impl NamedMatrix {
     ///
     /// Diagonal values are only stored if `set_diags` has been called;
     /// otherwise `set(i, i, _)` is silently ignored and `get(i, i)` returns 0.0.
+    /// Does nothing if either index is out of bounds.
     pub fn set(&mut self, row: usize, col: usize, value: f32) {
+        if row >= self.size() || col >= self.size() {
+            return;
+        }
         if row == col {
             if let Some(ref mut diags) = self.diags {
                 diags[row] = value;
@@ -212,7 +220,11 @@ impl NamedMatrix {
         let reader = crate::reader(infile)?;
         for line in reader.lines() {
             let line = line?;
-            let fields: Vec<&str> = line.split('\t').collect();
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            let fields: Vec<&str> = line.split('\t').map(str::trim).collect();
             if fields.len() < 3 {
                 log::warn!(
                     "skipping malformed pairwise line (expected 3 tab-separated fields): {}",
@@ -230,6 +242,10 @@ impl NamedMatrix {
 
             let n1 = fields[0].to_string();
             let n2 = fields[1].to_string();
+            if n1.is_empty() || n2.is_empty() {
+                log::warn!("skipping pairwise line with empty sequence name: {}", line);
+                continue;
+            }
             let score: f32 = match fields[2].parse() {
                 Ok(v) => v,
                 Err(e) => {
