@@ -84,7 +84,7 @@ pub fn make_subcommand() -> Command {
                 .action(ArgAction::SetTrue)
                 .help("Sweep over inconsistency coefficient threshold"),
         )
-        .arg(args::range_arg())
+        .arg(args::range_arg().required(true))
         .arg(args::deep_arg())
         .arg(args::stats_out_arg())
         .arg(args::support_arg());

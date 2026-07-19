@@ -125,20 +125,8 @@ pub fn cut_med_clade(tree: &Tree, threshold: f64) -> Result<Partition> {
         .ok_or_else(|| anyhow::anyhow!("Tree has no root"))?;
     let mut clusters = Vec::new();
 
-    // We will simulate the bottom-up pass using post-order traversal.
-    let mut post_order = Vec::new();
-    let mut visit_stack = vec![root];
-    while let Some(u) = visit_stack.pop() {
-        post_order.push(u);
-        if let Some(node) = tree.get_node(u) {
-            for &child in &node.children {
-                visit_stack.push(child);
-            }
-        }
-    }
-    // visit_stack pop order is Pre-Order (Parent, Child).
-    // Reversed, it becomes Post-Order (Child, Parent).
-    let post_order: Vec<NodeId> = post_order.into_iter().rev().collect();
+    // Bottom-up pass via post-order traversal.
+    let post_order = crate::libs::phylo::tree::traversal::postorder(tree, root);
 
     // Map NodeId -> (LeafDists, PairDists)
     // LeafDists: sorted list of distances from leaves to current node
@@ -274,17 +262,7 @@ pub fn cut_sum_branch(tree: &Tree, threshold: f64) -> Result<Partition> {
     let mut sums: HashMap<NodeId, f64> = HashMap::new();
 
     // Post-order traversal for bottom-up calculation
-    let mut post_order = Vec::new();
-    let mut visit_stack = vec![root];
-    while let Some(u) = visit_stack.pop() {
-        post_order.push(u);
-        if let Some(node) = tree.get_node(u) {
-            for &child in &node.children {
-                visit_stack.push(child);
-            }
-        }
-    }
-    let post_order: Vec<NodeId> = post_order.into_iter().rev().collect();
+    let post_order = crate::libs::phylo::tree::traversal::postorder(tree, root);
 
     for &u in &post_order {
         let node = tree

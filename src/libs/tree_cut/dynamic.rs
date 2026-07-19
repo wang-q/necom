@@ -77,13 +77,8 @@ pub fn cutree_dynamic_tree(
     }
 
     // 3. Identify initial clusters (contiguous segments below cut_height)
-    let static_clusters = cutree_static(
-        tree,
-        &leaves,
-        &node_heights,
-        cut_height,
-        options.min_module_size,
-    )?;
+    let static_clusters =
+        cutere_static(tree, &node_heights, cut_height, options.min_module_size)?;
 
     // 4. Process each cluster
     let mut final_partition = HashMap::new();
@@ -141,14 +136,8 @@ pub fn cutree_dynamic_tree(
 
             for (start, end) in segments {
                 let sub_heights = &cluster_heights[start..end];
-                let sub_ranges = process_individual_cluster(
-                    sub_heights,
-                    options.min_module_size,
-                    // Pass deep_split to control internal recursion of single-cluster result?
-                    // Actually `process_individual_cluster` handles the MeanMode recursion.
-                    // The DeepSplit flag controls the OUTER loop in R.
-                    // But here we are IN the loop.
-                );
+                let sub_ranges =
+                    process_individual_cluster(sub_heights, options.min_module_size);
 
                 // If sub_ranges has more than 1 element, we split.
                 // If sub_ranges has 1 element and it's smaller than input, we trimmed?
@@ -205,13 +194,9 @@ pub fn cutree_dynamic_tree(
     // The previous dynamic_tree used Partition as type alias for HashMap
     // The new Partition is a struct
 
-    // We need to re-calculate num_clusters based on final_partition
-    let num_clusters = final_partition
-        .values()
-        .filter(|&&v| v > 0)
-        .max()
-        .copied()
-        .unwrap_or(0);
+    // Cluster IDs are assigned sequentially from 1, so the count equals the
+    // last assigned ID. When no clusters are formed, next_cluster_id stays 1.
+    let num_clusters = next_cluster_id - 1;
 
     Ok(Partition {
         assignment: final_partition,
@@ -223,9 +208,8 @@ pub fn cutree_dynamic_tree(
 
 /// Simulates static cut (cutree).
 /// Returns Map: LeafID -> ClusterID. 0 for too small clusters.
-fn cutree_static(
+fn cutere_static(
     tree: &Tree,
-    _leaves: &[NodeId],
     node_heights: &HashMap<NodeId, f64>,
     cut_height: f64,
     min_size: usize,

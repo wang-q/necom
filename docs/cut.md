@@ -69,7 +69,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
   2. **Diameter constraint**: $\max_{u, v \in C_i} dist(u, v) \le T$.
   3. **Support constraint** (if `--support` is specified): The path between any two points in $C_i$ must not contain edges with support below the threshold.
 - **Algorithm**: TreeCluster "Max Clade" algorithm. Uses efficient bottom-up diameter computation and top-down greedy selection.
-- **Complexity**: $O(N)$. Avoids the $O(N^2)$ all-pairs distance computation.
+- **Complexity**: $O(N)$ for binary trees, $O(N \log N)$ worst-case for highly multifurcating trees (sorting children depths at each internal node). Avoids the $O(N^2)$ all-pairs distance computation.
 - **Use case**: Virus subtyping, OTU clustering, and other scenarios requiring strict control of within-cluster divergence.
 
 ### 5. Cut by Average Within-Cluster Distance (`--avg-clade`)
@@ -123,7 +123,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 
 - **Definition**: Cut all edges whose length is greater than $T$.
   - For any resulting cluster $C$, all edges $e$ in it satisfy $length(e) \le T$.
-  - This method is also known in graph theory as **Single Linkage Clustering**: as long as two points are connected by a path of "short edges" ($\le T$), they belong to the same cluster.
+  - This method is also known in graph theory as **Single Linkage Clustering**: as long as two points are connected by a path of "short edges" ($\le T$), they belong to the same cluster. `--single-linkage` is exposed as an alias of `--max-edge`.
 - **Complexity**: $O(N)$. Only one traversal is needed.
 - **Use cases**:
   - Remove the influence of long branch attraction.
@@ -181,7 +181,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 ### 13. Support Filtering (`--support <S>`)
 
 - **Definition**: A **preprocessing step** for all the above methods.
-  - Traverse all edges in the tree; if an edge's support value $< S$, its length is treated as $+\infty$ (infinite).
+  - Traverse all edges in the tree; if an edge's support value $< S$, its length is set to a very large finite sentinel (effectively $+\infty$), forcing any clustering that crosses it to exceed the cut threshold.
   - **Default behavior**: For nodes without explicit support values (e.g., internal nodes produced by parsing multifurcating trees), `necom` defaults their support to 100 (fully trusted).
 - **Effect**: Any clustering attempt that crosses a low-support edge will fail because the distance/height exceeds the limit, thereby forcing a cut at low-support positions.
 
@@ -214,7 +214,7 @@ Applies to both `cluster` and `pair` formats:
 - `--format {cluster|pair}`: Output format. Default: `cluster`. Used by `simple`, `dynamic`, and `hybrid`.
 - `--rep {root|medoid|first}`: Representative selection. Default: `root`.
 - `--deep <N>`: Depth used by the `inconsistent` method. Default: `2`.
-- `--support <S>`: Treat edges with support `< S` as infinite length, forcing a cut. Default behavior treats unlabeled internal nodes as support `100.0`.
+- `--support <S>`: Treat edges with support `< S` as effectively infinite length, forcing a cut. Default behavior treats unlabeled internal nodes as support `100.0`.
 
 ## Workflow and Toolchain Collaboration
 

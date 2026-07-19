@@ -468,8 +468,7 @@ fn calculate_core_scatter(
 
     let base_core_size = (min_cluster_size as f64 / 2.0 + 1.0) as usize;
     let eff_core_size = if base_core_size < n {
-        (base_core_size as f64 + (n - base_core_size) as f64).sqrt() as usize
-            + base_core_size
+        (n as f64).sqrt() as usize + base_core_size
     } else {
         n
     };

@@ -426,9 +426,9 @@ mod tests {
         let out = format_scan_rows(&part, &tree, "test=1").unwrap();
         let lines: Vec<&str> = out.lines().collect();
         // Cluster 0 must keep label 0; cluster 1 is label 1.
-        assert!(lines.iter().any(|l| *l == "test=1\t1\tA"));
-        assert!(lines.iter().any(|l| *l == "test=1\t1\tB"));
-        assert!(lines.iter().any(|l| *l == "test=1\t0\tC"));
-        assert!(lines.iter().any(|l| *l == "test=1\t0\tD"));
+        assert!(lines.contains(&"test=1\t1\tA"));
+        assert!(lines.contains(&"test=1\t1\tB"));
+        assert!(lines.contains(&"test=1\t0\tC"));
+        assert!(lines.contains(&"test=1\t0\tD"));
     }
 }

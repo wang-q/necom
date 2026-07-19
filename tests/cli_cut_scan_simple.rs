@@ -184,3 +184,19 @@ fn test_scan_k_range_rejects_zero_start() {
         stderr
     );
 }
+
+#[test]
+fn test_scan_simple_missing_range() {
+    // Without --range, clap must reject the invocation rather than panicking
+    // on the later `args.get_one::<String>("range").unwrap()` call.
+    let (_, stderr) = NecomCmd::new()
+        .args(&["cut", "scan-simple", "tests/newick/abcde.nwk", "--height"])
+        .run_fail();
+
+    let lowered = stderr.to_lowercase();
+    assert!(
+        lowered.contains("--range") || lowered.contains("required"),
+        "Expected missing --range error, got: {}",
+        stderr
+    );
+}

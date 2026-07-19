@@ -114,7 +114,10 @@ pub fn run_scan(
         };
 
         let (partition, method_name) = cut::dispatch_cut(tree, dispatch)?;
-        let group_label = format!("{}={}", method_name, val);
+        // Format `val` with fixed precision then strip trailing zeros so that
+        // floating-point drift (e.g. 0.1+0.1+0.1 = 0.30000000000000004) does
+        // not leak into the Group label.
+        let group_label = format!("{}={}", method_name, format_scan_value(val));
 
         if let Some(w) = stats_writer.as_deref_mut() {
             let (n_clusters, n_single, n_non_single, max_size) = partition.get_stats();
@@ -145,6 +148,14 @@ fn compute_n_steps(start: f64, end: f64, step: f64) -> anyhow::Result<i64> {
         );
     }
     Ok(n_steps_f as i64)
+}
+
+/// Format a scan threshold value for display, stripping trailing zeros and
+/// the decimal point so that floating-point drift (e.g. `0.1 + 0.1 + 0.1`
+/// yielding `0.30000000000000004`) does not leak into Group labels.
+fn format_scan_value(val: f64) -> String {
+    let s = format!("{:.10}", val);
+    s.trim_end_matches('0').trim_end_matches('.').to_string()
 }
 
 /// Build a dispatch for dynamic-tree scan values, validating that the value is
@@ -199,5 +210,22 @@ mod tests {
     fn test_parse_scan_range_rejects_bad_format() {
         assert!(parse_scan_range("0,1").is_err());
         assert!(parse_scan_range("0,1,2,3").is_err());
+    }
+
+    #[test]
+    fn test_format_scan_value_strips_drift() {
+        // Floating-point drift from 0.1+0.1+0.1 must not appear in the label.
+        assert_eq!(format_scan_value(0.30000000000000004), "0.3");
+        assert_eq!(format_scan_value(0.6000000000000001), "0.6");
+        assert_eq!(format_scan_value(0.7000000000000001), "0.7");
+    }
+
+    #[test]
+    fn test_format_scan_value_integers_and_clean_values() {
+        assert_eq!(format_scan_value(0.0), "0");
+        assert_eq!(format_scan_value(1.0), "1");
+        assert_eq!(format_scan_value(3.0), "3");
+        assert_eq!(format_scan_value(0.1), "0.1");
+        assert_eq!(format_scan_value(0.25), "0.25");
     }
 }
