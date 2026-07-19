@@ -21,8 +21,10 @@ Notes:
     * `red` (188,36,46)
     * `black` (26,25,25)
     * `grey` (129,130,132)
+    * `brown` (121,37,0)
     * `green` (32,128,108)
     * `purple` (160,90,150)
+    * `blue` (0,103,149)
 * Predefined background rectangle colors for `--rec`:
     * `LemonChiffon` (251,248,204)
     * `ChampagnePink` (253,228,207)

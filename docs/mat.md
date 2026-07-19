@@ -106,9 +106,6 @@ Because this key depends only on `i` and `j`, not on the matrix size `N`,
 entries remain valid even when the inferred size grows as more samples are
 discovered.
 
-Detailed implementation notes, including the complete public API grouping and
-dead-code inventory, are kept in [`notes/design/mat-impl.md`](../notes/design/mat-impl.md).
-
 ## Subcommands in Detail
 
 ### Format Conversion

@@ -7,6 +7,7 @@ Input:
 Notes:
 
 * Visits every internal node and sorts its children according to the selected criterion; different modes use post-order or level-order traversals internally.
+* When no sort criterion is specified, defaults to forward alphanumeric order (equivalent to `--alphanumeric`).
 * `--name-list` is processed before `--alphanumeric` and `--num-descendants`.
 * `--alphanumeric` and `--num-descendants` can be combined; sorting is first alphanumeric, then by number of descendants.
 * Sort orders:

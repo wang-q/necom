@@ -11,7 +11,7 @@ Output:
 Notes:
 
 * Render with Graphviz tools such as `dot`, `neato`, or `twopi` (e.g., `dot -Tpng tree.dot -o tree.png`).
-* Node and edge styles (colors, labels) are derived from Newick comments added by `necom nwk comment`.
+* Node labels come from Newick node names; edge labels come from positive branch lengths. Styling information from `necom nwk comment` annotations is not rendered.
 
 Examples:
 

@@ -18,6 +18,11 @@
 ## Tree Cutting
 
 - [cut](help/cut.md)
+- [simple](help/cut/simple.md)
+- [dynamic](help/cut/dynamic.md)
+- [hybrid](help/cut/hybrid.md)
+- [scan-simple](help/cut/scan-simple.md)
+- [scan-dynamic](help/cut/scan-dynamic.md)
 
 ## Clustering
 

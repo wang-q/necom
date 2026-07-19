@@ -59,7 +59,7 @@
   - **定位**：生物系统发育构树，直接输出 **Tree** 对象和 **Newick** 格式。
   - **实现**：
     - **UPGMA**：动态维护距离矩阵（HashMap），每次迭代寻找最小值，复杂度 $O(N^3)$。
-    - **NJ**：经典的 Neighbor-Joining 实现，计算净发散度与 Q 矩阵，输出无根树。
+    - **NJ**：经典的 Neighbor-Joining 实现，计算净发散度与 Q 矩阵，通过最后一条边的中点定根输出有根树（见 [nj.rs](../../src/libs/clust/nj.rs) doc comment）。
   - **优势**：逻辑直观，原生支持生物学所需的枝长计算与树操作。
   - **局限**：未采用 Heap 优化，在大规模数据（>5000 序列）上速度慢于优化过的 Linkage 算法。
 - **necom (clust hier)**：

@@ -14,7 +14,7 @@ Output:
 
 Notes:
 
-* External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, V-Measure, FMI, NMI, RI, Jaccard, Precision, and Recall.
+* External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, Homogeneity, Completeness, V-Measure, FMI, NMI, MI, RI, Jaccard, Precision, and Recall.
     * The two partitions must cover exactly the same sample set. If one partition contains samples missing from the other, the command errors out instead of silently dropping them.
     * With `--no-singletons`, singleton clusters are first removed from `--other`; any samples that become unreferenced are excluded from evaluation, and the remaining sample sets must still match.
 * Internal Evaluation (Partition + Matrix/Tree/Coords): evaluates a single partition without ground truth.

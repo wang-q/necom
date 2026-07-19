@@ -267,7 +267,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 - **单系性检查**：
   - 复用 `Tree::is_clade`（[query.rs](../../src/libs/phylo/tree/query.rs)，要求 ≥2 节点）或 `Tree::is_monophyletic`（[query.rs](../../src/libs/phylo/tree/query.rs)，单节点也视为单系）。CLI 层（[nwk/label.rs](../../src/cmd_necom/nwk/label.rs) 和 [nwk/subtree.rs](../../src/cmd_necom/nwk/subtree.rs)）当前统一使用 `Tree::is_clade`。
 - **Silhouette 复用**：直接复用 `libs/eval/distance.rs::silhouette_score` + `TreeDistance`（[distance.rs](../../src/libs/eval/distance.rs)），无需重写。`TreeDistance::new(tree)` 包装 `Tree::node_distance` 并实现 `DistanceMatrix` trait。现有实现已遵循 sklearn 单例 `s(x)=0` 约定。`--samples` 采样为 Phase 1 新增工作。
-- **`tree_medoid`**：[query.rs](../../src/libs/phylo/tree/query.rs) 提供 `tree_medoid(tree, ids) -> Option<usize>`，O(N²) 调用 `get_distance`。当前注释标记 "Currently unused by the CLI"。`eval tree` 可考虑复用于 representative 选择或 Medoid-based 聚类评估。
+- **`tree_medoid`**：[query.rs](../../src/libs/phylo/tree/query.rs) 提供 `tree_medoid(tree, ids) -> Option<usize>`，O(N²) 调用 `get_distance`。已被 `necom cut --rep medoid` 复用（通过 [tree_cut/partition.rs](../../src/libs/tree_cut/partition.rs) `find_representative`）。`eval tree` 可进一步复用于 representative 选择或 Medoid-based 聚类评估。
 - **性能策略**：
   - clade 检测后分流，clade 走 O(N)，任意 partition 走 O(N²)。
   - 对于 Silhouette 和 Cophenetic，**明确承认 O(N²) 是本质开销**，不试图用遍历聚合规避；对大树通过 `--samples` 采样。
