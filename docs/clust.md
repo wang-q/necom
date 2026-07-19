@@ -21,7 +21,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Advantages**: Robust to noise; handles complex network structures.
 - **Input**: Pairwise similarities `.tsv` (higher is better).
 - **Output**: `cluster` (default) or `pair` format, controlled by `--format`.
-- **Defaults**: `--inflation 2.0`, `--max-iter 100`.
+- **Defaults**: `--inflation 2.0`, `--prune 1e-5`, `--max-iter 100`.
 - **Note**: `--max-iter` must be greater than 0.
 
 ### Connected Components (CC)
@@ -31,7 +31,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Characteristics**: The most basic connected component clustering.
 - **Use cases**: Fast deduplication at very high similarity thresholds.
 - **Advantages**: Extremely fast (linear complexity).
-- **Input**: Pairwise relations in TSV format (`name1  name2  weight`); the weight column is ignored.
+- **Input**: Pairwise relations in TSV format (`name1\tname2\t[weight]`); the weight column is ignored.
 - **Output**: `cluster` (default) or `pair` format, controlled by `--format`.
 
 ### K-Medoids

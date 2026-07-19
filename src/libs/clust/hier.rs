@@ -14,8 +14,10 @@ pub enum Method {
 }
 
 impl Method {
-    /// Returns true if the method works in squared Euclidean space.
-    /// These methods (Ward, Centroid, Median) require squared distances for linear updates.
+    /// Returns true if the method operates on squared distances internally.
+    /// For Ward, Centroid, and Median, `linkage_inplace` squares the input
+    /// distances once up front so Lance-Williams updates stay linear without
+    /// per-step sqrt calls; merge distances are sqrt'd back before output.
     pub fn is_euclidean_squared(&self) -> bool {
         matches!(self, Method::Ward | Method::Centroid | Method::Median)
     }
@@ -471,24 +473,26 @@ fn lance_williams(
         Method::Average => (n_u * d_uk + n_v * d_vk) / n_uv,
         Method::Weighted => 0.5 * (d_uk + d_vk),
         Method::Centroid => {
-            // UPGMC (Unweighted Pair Group Method with Centroid Averaging)
-            // Inputs are already squared distances.
-            // d(u+v, k)^2 = (n_u * d(u,k)^2 + n_v * d(v,k)^2 - n_u*n_v*d(u,v)^2 / n_uv) / n_uv
+            // UPGMC (Unweighted Pair Group Method with Centroid Averaging).
+            // All quantities (d_uk, d_vk, d_uv, return value) are squared
+            // distances; the input matrix is squared once up front by
+            // `linkage_inplace` so this update stays linear.
+            // d_new = (n_u * d_uk + n_v * d_vk - n_u*n_v*d_uv / n_uv) / n_uv
 
             let d_new = (n_u * d_uk + n_v * d_vk - (n_u * n_v * d_uv) / n_uv) / n_uv;
             d_new.max(0.0)
         }
         Method::Median => {
-            // WPGMC (Weighted Pair Group Method with Centroid Averaging)
-            // Inputs are already squared distances.
-            // d_new^2 = 0.5*d_uk^2 + 0.5*d_vk^2 - 0.25*d_uv^2
+            // WPGMC (Weighted Pair Group Method with Centroid Averaging).
+            // All quantities are squared distances (see Centroid above).
+            // d_new = 0.5*d_uk + 0.5*d_vk - 0.25*d_uv
             let d_new = 0.5 * d_uk + 0.5 * d_vk - 0.25 * d_uv;
             d_new.max(0.0)
         }
         Method::Ward => {
-            // Ward's method (minimal variance) - specifically Ward.D2
-            // Inputs are already squared distances.
-            // d_new^2 = ((n_u+n_k)*d_uk^2 + (n_v+n_k)*d_vk^2 - n_k*d_uv^2) / n_uvk
+            // Ward's method (minimal variance) - specifically Ward.D2.
+            // All quantities are squared distances (see Centroid above).
+            // d_new = ((n_u+n_k)*d_uk + (n_v+n_k)*d_vk - n_k*d_uv) / n_uvk
 
             let d_new = ((n_u + n_k) * d_uk + (n_v + n_k) * d_vk - n_k * d_uv) / n_uvk;
             d_new.max(0.0)

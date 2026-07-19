@@ -11,7 +11,7 @@ Output:
 
 Notes:
 
-* The output tree uses the linkage distance (merge height) as node height.
+* Internal node height is half the linkage distance (`height = distance / 2`); branch length from child to parent is `parent_height - child_height`.
 * `--method <METHOD>`: linkage method (default: `ward`). Supported: `single`, `complete`, `average` (`upgma`), `weighted` (`wpgma`), `centroid` (`upgmc`), `median` (`wpgmc`), `ward` (`ward.d2`).
 * For reducible methods (`single`, `complete`, `average`, `weighted`, `ward`), the default NN-chain implementation may produce a different merge order than the primitive algorithm, but the resulting partition sequence is equivalent.
 * `centroid` and `median` linkage may produce non-monotonic merge heights (inversions); branch lengths are clamped at `0.0` so the resulting Newick tree remains valid. The same clamp is applied to all methods as a safety net.

@@ -5,6 +5,7 @@ use std::str::FromStr;
 
 use necom::libs::clust::hier::{linkage_inplace, to_tree, Method};
 use necom::libs::pairmat::NamedMatrix;
+
 /// Build the clap subcommand for hier.
 pub fn make_subcommand() -> Command {
     Command::new("hier")
