@@ -136,4 +136,4 @@ This normalization prevents invalid values from polluting sums, maxima, or dista
 
 *   `condense`: Tree condensation functionality is currently provided by `necom nwk subtree --condense`; no standalone `condense` subcommand is planned at this time.
 *   `match`, `ed`, `gen`, `duration`: Mapped from `newick_utils` but not yet implemented in `necom nwk`; no concrete plan at this time.
-* Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level command `necom eval`. `nwk compare` and `nwk support` have been migrated to `necom eval compare` and `necom eval replicate`; see [`docs/eval.md`](eval.md). The `eval tree` subcommand remains in design — see [`notes/design/eval-planned.md`](../notes/design/eval-planned.md).
+*   Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level command `necom eval`. `nwk compare` and `nwk support` have been migrated to `necom eval compare` and `necom eval replicate`; see [`docs/eval.md`](eval.md). The `eval tree` subcommand remains in design — see [`notes/design/eval-planned.md`](../notes/design/eval-planned.md).
