@@ -556,3 +556,139 @@ fn command_clust_kmedoids_invalid_k_too_large() {
         stderr
     );
 }
+
+#[test]
+fn command_clust_cc_empty() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("empty.tsv");
+    std::fs::write(&input, "").unwrap();
+
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["clust", "cc", input.to_str().unwrap()])
+        .run();
+
+    assert!(stderr.is_empty(), "expected no stderr, got: {}", stderr);
+    assert!(
+        stdout.trim().is_empty(),
+        "expected empty output, got: {}",
+        stdout
+    );
+}
+
+#[test]
+fn command_clust_dbscan_eps_nan() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "dbscan", input.to_str().unwrap(), "--eps", "nan"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("eps"),
+        "expected eps error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_dbscan_eps_inf() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "dbscan", input.to_str().unwrap(), "--eps", "inf"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("eps"),
+        "expected eps error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_mcl_prune_negative() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t1.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "mcl", input.to_str().unwrap(), "--prune=-1"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("prune"),
+        "expected prune error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_mcl_prune_nan() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t1.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "mcl", input.to_str().unwrap(), "--prune", "nan"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("prune"),
+        "expected prune error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_kmedoids_runs_zero() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "k-medoids",
+            input.to_str().unwrap(),
+            "-k",
+            "2",
+            "--runs",
+            "0",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("runs"),
+        "expected runs error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_kmedoids_max_iter_zero() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "k-medoids",
+            input.to_str().unwrap(),
+            "-k",
+            "2",
+            "--max-iter",
+            "0",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("max-iter"),
+        "expected max-iter error, got: {}",
+        stderr
+    );
+}

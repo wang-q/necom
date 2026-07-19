@@ -184,7 +184,7 @@
 1.  **Generic Clustering Algorithm (Heap)**:
     - 目标：优化 **Centroid** 和 **Median** 方法。
     - 方案：参考 SciPy 的 `fast_linkage` 实现（基于 Müllner 2011），引入 Binary Heap 维护最近邻距离。这将把这两个方法的复杂度从 $O(N^3)$ 降至 $O(N^2 \log N)$。
-    - 状态：**未实现**（截至 2026-07-20）。
+    - 状态：**未实现**（截至 2026-07-19）。
     - 优先级：中（除非用户有大量 Centroid/Median 聚类需求）。
 2.  **Ward/Centroid 平方距离优化 (已完成)**:
     - 改进：在算法开始时一次性将距离矩阵平方，使用简化版 Lance-Williams 更新，仅在输出时开方。
@@ -259,7 +259,7 @@
 
 ## 8. 计划中的算法
 
-> **实现状态注记**：本节列出尚未实现的聚类算法规划。当前 `necom clust` 已实现 hier/dbscan/mcl/k-medoids/cc/nj/upgma + cut/eval。截至 2026-07-20，GMM、HDBSCAN、Louvain/Leiden 仍为规划，未进入实现阶段。
+> **实现状态注记**：本节列出尚未实现的聚类算法规划。当前 `necom clust` 已实现 hier/dbscan/mcl/k-medoids/cc/nj/upgma + cut/eval。截至 2026-07-19，GMM、HDBSCAN、Louvain/Leiden 仍为规划，未进入实现阶段。
 
 ### 8.1 GMM (Gaussian Mixture Models)
 

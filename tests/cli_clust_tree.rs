@@ -478,3 +478,65 @@ fn test_clust_hier_method_aliases() {
         );
     }
 }
+
+#[test]
+fn test_clust_upgma_empty() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("empty.phy");
+    std::fs::write(&input, "").unwrap();
+
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["clust", "upgma", input.to_str().unwrap()])
+        .run();
+
+    assert!(stderr.is_empty(), "expected no stderr, got: {}", stderr);
+    assert!(
+        stdout.trim().is_empty(),
+        "expected empty output, got: {}",
+        stdout
+    );
+}
+
+#[test]
+fn test_clust_nj_empty() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("empty.phy");
+    std::fs::write(&input, "").unwrap();
+
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["clust", "nj", input.to_str().unwrap()])
+        .run();
+
+    assert!(stderr.is_empty(), "expected no stderr, got: {}", stderr);
+    assert!(
+        stdout.trim().is_empty(),
+        "expected empty output, got: {}",
+        stdout
+    );
+}
+
+#[test]
+fn test_clust_upgma_single() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("single.phy");
+    std::fs::write(&input, "1\nA 0.0\n").unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["clust", "upgma", input.to_str().unwrap()])
+        .run();
+
+    assert_eq!(stdout.trim(), "A;");
+}
+
+#[test]
+fn test_clust_nj_single() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("single.phy");
+    std::fs::write(&input, "1\nA 0.0\n").unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["clust", "nj", input.to_str().unwrap()])
+        .run();
+
+    assert_eq!(stdout.trim(), "A;");
+}
