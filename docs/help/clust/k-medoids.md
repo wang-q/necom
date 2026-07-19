@@ -23,6 +23,7 @@ Notes:
     * `medoid` (default): point with minimum sum of distances to other cluster members.
     * `first`: alphabetically first member.
 * In `cluster` format, the representative is placed first; in `pair` format, it is the first column.
+* If a cluster becomes empty during iteration, it is omitted from the output, so the final number of clusters may be less than `k`.
 
 Examples:
 

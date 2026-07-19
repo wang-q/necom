@@ -174,7 +174,7 @@ fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step
     while steps.len() < n - 1 {
         // If chain is empty, pick an arbitrary active cluster to start
         if chain.is_empty() {
-            for (i, &a) in active.iter().enumerate().take(n) {
+            for (i, &a) in active.iter().enumerate() {
                 if a {
                     chain.push(i);
                     break;
@@ -192,7 +192,7 @@ fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step
         let mut min_dist = f32::INFINITY;
         let mut nn = k; // Default to self if no other active found (shouldn't happen if >1 active)
 
-        for (i, &a) in active.iter().enumerate().take(n) {
+        for (i, &a) in active.iter().enumerate() {
             if i == k || !a {
                 continue;
             }
@@ -384,11 +384,11 @@ fn linkage_primitive(condensed: &mut CondensedMatrix, method: Method) -> Vec<Ste
         let mut u = 0;
         let mut v = 0;
 
-        for (i, &ai) in active.iter().enumerate().take(n) {
+        for (i, &ai) in active.iter().enumerate() {
             if !ai {
                 continue;
             }
-            for (j, &aj) in active.iter().enumerate().take(n).skip(i + 1) {
+            for (j, &aj) in active.iter().enumerate().skip(i + 1) {
                 if !aj {
                     continue;
                 }
@@ -614,30 +614,33 @@ mod tests {
         m.set(2, 4, 4.0);
         m.set(3, 4, 1.0); // min
 
-        // Test with Average linkage (reducible). NN-chain and primitive produce
+        // Test with reducible linkage methods. NN-chain and primitive produce
         // the same dendrogram, but not necessarily in the same merge order, so
         // compare the sorted merge distances.
-        let steps_prim =
-            linkage_with_algo(&m, Method::Average, Algorithm::Primitive).unwrap();
-        let steps_nn =
-            linkage_with_algo(&m, Method::Average, Algorithm::NnChain).unwrap();
+        for method in [Method::Average, Method::Ward] {
+            let steps_prim =
+                linkage_with_algo(&m, method, Algorithm::Primitive).unwrap();
+            let steps_nn = linkage_with_algo(&m, method, Algorithm::NnChain).unwrap();
 
-        assert_eq!(steps_prim.len(), 4);
-        assert_eq!(steps_nn.len(), 4);
+            assert_eq!(steps_prim.len(), 4, "method {:?}", method);
+            assert_eq!(steps_nn.len(), 4, "method {:?}", method);
 
-        let mut dists_prim: Vec<f32> = steps_prim.iter().map(|s| s.distance).collect();
-        let mut dists_nn: Vec<f32> = steps_nn.iter().map(|s| s.distance).collect();
-        dists_prim.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        dists_nn.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            let mut dists_prim: Vec<f32> =
+                steps_prim.iter().map(|s| s.distance).collect();
+            let mut dists_nn: Vec<f32> = steps_nn.iter().map(|s| s.distance).collect();
+            dists_prim.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            dists_nn.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-        for (i, (d1, d2)) in dists_prim.iter().zip(dists_nn.iter()).enumerate() {
-            assert!(
-                (d1 - d2).abs() < 1e-5,
-                "Step {}: distance mismatch {} vs {}",
-                i,
-                d1,
-                d2
-            );
+            for (i, (d1, d2)) in dists_prim.iter().zip(dists_nn.iter()).enumerate() {
+                assert!(
+                    (d1 - d2).abs() < 1e-5,
+                    "Method {:?}, Step {}: distance mismatch {} vs {}",
+                    method,
+                    i,
+                    d1,
+                    d2
+                );
+            }
         }
     }
 
@@ -689,7 +692,13 @@ mod tests {
             let size = 10 + i * 5; // Sizes: 10, 15, ..., 105
             let m = create_random_matrix_local(size);
 
-            for method in [Method::Average, Method::Ward] {
+            for method in [
+                Method::Single,
+                Method::Complete,
+                Method::Average,
+                Method::Weighted,
+                Method::Ward,
+            ] {
                 let steps_prim =
                     linkage_with_algo(&m, method, Algorithm::Primitive).unwrap();
                 let steps_nn =
@@ -859,13 +868,37 @@ mod tests {
         m.set(1, 2, 5.0);
         m.set(1, 3, 10.0);
 
-        let steps_centroid =
-            linkage_with_algo(&m, Method::Centroid, Algorithm::NnChain).unwrap();
-        assert_eq!(steps_centroid.len(), 3);
+        let names: Vec<String> = (0..4).map(|i| format!("N{}", i)).collect();
 
-        let steps_median =
-            linkage_with_algo(&m, Method::Median, Algorithm::NnChain).unwrap();
-        assert_eq!(steps_median.len(), 3);
+        for method in [Method::Centroid, Method::Median] {
+            let steps = linkage_with_algo(&m, method, Algorithm::NnChain).unwrap();
+            assert_eq!(steps.len(), 3, "method {:?}", method);
+
+            let tree = to_tree(&steps, &names).unwrap();
+            assert_eq!(tree.len(), 2 * m.size() - 1, "method {:?}", method);
+
+            // All assigned branch lengths must be non-negative.
+            for node_id in 0..tree.len() {
+                let node = tree.get_node(node_id).unwrap();
+                if let Some(len) = node.length {
+                    assert!(
+                        len >= -1e-6,
+                        "method {:?} node {} has negative length {}",
+                        method,
+                        node_id,
+                        len
+                    );
+                }
+            }
+
+            // Round-trip through Newick should succeed.
+            let nwk = tree.to_newick();
+            assert!(
+                crate::libs::phylo::parser::parse_newick(&nwk).is_ok(),
+                "method {:?} newick round-trip failed",
+                method
+            );
+        }
     }
 
     #[test]
@@ -875,7 +908,13 @@ mod tests {
         // the sorted distance spectra.
         let m = create_random_matrix_local(20);
 
-        for method in [Method::Single, Method::Complete, Method::Average] {
+        for method in [
+            Method::Single,
+            Method::Complete,
+            Method::Average,
+            Method::Weighted,
+            Method::Ward,
+        ] {
             let steps_prim =
                 linkage_with_algo(&m, method, Algorithm::Primitive).unwrap();
             let steps_nn = linkage_with_algo(&m, method, Algorithm::NnChain).unwrap();
@@ -935,7 +974,13 @@ mod tests {
         m.set(2, 4, 6.0);
         m.set(3, 4, 7.0);
 
-        for method in [Method::Single, Method::Complete, Method::Average] {
+        for method in [
+            Method::Single,
+            Method::Complete,
+            Method::Average,
+            Method::Weighted,
+            Method::Ward,
+        ] {
             let steps_prim =
                 linkage_with_algo(&m, method, Algorithm::Primitive).unwrap();
             let steps_nn = linkage_with_algo(&m, method, Algorithm::NnChain).unwrap();
@@ -945,5 +990,57 @@ mod tests {
                 method
             );
         }
+    }
+
+    #[test]
+    fn test_to_tree_inversion_clipping() {
+        // Manually construct a non-monotonic merge sequence:
+        // Step 1 merges 0-1 at distance 1.0 (node height 0.5).
+        // Step 2 merges the new cluster 3 with leaf 2 at distance 0.4
+        // (root height 0.2), which is *lower* than the previous merge distance.
+        // This creates an inverted branch from node 3 to the root.
+        // `to_tree` must clip that negative branch length to 0.0.
+        let steps = vec![
+            Step {
+                cluster1: 0,
+                cluster2: 1,
+                distance: 1.0,
+                size: 2,
+            },
+            Step {
+                cluster1: 3,
+                cluster2: 2,
+                distance: 0.4,
+                size: 3,
+            },
+        ];
+        let names = vec!["A".to_string(), "B".to_string(), "C".to_string()];
+
+        let tree = to_tree(&steps, &names).unwrap();
+        assert_eq!(tree.len(), 5); // 3 leaves + 2 internal
+
+        let leaf_a_id = tree
+            .get_leaves()
+            .iter()
+            .find(|&&id| tree.get_node(id).unwrap().name.as_deref() == Some("A"))
+            .copied()
+            .unwrap();
+
+        // The parent of A/B is the inverted node; its branch to the root
+        // would be 0.2 - 0.5 = -0.3 without clipping. `set_length` stores
+        // non-positive lengths as `None`, so verify via `finite_length`.
+        let parent_a_id = tree.get_node(leaf_a_id).unwrap().parent.unwrap();
+        let parent_a = tree.get_node(parent_a_id).unwrap();
+        assert_eq!(parent_a.finite_length(), 0.0);
+
+        // Leaf C has a non-negative length.
+        let leaf_c_id = tree
+            .get_leaves()
+            .iter()
+            .find(|&&id| tree.get_node(id).unwrap().name.as_deref() == Some("C"))
+            .copied()
+            .unwrap();
+        let leaf_c = tree.get_node(leaf_c_id).unwrap();
+        assert!((leaf_c.length.unwrap() - 0.2).abs() < 1e-6);
     }
 }

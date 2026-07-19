@@ -45,6 +45,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Output**: `cluster` (default) or `pair` format, controlled by `--format`.
 - **Defaults**: `--runs 10`, `--max-iter 100`.
 - **Note**: `--k` must not exceed the number of samples.
+- **Note**: If a cluster becomes empty during iteration, it is omitted from the output, so the final number of clusters may be less than `k`.
 
 ### DBSCAN
 
