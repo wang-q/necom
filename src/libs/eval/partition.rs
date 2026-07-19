@@ -1,7 +1,6 @@
 use super::LabelMap;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::BufRead;
 use std::path::Path;
 
 /// Supported partition file formats for clustering evaluation.
@@ -39,12 +38,14 @@ impl std::str::FromStr for PartitionFormat {
 ///    Additional columns are ignored.
 /// 3. Long: Returns an error — Long format contains multiple partitions and
 ///    must be loaded via [`load_batch_partitions`] instead.
+///
+/// Accepts `"stdin"` to read from standard input, consistent with
+/// `--matrix` and `--tree`.
 pub fn load_partition<P: AsRef<Path>>(
     path: P,
     format: PartitionFormat,
 ) -> anyhow::Result<LabelMap> {
-    let file = File::open(path)?;
-    let reader = BufReader::new(file);
+    let reader = crate::reader(path)?;
     let mut lines = Vec::new();
     for line in reader.lines() {
         let line = line?;
@@ -107,11 +108,13 @@ fn parse_cluster_format(lines: &[String]) -> anyhow::Result<LabelMap> {
 /// Load batch partitions from a file in Long format.
 /// Format: GroupID `tab` ClusterID `tab` SampleID
 /// Returns a list of (GroupID, LabelMap).
+///
+/// Accepts `"stdin"` to read from standard input, consistent with
+/// `--matrix` and `--tree`.
 pub fn load_batch_partitions<P: AsRef<Path>>(
     path: P,
 ) -> anyhow::Result<Vec<(String, LabelMap)>> {
-    let file = File::open(path)?;
-    let reader = BufReader::new(file);
+    let reader = crate::reader(path)?;
 
     let mut groups: Vec<String> = Vec::new();
     let mut group_indices: HashMap<String, usize> = HashMap::new();

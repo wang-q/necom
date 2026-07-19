@@ -90,7 +90,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     // 3.6 Validate that every target tree shares the same leaf set as the replicates.
-    let replicate_leaves = first_replicate_leaves.clone();
+    let replicate_leaves = first_replicate_leaves;
     for (i, target) in targets.iter().enumerate() {
         let target_leaves = leaf_name_set(target);
         if target_leaves != replicate_leaves {

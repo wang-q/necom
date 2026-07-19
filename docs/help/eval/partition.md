@@ -2,7 +2,8 @@ Calculate clustering evaluation metrics for partitions. Supports external compar
 
 Input:
 
-* A partition file (`p1`).
+* A partition file (`p1`). Use `"stdin"` to read from standard input.
+* `--other` / `--truth`, `--matrix`, `--tree`, `--coords` also accept `"stdin"`.
 
 Output:
 

@@ -675,3 +675,92 @@ fn test_eval_partition_batch_matrix_missing_sample() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_eval_partition_p1_stdin() -> anyhow::Result<()> {
+    // p1 should accept "stdin" as the input path, consistent with
+    // --matrix / --tree / --coords. Use the same partition as perfect_2.tsv
+    // (Cluster 1={A,B}, Cluster 2={C,D}) so ARI must be 1.0.
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg("stdin")
+        .arg("--other")
+        .arg("tests/eval/perfect_2.tsv")
+        .arg("--input-format")
+        .arg("cluster")
+        .write_stdin("A\tB\nC\tD\n")
+        .output()?;
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout)?;
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert!(lines[0].starts_with("ari\tami"));
+    let values: Vec<&str> = lines[1].split_whitespace().collect();
+    assert!((values[0].parse::<f64>()? - 1.0).abs() < 1e-6);
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_other_stdin() -> anyhow::Result<()> {
+    // --other should accept "stdin" as the input path, consistent with
+    // --matrix / --tree / --coords. Use the same partition as perfect_1.tsv
+    // (Cluster 1={A,B}, Cluster 2={C,D}) so ARI must be 1.0.
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg("tests/eval/perfect_1.tsv")
+        .arg("--other")
+        .arg("stdin")
+        .arg("--input-format")
+        .arg("cluster")
+        .write_stdin("A\tB\nC\tD\n")
+        .output()?;
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout)?;
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert!(lines[0].starts_with("ari\tami"));
+    let values: Vec<&str> = lines[1].split_whitespace().collect();
+    assert!((values[0].parse::<f64>()? - 1.0).abs() < 1e-6);
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_coords_stdin() -> anyhow::Result<()> {
+    // --coords should accept "stdin" as the input path, consistent with
+    // --matrix / --tree.
+    let partition_content = "1\tA\n1\tB\n2\tC\n2\tD\n";
+    let coords_content = "A\t0.0\t0.0\nB\t1.0\t0.0\nC\t5.0\t0.0\nD\t6.0\t0.0\n";
+
+    let mut partition_file = NamedTempFile::new()?;
+    partition_file.write_all(partition_content.as_bytes())?;
+    let partition_path = partition_file.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(partition_path)
+        .arg("--coords")
+        .arg("stdin")
+        .write_stdin(coords_content)
+        .output()?;
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout)?;
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(
+        lines[0],
+        "davies_bouldin\tcalinski_harabasz\tpbm\tball_hall\txie_beni\twemmert_gancarski"
+    );
+    // Sanity check: CH should be positive (well-separated compact clusters).
+    let values: Vec<&str> = lines[1].split_whitespace().collect();
+    assert!(values[1].parse::<f64>()? > 0.0);
+
+    Ok(())
+}

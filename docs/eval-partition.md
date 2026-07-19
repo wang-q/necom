@@ -81,7 +81,7 @@ Clustering evaluation metrics usually fall into two categories: **external valid
 - **AMI (Adjusted Mutual Information)**
   - **Definition**: Mutual Information corrected for chance.
   - **Principle**: Computes shared information between two partitions based on entropy, and subtracts the random expectation.
-  - **Range**: `[0, 1]`. 1 means perfect agreement, 0 means random.
+  - **Range**: `[-1, 1]` (typically `[0, 1]`). 1 means perfect agreement, 0 means random, negative values mean worse than random (e.g., anti-correlated partitions).
   - **Advantages**:
     - More robust when the number of clusters is very large (even close to the sample size).
     - Captures complex non-linear relationships.
@@ -100,7 +100,7 @@ Clustering evaluation metrics usually fall into two categories: **external valid
   - **Principle**: $MI(U, V) = \sum \sum P(u,v) \log \frac{P(u,v)}{P(u)P(v)}$.
   - **Range**: `[0, +∞)`.
   - **Disadvantages**: Difficult to interpret directly; strongly affected by partition entropy. Usually used as an intermediate step for AMI/NMI.
-  - **Implementation note**: The implementation uses natural logarithms (matching scikit-learn), so the raw MI value is `ln(2)` times larger than a base-2 formulation. Normalized metrics (NMI, AMI, V-Measure) are unaffected because they are ratios.
+  - **Implementation note**: The implementation uses natural logarithms (matching scikit-learn), so the raw MI value (in nats) equals the base-2 value (in bits) multiplied by `ln(2)` (≈ 0.693). Normalized metrics (NMI, AMI, V-Measure) are unaffected because they are ratios.
 
 - **Homogeneity**
   - **Definition**: Does each cluster contain only members of a single class? (Similar to Precision, requiring clusters to be "pure.")

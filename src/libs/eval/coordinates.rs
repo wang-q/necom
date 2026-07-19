@@ -2,8 +2,7 @@ use super::LabelMap;
 use crate::libs::feature::FeatureVector;
 use anyhow::Context;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::BufRead;
 use std::path::Path;
 
 /// Large finite proxy for infinity used when inter-centroid distance is zero
@@ -24,9 +23,11 @@ pub struct Coordinates {
 impl Coordinates {
     /// Load coordinates from a FeatureVector file.
     /// Format: Name `tab` Val1 `tab` Val2 `tab` Val3 ... (pure TSV)
+    ///
+    /// Accepts `"stdin"` to read from standard input, consistent with
+    /// `--matrix` and `--tree`.
     pub fn from_path<P: AsRef<Path>>(path: P) -> anyhow::Result<Self> {
-        let file = File::open(path)?;
-        let reader = BufReader::new(file);
+        let reader = crate::reader(path)?;
         let mut data = HashMap::new();
         let mut dim = 0;
         // 1-based row number for user-facing error messages, counting only
