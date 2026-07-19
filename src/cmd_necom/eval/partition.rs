@@ -2,11 +2,36 @@ use anyhow::Context;
 use clap::{Arg, ArgMatches, Command};
 use necom::libs::eval::{
     load_batch_partitions, load_partition, remove_singletons, run_batch, run_single,
-    Coordinates, DistanceMatrix, EvalTarget, PartitionFormat, TreeDistance,
+    Coordinates, DistanceMatrix, EvalTarget, LabelMap, PartitionFormat, TreeDistance,
 };
 use necom::libs::pairmat::NamedMatrix;
 use necom::libs::phylo::tree::Tree;
 use std::io::Write;
+
+/// Verify that every item in `partition` has a coordinate vector.
+///
+/// Prevents silent dropping of samples in coordinate-based metrics; if any
+/// partition item is missing from the coordinate file, the command bails with
+/// a clear message instead of producing misleading scores.
+fn ensure_coords_cover_partition(
+    partition: &LabelMap,
+    coords: &Coordinates,
+) -> anyhow::Result<()> {
+    let missing: Vec<&str> = partition
+        .keys()
+        .filter(|k| !coords.data.contains_key(*k))
+        .map(|k| k.as_str())
+        .collect();
+    if !missing.is_empty() {
+        anyhow::bail!(
+            "{} sample(s) from the partition are missing in --coords (showing up to 5): {:?}",
+            missing.len(),
+            missing.iter().take(5).copied().collect::<Vec<_>>()
+        );
+    }
+    Ok(())
+}
+
 /// Build the clap subcommand for partition.
 pub fn make_subcommand() -> Command {
     Command::new("partition")
@@ -110,6 +135,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             None
         };
 
+        if let Some(ref c) = coords {
+            for (_, p1) in &batches {
+                ensure_coords_cover_partition(p1, c)?;
+            }
+        }
+
         if p2.is_none() && dist_provider.is_none() && coords.is_none() {
             anyhow::bail!(
                 "Batch mode requires at least one evaluation target: --other/--truth, --matrix, --tree, or --coords."
@@ -166,6 +197,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         run_single(&p1, EvalTarget::Matrix(&dist), &mut writer)?;
     } else if let Some(coords_path) = args.get_one::<String>("coords") {
         let coords = Coordinates::from_path(coords_path)?;
+        ensure_coords_cover_partition(&p1, &coords)?;
         run_single(&p1, EvalTarget::Coords(&coords), &mut writer)?;
     } else {
         anyhow::bail!(

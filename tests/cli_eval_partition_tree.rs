@@ -24,9 +24,6 @@ fn test_clust_eval_tree_internal() -> anyhow::Result<()> {
         .arg(tree_path)
         .output()?;
 
-    if !output.status.success() {
-        eprintln!("STDERR:\n{}", String::from_utf8_lossy(&output.stderr));
-    }
     assert!(output.status.success());
 
     let stdout = String::from_utf8(output.stdout)?;

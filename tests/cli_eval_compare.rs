@@ -124,3 +124,47 @@ fn command_nwk_compare_rejects_duplicate_leaf_names() {
         stderr
     );
 }
+
+#[test]
+fn command_nwk_compare_two_files_first_empty() {
+    let empty_file = Builder::new().suffix(".nwk").tempfile().unwrap();
+    let mut file2 = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file2, "((A,B),(C,D));").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "eval",
+            "compare",
+            empty_file.path().to_str().unwrap(),
+            file2.path().to_str().unwrap(),
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("no trees found in first input file"),
+        "expected empty first file error, got stderr: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_nwk_compare_two_files_second_empty() {
+    let mut file1 = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file1, "((A,B),(C,D));").unwrap();
+    let empty_file = Builder::new().suffix(".nwk").tempfile().unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "eval",
+            "compare",
+            file1.path().to_str().unwrap(),
+            empty_file.path().to_str().unwrap(),
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("no trees found in second input file"),
+        "expected empty second file error, got stderr: {}",
+        stderr
+    );
+}

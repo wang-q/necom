@@ -90,8 +90,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     // 3.6 Validate that every target tree shares the same leaf set as the replicates.
-    let replicate_leaves: BTreeSet<String> =
-        replicates.iter().flat_map(leaf_name_set).collect();
+    let replicate_leaves = first_replicate_leaves.clone();
     for (i, target) in targets.iter().enumerate() {
         let target_leaves = leaf_name_set(target);
         if target_leaves != replicate_leaves {
@@ -123,7 +122,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             override_root,
         )
         .with_context(|| "annotate_support failed")?;
-        writer.write_fmt(format_args!("{}\n", target.to_newick()))?;
+        writeln!(writer, "{}", target.to_newick())?;
     }
 
     writer.flush()?;

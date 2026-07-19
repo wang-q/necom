@@ -1,7 +1,7 @@
 use anyhow::Context;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use necom::libs::phylo::tree::Tree;
-use std::io::Write;
+use std::io::{Read, Write};
 
 /// Build the clap subcommand for compare.
 pub fn make_subcommand() -> Command {
@@ -25,18 +25,34 @@ pub fn make_subcommand() -> Command {
         )
         .arg(crate::cmd_necom::args::outfile_arg())
 }
+/// Load trees from `infile`, bailing with a clear message when the input is
+/// empty or contains no parseable trees.
+fn load_trees(infile: &str) -> anyhow::Result<Vec<Tree>> {
+    let mut reader =
+        necom::reader(infile).with_context(|| format!("failed to open {}", infile))?;
+    let mut content = String::new();
+    reader
+        .read_to_string(&mut content)
+        .with_context(|| format!("failed to read {}", infile))?;
+    if content.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    Tree::from_newick_multi(&content)
+        .map_err(|e| anyhow::anyhow!("failed to parse '{}': {}", infile, e))
+}
+
 /// Execute the compare command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // 1. Load first file
     let infile = args
         .get_one::<String>("infile")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: infile"))?;
-    let trees1 = Tree::from_file(infile)?;
+    let trees1 = load_trees(infile)?;
 
     // 2. Load second file (if provided) or self-compare against trees1
     let compare_file = args.get_one::<String>("compare_file");
     let trees2_owned: Vec<Tree> = if let Some(f2) = compare_file {
-        Tree::from_file(f2)?
+        load_trees(f2)?
     } else {
         Vec::new()
     };
@@ -55,6 +71,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             "need at least 2 trees for pairwise comparison, got {}",
             trees1.len()
         );
+    }
+    if trees1.is_empty() {
+        anyhow::bail!("no trees found in first input file");
+    }
+    if compare_file.is_some() && trees2.is_empty() {
+        anyhow::bail!("no trees found in second input file");
     }
 
     // 3. Output writer

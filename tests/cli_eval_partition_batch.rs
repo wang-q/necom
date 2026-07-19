@@ -74,9 +74,6 @@ D 1.0 1.0 0.2 0.0
         .arg(matrix_file.path())
         .output()?;
 
-    if !output_eval.status.success() {
-        eprintln!("STDERR:\n{}", String::from_utf8_lossy(&output_eval.stderr));
-    }
     assert!(output_eval.status.success());
     let stdout_eval = String::from_utf8(output_eval.stdout)?;
 
@@ -150,9 +147,6 @@ g2\t2\tD\n";
         .arg(truth_file.path())
         .output()?;
 
-    if !output.status.success() {
-        eprintln!("STDERR:\n{}", String::from_utf8_lossy(&output.stderr));
-    }
     assert!(output.status.success());
 
     let stdout = String::from_utf8(output.stdout)?;

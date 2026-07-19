@@ -1,4 +1,6 @@
 use assert_cmd::Command;
+use std::io::Write;
+use tempfile::NamedTempFile;
 
 #[test]
 fn test_clust_eval_perfect_match() -> anyhow::Result<()> {
@@ -14,9 +16,6 @@ fn test_clust_eval_perfect_match() -> anyhow::Result<()> {
         .output()?;
 
     let stdout = String::from_utf8(output.stdout)?;
-    if !output.status.success() {
-        eprintln!("STDERR:\n{}", String::from_utf8_lossy(&output.stderr));
-    }
     assert!(output.status.success());
 
     // Check header
@@ -52,11 +51,12 @@ fn test_clust_eval_no_singletons() -> anyhow::Result<()> {
     let truth_content = "1\tA\n1\tB\n1\tC\n2\tD\n3\tE\n";
     let pred_content = "1\tA\n1\tB\n1\tC\n2\tD\n2\tE\n";
 
-    let truth_path = "tests/clust/eval_ns_truth.tsv";
-    let pred_path = "tests/clust/eval_ns_pred.tsv";
-
-    std::fs::write(truth_path, truth_content)?;
-    std::fs::write(pred_path, pred_content)?;
+    let mut truth_file = NamedTempFile::new()?;
+    let mut pred_file = NamedTempFile::new()?;
+    truth_file.write_all(truth_content.as_bytes())?;
+    pred_file.write_all(pred_content.as_bytes())?;
+    let truth_path = truth_file.path().to_str().unwrap();
+    let pred_path = pred_file.path().to_str().unwrap();
 
     // 1. Run WITHOUT --no-singletons
     let mut cmd = Command::cargo_bin("necom")?;
@@ -96,10 +96,6 @@ fn test_clust_eval_no_singletons() -> anyhow::Result<()> {
     // ARI should be 1.0
     assert!((ari - 1.0).abs() < 1e-6, "ARI was {}", ari);
 
-    // Cleanup
-    std::fs::remove_file(truth_path)?;
-    std::fs::remove_file(pred_path)?;
-
     Ok(())
 }
 
@@ -117,9 +113,6 @@ fn test_clust_eval_disjoint() -> anyhow::Result<()> {
         .output()?;
 
     let stdout = String::from_utf8(output.stdout)?;
-    if !output.status.success() {
-        eprintln!("STDERR:\n{}", String::from_utf8_lossy(&output.stderr));
-    }
     assert!(output.status.success());
 
     let lines: Vec<&str> = stdout.lines().collect();
@@ -150,9 +143,6 @@ fn test_clust_eval_single_vs_singletons() -> anyhow::Result<()> {
         .output()?;
 
     let stdout = String::from_utf8(output.stdout)?;
-    if !output.status.success() {
-        eprintln!("STDERR:\n{}", String::from_utf8_lossy(&output.stderr));
-    }
     assert!(output.status.success());
 
     let lines: Vec<&str> = stdout.lines().collect();
@@ -178,9 +168,6 @@ fn test_clust_eval_pair_format() -> anyhow::Result<()> {
         .output()?;
 
     let stdout = String::from_utf8(output.stdout)?;
-    if !output.status.success() {
-        eprintln!("STDERR:\n{}", String::from_utf8_lossy(&output.stderr));
-    }
     assert!(output.status.success());
 
     // Check header
@@ -294,19 +281,20 @@ fn test_clust_eval_invariance_sample_order() -> anyhow::Result<()> {
     let content_orig = "1\tA\n1\tB\n2\tC\n2\tD\n";
     let content_shuffled = "1\tB\n2\tD\n1\tA\n2\tC\n";
 
-    let temp_orig = "tests/clust/inv_order_orig.tsv";
-    let temp_shuffled = "tests/clust/inv_order_shuffled.tsv";
-
-    std::fs::write(temp_orig, content_orig)?;
-    std::fs::write(temp_shuffled, content_shuffled)?;
+    let mut orig_file = NamedTempFile::new()?;
+    let mut shuffled_file = NamedTempFile::new()?;
+    orig_file.write_all(content_orig.as_bytes())?;
+    shuffled_file.write_all(content_shuffled.as_bytes())?;
+    let orig_path = orig_file.path().to_str().unwrap();
+    let shuffled_path = shuffled_file.path().to_str().unwrap();
 
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg(temp_orig)
+        .arg(orig_path)
         .arg("--other")
-        .arg(temp_shuffled)
+        .arg(shuffled_path)
         .output()?;
 
     assert!(output.status.success());
@@ -315,9 +303,6 @@ fn test_clust_eval_invariance_sample_order() -> anyhow::Result<()> {
     let values: Vec<&str> = lines[1].split_whitespace().collect();
 
     assert!((values[0].parse::<f64>()? - 1.0).abs() < 1e-6);
-
-    std::fs::remove_file(temp_orig)?;
-    std::fs::remove_file(temp_shuffled)?;
 
     Ok(())
 }
@@ -327,19 +312,20 @@ fn test_clust_eval_invariance_label_scaling() -> anyhow::Result<()> {
     let content_small = "1\tA\n1\tB\n2\tC\n2\tD\n";
     let content_large = "100\tA\n100\tB\n200\tC\n200\tD\n";
 
-    let temp_small = "tests/clust/inv_label_small.tsv";
-    let temp_large = "tests/clust/inv_label_large.tsv";
-
-    std::fs::write(temp_small, content_small)?;
-    std::fs::write(temp_large, content_large)?;
+    let mut small_file = NamedTempFile::new()?;
+    let mut large_file = NamedTempFile::new()?;
+    small_file.write_all(content_small.as_bytes())?;
+    large_file.write_all(content_large.as_bytes())?;
+    let small_path = small_file.path().to_str().unwrap();
+    let large_path = large_file.path().to_str().unwrap();
 
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg(temp_small)
+        .arg(small_path)
         .arg("--other")
-        .arg(temp_large)
+        .arg(large_path)
         .output()?;
 
     assert!(output.status.success());
@@ -349,24 +335,21 @@ fn test_clust_eval_invariance_label_scaling() -> anyhow::Result<()> {
 
     assert!((values[0].parse::<f64>()? - 1.0).abs() < 1e-6);
 
-    std::fs::remove_file(temp_small)?;
-    std::fs::remove_file(temp_large)?;
-
     Ok(())
 }
 
 #[test]
 fn test_clust_eval_empty_input() -> anyhow::Result<()> {
-    let temp_empty = "tests/clust/empty.tsv";
-    std::fs::write(temp_empty, "")?;
+    let empty_file = NamedTempFile::new()?;
+    let empty_path = empty_file.path().to_str().unwrap();
 
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg(temp_empty)
+        .arg(empty_path)
         .arg("--other")
-        .arg(temp_empty)
+        .arg(empty_path)
         .output()?;
 
     assert!(output.status.success());
@@ -378,15 +361,14 @@ fn test_clust_eval_empty_input() -> anyhow::Result<()> {
         assert_eq!(values[0], "0.000000");
     }
 
-    std::fs::remove_file(temp_empty)?;
-
     Ok(())
 }
 
 #[test]
 fn test_eval_malformed_pair_format() -> anyhow::Result<()> {
-    let malformed_path = "tests/clust/eval/malformed.pair";
-    std::fs::write(malformed_path, "A\nB\n")?;
+    let mut malformed_file = NamedTempFile::new()?;
+    malformed_file.write_all("A\nB\n".as_bytes())?;
+    let malformed_path = malformed_file.path().to_str().unwrap();
 
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
@@ -409,7 +391,6 @@ fn test_eval_malformed_pair_format() -> anyhow::Result<()> {
         stderr
     );
 
-    std::fs::remove_file(malformed_path)?;
     Ok(())
 }
 
