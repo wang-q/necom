@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c8504623.js";
+            window.path_to_searchindex_js = "../searchindex-36a11b86.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-01a6bffc.js"></script>
+        <script src="../toc-3f52531c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -203,9 +203,9 @@
 <li><code>--avg-clade &lt;T&gt;</code>: TreeCluster style (avg pairwise distance in clade &lt;= T).</li>
 <li><code>--med-clade &lt;T&gt;</code>: TreeCluster style (median pairwise distance in clade &lt;= T).</li>
 <li><code>--sum-branch &lt;T&gt;</code>: TreeCluster style (sum of branch lengths in clade &lt;= T).</li>
-<li><code>--leaf-dist-max &lt;T&gt;</code>: TreeCluster style (max distance from cluster root to any leaf &lt;= T).</li>
-<li><code>--leaf-dist-min &lt;T&gt;</code>: TreeCluster style (min distance from cluster root to any leaf &lt;= T).</li>
-<li><code>--leaf-dist-avg &lt;T&gt;</code>: TreeCluster style (avg distance from cluster root to leaves &lt;= T).</li>
+<li><code>--leaf-dist-max &lt;T&gt;</code>: TreeCluster style (max distance from cluster root to any leaf &lt;= T). Approximate: uses global leaf depth statistics converted to a root-distance cut.</li>
+<li><code>--leaf-dist-min &lt;T&gt;</code>: TreeCluster style (min distance from cluster root to any leaf &lt;= T). Approximate: same conversion as <code>--leaf-dist-max</code>.</li>
+<li><code>--leaf-dist-avg &lt;T&gt;</code>: TreeCluster style (avg distance from cluster root to leaves &lt;= T). Approximate: same conversion as <code>--leaf-dist-max</code>.</li>
 <li><code>--max-edge &lt;T&gt;</code> / <code>--single-linkage &lt;T&gt;</code>: cut branches longer than threshold.</li>
 <li><code>--inconsistent &lt;T&gt;</code>: SciPy style (inconsistent coefficient &lt;= T).</li>
 <li><code>--dynamic-tree &lt;N&gt;</code>: Dynamic Tree Cut (top-down adaptive, N=min cluster size).</li>
@@ -224,8 +224,8 @@
 <li><code>first</code>: alphabetically first member.</li>
 </ul>
 </li>
-<li><code>--support &lt;S&gt;</code> treats edges with support <code>&lt; S</code> as infinite length, forcing a cut. Nodes without explicit support default to <code>100.0</code>.</li>
-<li><code>--scan &lt;start&gt;,&lt;end&gt;,&lt;step&gt;</code> performs a parameter sweep. In scan mode, <code>--format</code> is ignored and output is always long format (<code>Group\tClusterID\tSampleID</code>).</li>
+<li><code>--support &lt;S&gt;</code> treats edges with support <code>&lt; S</code> as effectively infinite length, forcing a cut. Nodes without explicit support default to <code>100.0</code>. The mask is applied before any cut method runs, so it affects all distance/height-based methods uniformly.</li>
+<li><code>--scan &lt;start&gt;,&lt;end&gt;,&lt;step&gt;</code> performs a parameter sweep. In scan mode, <code>--format</code> is ignored and output is always long format (<code>Group\tClusterID\tSampleID</code>). For <code>--dynamic-tree</code>, the scan value replaces the min cluster size at each step (the <code>--dynamic-tree</code> argument itself only selects the method).</li>
 <li><code>--stats-out &lt;FILE&gt;</code> writes scan summary statistics (<code>Group\tClusters\tSingletons\tNon-Singletons\tMaxSize</code>).</li>
 <li><code>--dynamic-hybrid</code> requires <code>--matrix</code>.</li>
 </ul>

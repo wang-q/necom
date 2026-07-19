@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c8504623.js";
+            window.path_to_searchindex_js = "searchindex-36a11b86.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-01a6bffc.js"></script>
+        <script src="toc-3f52531c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -264,7 +264,7 @@
 <li><code>eval tree --ref</code>: <strong>Local</strong> comparison in the context of a partition. The reference tree (typically a species tree) provides biological ground truth. Computes Local RF (cluster subtree vs reference subset) and Monophyly Check (do cluster members form a clade on the reference?). Requires leaf-set intersection pruning as a prerequisite, because gene trees usually sample only a subset of the species tree’s taxa.</li>
 </ul>
 <p><strong>Rule of thumb</strong>: If comparing two trees as a whole, use <code>eval compare</code>. If assessing whether a gene tree’s clusters are consistent with a species tree, use <code>eval tree --ref</code>.</p>
-<h3 id="eval-quartet-vs-eval-compare-both-planned-or-partially-implemented"><a class="header" href="#eval-quartet-vs-eval-compare-both-planned-or-partially-implemented"><code>eval quartet</code> vs <code>eval compare</code> (both planned or partially implemented)</a></h3>
+<h3 id="eval-quartet-future-vs-eval-compare"><a class="header" href="#eval-quartet-future-vs-eval-compare"><code>eval quartet</code> (future) vs <code>eval compare</code></a></h3>
 <ul>
 <li><code>eval compare</code>: Topology-based (split-set symmetric difference). Pure structural comparison of whole trees.</li>
 <li><code>eval quartet</code> (future): Quartet-based, can incorporate sequence alignment. Assesses branch-level support rather than overall distance.</li>

@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c8504623.js";
+            window.path_to_searchindex_js = "searchindex-36a11b86.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-01a6bffc.js"></script>
+        <script src="toc-3f52531c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -998,7 +998,7 @@ necom eval partition partitions.tsv --input-format long --matrix dist.phy
 <p><code>necom</code> supports two external distance matrix file formats: <code>PHYLIP</code> and <code>Pairwise</code>. (Internal matrix data structures are documented in <a href="../notes/design/mat-impl.html"><code>notes/design/mat-impl.md</code></a>.)</p>
 <h3 id="1-phylip-distance-matrix-dense"><a class="header" href="#1-phylip-distance-matrix-dense">1. PHYLIP Distance Matrix (Dense)</a></h3>
 <p>The <code>PHYLIP</code> distance matrix format is a common format in phylogenetic analysis. <code>necom</code> provides a series of tools for processing this format.</p>
-<p><code>necom</code> stores this internally using the <code>NamedMatrix</code> structure, backed by <code>CondensedMatrix</code> (a one-dimensional array storing the upper or lower triangle), with memory usage of approximately $O(N^2/2)$.</p>
+<p><code>necom</code> stores this internally using the <code>NamedMatrix</code> structure, backed by <code>CondensedMatrix</code> (a one-dimensional array storing the upper triangle, excluding the diagonal), with memory usage of approximately $O(N^2/2)$.</p>
 <p><code>necom</code> supports both Strict and Relaxed <code>PHYLIP</code> formats.</p>
 <p><strong>Relaxed PHYLIP (default input support)</strong>:</p>
 <ul>
@@ -1101,12 +1101,17 @@ necom eval partition partitions.tsv --input-format long --matrix dist.phy
 <li><strong>Cosine Similarity</strong>: $D = 1 - \cos(\theta)$.</li>
 <li><strong>Correlation</strong>: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.</li>
 </ul>
-<p>For Cosine/Correlation distances, compute them in Python (SciPy) and export as a PHYLIP matrix.</p>
+<p>For Cosine/Correlation distances, the workflow depends on the input form:</p>
+<ul>
+<li><strong>Vector-level</strong> (one row per sequence with a feature vector): use <code>necom mat from-vector --mode cosine</code> to produce a pairwise TSV directly.</li>
+<li><strong>Matrix-level</strong> (already assembled PHYLIP similarity matrix): no built-in conversion is provided; compute in Python (SciPy) and export as a PHYLIP matrix.</li>
+</ul>
 <h2 id="recommended-workflows-1"><a class="header" href="#recommended-workflows-1">Recommended Workflows</a></h2>
 <h3 id="scenario-a-tree-inference-from-blast-results"><a class="header" href="#scenario-a-tree-inference-from-blast-results">Scenario A: Tree Inference from BLAST Results</a></h3>
-<pre><code class="language-bash"># 1. Parse BLAST results into pairwise distances (assuming distance = 1 - identity has already been computed)
-# Note: ensure both A-B and B-A are present, or rely on a single direction
-awk '{print $1, $2, 100-$3}' blast.out &gt; pairs.tsv
+<pre><code class="language-bash"># 1. Parse BLAST results (column 3 = percent identity) into pairwise distances.
+#    distance = 100 - identity. Only one direction (A-B) is needed; the matrix is symmetric.
+#    Use OFS='\t' so the output is tab-separated (necom expects TSV, not whitespace-separated)
+awk -v OFS='\t' '{print $1, $2, 100-$3}' blast.out &gt; pairs.tsv
 
 # 2. Convert to PHYLIP matrix; set unaligned pairs to maximum distance 100
 necom mat to-phylip pairs.tsv --missing 100 -o matrix.phy
@@ -1333,7 +1338,7 @@ neighbor &lt; input.infile
 <li><code>eval tree --ref</code>: <strong>Local</strong> comparison in the context of a partition. The reference tree (typically a species tree) provides biological ground truth. Computes Local RF (cluster subtree vs reference subset) and Monophyly Check (do cluster members form a clade on the reference?). Requires leaf-set intersection pruning as a prerequisite, because gene trees usually sample only a subset of the species tree’s taxa.</li>
 </ul>
 <p><strong>Rule of thumb</strong>: If comparing two trees as a whole, use <code>eval compare</code>. If assessing whether a gene tree’s clusters are consistent with a species tree, use <code>eval tree --ref</code>.</p>
-<h3 id="eval-quartet-vs-eval-compare-both-planned-or-partially-implemented"><a class="header" href="#eval-quartet-vs-eval-compare-both-planned-or-partially-implemented"><code>eval quartet</code> vs <code>eval compare</code> (both planned or partially implemented)</a></h3>
+<h3 id="eval-quartet-future-vs-eval-compare"><a class="header" href="#eval-quartet-future-vs-eval-compare"><code>eval quartet</code> (future) vs <code>eval compare</code></a></h3>
 <ul>
 <li><code>eval compare</code>: Topology-based (split-set symmetric difference). Pure structural comparison of whole trees.</li>
 <li><code>eval quartet</code> (future): Quartet-based, can incorporate sequence alignment. Assesses branch-level support rather than overall distance.</li>
@@ -1560,7 +1565,7 @@ neighbor &lt; input.infile
 <p><strong>Hubert’s Gamma</strong></p>
 <ul>
 <li><strong>Principle</strong>: Correlation between the distance matrix and a binary clustering matrix (0 = same cluster, 1 = different clusters).</li>
-<li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong> (note that in the definition Y=1 means different clusters; confirm sign direction for the specific implementation; in <code>necom</code> larger means better discriminability).</li>
+<li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong> (Y=1 means different clusters; larger Gamma means between-cluster distances exceed within-cluster distances more strongly).</li>
 </ul>
 </li>
 <li>
@@ -1743,9 +1748,9 @@ GeneB	1.1	0.6	3.1
 <li><code>--avg-clade &lt;T&gt;</code>: TreeCluster style (avg pairwise distance in clade &lt;= T).</li>
 <li><code>--med-clade &lt;T&gt;</code>: TreeCluster style (median pairwise distance in clade &lt;= T).</li>
 <li><code>--sum-branch &lt;T&gt;</code>: TreeCluster style (sum of branch lengths in clade &lt;= T).</li>
-<li><code>--leaf-dist-max &lt;T&gt;</code>: TreeCluster style (max distance from cluster root to any leaf &lt;= T).</li>
-<li><code>--leaf-dist-min &lt;T&gt;</code>: TreeCluster style (min distance from cluster root to any leaf &lt;= T).</li>
-<li><code>--leaf-dist-avg &lt;T&gt;</code>: TreeCluster style (avg distance from cluster root to leaves &lt;= T).</li>
+<li><code>--leaf-dist-max &lt;T&gt;</code>: TreeCluster style (max distance from cluster root to any leaf &lt;= T). Approximate: uses global leaf depth statistics converted to a root-distance cut.</li>
+<li><code>--leaf-dist-min &lt;T&gt;</code>: TreeCluster style (min distance from cluster root to any leaf &lt;= T). Approximate: same conversion as <code>--leaf-dist-max</code>.</li>
+<li><code>--leaf-dist-avg &lt;T&gt;</code>: TreeCluster style (avg distance from cluster root to leaves &lt;= T). Approximate: same conversion as <code>--leaf-dist-max</code>.</li>
 <li><code>--max-edge &lt;T&gt;</code> / <code>--single-linkage &lt;T&gt;</code>: cut branches longer than threshold.</li>
 <li><code>--inconsistent &lt;T&gt;</code>: SciPy style (inconsistent coefficient &lt;= T).</li>
 <li><code>--dynamic-tree &lt;N&gt;</code>: Dynamic Tree Cut (top-down adaptive, N=min cluster size).</li>
@@ -1764,8 +1769,8 @@ GeneB	1.1	0.6	3.1
 <li><code>first</code>: alphabetically first member.</li>
 </ul>
 </li>
-<li><code>--support &lt;S&gt;</code> treats edges with support <code>&lt; S</code> as infinite length, forcing a cut. Nodes without explicit support default to <code>100.0</code>.</li>
-<li><code>--scan &lt;start&gt;,&lt;end&gt;,&lt;step&gt;</code> performs a parameter sweep. In scan mode, <code>--format</code> is ignored and output is always long format (<code>Group\tClusterID\tSampleID</code>).</li>
+<li><code>--support &lt;S&gt;</code> treats edges with support <code>&lt; S</code> as effectively infinite length, forcing a cut. Nodes without explicit support default to <code>100.0</code>. The mask is applied before any cut method runs, so it affects all distance/height-based methods uniformly.</li>
+<li><code>--scan &lt;start&gt;,&lt;end&gt;,&lt;step&gt;</code> performs a parameter sweep. In scan mode, <code>--format</code> is ignored and output is always long format (<code>Group\tClusterID\tSampleID</code>). For <code>--dynamic-tree</code>, the scan value replaces the min cluster size at each step (the <code>--dynamic-tree</code> argument itself only selects the method).</li>
 <li><code>--stats-out &lt;FILE&gt;</code> writes scan summary statistics (<code>Group\tClusters\tSingletons\tNon-Singletons\tMaxSize</code>).</li>
 <li><code>--dynamic-hybrid</code> requires <code>--matrix</code>.</li>
 </ul>
@@ -2074,6 +2079,7 @@ GeneB	1.1	0.6	3.1
 <ul>
 <li><code>compare</code>: compare two PHYLIP distance matrices.</li>
 <li><code>format</code>: convert between PHYLIP matrix variants.</li>
+<li><code>from-vector</code>: calculate pairwise similarity/distance from vector inputs.</li>
 <li><code>subset</code>: extract a submatrix using a name list.</li>
 <li><code>to-pair</code>: flatten a PHYLIP matrix to pairwise TSV.</li>
 <li><code>to-phylip</code>: assemble pairwise TSV into a PHYLIP matrix.</li>
@@ -2189,6 +2195,49 @@ GeneB	1.1	0.6	3.1
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="from-vector"><a href="#from-vector" class="header">from-vector</a></h1>
+<p>Calculate pairwise similarity/distance between vectors in input file(s).</p>
+<p>Behavior:</p>
+<ul>
+<li><code>--mode euclid</code>: Euclidean distance.</li>
+<li><code>--mode euclid --sim</code>: Euclidean distance converted to similarity.</li>
+<li><code>--mode euclid --binary</code>: binary Euclidean distance (values treated as 0/1).</li>
+<li><code>--mode euclid --binary --sim --dis</code>: binary Euclidean distance to dissimilarity.</li>
+<li><code>--mode cosine</code>: cosine similarity (-1 to 1).</li>
+<li><code>--mode cosine --dis</code>: cosine distance (0 to 2).</li>
+<li><code>--mode cosine --binary</code>: binary cosine similarity.</li>
+<li><code>--mode cosine --binary --dis</code>: binary cosine distance.</li>
+<li><code>--mode jaccard --binary</code>: Jaccard index.</li>
+<li><code>--mode jaccard</code>: weighted Jaccard similarity.</li>
+</ul>
+<p>Input:</p>
+<ul>
+<li>One or two vector files in <code>name&lt;tab&gt;v1&lt;tab&gt;v2&lt;tab&gt;...</code> format (pure TSV).</li>
+<li>One file: self-comparison (all pairs including diagonal).</li>
+<li>Two files: cross-comparison between the two sets.</li>
+</ul>
+<p>Output:</p>
+<ul>
+<li>Three-column TSV: <code>name1&lt;tab&gt;name2&lt;tab&gt;score</code> (6 decimal places), one row per pair.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li><code>--binary</code> treats positive values as 1, all others as 0, before computing the score.</li>
+<li><code>--sim</code> converts a distance to a similarity; <code>--dis</code> converts a similarity to a dissimilarity.</li>
+<li><code>--parallel &lt;N&gt;</code> sets the number of worker threads (default 1).</li>
+</ul>
+<p>Examples:</p>
+<ol>
+<li>
+<p>Self-compare vectors with binary Jaccard
+<code>necom mat from-vector vectors.tsv --mode jaccard --binary</code></p>
+</li>
+<li>
+<p>Cross-compare two vector sets with cosine distance
+<code>necom mat from-vector set1.tsv set2.tsv --mode cosine --dis -o out.tsv</code></p>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="subset"><a href="#subset" class="header">subset</a></h1>
 <p>Extract a submatrix from a PHYLIP matrix using a list of names.</p>
 <p>Input:</p>
@@ -2293,6 +2342,7 @@ GeneB	1.1	0.6	3.1
 <ul>
 <li><code>--normalize</code> requires diagonal data in the input; if absent, results will be <code>0</code>.</li>
 <li>Diagonal values less than or equal to <code>1e-9</code> are treated as zero, producing <code>0</code> for the corresponding row/column.</li>
+<li>Normalization is applied before the transformation op: off-diagonal <code>x(i,j) / sqrt(d_i*d_j)</code> then <code>--op</code>, diagonal normalized to <code>1.0</code> (or <code>0.0</code> if <code>d_i &lt;= 1e-9</code>) then <code>--op</code>.</li>
 </ul>
 </li>
 <li>When <code>--input-format pair</code> is used, <code>--same</code> and <code>--missing</code> control default diagonal and missing-pair values.</li>
@@ -2977,7 +3027,7 @@ GeneB	1.1	0.6	3.1
 </ul>
 </li>
 <li>Use <code>--include-trivial</code> to include single-leaf splits in WRF/KF calculations.</li>
-<li>Single-file pairwise mode requires at least 2 trees. With only 1 tree, a warning is emitted and the output contains only the header.</li>
+<li>Single-file pairwise mode requires at least 2 trees; with fewer, the command errors out with a clear message.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -3001,7 +3051,7 @@ GeneB	1.1	0.6	3.1
 <ul>
 <li>TSV with a header row.</li>
 <li>External evaluation: one row of pair-based metrics (ARI, AMI, V-Measure, etc.).</li>
-<li>Internal evaluation: one row per partition with Silhouette, Dunn, Davies-Bouldin, etc.</li>
+<li>Internal evaluation: one row of distance-based or coordinate-based metrics (Silhouette, Dunn, … or Davies-Bouldin, Calinski-Harabasz, …).</li>
 <li>Batch mode (<code>--input-format long</code>): one row per <code>Group</code>, with the <code>Group</code> column preserved as the first column.</li>
 </ul>
 <p>Notes:</p>
@@ -3017,6 +3067,7 @@ GeneB	1.1	0.6	3.1
 <li><code>--other</code> / <code>--truth</code>: second partition for external evaluation (synonyms).</li>
 <li><code>--no-singletons</code>: exclude singleton clusters from <code>--other</code> before external evaluation.</li>
 <li><code>--input-format</code>: supports <code>pair</code> (default), <code>cluster</code>, or <code>long</code> (required for batch mode).</li>
+<li><code>--other-format</code>: format for the <code>--other</code> file (<code>cluster</code> or <code>pair</code>). Defaults to the value of <code>--input-format</code> in single mode, or <code>cluster</code> in batch mode (since the truth file is a single partition, not Long).</li>
 <li>In batch mode, the <code>Group</code> column is preserved as the first column of the output.</li>
 <li>Quick metric selection:
 <ul>
@@ -3056,7 +3107,7 @@ GeneB	1.1	0.6	3.1
 <p>Assign support values to internal nodes of a target tree based on replicate trees.</p>
 <p>Input:</p>
 <ul>
-<li>Target tree file (first positional argument).</li>
+<li>Target tree file (first positional argument). May contain one or more trees; each is annotated and emitted on its own line.</li>
 <li>Replicate trees file (second positional argument), e.g., from bootstrap or jackknife resampling.</li>
 </ul>
 <p>Notes:</p>

@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c8504623.js";
+            window.path_to_searchindex_js = "searchindex-36a11b86.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-01a6bffc.js"></script>
+        <script src="toc-3f52531c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -206,7 +206,7 @@
 <p><code>necom</code> supports two external distance matrix file formats: <code>PHYLIP</code> and <code>Pairwise</code>. (Internal matrix data structures are documented in <a href="../notes/design/mat-impl.html"><code>notes/design/mat-impl.md</code></a>.)</p>
 <h3 id="1-phylip-distance-matrix-dense"><a class="header" href="#1-phylip-distance-matrix-dense">1. PHYLIP Distance Matrix (Dense)</a></h3>
 <p>The <code>PHYLIP</code> distance matrix format is a common format in phylogenetic analysis. <code>necom</code> provides a series of tools for processing this format.</p>
-<p><code>necom</code> stores this internally using the <code>NamedMatrix</code> structure, backed by <code>CondensedMatrix</code> (a one-dimensional array storing the upper or lower triangle), with memory usage of approximately $O(N^2/2)$.</p>
+<p><code>necom</code> stores this internally using the <code>NamedMatrix</code> structure, backed by <code>CondensedMatrix</code> (a one-dimensional array storing the upper triangle, excluding the diagonal), with memory usage of approximately $O(N^2/2)$.</p>
 <p><code>necom</code> supports both Strict and Relaxed <code>PHYLIP</code> formats.</p>
 <p><strong>Relaxed PHYLIP (default input support)</strong>:</p>
 <ul>
@@ -309,12 +309,17 @@
 <li><strong>Cosine Similarity</strong>: $D = 1 - \cos(\theta)$.</li>
 <li><strong>Correlation</strong>: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.</li>
 </ul>
-<p>For Cosine/Correlation distances, compute them in Python (SciPy) and export as a PHYLIP matrix.</p>
+<p>For Cosine/Correlation distances, the workflow depends on the input form:</p>
+<ul>
+<li><strong>Vector-level</strong> (one row per sequence with a feature vector): use <code>necom mat from-vector --mode cosine</code> to produce a pairwise TSV directly.</li>
+<li><strong>Matrix-level</strong> (already assembled PHYLIP similarity matrix): no built-in conversion is provided; compute in Python (SciPy) and export as a PHYLIP matrix.</li>
+</ul>
 <h2 id="recommended-workflows"><a class="header" href="#recommended-workflows">Recommended Workflows</a></h2>
 <h3 id="scenario-a-tree-inference-from-blast-results"><a class="header" href="#scenario-a-tree-inference-from-blast-results">Scenario A: Tree Inference from BLAST Results</a></h3>
-<pre><code class="language-bash"># 1. Parse BLAST results into pairwise distances (assuming distance = 1 - identity has already been computed)
-# Note: ensure both A-B and B-A are present, or rely on a single direction
-awk '{print $1, $2, 100-$3}' blast.out &gt; pairs.tsv
+<pre><code class="language-bash"># 1. Parse BLAST results (column 3 = percent identity) into pairwise distances.
+#    distance = 100 - identity. Only one direction (A-B) is needed; the matrix is symmetric.
+#    Use OFS='\t' so the output is tab-separated (necom expects TSV, not whitespace-separated)
+awk -v OFS='\t' '{print $1, $2, 100-$3}' blast.out &gt; pairs.tsv
 
 # 2. Convert to PHYLIP matrix; set unaligned pairs to maximum distance 100
 necom mat to-phylip pairs.tsv --missing 100 -o matrix.phy

@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-c8504623.js";
+            window.path_to_searchindex_js = "../../searchindex-36a11b86.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-01a6bffc.js"></script>
+        <script src="../../toc-3f52531c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -203,6 +203,7 @@
 <ul>
 <li><code>--normalize</code> requires diagonal data in the input; if absent, results will be <code>0</code>.</li>
 <li>Diagonal values less than or equal to <code>1e-9</code> are treated as zero, producing <code>0</code> for the corresponding row/column.</li>
+<li>Normalization is applied before the transformation op: off-diagonal <code>x(i,j) / sqrt(d_i*d_j)</code> then <code>--op</code>, diagonal normalized to <code>1.0</code> (or <code>0.0</code> if <code>d_i &lt;= 1e-9</code>) then <code>--op</code>.</li>
 </ul>
 </li>
 <li>When <code>--input-format pair</code> is used, <code>--same</code> and <code>--missing</code> control default diagonal and missing-pair values.</li>
