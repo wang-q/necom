@@ -243,3 +243,24 @@ fn test_dynamic_min_size_zero_rejected() {
         stderr
     );
 }
+
+#[test]
+fn test_dynamic_missing_min_size() {
+    let temp = Builder::new()
+        .prefix("necom_test_dynamic_missing")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("missing.nwk");
+    fs::write(&tree_file, "(A,B);").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["cut", "dynamic", tree_file.to_str().unwrap()])
+        .run_fail();
+
+    let lowered = stderr.to_lowercase();
+    assert!(
+        lowered.contains("--min-size") || lowered.contains("required"),
+        "Expected missing --min-size error, got: {}",
+        stderr
+    );
+}

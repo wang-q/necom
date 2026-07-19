@@ -11,7 +11,7 @@ pub fn make_subcommand() -> Command {
         .about("Scans dynamic tree cut min cluster sizes")
         .after_help(include_str!("../../../docs/help/cut/scan-dynamic.md"))
         .arg(args::infile_arg_required_with_help("Input Newick file"))
-        .arg(args::range_arg())
+        .arg(args::range_arg().required(true))
         .arg(args::deep_split_arg())
         .arg(args::max_tree_height_arg())
         .arg(args::stats_out_arg())

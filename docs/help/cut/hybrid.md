@@ -12,11 +12,11 @@ Output:
 
 Notes:
 
-* `--matrix` and `--min-size` are required.
-* `--max-pam-dist` limits the distance for PAM reassignment.
-* `--no-pam-dendro` disables dendrogram respect during PAM reassignment.
-* `--deep-split` enables more aggressive splitting.
-* `--max-tree-height` sets the maximum joining height (default: 99% of tree height).
+* The `--matrix` and `--min-size` options are required. `--min-size` must be a positive integer.
+* `--max-pam-dist` sets the maximum distance for PAM reassignment (optional).
+* `--no-pam-dendro` disables dendrogram respect during PAM reassignment (default: off).
+* `--deep-split` enables more aggressive splitting (default: off).
+* `--max-tree-height` sets the maximum joining height; if omitted, 99% of the tree height is used.
 * `--rep` selects the cluster representative: `root` (default), `first`, or `medoid`.
 * `--support <S>` treats edges with support `< S` as effectively infinite length, forcing a cut at low-support positions.
 
@@ -27,3 +27,6 @@ Examples:
 
 2. Allow PAM reassignment across high branches
    `necom cut hybrid tree.nwk --matrix dist.phy --min-size 10 --no-pam-dendro`
+
+3. Limit PAM reassignment distance
+   `necom cut hybrid tree.nwk --matrix dist.phy --min-size 10 --max-pam-dist 0.3`

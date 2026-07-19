@@ -139,3 +139,33 @@ fn test_hybrid_min_size_zero_rejected() {
         stderr
     );
 }
+
+#[test]
+fn test_hybrid_missing_min_size() {
+    let temp = Builder::new()
+        .prefix("necom_test_hybrid_missing")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("hybrid_missing.nwk");
+    let mat_file = temp.path().join("hybrid_missing.phy");
+
+    fs::write(&tree_file, "(A,B);").unwrap();
+    fs::write(&mat_file, "2\nA 0.0 1.0\nB 1.0 0.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "hybrid",
+            tree_file.to_str().unwrap(),
+            "--matrix",
+            mat_file.to_str().unwrap(),
+        ])
+        .run_fail();
+
+    let lowered = stderr.to_lowercase();
+    assert!(
+        lowered.contains("--min-size") || lowered.contains("required"),
+        "Expected missing --min-size error, got: {}",
+        stderr
+    );
+}

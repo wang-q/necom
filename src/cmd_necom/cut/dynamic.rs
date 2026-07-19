@@ -11,7 +11,7 @@ pub fn make_subcommand() -> Command {
         .about("Cuts a tree using dynamic tree cut")
         .after_help(include_str!("../../../docs/help/cut/dynamic.md"))
         .arg(args::infile_arg_required_with_help("Input Newick file"))
-        .arg(args::min_size_arg())
+        .arg(args::min_size_arg().required(true))
         .arg(args::deep_split_arg())
         .arg(args::max_tree_height_arg())
         .arg(args::format_arg())
@@ -24,9 +24,7 @@ pub fn make_subcommand() -> Command {
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let tree = load_tree(args)?;
 
-    let min_size = *args
-        .get_one::<usize>("min_size")
-        .ok_or_else(|| anyhow::anyhow!("missing required argument: --min-size"))?;
+    let min_size = *args.get_one::<usize>("min_size").unwrap();
 
     let deep_split = args.get_flag("deep_split");
     let max_tree_height = args.get_one::<f64>("max_tree_height").copied();

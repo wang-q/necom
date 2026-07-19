@@ -102,3 +102,17 @@ fn test_scan_dynamic_negative_range_rejected() {
         stderr
     );
 }
+
+#[test]
+fn test_scan_dynamic_missing_range() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&["cut", "scan-dynamic", "tests/newick/abcde.nwk"])
+        .run_fail();
+
+    let lowered = stderr.to_lowercase();
+    assert!(
+        lowered.contains("--range") || lowered.contains("required"),
+        "Expected missing --range error, got: {}",
+        stderr
+    );
+}

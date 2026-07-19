@@ -12,7 +12,7 @@ pub fn make_subcommand() -> Command {
         .after_help(include_str!("../../../docs/help/cut/hybrid.md"))
         .arg(args::infile_arg_required_with_help("Input Newick file"))
         .arg(args::matrix_arg().required(true))
-        .arg(args::min_size_arg())
+        .arg(args::min_size_arg().required(true))
         .arg(args::max_pam_dist_arg())
         .arg(args::no_pam_dendro_arg())
         .arg(args::deep_split_arg())
@@ -27,9 +27,7 @@ pub fn make_subcommand() -> Command {
 pub fn execute(args: &ArgMatches) -> Result<()> {
     let tree = load_tree(args)?;
 
-    let min_size = *args
-        .get_one::<usize>("min_size")
-        .ok_or_else(|| anyhow::anyhow!("missing required argument: --min-size"))?;
+    let min_size = *args.get_one::<usize>("min_size").unwrap();
 
     let matrix_file = args.get_one::<String>("matrix").unwrap();
     let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(matrix_file)
