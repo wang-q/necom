@@ -176,13 +176,13 @@ pub fn cutree_dynamic_tree(
                 let global_id = next_cluster_id;
                 next_cluster_id += 1;
 
-                for original_idx in indices.iter().take(end).skip(start) {
+                for original_idx in &indices[start..end] {
                     let leaf_id = height_seq[*original_idx].0;
                     final_partition.insert(leaf_id, global_id);
                 }
             } else {
                 // Too small after split -> 0
-                for original_idx in indices.iter().take(end).skip(start) {
+                for original_idx in &indices[start..end] {
                     let leaf_id = height_seq[*original_idx].0;
                     final_partition.insert(leaf_id, 0);
                 }

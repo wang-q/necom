@@ -88,8 +88,8 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
   1. **Monophyly**.
   2. **Median distance constraint**: $median(\{dist(u, v) \mid u, v \in C_i, u \neq v\}) \le T$.
   3. **Support constraint**.
-- **Algorithm**: TreeCluster "Med Clade" algorithm. Computes medians by merging sorted lists bottom-up.
-- **Complexity**: $O(N^2 \log N)$ in the worst case. Significantly more expensive than the previous two methods.
+- **Algorithm**: TreeCluster "Med Clade" algorithm. Computes medians by sorting the pairwise distance list at each internal node bottom-up.
+- **Complexity**: $O(N^2 \log N)$ on balanced trees; degrades to $O(N^3 \log N)$ on degenerate (comb) trees, because each level re-sorts an $O(L^2)$ list of pairwise distances where $L$ is the subtree leaf count. Significantly more expensive than the previous two methods.
 - **Note**: Not recommended for very large trees (e.g., >10k leaves) unless median robustness is truly required.
 
 ### 7. Cut by Total Within-Cluster Branch Length (`--sum-branch`)
@@ -173,6 +173,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
   - `--matrix <FILE>`: Distance matrix file (PHYLIP format).
   - `--max-pam-dist <D>`: Maximum distance threshold for PAM assignment (default equals the cut height `cutHeight`). If an unassigned point's distance to the nearest medoid exceeds this value, it remains unassigned.
   - `--no-pam-dendro`: Disable the dendrogram constraint in the PAM stage (allows assigning objects across high branches). By default the PAM stage respects tree structure (`pamRespectsDendro=TRUE`).
+  - `--max-tree-height <H>` (optional): Maximum joining height. Default is `ref_height + 0.99 * (max_height - ref_height)`, where `ref_height` is the 5th percentile of merge heights and `max_height` is the maximum merge height. Unlike `cut dynamic` (which uses `0.99 * root_height`), this formula anchors the cut to the 5th percentile so that a few extreme merges do not inflate the threshold.
 - **Use cases**:
   - High accuracy at cluster boundaries is required.
   - The distance matrix is needed to correct small errors or uncertainties in the tree structure.

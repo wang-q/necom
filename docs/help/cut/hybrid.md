@@ -16,7 +16,7 @@ Notes:
 * `--max-pam-dist` sets the maximum distance for PAM reassignment (optional).
 * `--no-pam-dendro` disables dendrogram respect during PAM reassignment (default: off).
 * `--deep-split` enables more aggressive splitting (default: off).
-* `--max-tree-height` sets the maximum joining height; if omitted, 99% of the tree height is used.
+* `--max-tree-height` sets the maximum joining height; if omitted, defaults to `ref_height + 0.99 * (max_height - ref_height)`, where `ref_height` is the 5th percentile of merge heights and `max_height` is the maximum merge height.
 * `--rep` selects the cluster representative: `root` (default), `first`, or `medoid`.
 * `--support <S>` treats edges with support `< S` as effectively infinite length, forcing a cut at low-support positions.
 

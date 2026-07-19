@@ -78,7 +78,13 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
     // 2. Calculate Absolute Thresholds
     let deep_split = options.deep_split.clamp(0, 4);
     let def_mcs = [0.64, 0.73, 0.82, 0.91, 0.95];
-    let def_mg: Vec<f64> = def_mcs.iter().map(|&x| (1.0 - x) * 0.75).collect();
+    let def_mg = [
+        (1.0 - def_mcs[0]) * 0.75,
+        (1.0 - def_mcs[1]) * 0.75,
+        (1.0 - def_mcs[2]) * 0.75,
+        (1.0 - def_mcs[3]) * 0.75,
+        (1.0 - def_mcs[4]) * 0.75,
+    ];
 
     let rel_max_scatter = options.max_core_scatter.unwrap_or(def_mcs[deep_split]);
     let rel_min_gap = options.min_gap.unwrap_or(def_mg[deep_split]);
@@ -255,19 +261,19 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
         }
     }
 
-    // Handle Root (or remaining top node)
-    if let Some(root_id) = tree.get_root() {
-        if let Some(info) = branch_infos.remove(&root_id) {
-            if info.is_basic {
-                let fail_shape = info.scatter > abs_max_scatter; // Gap is undefined at root/top? Or check against cut_height?
-                let fail_size = info.members.len() < min_size;
+    // Handle Root (or remaining top node).
+    // Reuse `root_id` resolved earlier; the root has no parent merge, so gap is
+    // undefined and only the scatter criterion applies here.
+    if let Some(info) = branch_infos.remove(&root_id) {
+        if info.is_basic {
+            let fail_shape = info.scatter > abs_max_scatter;
+            let fail_size = info.members.len() < min_size;
 
-                if !fail_shape {
-                    if !fail_size {
-                        final_clusters.push(info.members);
-                    } else if options.respect_small_clusters {
-                        small_clusters.push(info.members);
-                    }
+            if !fail_shape {
+                if !fail_size {
+                    final_clusters.push(info.members);
+                } else if options.respect_small_clusters {
+                    small_clusters.push(info.members);
                 }
             }
         }
