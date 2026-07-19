@@ -354,7 +354,7 @@ mod tests {
         // Tree: ((A:1,B:1):1,C:1);
         // K=2 -> {A,B}, {C}.
         let tree = parse_tree("((A:1,B:1):1,C:1);");
-        let partition = crate::libs::tree_cut::simple::cut_k(&tree, 2).unwrap();
+        let partition = crate::libs::cut::simple::cut_k(&tree, 2).unwrap();
         let clusters = partition_to_clusters(&partition, &tree, RepMode::First);
         assert_eq!(clusters.len(), 2);
         assert_eq!(clusters[0].members.len(), 2); // {A,B} first by size

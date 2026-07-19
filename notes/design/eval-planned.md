@@ -246,7 +246,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
   - 已良好分层（`EvalTarget`/`DistanceMatrix`/`TreeDistance`/`run_single`/`run_batch`，见 [mod.rs](../../src/libs/eval/mod.rs)）。`eval partition` 使用；`eval tree` 复用 `silhouette_score` + `TreeDistance`。
   - **缺失（需新增）**：Purity、Entropy（Phase 2）、Cophenetic 相关系数（Phase 1）。
 - **`libs/phylo/cmp.rs`**：树拓扑比较（RF、WRF、KF）。`eval tree` 复用；`eval compare` 已迁移为顶级命令。
-- **`libs/phylo/tree/balance.rs`**：`compute_avg_clade_distances`（[balance.rs](../../src/libs/phylo/tree/balance.rs)）的 O(N) 自底向上聚合，`stat.rs` 仅 re-export。当前唯一消费者是 [tree_cut/clade.rs](../../src/libs/tree_cut/clade.rs)（即 `necom cut` 的底层）。
+- **`libs/phylo/tree/balance.rs`**：`compute_avg_clade_distances`（[balance.rs](../../src/libs/phylo/tree/balance.rs)）的 O(N) 自底向上聚合，`stat.rs` 仅 re-export。当前唯一消费者是 [cut/clade.rs](../../src/libs/cut/clade.rs)（即 `necom cut` 的底层）。
 - **`libs/phylo/tree/query.rs`**：叶子间距离（`get_distance`/`node_distance`，[query.rs](../../src/libs/phylo/tree/query.rs)）、LCA、`is_monophyletic`/`is_clade`（[query.rs](../../src/libs/phylo/tree/query.rs)）。
 - **`libs/phylo/tree/stat.rs`**：树统计（`diameter` 全树双 BFS、`compute_node_heights`、`TreeSummary` 等）。**注意**：`stat.rs::diameter` 不是簇内直径。
 - **`libs/phylo/tree/distance.rs`**：CLI 输出辅助（`dist_root`/`dist_pairwise`/`dist_phylip` 等），**不是**叶子间距离 API。早期草案将其与 `Tree::get_distance` 混淆，已订正。
@@ -256,7 +256,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 - **距离计算**：
   - 基础：复用 `Tree::node_distance`（[query.rs](../../src/libs/phylo/tree/query.rs)，自动在枝长和与边数间切换）。
-  - **clade 路径优化**：对 AvgDist，复用 [balance.rs](../../src/libs/phylo/tree/balance.rs) `compute_avg_clade_distances` 的 O(N) 聚合（返回 `HashMap<NodeId, f64>`，键为子树根）。该算法已在 [tree_cut/clade.rs](../../src/libs/tree_cut/clade.rs) 中使用。
+  - **clade 路径优化**：对 AvgDist，复用 [balance.rs](../../src/libs/phylo/tree/balance.rs) `compute_avg_clade_distances` 的 O(N) 聚合（返回 `HashMap<NodeId, f64>`，键为子树根）。该算法已在 [cut/clade.rs](../../src/libs/cut/clade.rs) 中使用。
   - **任意 partition 路径**：无 O(N) 折中，必须 O(|C|²) 调用 `node_distance`。
 - **簇直径（max_clade）**：
   - **当前代码库不存在此算法**。`stat.rs::diameter` 是全树双 BFS，不适用。
@@ -267,7 +267,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 - **单系性检查**：
   - 复用 `Tree::is_clade`（[query.rs](../../src/libs/phylo/tree/query.rs)，要求 ≥2 节点）或 `Tree::is_monophyletic`（[query.rs](../../src/libs/phylo/tree/query.rs)，单节点也视为单系）。CLI 层（[nwk/label.rs](../../src/cmd_necom/nwk/label.rs) 和 [nwk/subtree.rs](../../src/cmd_necom/nwk/subtree.rs)）当前统一使用 `Tree::is_clade`。
 - **Silhouette 复用**：直接复用 `libs/eval/distance.rs::silhouette_score` + `TreeDistance`（[distance.rs](../../src/libs/eval/distance.rs)），无需重写。`TreeDistance::new(tree)` 包装 `Tree::node_distance` 并实现 `DistanceMatrix` trait。现有实现已遵循 sklearn 单例 `s(x)=0` 约定。`--samples` 采样为 Phase 1 新增工作。
-- **`tree_medoid`**：[query.rs](../../src/libs/phylo/tree/query.rs) 提供 `tree_medoid(tree, ids) -> Option<usize>`，O(N²) 调用 `get_distance`。已被 `necom cut --rep medoid` 复用（通过 [tree_cut/partition.rs](../../src/libs/tree_cut/partition.rs) `find_representative`）。`eval tree` 可进一步复用于 representative 选择或 Medoid-based 聚类评估。
+- **`tree_medoid`**：[query.rs](../../src/libs/phylo/tree/query.rs) 提供 `tree_medoid(tree, ids) -> Option<usize>`，O(N²) 调用 `get_distance`。已被 `necom cut --rep medoid` 复用（通过 [cut/partition.rs](../../src/libs/cut/partition.rs) `find_representative`）。`eval tree` 可进一步复用于 representative 选择或 Medoid-based 聚类评估。
 - **性能策略**：
   - clade 检测后分流，clade 走 O(N)，任意 partition 走 O(N²)。
   - 对于 Silhouette 和 Cophenetic，**明确承认 O(N²) 是本质开销**，不试图用遍历聚合规避；对大树通过 `--samples` 采样。

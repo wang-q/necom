@@ -1,4 +1,5 @@
 pub mod clust;
+pub mod cut;
 pub mod eval;
 pub mod feature;
 pub mod io;
@@ -7,4 +8,3 @@ pub mod pairmat;
 pub mod par;
 pub mod phylo;
 pub mod pl;
-pub mod tree_cut;

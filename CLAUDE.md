@@ -155,7 +155,7 @@ cargo test
     - **`hier.rs`**: 层次聚类 (NN-chain 算法)。
     - **`dbscan.rs`, `mcl.rs`, `k_medoids.rs`**: 其他聚类算法。
     - **`nj.rs`, `upgma.rs`**: 建树算法 (Neighbor-Joining, UPGMA)。
-    - **`tree_cut/`**: 树切分算法。
+    - **`cut/`**: 树切分算法。
     - **`eval/`**: 聚类评估指标。
   - **`phylo/`** - 系统发育分析核心库。
     - **`node.rs`/`parser.rs`/`error.rs`**: 树节点定义、Newick 解析、错误类型（位于 `phylo/` 根级）。

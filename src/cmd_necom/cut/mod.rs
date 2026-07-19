@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use clap::{ArgMatches, Command};
+use necom::libs::cut::{self as cut, RepMode};
 use necom::libs::phylo::tree::Tree;
-use necom::libs::tree_cut::{self as cut, RepMode};
 use std::io::Write;
 
 pub mod dynamic;
@@ -106,7 +106,7 @@ pub fn init_stats_writer(args: &ArgMatches) -> Result<Option<Box<dyn Write>>> {
     }
 }
 
-/// Command-layer builder wrapper around `tree_cut::build_dispatch`.
+/// Command-layer builder wrapper around `cut::build_dispatch`.
 ///
 /// Converts named parameters to the library's positional call to avoid
 /// confusion with the many `None`/`false` defaults.

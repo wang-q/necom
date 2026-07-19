@@ -1,7 +1,7 @@
 //! Parameter-scan support for tree cutting.
 
+use crate::libs::cut::{self as cut, CutDispatch};
 use crate::libs::phylo::tree::Tree;
-use crate::libs::tree_cut::{self as cut, CutDispatch};
 use std::io::Write;
 
 /// Parameters controlling a scan threshold sweep.

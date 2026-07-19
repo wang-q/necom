@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{ArgMatches, Command};
-use necom::libs::tree_cut as cut;
+use necom::libs::cut;
 
 use crate::cmd_necom::args;
 use crate::cmd_necom::cut::{load_tree, write_clusters, DispatchBuilder, OutputOptions};
