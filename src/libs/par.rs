@@ -5,43 +5,50 @@
 //! these depend on clap; the cmd layer extracts positional args and passes
 //! them in.
 
+use anyhow::Context;
 use rayon::prelude::*;
+use rayon::ThreadPool;
 use std::io::Write;
 use std::thread::JoinHandle;
 
-/// Spawn a writer thread draining a channel and configure the global rayon
-/// pool with `num_threads`. Returns the sender and the writer join handle.
+/// Spawn a writer thread draining a channel and create a local rayon pool with
+/// `num_threads`. Returns the sender, the writer join handle, and the pool.
 ///
-/// Note: `build_global` mutates the global rayon pool; calling this function
-/// more than once per process will error on the second `build_global` call.
+/// A local `ThreadPool` is used instead of `build_global` so that the command
+/// can be invoked multiple times in the same process (e.g. parallel tests)
+/// without failing on global pool re-initialization.
 pub fn spawn_writer_and_pool(
     outfile: &str,
     num_threads: usize,
-) -> anyhow::Result<(crossbeam_channel::Sender<String>, JoinHandle<()>)> {
+) -> anyhow::Result<(
+    crossbeam_channel::Sender<String>,
+    JoinHandle<anyhow::Result<()>>,
+    ThreadPool,
+)> {
+    if num_threads == 0 {
+        anyhow::bail!("--parallel must be >= 1");
+    }
+
     let (sender, receiver) = crossbeam_channel::bounded::<String>(256);
 
     let output = outfile.to_string();
     let writer_thread = std::thread::spawn(move || {
-        let mut writer = match crate::writer(&output) {
-            Ok(w) => w,
-            Err(e) => {
-                log::error!("failed to open writer for {}: {}", output, e);
-                return;
-            }
-        };
+        let mut writer = crate::writer(&output)
+            .with_context(|| format!("failed to open writer for {}", output))?;
         for result in receiver {
-            if let Err(e) = writer.write_all(result.as_bytes()) {
-                log::error!("writer write_all failed: {}", e);
-                return;
-            }
+            writer
+                .write_all(result.as_bytes())
+                .with_context(|| "writer write_all failed")?;
         }
+        Ok(())
     });
 
-    rayon::ThreadPoolBuilder::new()
+    let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(num_threads)
-        .build_global()?;
+        .build()
+        .with_context(|| "failed to build rayon thread pool")?;
 
-    Ok((sender, writer_thread))
+    Ok((sender, writer_thread, pool))
 }
 
 /// Resolve an infile to a list of paths. If `is_list` is true, read the file
@@ -94,37 +101,39 @@ where
     }
 }
 
-/// Iterate `entries1` x `entries2` in parallel (rayon), invoking `pair_fn`
+/// Iterate `entries1` x `entries2` in parallel on `pool`, invoking `pair_fn`
 /// for each pair. `pair_fn` appends its output directly to the provided
 /// `&mut String` buffer (using `write!`/`writeln!`), which is flushed to
 /// `sender` every 1000 pairs (and at the end of each row).
 ///
-/// Errors from the writer channel are logged and the worker aborts its row;
-/// rayon's panic handler does not need to be involved.
+/// Errors from the writer channel are logged and the worker aborts its row.
 pub fn par_run_pairs<E, F>(
     entries1: &[E],
     entries2: &[E],
     sender: &crossbeam_channel::Sender<String>,
+    pool: &ThreadPool,
     pair_fn: F,
 ) where
     E: Sync,
     F: Fn(&E, &E, &mut String) + Sync + Send,
 {
-    entries1.par_iter().for_each(|e1| {
-        let mut lines = String::with_capacity(1024);
-        for (i, e2) in entries2.iter().enumerate() {
-            pair_fn(e1, e2, &mut lines);
-            if i % 1000 == 0 && !lines.is_empty() {
-                if let Err(e) = sender.send(std::mem::take(&mut lines)) {
-                    log::error!("writer channel closed: {}", e);
-                    break;
+    pool.install(|| {
+        entries1.par_iter().for_each(|e1| {
+            let mut lines = String::with_capacity(1024);
+            for (i, e2) in entries2.iter().enumerate() {
+                pair_fn(e1, e2, &mut lines);
+                if i % 1000 == 0 && !lines.is_empty() {
+                    if let Err(e) = sender.send(std::mem::take(&mut lines)) {
+                        log::error!("writer channel closed: {}", e);
+                        break;
+                    }
                 }
             }
-        }
-        if !lines.is_empty() {
-            if let Err(e) = sender.send(lines) {
-                log::error!("writer channel closed: {}", e);
+            if !lines.is_empty() {
+                if let Err(e) = sender.send(lines) {
+                    log::error!("writer channel closed: {}", e);
+                }
             }
-        }
+        });
     });
 }

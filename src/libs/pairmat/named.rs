@@ -336,11 +336,18 @@ impl NamedMatrix {
 
         let size = declared_size.unwrap_or(rows.len());
         if rows.len() != size {
-            anyhow::bail!(
-                "PHYLIP matrix declares {} sequences but found {}",
-                declared_size.unwrap_or(0),
-                rows.len()
-            );
+            match declared_size {
+                Some(d) => anyhow::bail!(
+                    "PHYLIP matrix declares {} sequences but found {}",
+                    d,
+                    rows.len()
+                ),
+                None => anyhow::bail!(
+                    "could not infer PHYLIP size: expected {} data rows, found {}",
+                    size,
+                    rows.len()
+                ),
+            }
         }
 
         if size == 0 {

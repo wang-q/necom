@@ -29,6 +29,7 @@ Notes:
 * `--sim` converts a distance to a similarity; `--dis` converts a similarity to a dissimilarity.
 * When both `--sim` and `--dis` are given, the conversion is applied in the order distance -> similarity -> dissimilarity.
 * `--parallel <N>` sets the number of worker threads (default 1).
+* With `--parallel` > 1, rows may be emitted in non-deterministic order; each row still pairs the first-file entry with all second-file entries in file order.
 
 Examples:
 

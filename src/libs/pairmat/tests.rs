@@ -537,3 +537,41 @@ fn test_single_element_matrix_boundary() {
     let expected = "1\nA\t0.000000\n";
     assert_eq!(expected.as_bytes(), buf.as_slice());
 }
+
+#[test]
+fn test_phylip_no_header_size_mismatch() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // No declared-size header; row B has too few values for the inferred layout.
+    writeln!(tmp, "A 0.0").unwrap();
+    writeln!(tmp, "B 0.1").unwrap();
+
+    let result = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap());
+    assert!(
+        result.is_err(),
+        "inconsistent no-header PHYLIP should error"
+    );
+    let msg = format!("{}", result.unwrap_err());
+    assert!(
+        !msg.contains("declares 0 sequences"),
+        "unexpected 'declares 0 sequences' in error: {}",
+        msg
+    );
+    assert!(
+        msg.contains("malformed PHYLIP line"),
+        "expected malformed line error, got: {}",
+        msg
+    );
+}
+
+#[test]
+fn test_scoring_matrix_set_infers_size() {
+    let mut m = ScoringMatrix::with_defaults(0.0, -1.0);
+    m.set(2, 5, 7.0);
+
+    // Size should be inferred from max_index + 1.
+    assert_eq!(m.size(), 6);
+    assert_eq!(m.get(2, 5), 7.0);
+    assert_eq!(m.get(5, 2), 7.0);
+}

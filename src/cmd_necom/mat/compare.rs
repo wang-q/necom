@@ -28,9 +28,15 @@ pub fn make_subcommand() -> Command {
 }
 /// Execute the compare command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let matrix1_file = args.get_one::<String>("matrix1").unwrap();
-    let matrix2_file = args.get_one::<String>("matrix2").unwrap();
-    let method = args.get_one::<String>("mat_method").unwrap();
+    let matrix1_file = args
+        .get_one::<String>("matrix1")
+        .context("missing required argument: matrix1")?;
+    let matrix2_file = args
+        .get_one::<String>("matrix2")
+        .context("missing required argument: matrix2")?;
+    let method = args
+        .get_one::<String>("mat_method")
+        .context("missing required argument: mat_method")?;
     let methods = if method == "all" {
         VALID_METHODS.join(",")
     } else {

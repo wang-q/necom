@@ -135,12 +135,8 @@ where
 
     /// Stores `value` at `(row, col)`.
     ///
-    /// # Panics
-    ///
-    /// Panics if the matrix size has not been set and cannot be inferred safely
-    /// (this only happens for matrices created with `new()` or `with_defaults()`
-    /// before any `set` call). Production code should use `with_size_and_defaults`
-    /// or call `set_size` first.
+    /// If the matrix size has not been set, it is inferred from the largest
+    /// column index seen so far (`max_index + 1`).
     pub fn set(&mut self, row: usize, col: usize, value: T) {
         let (i, j) = if row <= col { (row, col) } else { (col, row) };
         self.max_index = self.max_index.max(j);

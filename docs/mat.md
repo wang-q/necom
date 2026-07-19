@@ -116,6 +116,7 @@ Calculate pairwise similarity/distance between vectors in input file(s). Reads t
 * `--binary`: treat values as 0/1 before computing.
 * `--sim` / `--dis`: convert between distance and (dis)similarity.
 * Accepts one file (self-comparison) or two files (cross-comparison).
+* `--parallel <N>`: number of worker threads (default 1). With `--parallel` > 1, rows may be emitted in non-deterministic order.
 
 #### Conversion Models
 

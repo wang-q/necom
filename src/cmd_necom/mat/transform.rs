@@ -56,15 +56,33 @@ pub fn make_subcommand() -> Command {
 }
 /// Execute the transform command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let infile = args.get_one::<String>("infile").unwrap();
-    let op = args.get_one::<String>("op").unwrap().as_str();
-    let max_val = *args.get_one::<f32>("max_val").unwrap();
-    let scale = *args.get_one::<f32>("scale").unwrap();
-    let offset = *args.get_one::<f32>("offset").unwrap();
+    let infile = args
+        .get_one::<String>("infile")
+        .context("missing required argument: infile")?;
+    let op = args
+        .get_one::<String>("op")
+        .context("missing required argument: op")?
+        .as_str();
+    let max_val = *args
+        .get_one::<f32>("max_val")
+        .context("missing required argument: max_val")?;
+    let scale = *args
+        .get_one::<f32>("scale")
+        .context("missing required argument: scale")?;
+    let offset = *args
+        .get_one::<f32>("offset")
+        .context("missing required argument: offset")?;
     let normalize = args.get_flag("normalize");
-    let format = args.get_one::<String>("mat_input_format").unwrap().as_str();
-    let opt_same = *args.get_one::<f32>("same").unwrap();
-    let opt_missing = *args.get_one::<f32>("missing").unwrap();
+    let format = args
+        .get_one::<String>("mat_input_format")
+        .context("missing required argument: mat_input_format")?
+        .as_str();
+    let opt_same = *args
+        .get_one::<f32>("same")
+        .context("missing required argument: same")?;
+    let opt_missing = *args
+        .get_one::<f32>("missing")
+        .context("missing required argument: missing")?;
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer = necom::writer(outfile)
         .with_context(|| format!("Failed to open writer for {}", outfile))?;

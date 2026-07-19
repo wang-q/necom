@@ -76,3 +76,96 @@ fn command_mat_from_vector_length_mismatch() {
         stderr
     );
 }
+
+#[test]
+fn command_mat_from_vector_parallel_zero() {
+    let path_buf = fixture("vector.tsv");
+    let path = path_buf.to_str().unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "from-vector",
+            path,
+            "--mode",
+            "jaccard",
+            "--binary",
+            "-p",
+            "0",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("must be >= 1"),
+        "expected '--parallel must be >= 1' in stderr, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_mat_from_vector_parallel_two() {
+    let path_buf = fixture("vector.tsv");
+    let path = path_buf.to_str().unwrap();
+
+    let (p1_out, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "from-vector",
+            path,
+            "--mode",
+            "jaccard",
+            "--binary",
+            "-p",
+            "1",
+        ])
+        .run();
+
+    let (p2_out, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "from-vector",
+            path,
+            "--mode",
+            "jaccard",
+            "--binary",
+            "-p",
+            "2",
+        ])
+        .run();
+
+    assert_eq!(p1_out.lines().count(), 16);
+    assert_eq!(p2_out.lines().count(), 16);
+
+    let mut p1_lines: Vec<_> = p1_out.lines().collect();
+    let mut p2_lines: Vec<_> = p2_out.lines().collect();
+    p1_lines.sort();
+    p2_lines.sort();
+    assert_eq!(p1_lines, p2_lines);
+}
+
+#[test]
+fn command_mat_from_vector_bad_outfile() {
+    let path_buf = fixture("vector.tsv");
+    let path = path_buf.to_str().unwrap();
+    let tmpdir = tempfile::tempdir().unwrap();
+    let bad_out = tmpdir.path().to_str().unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "from-vector",
+            path,
+            "--mode",
+            "jaccard",
+            "--binary",
+            "-o",
+            bad_out,
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("failed to open writer"),
+        "expected writer open error in stderr, got: {}",
+        stderr
+    );
+}

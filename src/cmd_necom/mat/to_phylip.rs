@@ -16,9 +16,15 @@ pub fn make_subcommand() -> Command {
 
 /// Execute the to-phylip command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let infile = args.get_one::<String>("infile").unwrap();
-    let opt_same = *args.get_one::<f32>("same").unwrap();
-    let opt_missing = *args.get_one::<f32>("missing").unwrap();
+    let infile = args
+        .get_one::<String>("infile")
+        .context("missing required argument: infile")?;
+    let opt_same = *args
+        .get_one::<f32>("same")
+        .context("missing required argument: same")?;
+    let opt_missing = *args
+        .get_one::<f32>("missing")
+        .context("missing required argument: missing")?;
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer = necom::writer(outfile)
         .with_context(|| format!("Failed to open writer for {}", outfile))?;
