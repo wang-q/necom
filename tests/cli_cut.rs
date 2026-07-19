@@ -2,6 +2,7 @@ mod common;
 use crate::common::*;
 use std::collections::HashSet;
 use std::fs;
+use tempfile::Builder;
 
 // --- Helper Functions ---
 
@@ -168,8 +169,10 @@ fn test_nwk_cut_pair_rep() {
         ])
         .run();
     let lines: Vec<_> = stdout.lines().collect();
+    assert_eq!(lines.len(), 3);
     assert_eq!(lines[0], "A\tA");
     assert_eq!(lines[1], "A\tB");
+    assert_eq!(lines[2], "C\tC");
 
     // 3. First:
     // Cluster {A, B}. First is A.
@@ -179,22 +182,47 @@ fn test_nwk_cut_pair_rep() {
 #[test]
 fn test_nwk_cut_cluster_rep() {
     // K=2 -> {A, B}, {C}
-    // A and B tie for everything.
-    // Let's create a scenario where rep changes.
     // Tree: ((A:10,B:1)D:1,C:1)E;
     // Dist from root: A=11, B=2.
-    // Rep(root): B should be rep.
-    // Rep(first): A should be rep.
+    // Rep(root): B should be rep (closer to root).
+    // Rep(first): A should be rep (alphabetically first).
 
-    // We can't easily construct a tree string with unequal lengths for testing here without modifying the file.
-    // But we can verify that output format is correct (rep first).
+    let nwk = "((A:10,B:1)D:1,C:1)E;";
+    let mut tree_file = Builder::new().suffix(".nwk").tempfile().unwrap();
+    use std::io::Write;
+    write!(tree_file, "{}", nwk).unwrap();
 
+    // 1. --rep first: A is alphabetically first in {A,B}
     let (stdout, _) = NecomCmd::new()
-        .args(&["cut", "simple", "tests/newick/abcde.nwk", "--k", "2"])
+        .args(&[
+            "cut",
+            "simple",
+            tree_file.path().to_str().unwrap(),
+            "--k",
+            "2",
+            "--rep",
+            "first",
+        ])
         .run();
     let lines: Vec<_> = stdout.lines().collect();
-    // A\tB -> A is rep.
+    // {A,B} cluster: A is rep, listed first
     assert_eq!(lines[0], "A\tB");
+
+    // 2. --rep root: B is closer to root (dist=2 vs dist=11)
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "simple",
+            tree_file.path().to_str().unwrap(),
+            "--k",
+            "2",
+            "--rep",
+            "root",
+        ])
+        .run();
+    let lines: Vec<_> = stdout.lines().collect();
+    // {A,B} cluster: B is rep, listed first
+    assert_eq!(lines[0], "B\tA");
 }
 
 #[test]

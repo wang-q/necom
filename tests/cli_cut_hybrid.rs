@@ -1,9 +1,28 @@
+use std::collections::HashSet;
 use std::fs;
 use tempfile::Builder;
 
 #[path = "common/mod.rs"]
 mod common;
 use common::NecomCmd;
+
+fn parse_clusters(output: &str) -> Vec<HashSet<String>> {
+    let mut clusters = Vec::new();
+    for line in output.lines() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let set: HashSet<String> =
+            line.split_whitespace().map(|s| s.to_string()).collect();
+        clusters.push(set);
+    }
+    clusters.sort_by(|a, b| {
+        let min_a = a.iter().min().unwrap();
+        let min_b = b.iter().min().unwrap();
+        min_a.cmp(min_b)
+    });
+    clusters
+}
 
 #[test]
 fn test_hybrid_cut_basic() {
@@ -40,13 +59,29 @@ D 1.0 1.0 0.2 0.0
         ])
         .run();
 
-    let lines: Vec<&str> = stdout.lines().collect();
+    let clusters = parse_clusters(&stdout);
     // Should have 2 clusters: {A,B} and {C,D}
-    let has_ab = lines.iter().any(|l| l.contains("A") && l.contains("B"));
-    let has_cd = lines.iter().any(|l| l.contains("C") && l.contains("D"));
-
-    assert!(has_ab, "Cluster {{A,B}} missing in output:\n{}", stdout);
-    assert!(has_cd, "Cluster {{C,D}} missing in output:\n{}", stdout);
+    assert_eq!(
+        clusters.len(),
+        2,
+        "expected 2 clusters, got {}:\n{}",
+        clusters.len(),
+        stdout
+    );
+    let expected_ab: HashSet<String> =
+        ["A", "B"].iter().map(|s| s.to_string()).collect();
+    let expected_cd: HashSet<String> =
+        ["C", "D"].iter().map(|s| s.to_string()).collect();
+    assert!(
+        clusters.contains(&expected_ab),
+        "Cluster {{A,B}} missing in output:\n{}",
+        stdout
+    );
+    assert!(
+        clusters.contains(&expected_cd),
+        "Cluster {{C,D}} missing in output:\n{}",
+        stdout
+    );
 }
 
 #[test]
@@ -94,18 +129,25 @@ E 0.5 0.5 1.0 1.0 0.0
         .run();
 
     // Verify that E is grouped with A and B
-    let lines: Vec<&str> = stdout.lines().collect();
-    let has_abe = lines
-        .iter()
-        .any(|l| l.contains("A") && l.contains("B") && l.contains("E"));
-    let has_cd = lines.iter().any(|l| l.contains("C") && l.contains("D"));
-
+    let clusters = parse_clusters(&stdout);
     assert!(
-        has_abe,
+        !clusters.is_empty(),
+        "expected non-empty output, got empty stdout"
+    );
+    let expected_abe: HashSet<String> =
+        ["A", "B", "E"].iter().map(|s| s.to_string()).collect();
+    let expected_cd: HashSet<String> =
+        ["C", "D"].iter().map(|s| s.to_string()).collect();
+    assert!(
+        clusters.contains(&expected_abe),
         "Cluster {{A,B,E}} missing (PAM failed to reassign E):\n{}",
         stdout
     );
-    assert!(has_cd, "Cluster {{C,D}} missing:\n{}", stdout);
+    assert!(
+        clusters.contains(&expected_cd),
+        "Cluster {{C,D}} missing:\n{}",
+        stdout
+    );
 }
 
 #[test]
@@ -226,9 +268,12 @@ fn test_hybrid_missing_leaf_name_rejected() {
         ])
         .run_fail();
 
+    // Error message is "distance matrix is missing N tree leaf name(s): <names>".
+    // Check "missing" case-insensitively, and check the original stderr for the
+    // leaf name "C" (case-sensitive) to avoid matching the "c" in "distance".
     let lowered = stderr.to_lowercase();
     assert!(
-        lowered.contains("missing") && lowered.contains("c"),
+        lowered.contains("missing") && stderr.contains("C"),
         "Expected missing leaf name error for C, got: {}",
         stderr
     );

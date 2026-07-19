@@ -44,15 +44,29 @@ fn test_dynamic_tree_cut_basic() {
         ])
         .run();
 
-    let lines: Vec<&str> = stdout.lines().collect();
+    let clusters = parse_clusters(&stdout);
     // Should have 2 clusters: {A,B} and {C,D}
-    // Output format is tab separated members (with first being rep)
-
-    let has_ab = lines.iter().any(|l| l.contains("A") && l.contains("B"));
-    let has_cd = lines.iter().any(|l| l.contains("C") && l.contains("D"));
-
-    assert!(has_ab, "Cluster {{A,B}} missing in output:\n{}", stdout);
-    assert!(has_cd, "Cluster {{C,D}} missing in output:\n{}", stdout);
+    assert_eq!(
+        clusters.len(),
+        2,
+        "expected 2 clusters, got {}:\n{}",
+        clusters.len(),
+        stdout
+    );
+    let expected_ab: HashSet<String> =
+        ["A", "B"].iter().map(|s| s.to_string()).collect();
+    let expected_cd: HashSet<String> =
+        ["C", "D"].iter().map(|s| s.to_string()).collect();
+    assert!(
+        clusters.contains(&expected_ab),
+        "Cluster {{A,B}} missing in output:\n{}",
+        stdout
+    );
+    assert!(
+        clusters.contains(&expected_cd),
+        "Cluster {{C,D}} missing in output:\n{}",
+        stdout
+    );
 }
 
 #[test]

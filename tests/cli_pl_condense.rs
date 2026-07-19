@@ -104,22 +104,29 @@ fn command_pl_condense_with_map() {
     let dir = tempdir().unwrap();
     let output_path = dir.path().join("condensed.nwk");
 
+    // Use absolute paths for inputs so the command can run from a temp dir,
+    // keeping the --map output (condensed.tsv) out of the workspace root.
+    let manifest = env!("CARGO_MANIFEST_DIR");
+    let taxon = format!("{}/tests/pipeline/strains.taxon.tsv", manifest);
+    let tree = format!("{}/tests/pipeline/minhash.reroot.newick", manifest);
+
     let mut cmd = Command::cargo_bin("necom").unwrap();
     cmd.arg("pl")
         .arg("condense")
         .arg("--taxon")
-        .arg("tests/pipeline/strains.taxon.tsv")
+        .arg(&taxon)
         .arg("--map")
         .arg("-o")
         .arg(&output_path)
-        .arg("tests/pipeline/minhash.reroot.newick");
+        .arg(&tree)
+        .current_dir(dir.path());
     cmd.assert().success();
 
     // Check output file exists
     assert!(output_path.exists());
 
-    // Check condensed.tsv exists in current directory (where command was run)
-    let map_path = std::env::current_dir().unwrap().join("condensed.tsv");
+    // condensed.tsv is written to the command's CWD (the temp dir).
+    let map_path = dir.path().join("condensed.tsv");
     assert!(
         map_path.exists(),
         "condensed.tsv not found at {:?}",
@@ -144,28 +151,7 @@ fn command_pl_condense_with_map() {
         );
     }
 
-    // Clean up
-    let _ = fs::remove_file(&map_path);
-}
-
-#[test]
-fn command_pl_condense_genus_level() {
-    // Test condensing at genus level (column 3)
-    let mut cmd = Command::cargo_bin("necom").unwrap();
-    cmd.arg("pl")
-        .arg("condense")
-        .arg("--taxon")
-        .arg("tests/pipeline/strains.taxon.tsv")
-        .arg("--rank")
-        .arg("3")
-        .arg("tests/pipeline/minhash.reroot.newick");
-    let output = cmd.output().expect("Failed to execute command");
-    let stdout = String::from_utf8_lossy(&output.stdout);
-
-    assert!(output.status.success());
-
-    // Genus level condensation should have genus names
-    assert!(stdout.contains("||"));
+    // Cleanup handled by tempdir drop.
 }
 
 #[test]

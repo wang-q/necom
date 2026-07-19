@@ -144,20 +144,27 @@ fn command_order_species() {
     let original = std::fs::read_to_string("tests/newick/species.nwk").unwrap();
     assert_eq!(stdout.trim(), original.trim());
 
-    // gene tree
+    // gene tree: pmxc.nwk is a proper subtree of species.nwk (missing
+    // Brevibac_agri_GCF_004117055_1 and Brevibac_brevis_GCF_900637055_1).
+    // Ordering pmxc.nwk with species.list (which contains those missing names)
+    // must fail with a clear error rather than silently producing a wrong tree.
     std::fs::copy("tests/newick/pmxc.nwk", temp_path.join("pmxc.nwk")).unwrap();
 
-    // Order pmxc.nwk using the generated list
-    let (stdout, _) = NecomCmd::new()
+    let (_, stderr) = NecomCmd::new()
         .args(&["nwk", "order", "pmxc.nwk", "--name-list", "species.list"])
         .current_dir(temp_path)
-        .run();
+        .run_fail();
 
-    // Read the original pmxc.nwk file
-    let original = std::fs::read_to_string("tests/newick/pmxc.nwk").unwrap();
-
-    // The ordered tree should be different from the original one
-    assert_ne!(stdout.trim(), original.trim());
+    assert!(
+        stderr.contains("name-list entries not found in tree"),
+        "expected missing-name error for pmxc.nwk, got: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("Brevibac"),
+        "expected Brevibac name in error, got: {}",
+        stderr
+    );
 }
 
 #[test]

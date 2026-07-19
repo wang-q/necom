@@ -104,7 +104,15 @@ fn command_clust_dbscan_pair() {
 #[test]
 fn command_clust_kmedoids() {
     let (stdout, _) = NecomCmd::new()
-        .args(&["clust", "km", "tests/clust/IBPA.fa.tsv", "-k", "2"])
+        .args(&[
+            "clust",
+            "km",
+            "tests/clust/IBPA.fa.tsv",
+            "-k",
+            "2",
+            "--seed",
+            "42",
+        ])
         .run();
 
     // Output should contain at least 2 lines (clusters)
@@ -122,6 +130,8 @@ fn command_clust_kmedoids_pair() {
             "2",
             "--format",
             "pair",
+            "--seed",
+            "42",
         ])
         .run();
 
@@ -218,7 +228,7 @@ fn command_clust_dbscan_default_min_points() {
         .find(|l| l.contains("--min-points"))
         .expect("--min-points line not found in help");
     assert!(
-        min_points_line.contains("4"),
+        min_points_line.contains("[default: 4]"),
         "expected default 4 in --min-points help, got: {}",
         min_points_line
     );
@@ -387,6 +397,8 @@ fn command_clust_kmedoids_pair_rep_first() {
             "2",
             "--format",
             "pair",
+            "--seed",
+            "42",
         ])
         .run();
 
@@ -401,6 +413,8 @@ fn command_clust_kmedoids_pair_rep_first() {
             "pair",
             "--rep",
             "first",
+            "--seed",
+            "42",
         ])
         .run();
 
@@ -413,6 +427,8 @@ fn command_clust_kmedoids_pair_rep_first() {
             "2",
             "--format",
             "cluster",
+            "--seed",
+            "42",
         ])
         .run();
 
@@ -427,6 +443,8 @@ fn command_clust_kmedoids_pair_rep_first() {
             "cluster",
             "--rep",
             "first",
+            "--seed",
+            "42",
         ])
         .run();
 
@@ -494,8 +512,8 @@ fn command_clust_kmedoids_invalid_k() {
         .run_fail();
 
     assert!(
-        stderr.to_lowercase().contains("k"),
-        "expected k error, got: {}",
+        stderr.to_lowercase().contains("--k"),
+        "expected --k error, got: {}",
         stderr
     );
 }

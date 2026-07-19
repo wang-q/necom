@@ -637,11 +637,9 @@ fn command_distance_reference_unnamed() {
         .run();
 
     // Verified against newick_utils test_nw_distance_nsf.exp
-    // Unnamed nodes might appear as tabs with no label or internal ID.
-    // Based on my experience, necom usually outputs label if present.
-    // If empty label, it outputs "\tDist".
-    assert!(stdout.contains("\t3"));
-    assert!(stdout.contains("\t4"));
+    // Unnamed nodes receive synthetic labels of the form "#<id>" (e.g., "#2", "#3").
+    assert!(stdout.contains("#2\t3"));
+    assert!(stdout.contains("#3\t4"));
     assert!(stdout.contains("A\t5"));
     assert!(stdout.contains("B\t4"));
 }

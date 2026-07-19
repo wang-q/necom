@@ -84,6 +84,8 @@ D 1.0 1.0 0.2 0.0
     // Parse output
     // Header
     assert_eq!(lines[0], "Group\tsilhouette\tdunn\tc_index\tgamma\ttau");
+    // Expect 4 data rows (height=0, 0.2, 0.4, 0.6) + 1 header
+    assert_eq!(lines.len(), 5, "expected 4 data rows + 1 header");
 
     // Rows
     for line in &lines[1..] {
@@ -101,6 +103,8 @@ D 1.0 1.0 0.2 0.0
             assert!((sil - 0.8).abs() < 1e-6);
         } else if (val - 0.6).abs() < 1e-6 {
             assert!((sil - 0.0).abs() < 1e-6);
+        } else {
+            panic!("unexpected height {} in line: {}", val, line);
         }
     }
 
@@ -150,6 +154,8 @@ g2\t2\tD\n";
     // Header: Group + external metric names
     assert!(lines[0].starts_with("Group\t"));
     assert!(lines[0].contains("ari"));
+    // Expect 2 group rows (g1, g2) + 1 header
+    assert_eq!(lines.len(), 3, "expected 2 group rows + 1 header");
 
     // Each group is identical to truth, so ARI should be 1.0.
     for line in &lines[1..] {

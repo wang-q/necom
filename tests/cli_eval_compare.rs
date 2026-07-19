@@ -1,4 +1,3 @@
-#[macro_use]
 #[path = "common/mod.rs"]
 mod common;
 
@@ -96,7 +95,7 @@ fn command_eval_compare_branch_lengths() {
         .run();
 
     // T1 vs T2: RF=0, WRF=0.1, KF=0.1
-    // T1 vs T3: RF=2, WRF=0.8, KF=0.4
+    // T1 vs T3: RF=2, WRF=0.8, KF=0.565685 (= sqrt(0.32))
 
     // Check T1 vs T2
     // 1\t2\t0\t0.1\t0.1

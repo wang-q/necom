@@ -1,4 +1,3 @@
-#[macro_use]
 #[path = "common/mod.rs"]
 mod common;
 
@@ -128,7 +127,7 @@ fn test_eval_replicate_multi() {
 
     let epsilon = 1e-6;
 
-    // Check first tree
+    // Check that the expected support/length appears in the multi-tree output
     assert!(
         check_support_and_length(&stdout, "6", 0.076821, epsilon),
         "Failed to find node in multi-tree output"
