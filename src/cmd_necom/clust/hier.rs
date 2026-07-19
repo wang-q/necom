@@ -29,7 +29,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Parse method
     let method = Method::from_str(method_str)
-        .with_context(|| format!("invalid --clust-method '{}'", method_str))?;
+        .with_context(|| format!("invalid --method '{}'", method_str))?;
 
     // Read matrix
     let matrix = NamedMatrix::from_relaxed_phylip(infile)?;

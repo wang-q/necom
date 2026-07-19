@@ -1,11 +1,12 @@
 //! Medoid selection for flat clustering output.
 //!
 //! A medoid is the member of a cluster whose sum of pairwise distances
-//! (or similarities) to the other members is extremal. For distance
-//! matrices the medoid minimizes the sum; for similarity matrices it
-//! maximizes the sum. Ties are broken by the iteration order — callers
-//! should pass `members` sorted by name so the alphabetically-first
-//! member wins.
+//! (or similarities) to all members (including itself) is extremal. For
+//! distance matrices the medoid minimizes the sum; for similarity
+//! matrices it maximizes the sum. Since self-distance / self-similarity
+//! is constant across candidates, including it does not affect the
+//! result. Ties are broken by the iteration order — callers should pass
+//! `members` sorted by name so the alphabetically-first member wins.
 
 use crate::libs::pairmat::MatrixView;
 

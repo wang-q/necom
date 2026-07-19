@@ -243,6 +243,13 @@ fn test_clust_hier_invalid_method() {
         "expected invalid method error, got: {}",
         stderr
     );
+    // The user-facing flag is `--method` (internal arg name is `clust_method`).
+    // The error message must reference the user-facing flag, not the internal name.
+    assert!(
+        stderr.contains("--method"),
+        "expected --method in error, got: {}",
+        stderr
+    );
 }
 
 #[test]
