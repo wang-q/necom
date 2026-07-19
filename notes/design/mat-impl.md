@@ -5,8 +5,8 @@
 ## 1. ScoringMatrix
 
 - **用途**：稀疏或按需计算的评分/距离矩阵。
-- **底层存储**：`HashMap<(usize, usize), T>`。
-- **特点**：稀疏存储，仅保留显式设置的值；支持对角线和 non-diagonal 的默认值；逻辑对称（`get(i,j)` 等价于 `get(j,i)`）。
+- **底层存储**：`HashMap<usize, T>`，key 为上三角（含对角线）的压缩线性索引 `i * N - i(i-1)/2 + (j-i)`（`i <= j`）。
+- **特点**：稀疏存储，仅保留显式设置的值；单 `usize` key 比 `(usize, usize)` tuple 更省内存；支持对角线和 non-diagonal 的默认值；逻辑对称（`get(i,j)` 等价于 `get(j,i)`）。
 
 ## 2. CondensedMatrix
 
@@ -33,10 +33,10 @@
   - `MatrixFormat`：`Full` / `Lower` / `Strict` 三种 PHYLIP 输出变体（`output.rs`）。
   - `MatrixFormat::from_mode(s)`：从字符串（`"full"` / `"lower"` / `"strict"`）解析。
   - `write_phylip_matrix(m, fmt, precision, writer)`：按指定格式写出 PHYLIP 矩阵。
-  - `write_subset(m, names, writer)`：按给定名称子集写出子矩阵，返回缺失名称列表。
+  - `write_subset(m, names, precision, writer)`：按给定名称子集写出子矩阵，返回缺失名称列表；`precision` 控制小数位数。
   - `extract_common_lower_triangle(m1, m2)`：抽取两个矩阵公共名称的下三角值对，供 `mat compare` 使用。
   - `NamedMatrix::from_relaxed_phylip(infile)`：从 Relaxed PHYLIP 文件加载。
-  - `NamedMatrix::from_pair_scores(infile, same, missing)`：从 Pairwise TSV 构建（自对角默认 `same`，缺失对默认 `missing`）。
+  - `NamedMatrix::from_pair_scores(infile, same, missing)`：从 Pairwise TSV 直接构建底层 `CondensedMatrix`（自对角默认 `same`，缺失对默认 `missing`），避免经过 `ScoringMatrix` 造成内存双份。
 
 - **变换**：
   - `transform_matrix(matrix, method, max_val, scale, offset, normalize)`：元素级数学变换（`transform.rs`），支持 `linear` / `inv-linear` / `log` / `exp` / `square` / `sqrt`，可选按对角线归一化。

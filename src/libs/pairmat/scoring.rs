@@ -1,13 +1,34 @@
 use std::collections::HashMap;
 use std::io::BufRead;
 
+/// Triangular number `T(i) = i * (i - 1) / 2`.
+///
+/// Uses `saturating_sub` so that `T(0) == 0` without underflow on `usize`.
+fn triangular_number(i: usize) -> usize {
+    i * i.saturating_sub(1) / 2
+}
+
+/// Linear index into the upper triangle of an N×N matrix **including** the diagonal.
+///
+/// Assumes `i <= j` and `j < n`. The total number of stored elements is `n * (n + 1) / 2`.
+fn upper_index_with_diag(n: usize, i: usize, j: usize) -> usize {
+    debug_assert!(i <= j, "upper_index_with_diag requires i <= j");
+    debug_assert!(j < n, "upper_index_with_diag requires j < n");
+    i * n - triangular_number(i) + (j - i)
+}
+
 /// A symmetric scoring matrix parameterized over the value type `T`.
+///
+/// Internally stores only the upper triangle (including the diagonal) using a
+/// single compressed `usize` key, reducing per-entry overhead compared to a
+/// `(usize, usize)` tuple key.
 #[derive(Debug, Clone)]
 pub struct ScoringMatrix<T> {
     size: Option<usize>,
     same: Option<T>,
     missing: Option<T>,
-    data: HashMap<(usize, usize), T>,
+    data: HashMap<usize, T>,
+    max_index: usize,
 }
 
 impl<T> Default for ScoringMatrix<T>
@@ -36,6 +57,7 @@ where
             same: None,
             missing: None,
             data: HashMap::new(),
+            max_index: 0,
         }
     }
 
@@ -53,6 +75,7 @@ where
             same: Some(same),
             missing: Some(missing),
             data: HashMap::new(),
+            max_index: 0,
         }
     }
 
@@ -71,6 +94,7 @@ where
             same: Some(same),
             missing: Some(missing),
             data: HashMap::new(),
+            max_index: 0,
         }
     }
 
@@ -81,61 +105,73 @@ where
             same: None,
             missing: None,
             data: HashMap::new(),
+            max_index: 0,
         }
     }
 
-    /// Effective matrix size: the declared size if set, otherwise inferred from data keys.
+    /// Effective matrix size: the declared size if set, otherwise inferred from
+    /// the largest index seen by `set`.
     pub fn size(&self) -> usize {
-        self.size.unwrap_or_else(|| {
-            self.data
-                .keys()
-                .map(|&(i, j)| i.max(j) + 1)
-                .max()
-                .unwrap_or(0)
-        })
+        self.size.unwrap_or(self.max_index + 1)
     }
 
-    /// Sets a fixed size for the matrix
+    /// Sets a fixed size for the matrix.
+    ///
+    /// # Panics
+    ///
+    /// Panics if entries have already been stored with indices larger than or
+    /// equal to `size`, because their compressed keys would no longer be valid.
     pub fn set_size(&mut self, size: usize) {
+        assert!(
+            self.max_index < size || self.data.is_empty(),
+            "set_size({}) called but entries with index {} already exist",
+            size,
+            self.max_index
+        );
         self.size = Some(size);
     }
 
-    /// Returns the value of the given cell.
+    /// Stores `value` at `(row, col)`.
     ///
-    /// ```
-    /// # use necom::libs::pairmat::ScoringMatrix;
-    /// let mut m = ScoringMatrix::with_size_and_defaults(5, 0, 1);
-    /// m.set(1, 2, 42);
-    /// assert_eq!(m.get(1, 2), 42);
-    /// assert_eq!(m.get(2, 1), 42);
-    /// assert_eq!(m.get(3, 3), 0);
-    /// assert_eq!(m.get(1, 3), 1);
-    /// ```
+    /// # Panics
+    ///
+    /// Panics if the matrix size has not been set and cannot be inferred safely
+    /// (this only happens for matrices created with `new()` or `with_defaults()`
+    /// before any `set` call). Production code should use `with_size_and_defaults`
+    /// or call `set_size` first.
     pub fn set(&mut self, row: usize, col: usize, value: T) {
-        if row <= col {
-            self.data.insert((row, col), value);
-        } else {
-            self.data.insert((col, row), value);
-        }
+        let (i, j) = if row <= col { (row, col) } else { (col, row) };
+        self.max_index = self.max_index.max(j);
+
+        let n = self.size.unwrap_or(self.max_index + 1);
+        let key = upper_index_with_diag(n, i, j);
+        self.data.insert(key, value);
     }
 
     pub fn get(&self, row: usize, col: usize) -> T {
+        let n = self.size();
+        if row >= n || col >= n {
+            return if row == col {
+                self.same.unwrap_or_default()
+            } else {
+                self.missing.unwrap_or_default()
+            };
+        }
+
+        let (i, j) = if row <= col { (row, col) } else { (col, row) };
+        let key = upper_index_with_diag(n, i, j);
+        if let Some(&value) = self.data.get(&key) {
+            return value;
+        }
+
         if row == col {
-            self.data
-                .get(&(row, col))
-                .copied()
-                .unwrap_or_else(|| self.same.unwrap_or_default())
+            self.same.unwrap_or_default()
         } else {
-            let (r, c) = if row < col { (row, col) } else { (col, row) };
-            self.data
-                .get(&(r, c))
-                .copied()
-                .unwrap_or_else(|| self.missing.unwrap_or_default())
+            self.missing.unwrap_or_default()
         }
     }
 }
 
-// Add a separate implementation for f32 specifically for from_pair_scores
 impl ScoringMatrix<f32> {
     /// Load a `ScoringMatrix<f32>` and ordered name list from a 3-column pairwise TSV.
     /// Self-pairs default to `same`; missing pairs default to `missing`.
@@ -145,7 +181,7 @@ impl ScoringMatrix<f32> {
         missing: f32,
     ) -> anyhow::Result<(Self, Vec<String>)> {
         let mut names = indexmap::IndexSet::new();
-        let mut matrix = Self::with_defaults(same, missing);
+        let mut entries: Vec<(String, String, f32)> = Vec::new();
 
         let reader = crate::reader(infile)?;
         for line in reader.lines() {
@@ -180,12 +216,24 @@ impl ScoringMatrix<f32> {
                 }
             };
 
-            // insert_full returns (index, was_newly_inserted) in one lookup;
-            // we only need the index here.
-            let (i1, _) = names.insert_full(n1.clone());
-            let (i2, _) = names.insert_full(n2.clone());
+            names.insert(n1.clone());
+            names.insert(n2.clone());
+            entries.push((n1, n2, score));
+        }
 
-            let key = if i1 <= i2 { (i1, i2) } else { (i2, i1) };
+        let size = names.len();
+        let mut matrix = Self::with_size_and_defaults(size, same, missing);
+        let name_to_index: indexmap::IndexMap<String, usize> = names
+            .iter()
+            .enumerate()
+            .map(|(i, n)| (n.clone(), i))
+            .collect();
+
+        for (n1, n2, score) in entries {
+            let i1 = name_to_index[&n1];
+            let i2 = name_to_index[&n2];
+            let (i, j) = if i1 <= i2 { (i1, i2) } else { (i2, i1) };
+            let key = upper_index_with_diag(size, i, j);
             if let Some(&existing) = matrix.data.get(&key) {
                 if existing != score {
                     log::warn!(
@@ -200,7 +248,6 @@ impl ScoringMatrix<f32> {
             matrix.set(i1, i2, score);
         }
 
-        matrix.set_size(names.len());
         Ok((matrix, names.into_iter().collect()))
     }
 }

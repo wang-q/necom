@@ -1,10 +1,9 @@
 use std::collections::HashSet;
 use std::io::BufRead;
 
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 
 use super::condensed::{get_condensed_index, CondensedMatrix};
-use super::scoring::ScoringMatrix;
 
 /// Build a name-to-index map from a list of unique sequence names.
 fn build_name_map(names: Vec<String>) -> anyhow::Result<IndexMap<String, usize>> {
@@ -198,27 +197,96 @@ impl NamedMatrix {
 
     /// Build a NamedMatrix from a 3-column pairwise TSV (`name1<tab>name2<tab>score`).
     /// Self-pairs default to `same`; missing pairs default to `missing`.
+    ///
+    /// Constructs the underlying `CondensedMatrix` directly instead of going through
+    /// an intermediate `ScoringMatrix`, reducing peak memory for large inputs.
     pub fn from_pair_scores(
         infile: &str,
         same: f32,
         missing: f32,
     ) -> anyhow::Result<Self> {
-        let (scoring_matrix, index_name) =
-            ScoringMatrix::from_pair_scores(infile, same, missing)?;
-        let size = index_name.len();
+        let mut names = IndexSet::new();
+        let mut entries: Vec<(String, String, f32)> = Vec::new();
 
-        // Create NamedMatrix from ScoringMatrix
-        let mut matrix = NamedMatrix::new(index_name.into_iter().collect())?;
-        let mut diags = vec![same; size];
-
-        for (i, d) in diags.iter_mut().enumerate() {
-            *d = scoring_matrix.get(i, i);
-            for j in (i + 1)..size {
-                matrix.set(i, j, scoring_matrix.get(i, j));
+        let reader = crate::reader(infile)?;
+        for line in reader.lines() {
+            let line = line?;
+            let fields: Vec<&str> = line.split('\t').collect();
+            if fields.len() < 3 {
+                log::warn!(
+                    "skipping malformed pairwise line (expected 3 tab-separated fields): {}",
+                    line
+                );
+                continue;
             }
+            if fields.len() > 3 {
+                log::warn!(
+                    "pairwise line contains {} extra column(s); ignoring: {}",
+                    fields.len() - 3,
+                    line
+                );
+            }
+
+            let n1 = fields[0].to_string();
+            let n2 = fields[1].to_string();
+            let score: f32 = match fields[2].parse() {
+                Ok(v) => v,
+                Err(e) => {
+                    log::warn!(
+                        "skipping pairwise line with invalid score ({}): {}",
+                        e,
+                        line
+                    );
+                    continue;
+                }
+            };
+
+            names.insert(n1.clone());
+            names.insert(n2.clone());
+            entries.push((n1, n2, score));
         }
-        matrix.set_diags(diags)?;
-        Ok(matrix)
+
+        let size = names.len();
+        let len = if size == 0 { 0 } else { size * (size - 1) / 2 };
+        let mut matrix = CondensedMatrix::from_vec(size, vec![missing; len])?;
+        let mut diags = vec![same; size];
+        let mut seen_pairs: HashSet<(usize, usize)> = HashSet::new();
+
+        let name_to_index: IndexMap<String, usize> = names
+            .iter()
+            .enumerate()
+            .map(|(i, n)| (n.clone(), i))
+            .collect();
+
+        for (n1, n2, score) in entries {
+            let i1 = name_to_index[&n1];
+            let i2 = name_to_index[&n2];
+            if i1 == i2 {
+                diags[i1] = score;
+                continue;
+            }
+            let (row, col) = if i1 < i2 { (i1, i2) } else { (i2, i1) };
+            if !seen_pairs.insert((row, col)) {
+                let existing = matrix.get(row, col);
+                if existing != score {
+                    log::warn!(
+                        "conflicting pairwise entry for ({}, {}): existing {} vs new {}; using last value",
+                        n1,
+                        n2,
+                        existing,
+                        score
+                    );
+                }
+            }
+            matrix.set(row, col, score);
+        }
+
+        let names_map = build_name_map(names.into_iter().collect())?;
+        Ok(NamedMatrix {
+            names: names_map,
+            matrix,
+            diags: Some(diags),
+        })
     }
 
     /// Creates a new matrix from a relaxed PHYLIP format file.
