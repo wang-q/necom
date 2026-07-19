@@ -76,7 +76,6 @@ pub fn silhouette_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> 
     }
 
     let mut total_s = 0.0;
-    let mut has_nan = false;
     let n = partition.len();
 
     for (item_i, &cluster_i) in partition {
@@ -94,13 +93,11 @@ pub fn silhouette_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> 
             .iter()
             .filter(|&&item_j| item_j != item_i)
             .map(|&item_j| dist_mat.get_distance(item_i, item_j))
-            .inspect(|d| {
-                if d.is_nan() {
-                    has_nan = true;
-                }
-            })
             .sum();
         let a_i = sum_dist_a / (cluster_i_members.len() - 1) as f64;
+        if a_i.is_nan() {
+            return f64::NAN;
+        }
 
         // Calculate b(i): min mean distance to items in other clusters
         let mut min_mean_dist_other = f64::MAX;
@@ -112,13 +109,11 @@ pub fn silhouette_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> 
             let sum_dist_b: f64 = cluster_j_members
                 .iter()
                 .map(|&item_j| dist_mat.get_distance(item_i, item_j))
-                .inspect(|d| {
-                    if d.is_nan() {
-                        has_nan = true;
-                    }
-                })
                 .sum();
             let mean_dist_b = sum_dist_b / cluster_j_members.len() as f64;
+            if mean_dist_b.is_nan() {
+                return f64::NAN;
+            }
             if mean_dist_b < min_mean_dist_other {
                 min_mean_dist_other = mean_dist_b;
             }
@@ -135,11 +130,7 @@ pub fn silhouette_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> 
         total_s += s_i;
     }
 
-    if has_nan {
-        f64::NAN
-    } else {
-        total_s / n as f64
-    }
+    total_s / n as f64
 }
 
 /// Calculate Dunn Index
@@ -166,8 +157,6 @@ pub fn dunn_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> f64 {
     // 2. Calculate Max Intra-cluster Diameter (max_delta)
     let mut max_diameter = 0.0;
 
-    let mut has_nan = false;
-
     for members in clusters.values() {
         let mut cluster_diameter = 0.0;
         // O(n_k^2)
@@ -175,7 +164,7 @@ pub fn dunn_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> f64 {
             for j in i + 1..members.len() {
                 let d = dist_mat.get_distance(members[i], members[j]);
                 if d.is_nan() {
-                    has_nan = true;
+                    return f64::NAN;
                 } else if d > cluster_diameter {
                     cluster_diameter = d;
                 }
@@ -207,17 +196,13 @@ pub fn dunn_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> f64 {
                 for item_j in members_j {
                     let d = dist_mat.get_distance(item_i, item_j);
                     if d.is_nan() {
-                        has_nan = true;
+                        return f64::NAN;
                     } else if d < min_inter_dist {
                         min_inter_dist = d;
                     }
                 }
             }
         }
-    }
-
-    if has_nan {
-        return f64::NAN;
     }
 
     if max_diameter == 0.0 {
@@ -399,7 +384,7 @@ pub fn tau_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> f64 {
     while i < pairs.len() {
         // Find block of identical distances
         let mut j = i;
-        while j < pairs.len() && (pairs[j].dist - pairs[i].dist).abs() < 1e-10 {
+        while j < pairs.len() && pairs[j].dist == pairs[i].dist {
             j += 1;
         }
 
@@ -441,7 +426,7 @@ pub fn tau_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> f64 {
     let mut i = 0;
     while i < pairs.len() {
         let mut j = i;
-        while j < pairs.len() && (pairs[j].dist - pairs[i].dist).abs() < 1e-10 {
+        while j < pairs.len() && pairs[j].dist == pairs[i].dist {
             j += 1;
         }
         let block_len = (j - i) as f64;

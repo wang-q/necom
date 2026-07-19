@@ -28,8 +28,9 @@ impl Coordinates {
         let reader = BufReader::new(file);
         let mut data = HashMap::new();
         let mut dim = 0;
+        let mut data_line_no = 0;
 
-        for (i, line) in reader.lines().enumerate() {
+        for line in reader.lines() {
             let line = line?;
             if line.trim().is_empty() || line.starts_with('#') {
                 continue;
@@ -41,22 +42,25 @@ impl Coordinates {
                 let vec: Vec<f64> = fv.list().iter().map(|&v| v as f64).collect();
                 // Initialize dim on the first data row (not line index), so that
                 // leading comment/blank lines do not cause false "inconsistent
-                // dimensions" errors.
+                // dimensions" errors. data_line_no is incremented only for
+                // successfully parsed data rows, so error messages refer to the
+                // data-row number rather than the raw physical line index.
                 if dim == 0 {
                     dim = vec.len();
                 } else if vec.len() != dim {
                     return Err(anyhow::anyhow!(
-                        "Inconsistent dimensions at line {}: expected {}, got {}",
-                        i + 1,
+                        "Inconsistent dimensions at data row {}: expected {}, got {}",
+                        data_line_no,
                         dim,
                         vec.len()
                     ));
                 }
                 data.insert(fv.name().clone(), vec);
+                data_line_no += 1;
             } else {
                 return Err(anyhow::anyhow!(
-                    "Invalid FeatureVector format at line {}: expected 'Name<tab>Val1<tab>Val2...'",
-                    i + 1
+                    "Invalid FeatureVector format at data row {}: expected 'Name<tab>Val1<tab>Val2...'",
+                    data_line_no
                 ));
             }
         }

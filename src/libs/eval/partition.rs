@@ -60,9 +60,9 @@ pub fn load_partition<P: AsRef<Path>>(
     match format {
         PartitionFormat::Cluster => parse_cluster_format(&lines),
         PartitionFormat::Pair => parse_pair_format(&lines),
-        PartitionFormat::Long => Err(anyhow::anyhow!(
+        PartitionFormat::Long => anyhow::bail!(
             "Long format is for batch processing. Use load_batch_partitions instead."
-        )),
+        ),
     }
 }
 

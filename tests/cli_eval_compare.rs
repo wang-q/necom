@@ -7,7 +7,7 @@ use std::io::Write;
 use tempfile::Builder;
 
 #[test]
-fn command_nwk_compare_single_file() {
+fn command_eval_compare_single_file() {
     // Create a temporary Newick file with 2 different trees
     let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
     // Tree 1: ((A,B),(C,D)); -> Splits: {A,B} vs {C,D}
@@ -34,7 +34,7 @@ fn command_nwk_compare_single_file() {
 }
 
 #[test]
-fn command_nwk_compare_single_file_one_tree_bails() {
+fn command_eval_compare_single_file_one_tree_bails() {
     // Single-file mode with <2 trees bails with a clear error rather than
     // warning and emitting an empty (header-only) table. This prevents users
     // from mistaking an empty result for a successful run.
@@ -53,7 +53,7 @@ fn command_nwk_compare_single_file_one_tree_bails() {
 }
 
 #[test]
-fn command_nwk_compare_two_files() {
+fn command_eval_compare_two_files() {
     let mut file1 = Builder::new().suffix(".nwk").tempfile().unwrap();
     writeln!(file1, "((A,B),(C,D));").unwrap(); // Tree 1
 
@@ -79,7 +79,7 @@ fn command_nwk_compare_two_files() {
 }
 
 #[test]
-fn command_nwk_compare_branch_lengths() {
+fn command_eval_compare_branch_lengths() {
     let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
 
     // T1: Same topology, lengths 0.2
@@ -108,7 +108,7 @@ fn command_nwk_compare_branch_lengths() {
 }
 
 #[test]
-fn command_nwk_compare_rejects_duplicate_leaf_names() {
+fn command_eval_compare_rejects_duplicate_leaf_names() {
     let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
     // Duplicate leaf name A should be rejected with a clear error.
     writeln!(file, "((A,A),(B,C));").unwrap();
@@ -126,7 +126,7 @@ fn command_nwk_compare_rejects_duplicate_leaf_names() {
 }
 
 #[test]
-fn command_nwk_compare_two_files_first_empty() {
+fn command_eval_compare_two_files_first_empty() {
     let empty_file = Builder::new().suffix(".nwk").tempfile().unwrap();
     let mut file2 = Builder::new().suffix(".nwk").tempfile().unwrap();
     writeln!(file2, "((A,B),(C,D));").unwrap();
@@ -148,7 +148,7 @@ fn command_nwk_compare_two_files_first_empty() {
 }
 
 #[test]
-fn command_nwk_compare_two_files_second_empty() {
+fn command_eval_compare_two_files_second_empty() {
     let mut file1 = Builder::new().suffix(".nwk").tempfile().unwrap();
     writeln!(file1, "((A,B),(C,D));").unwrap();
     let empty_file = Builder::new().suffix(".nwk").tempfile().unwrap();

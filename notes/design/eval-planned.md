@@ -156,7 +156,7 @@ necom eval <subcommand>
 - **Purity**: 簇内最优势标签的占比。
   - 分类示例：9 个 E. coli，1 个 S. enterica -> Purity = 0.9。
   - 地理示例：9 个 Asia，1 个 Europe -> Purity = 0.9。
-- **Entropy**: 标签分布的香农熵。`H(C) = - sum(p_i * log2(p_i))`。衡量簇内标签的混乱程度。
+- **Entropy**: 标签分布的香农熵。`H(C) = - sum(p_i * log(p_i))`。衡量簇内标签的混乱程度。If reusing the existing `libs/eval/pairwise.rs::entropy` helper, the implementation uses natural logarithms; any standalone entropy implementation must document and consistently use its chosen base.
 - **LCA Rank Consistency** (仅限分类): 如果提供层级信息，评估 LCA 是否对应特定层级。
 
 #### 4.3.3 系统发育指标

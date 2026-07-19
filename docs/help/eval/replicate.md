@@ -8,8 +8,7 @@ Input:
 Notes:
 
 * Support values are written as internal node labels.
-* All trees must share the same set of leaves.
-* All replicate trees must have identical leaf sets to ensure valid support value calculation.
+* All trees must share the same set of leaves; replicate trees are checked against the first replicate and target trees are checked against the replicate set.
 * The root node is not annotated; any existing root label is preserved.
 * `--percent` / `-p`: output support values as integer percentages (0–100), truncated toward zero.
 * `--override-root` / `-r`: override the root node label with its support value.

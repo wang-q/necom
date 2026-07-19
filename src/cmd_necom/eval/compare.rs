@@ -38,7 +38,7 @@ fn load_trees(infile: &str) -> anyhow::Result<Vec<Tree>> {
         return Ok(Vec::new());
     }
     Tree::from_newick_multi(&content)
-        .map_err(|e| anyhow::anyhow!("failed to parse '{}': {}", infile, e))
+        .with_context(|| format!("failed to parse '{}'", infile))
 }
 
 /// Execute the compare command.

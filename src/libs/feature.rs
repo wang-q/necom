@@ -27,7 +27,7 @@ impl FeatureVector {
         &self.list
     }
 
-    /// Constructed from range and seq
+    /// Constructed from a name and a float vector.
     ///
     /// ```ignore
     /// # use necom::libs::feature::FeatureVector;

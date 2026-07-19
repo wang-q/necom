@@ -3,7 +3,7 @@ use std::io::Write;
 use tempfile::NamedTempFile;
 
 #[test]
-fn test_clust_eval_perfect_match() -> anyhow::Result<()> {
+fn test_eval_partition_perfect_match() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("eval")
@@ -42,7 +42,7 @@ fn test_clust_eval_perfect_match() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_clust_eval_no_singletons() -> anyhow::Result<()> {
+fn test_eval_partition_no_singletons() -> anyhow::Result<()> {
     // Create temporary files
     // Truth: {A, B, C} (Cluster 1), {D} (Singleton), {E} (Singleton)
     // Pred: {A, B, C} (Cluster 1), {D, E} (Cluster 2)
@@ -100,7 +100,7 @@ fn test_clust_eval_no_singletons() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_clust_eval_disjoint() -> anyhow::Result<()> {
+fn test_eval_partition_disjoint() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("eval")
@@ -130,7 +130,7 @@ fn test_clust_eval_disjoint() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_clust_eval_single_vs_singletons() -> anyhow::Result<()> {
+fn test_eval_partition_single_vs_singletons() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("eval")
@@ -157,7 +157,7 @@ fn test_clust_eval_single_vs_singletons() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_clust_eval_pair_format() -> anyhow::Result<()> {
+fn test_eval_partition_pair_format() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("eval")
@@ -187,7 +187,7 @@ fn test_clust_eval_pair_format() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_clust_eval_internal_silhouette() -> anyhow::Result<()> {
+fn test_eval_partition_internal_silhouette() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("eval")
@@ -239,7 +239,7 @@ fn test_clust_eval_internal_silhouette() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_clust_eval_internal_db() -> anyhow::Result<()> {
+fn test_eval_partition_internal_db() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
         .arg("eval")
@@ -277,7 +277,7 @@ fn test_clust_eval_internal_db() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_clust_eval_invariance_sample_order() -> anyhow::Result<()> {
+fn test_eval_partition_invariance_sample_order() -> anyhow::Result<()> {
     let content_orig = "1\tA\n1\tB\n2\tC\n2\tD\n";
     let content_shuffled = "1\tB\n2\tD\n1\tA\n2\tC\n";
 
@@ -308,7 +308,7 @@ fn test_clust_eval_invariance_sample_order() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_clust_eval_invariance_label_scaling() -> anyhow::Result<()> {
+fn test_eval_partition_invariance_label_scaling() -> anyhow::Result<()> {
     let content_small = "1\tA\n1\tB\n2\tC\n2\tD\n";
     let content_large = "100\tA\n100\tB\n200\tC\n200\tD\n";
 
@@ -339,7 +339,7 @@ fn test_clust_eval_invariance_label_scaling() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_clust_eval_empty_input() -> anyhow::Result<()> {
+fn test_eval_partition_empty_input() -> anyhow::Result<()> {
     let empty_file = NamedTempFile::new()?;
     let empty_path = empty_file.path().to_str().unwrap();
 

@@ -84,12 +84,14 @@ Clustering evaluation metrics usually fall into two categories: **external valid
   - **Range**: `[0, 1]`.
   - **Disadvantages**: Not corrected for chance.
   - **Applicable**: Scenarios with balanced cluster size distributions.
+  - **Implementation note**: Because NMI is a ratio of MI to the geometric mean of the two entropies, the choice of logarithm base cancels out. The value is therefore independent of whether natural logs or base-2 logs are used.
 
 - **MI (Mutual Information)**
   - **Definition**: Mutual information between two partitions.
   - **Principle**: $MI(U, V) = \sum \sum P(u,v) \log \frac{P(u,v)}{P(u)P(v)}$.
   - **Range**: `[0, +∞)`.
   - **Disadvantages**: Difficult to interpret directly; strongly affected by partition entropy. Usually used as an intermediate step for AMI/NMI.
+  - **Implementation note**: The implementation uses natural logarithms (matching scikit-learn), so the raw MI value is `ln(2)` times larger than a base-2 formulation. Normalized metrics (NMI, AMI, V-Measure) are unaffected because they are ratios.
 
 - **Homogeneity**
   - **Definition**: Does each cluster contain only members of a single class? (Similar to Precision, requiring clusters to be "pure.")
