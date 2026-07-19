@@ -764,3 +764,90 @@ fn test_eval_partition_coords_stdin() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_eval_partition_other_empty_after_no_singletons() -> anyhow::Result<()> {
+    // When --no-singletons removes every cluster from --other (all were
+    // singletons), the command must bail with a clear error rather than
+    // producing misleading all-zero metrics.
+    let mut p1_file = NamedTempFile::new()?;
+    p1_file.write_all("1\tA\n1\tB\n2\tC\n2\tD\n".as_bytes())?;
+    let p1_path = p1_file.path().to_str().unwrap();
+
+    // Every cluster in p2 is a singleton.
+    let mut p2_file = NamedTempFile::new()?;
+    p2_file.write_all("1\tA\n2\tB\n3\tC\n4\tD\n".as_bytes())?;
+    let p2_path = p2_file.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(p1_path)
+        .arg("--other")
+        .arg(p2_path)
+        .arg("--no-singletons")
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure when --other becomes empty after --no-singletons, but command succeeded"
+    );
+    assert!(
+        stderr.contains("empty"),
+        "Expected empty partition error, got: {}",
+        stderr
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_batch_other_empty_after_no_singletons() -> anyhow::Result<()> {
+    // Batch mode: when --no-singletons removes every cluster from --other,
+    // the command must bail with a clear error rather than emitting all-zero
+    // rows for every group.
+    //
+    // In batch mode `--other` defaults to Cluster format (each line is a
+    // cluster whose whitespace-separated items are members). To get true
+    // singleton clusters we therefore use `--other-format pair`, where each
+    // line is `<cluster_id>\t<sample>` and a cluster with one sample is a
+    // singleton that `--no-singletons` will remove.
+    let long_content = "Group\tClusterID\tSampleID\n\
+g1\t1\tA\n\
+g1\t1\tB\n";
+    let mut long_file = NamedTempFile::new()?;
+    long_file.write_all(long_content.as_bytes())?;
+
+    // Every cluster in truth is a singleton (one sample per cluster ID).
+    let mut truth_file = NamedTempFile::new()?;
+    truth_file.write_all("1\tA\n2\tB\n".as_bytes())?;
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(long_file.path())
+        .arg("--input-format")
+        .arg("long")
+        .arg("--other-format")
+        .arg("pair")
+        .arg("--other")
+        .arg(truth_file.path())
+        .arg("--no-singletons")
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure when --other becomes empty after --no-singletons in batch mode"
+    );
+    assert!(
+        stderr.contains("empty"),
+        "Expected empty partition error, got: {}",
+        stderr
+    );
+
+    Ok(())
+}

@@ -173,6 +173,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             if remove_singletons_flag {
                 remove_singletons(&mut truth);
             }
+            // Catches both "empty --other file" and "--no-singletons removed
+            // every cluster" cases. Without this, every batch group would be
+            // retained down to an empty set, alignment would succeed on two
+            // empty sets, and `run_batch` would emit misleading all-zero rows.
+            ensure_non_empty(&truth, "partition --other")?;
             Some(truth)
         } else {
             None
@@ -275,6 +280,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         if remove_singletons_flag {
             remove_singletons(&mut p2);
         }
+        // Catches both "empty --other file" and "--no-singletons removed every
+        // cluster" cases. Without this, p1_for_eval and p2 could both end up
+        // empty, `ensure_partitions_align` would succeed on two empty sets,
+        // and `run_single` would emit misleading all-zero metrics.
+        ensure_non_empty(&p2, "partition --other")?;
         // Filter p1 to match p2 after singleton removal; otherwise require an
         // exact sample-set match so users are not misled by silent intersection.
         let mut p1_for_eval = p1.clone();

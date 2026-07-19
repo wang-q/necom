@@ -12,7 +12,7 @@ Notes:
     * Branch support: `replicate`
 * Run `necom eval <subcommand> --help` for command-specific options.
 * `eval compare` reads from stdin if the input file is `stdin`.
-* `eval partition` requires a real file path; it does not accept `stdin` as the positional partition argument.
+* `eval partition` accepts `stdin` for `p1` and for `--other`/`--matrix`/`--tree`/`--coords`.
 
 Examples:
 
