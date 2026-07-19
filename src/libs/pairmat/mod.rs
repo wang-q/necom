@@ -19,7 +19,7 @@ pub use transform::transform_matrix;
 /// matrix size and symmetric element access.
 pub trait MatrixView<T = f32>
 where
-    T: Copy + PartialOrd,
+    T: Copy,
 {
     /// Number of rows/columns in the matrix.
     fn size(&self) -> usize;

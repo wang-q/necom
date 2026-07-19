@@ -132,22 +132,21 @@ where
     /// `set(col, row, v)`. If the matrix size has not been set, it is inferred
     /// from the largest column index seen so far (`max_index + 1`).
     ///
-    /// # Panics
-    ///
-    /// Panics if the size has been fixed via [`set_size`](Self::set_size) and
-    /// either index is out of bounds.
+    /// When the size has been fixed via [`set_size`](Self::set_size) and either
+    /// index is out of bounds, the write is silently ignored, matching the
+    /// behavior of [`NamedMatrix::set`](super::NamedMatrix::set).
     pub fn set(&mut self, row: usize, col: usize, value: T) {
         let (i, j) = if row <= col { (row, col) } else { (col, row) };
-        self.max_index = self.max_index.max(j);
 
-        let n = self.size.unwrap_or(self.max_index + 1);
-        assert!(
-            i < n && j < n,
-            "ScoringMatrix::set({}, {}) out of bounds for size {}",
-            row,
-            col,
-            n
-        );
+        match self.size {
+            // Fixed size: silently ignore out-of-bounds writes.
+            Some(n) if i >= n || j >= n => return,
+            // Fixed size, in bounds: proceed.
+            Some(_) => {}
+            // Dynamic size: infer from the largest index seen so far.
+            None => self.max_index = self.max_index.max(j),
+        }
+
         let key = condensed_index_with_diag(i, j);
         self.data.insert(key, value);
     }
@@ -185,7 +184,7 @@ where
 
 impl<T> MatrixView<T> for ScoringMatrix<T>
 where
-    T: Default + Copy + PartialOrd,
+    T: Default + Copy,
 {
     fn size(&self) -> usize {
         self.size()

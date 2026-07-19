@@ -1,5 +1,8 @@
 use anyhow::Context;
-use clap::{builder::PossibleValue, value_parser, Arg, ArgAction, ArgMatches, Command};
+use clap::{
+    builder::PossibleValue, parser::ValueSource, value_parser, Arg, ArgAction,
+    ArgMatches, Command,
+};
 /// Build the clap subcommand for transform.
 pub fn make_subcommand() -> Command {
     Command::new("transform")
@@ -95,6 +98,27 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             opt_missing,
         )?
     } else {
+        // --same / --missing only apply to pairwise input; warn if the user
+        // explicitly provided them with PHYLIP input so the silent ignore
+        // does not surprise them.
+        let same_cli = args
+            .value_source("same")
+            .map(|s| s == ValueSource::CommandLine)
+            .unwrap_or(false);
+        let missing_cli = args
+            .value_source("missing")
+            .map(|s| s == ValueSource::CommandLine)
+            .unwrap_or(false);
+        if same_cli {
+            log::warn!(
+                "--same is ignored with --input-format phylip (diagonals are read from the input)"
+            );
+        }
+        if missing_cli {
+            log::warn!(
+                "--missing is ignored with --input-format phylip (all pairs are read from the input)"
+            );
+        }
         necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?
     };
 

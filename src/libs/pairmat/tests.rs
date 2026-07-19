@@ -618,24 +618,18 @@ fn test_scoring_matrix_set_infers_size() {
 }
 
 #[test]
-fn test_scoring_matrix_set_out_of_bounds_panics() {
-    use std::panic::{catch_unwind, AssertUnwindSafe};
-
+fn test_scoring_matrix_set_out_of_bounds_silently_ignored() {
+    // Out-of-bounds writes on a fixed-size matrix are silently ignored,
+    // matching NamedMatrix::set behavior.
     let mut m = ScoringMatrix::with_size_and_defaults(3, 0.0, -1.0);
-    let result = catch_unwind(AssertUnwindSafe(|| {
-        m.set(5, 0, 1.0);
-    }));
-    let err = result.expect_err("set out of bounds should panic");
-    let msg = err
-        .downcast_ref::<String>()
-        .map(String::as_str)
-        .or_else(|| err.downcast_ref::<&str>().copied())
-        .unwrap_or("");
-    assert!(
-        msg.contains("out of bounds"),
-        "panic message should mention out of bounds: {}",
-        msg
-    );
+    m.set(5, 0, 1.0);
+    m.set(0, 5, 2.0);
+    m.set(5, 5, 3.0);
+
+    // Size and existing entries are unchanged.
+    assert_eq!(m.size(), 3);
+    assert_eq!(m.get(0, 0), 0.0); // same default
+    assert_eq!(m.get(0, 1), -1.0); // missing default
 }
 
 #[test]

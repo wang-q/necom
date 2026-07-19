@@ -131,6 +131,9 @@ pub fn write_subset<W: Write>(
 
 /// Extract paired values from the lower triangle (excluding diagonal) of two matrices,
 /// restricted to sequence names common to both. Returns `(common_names, values1, values2)`.
+///
+/// Builds an index map once (O(N)) so the nested pairwise loop uses direct `get(i, j)`
+/// indexing instead of repeated `get_by_name` hash lookups (O(N^2) lookups avoided).
 pub fn extract_common_lower_triangle(
     m1: &NamedMatrix,
     m2: &NamedMatrix,
@@ -151,20 +154,27 @@ pub fn extract_common_lower_triangle(
         );
     }
 
-    let mut values1 =
-        Vec::with_capacity(common_names.len() * (common_names.len() - 1) / 2);
-    let mut values2 =
-        Vec::with_capacity(common_names.len() * (common_names.len() - 1) / 2);
+    // Pre-compute (idx_in_m1, idx_in_m2) for each common name so the O(N^2)
+    // pairwise loop uses direct indexing instead of hash lookups.
+    let indices: Vec<(usize, usize)> = common_names
+        .iter()
+        .map(|name| {
+            // Safety: names come from the intersection of both matrices, so both
+            // lookups must succeed.
+            let i1 = m1.get_index(name).expect("common name missing in m1");
+            let i2 = m2.get_index(name).expect("common name missing in m2");
+            (i1, i2)
+        })
+        .collect();
 
-    for i in 0..common_names.len() {
-        for j in 0..i {
-            if let (Some(v1), Some(v2)) = (
-                m1.get_by_name(&common_names[i], &common_names[j]),
-                m2.get_by_name(&common_names[i], &common_names[j]),
-            ) {
-                values1.push(v1);
-                values2.push(v2);
-            }
+    let n = common_names.len();
+    let mut values1 = Vec::with_capacity(n * (n - 1) / 2);
+    let mut values2 = Vec::with_capacity(n * (n - 1) / 2);
+
+    for (i, &(i1, i2)) in indices.iter().enumerate() {
+        for &(j1, j2) in indices.iter().take(i) {
+            values1.push(m1.get(i1, j1));
+            values2.push(m2.get(i2, j2));
         }
     }
 

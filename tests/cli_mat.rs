@@ -649,3 +649,116 @@ fn command_mat_subset_precision() {
     // exactly 6 decimal places.
     assert!(lines[1].starts_with("IBPA_ECOLI_GA\t0.000000\t0.102190\t0.058394"));
 }
+
+#[test]
+fn command_mat_transform_warns_same_missing_with_phylip() {
+    // When --same / --missing are explicitly provided with default PHYLIP input,
+    // a warning should be emitted because these flags only apply to --input-format pair.
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            "tests/mat/IBPA.phy",
+            "--same",
+            "0.5",
+            "--missing",
+            "0.9",
+        ])
+        .run();
+
+    assert!(
+        stderr.contains("--same is ignored with --input-format phylip"),
+        "expected --same warning in stderr, got: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("--missing is ignored with --input-format phylip"),
+        "expected --missing warning in stderr, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_mat_transform_no_warning_without_explicit_same_missing() {
+    // Default --same / --missing values should NOT trigger warnings.
+    let (_, stderr) = NecomCmd::new()
+        .args(&["mat", "transform", "tests/mat/IBPA.phy"])
+        .run();
+
+    assert!(
+        !stderr.contains("--same is ignored"),
+        "unexpected --same warning without explicit flag: {}",
+        stderr
+    );
+    assert!(
+        !stderr.contains("--missing is ignored"),
+        "unexpected --missing warning without explicit flag: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_mat_transform_pair_with_same_missing_no_warning() {
+    // With --input-format pair, --same / --missing are used and should NOT warn.
+    let input = "A\tB\t0.1\n";
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            "stdin",
+            "--input-format",
+            "pair",
+            "--same",
+            "0.5",
+            "--missing",
+            "0.9",
+        ])
+        .stdin(input)
+        .run();
+
+    assert!(
+        !stderr.contains("--same is ignored"),
+        "unexpected --same warning with pair input: {}",
+        stderr
+    );
+    assert!(
+        !stderr.contains("--missing is ignored"),
+        "unexpected --missing warning with pair input: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_mat_compare_reordered_names() {
+    // Compare two matrices whose names appear in different orders. This
+    // exercises the pre-computed index mapping in extract_common_lower_triangle.
+    use std::io::Write;
+    let mut m1 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(m1, "3").unwrap();
+    writeln!(m1, "A 0.0 0.1 0.2").unwrap();
+    writeln!(m1, "B 0.1 0.0 0.3").unwrap();
+    writeln!(m1, "C 0.2 0.3 0.0").unwrap();
+    m1.flush().unwrap();
+
+    // m2 has the same values but names in reversed order (C, B, A).
+    let mut m2 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(m2, "3").unwrap();
+    writeln!(m2, "C 0.0 0.3 0.2").unwrap();
+    writeln!(m2, "B 0.3 0.0 0.1").unwrap();
+    writeln!(m2, "A 0.2 0.1 0.0").unwrap();
+    m2.flush().unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            m1.path().to_str().unwrap(),
+            m2.path().to_str().unwrap(),
+            "--method",
+            "pearson",
+        ])
+        .run();
+
+    // Identical lower triangles (after reordering) → perfect correlation.
+    assert_method_score(&stdout, "pearson", 1.0, 1e-6);
+}
