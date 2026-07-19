@@ -10,7 +10,7 @@ Input:
 Output:
 
 * Condensed Newick tree written to `-o`/`--outfile` or `stdout`.
-* With `--map`, also writes `condensed.tsv` mapping original node names to condensed labels.
+* With `--map`, also writes `condensed.tsv` to the current working directory. It contains two tab-separated columns: original node name and condensed label.
 
 Notes:
 

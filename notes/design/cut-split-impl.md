@@ -193,7 +193,7 @@ src/cmd_necom/
   - `--dynamic-tree 20` → `cut dynamic ... --min-size 20`
 - `tests/cli_cut_hybrid.rs`
   - `--dynamic-hybrid 20` → `cut hybrid ... --min-size 20 --matrix ...`
-- 新增 `tests/cli_cut_scan_simple.rs` 和 `tests/cli_cut_scan_dynamic.rs`，分别覆盖原 `--scan` 在 standard 方法和 dynamic-tree 下的用法。
+- 新增 `tests/cli_cut_scan_simple.rs` 和 `tests/cli_cut_scan_dynamic.rs`，分别覆盖原 `--scan` 在 standard 方法和 dynamic-tree 下的用法（截至 2026-07-20 尚未创建，将在实施本方案时一并添加）。
 
 ## 实施顺序
 

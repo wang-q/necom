@@ -12,25 +12,28 @@ Notes:
 * Use `--string` to add a free-form string stored under the `string` property.
 * Visualization options:
     * `--color`, `--label`, and `--comment-text` each take one argument.
-    * `--dot`, `--bar`, `--rec`, and `--tri` take zero or one argument.
+    * `--dot`, `--bar`, `--rec`, and `--tri` take zero or one argument. When no value is supplied they use their default color (see below); any other value is passed through as the color directly.
+* Defaults when no color is given:
+    * `--dot` / `--bar`: `black`
+    * `--rec`: `LemonChiffon`
+    * `--tri`: `white`
 * Predefined colors for `--color`, `--dot`, and `--bar`:
-    * `red` {RGB}{188,36,46}
-    * `black` {RGB}{26,25,25}
-    * `grey` {RGB}{129,130,132}
-    * `green` {RGB}{32,128,108}
-    * `purple` {RGB}{160,90,150}
-* Background rectangle colors for `--rec`:
-    * `LemonChiffon` {RGB}{251,248,204}
-    * `ChampagnePink` {RGB}{253,228,207}
-    * `TeaRose` {RGB}{255,207,210}
-    * `PinkLavender` {RGB}{241,192,232}
-    * `Mauve` {RGB}{207,186,240}
-    * `JordyBlue` {RGB}{163,196,243}
-    * `NonPhotoBlue` {RGB}{144,219,244}
-    * `ElectricBlue` {RGB}{142,236,245}
-    * `Aquamarine` {RGB}{152,245,225}
-    * `Celadon` {RGB}{185,251,192}
-* `--tri` places a triangle at the end of the branch (default color: `white`).
+    * `red` (188,36,46)
+    * `black` (26,25,25)
+    * `grey` (129,130,132)
+    * `green` (32,128,108)
+    * `purple` (160,90,150)
+* Predefined background rectangle colors for `--rec`:
+    * `LemonChiffon` (251,248,204)
+    * `ChampagnePink` (253,228,207)
+    * `TeaRose` (255,207,210)
+    * `PinkLavender` (241,192,232)
+    * `Mauve` (207,186,240)
+    * `JordyBlue` (163,196,243)
+    * `NonPhotoBlue` (144,219,244)
+    * `ElectricBlue` (142,236,245)
+    * `Aquamarine` (152,245,225)
+    * `Celadon` (185,251,192)
 * `--remove <REGEX>` scans all nodes and removes parts of comments matching the regex.
 
 Examples:

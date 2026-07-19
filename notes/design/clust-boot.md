@@ -1,7 +1,7 @@
 # clust boot：层次聚类的多尺度 Bootstrap p-value（pvclust 风格）
 
 > **实现状态注记**：本文档为 `necom clust boot` 命令的设计稿（计划中，未实现）。
-> 截至 2026-07-16，底层 `necom clust hier` 与 `libs/clust/hier.rs` 已就绪，可作为实现基础。
+> 截至 2026-07-20，底层 `necom clust hier` 与 `libs/clust/hier.rs` 已就绪，可作为实现基础。当前 `hier` 支持 `single`、`complete`、`average`、`weighted`、`centroid`、`median`、`ward` 七种 linkage 方法，`boot` 可复用这些距离/链接策略。
 
 本页基于外部 R 包 `pvclust`（CRAN 版本 2.2-0）的源码梳理其算法与数据结构，并给出 `necom` 侧计划新增命令 `necom clust boot` 的接口与输出约定。
 

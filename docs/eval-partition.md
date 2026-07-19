@@ -156,6 +156,9 @@ Clustering evaluation metrics usually fall into two categories: **external valid
   - **Principle**: Ratio of between-cluster dispersion (BGSS) to within-cluster dispersion (WGSS).
   - **Range**: `[0, +∞)`. **Larger is better**.
   - **Advantages**: Fast to compute.
+  - **Boundary cases**:
+    * If every point is identical (WGSS == 0 and BGSS == 0), the input is degenerate and the score is `0.0`.
+    * If clusters are perfectly compact and well-separated (WGSS == 0 but BGSS > 0), the score is infinite and is reported as `NA` to keep the TSV parseable.
 
 - **PBM Index**
   - **Principle**: Composite index based on total dispersion, within-cluster dispersion, and maximum centroid distance.
