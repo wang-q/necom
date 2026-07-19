@@ -53,5 +53,7 @@
 
 - `NamedMatrix::with_ids(size)`（`named.rs`）：创建数字命名矩阵，无调用方。
 - `NamedMatrix::matrix()`（`named.rs`）：返回底层 `CondensedMatrix` 引用，无调用方（调用方使用 `values()` 或 `into_parts()`）。
-- `NamedMatrix::new_from_values(names, values)`（`named.rs`）：从名称和上三角值创建，无调用方（调用方使用 `from_relaxed_phylip` 或 `from_pair_scores`）。
+- `NamedMatrix::index()`（`named.rs`）：返回 `(row, col)` 的线性压缩索引，无调用方。
 - `ScoringMatrix::with_size(size)`（`scoring.rs`）：创建指定大小的空矩阵，无调用方（调用方使用 `with_size_and_defaults`）。
+
+注：`NamedMatrix::new_from_values(names, values)` 被 `src/libs/tree_cut/mod.rs` 用于构建树切分距离矩阵，不属于死代码。

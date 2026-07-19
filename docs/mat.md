@@ -156,8 +156,8 @@ After normalization: $D = -\ln(S(x, y) / \sqrt{S(x, x) \cdot S(y, y)})$. Useful 
 The following conversions are not yet implemented:
 
 * **Reciprocal**: $D = 1/S - 1/Max$ (can be approximated with `--op linear`).
-* **Cosine Similarity**: $D = 1 - \cos(\theta)$.
-* **Correlation**: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.
+* **Matrix-level Cosine Similarity conversion**: $D = 1 - \cos(\theta)$.
+* **Matrix-level Correlation conversion**: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.
 
 For Cosine/Correlation distances, the workflow depends on the input form:
 

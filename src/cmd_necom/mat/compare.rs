@@ -48,6 +48,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .map(str::trim)
         .filter(|s| !s.is_empty())
         .collect();
+    if requested_methods.is_empty() {
+        anyhow::bail!("at least one comparison method required");
+    }
     for m in &requested_methods {
         if !VALID_METHODS.contains(m) {
             anyhow::bail!("unknown method: {}", m);

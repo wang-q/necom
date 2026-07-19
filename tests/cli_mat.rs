@@ -584,6 +584,28 @@ fn command_mat_to_phylip_empty_input() {
 }
 
 #[test]
+fn command_mat_compare_empty_method_errors() {
+    // Empty --method should bail with a clear error instead of emitting only
+    // the header line.
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            "tests/mat/IBPA.phy",
+            "tests/mat/IBPA.71.phy",
+            "--method",
+            "",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("at least one comparison method required"),
+        "expected empty-method error in stderr, got: {}",
+        stderr
+    );
+}
+
+#[test]
 fn command_mat_subset_precision() {
     // Subset output should use fixed 6-decimal precision.
     let (stdout, _) = NecomCmd::new()

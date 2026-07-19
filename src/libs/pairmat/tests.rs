@@ -250,6 +250,20 @@ fn test_from_pair_scores_duplicate_pair_uses_last_value() {
 }
 
 #[test]
+fn test_from_pair_scores_duplicate_self_pair_warns() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Duplicate self-pair (A,A) with different values; last value should win.
+    writeln!(tmp, "A\tA\t0.1").unwrap();
+    writeln!(tmp, "A\tA\t0.9").unwrap();
+
+    let matrix =
+        NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
+    assert_eq!(matrix.get_by_name("A", "A"), Some(0.9));
+}
+
+#[test]
 fn test_from_relaxed_phylip_extra_values() {
     use std::io::Write;
 
@@ -574,4 +588,25 @@ fn test_scoring_matrix_set_infers_size() {
     assert_eq!(m.size(), 6);
     assert_eq!(m.get(2, 5), 7.0);
     assert_eq!(m.get(5, 2), 7.0);
+}
+
+#[test]
+fn test_scoring_matrix_set_out_of_bounds_panics() {
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+
+    let mut m = ScoringMatrix::with_size_and_defaults(3, 0.0, -1.0);
+    let result = catch_unwind(AssertUnwindSafe(|| {
+        m.set(5, 0, 1.0);
+    }));
+    let err = result.expect_err("set out of bounds should panic");
+    let msg = err
+        .downcast_ref::<String>()
+        .map(String::as_str)
+        .or_else(|| err.downcast_ref::<&str>().copied())
+        .unwrap_or("");
+    assert!(
+        msg.contains("out of bounds"),
+        "panic message should mention out of bounds: {}",
+        msg
+    );
 }

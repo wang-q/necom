@@ -252,6 +252,7 @@ impl NamedMatrix {
         let mut matrix = CondensedMatrix::from_vec(size, vec![missing; len])?;
         let mut diags = vec![same; size];
         let mut seen_pairs: HashSet<(usize, usize)> = HashSet::new();
+        let mut seen_self_pairs: HashSet<usize> = HashSet::new();
 
         let name_to_index: IndexMap<String, usize> = names
             .iter()
@@ -263,6 +264,18 @@ impl NamedMatrix {
             let i1 = name_to_index[&n1];
             let i2 = name_to_index[&n2];
             if i1 == i2 {
+                if !seen_self_pairs.insert(i1) {
+                    let existing = diags[i1];
+                    if existing != score {
+                        log::warn!(
+                            "conflicting pairwise entry for ({}, {}): existing {} vs new {}; using last value",
+                            n1,
+                            n2,
+                            existing,
+                            score
+                        );
+                    }
+                }
                 diags[i1] = score;
                 continue;
             }

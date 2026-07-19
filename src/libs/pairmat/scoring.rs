@@ -135,17 +135,38 @@ where
 
     /// Stores `value` at `(row, col)`.
     ///
-    /// If the matrix size has not been set, it is inferred from the largest
-    /// column index seen so far (`max_index + 1`).
+    /// The matrix is symmetric, so `set(row, col, v)` is equivalent to
+    /// `set(col, row, v)`. If the matrix size has not been set, it is inferred
+    /// from the largest column index seen so far (`max_index + 1`).
+    ///
+    /// # Panics
+    ///
+    /// Panics if the size has been fixed via [`set_size`](Self::set_size) and
+    /// either index is out of bounds, because the compressed key would no
+    /// longer be valid.
     pub fn set(&mut self, row: usize, col: usize, value: T) {
         let (i, j) = if row <= col { (row, col) } else { (col, row) };
         self.max_index = self.max_index.max(j);
 
         let n = self.size.unwrap_or(self.max_index + 1);
+        assert!(
+            i < n && j < n,
+            "ScoringMatrix::set({}, {}) out of bounds for size {}",
+            row,
+            col,
+            n
+        );
         let key = upper_index_with_diag(n, i, j);
         self.data.insert(key, value);
     }
 
+    /// Gets the value at `(row, col)`.
+    ///
+    /// The matrix is symmetric, so `get(row, col)` equals `get(col, row)`.
+    /// Returns the configured `same` value for diagonal elements and the
+    /// `missing` value for off-diagonal elements that have not been explicitly
+    /// set. If either index is out of bounds, the default value for that
+    /// position is returned.
     pub fn get(&self, row: usize, col: usize) -> T {
         let n = self.size();
         if row >= n || col >= n {
