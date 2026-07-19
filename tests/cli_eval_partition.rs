@@ -8,9 +8,9 @@ fn test_eval_partition_perfect_match() -> anyhow::Result<()> {
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg("tests/clust/perfect_1.tsv")
+        .arg("tests/eval/perfect_1.tsv")
         .arg("--other")
-        .arg("tests/clust/perfect_2.tsv")
+        .arg("tests/eval/perfect_2.tsv")
         .arg("--input-format")
         .arg("cluster")
         .output()?;
@@ -105,9 +105,9 @@ fn test_eval_partition_disjoint() -> anyhow::Result<()> {
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg("tests/clust/perfect_1.tsv")
+        .arg("tests/eval/perfect_1.tsv")
         .arg("--other")
-        .arg("tests/clust/disjoint_2.tsv")
+        .arg("tests/eval/disjoint_2.tsv")
         .arg("--input-format")
         .arg("cluster")
         .output()?;
@@ -135,9 +135,9 @@ fn test_eval_partition_single_vs_singletons() -> anyhow::Result<()> {
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg("tests/clust/single_1.tsv")
+        .arg("tests/eval/single_1.tsv")
         .arg("--other")
-        .arg("tests/clust/singletons.tsv")
+        .arg("tests/eval/singletons.tsv")
         .arg("--input-format")
         .arg("cluster")
         .output()?;
@@ -162,9 +162,9 @@ fn test_eval_partition_pair_format() -> anyhow::Result<()> {
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg("tests/clust/pair_1.tsv")
+        .arg("tests/eval/pair_1.tsv")
         .arg("--other")
-        .arg("tests/clust/pair_2.tsv")
+        .arg("tests/eval/pair_2.tsv")
         .output()?;
 
     let stdout = String::from_utf8(output.stdout)?;
@@ -192,9 +192,9 @@ fn test_eval_partition_internal_silhouette() -> anyhow::Result<()> {
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg("tests/clust/eval/simple.pair")
+        .arg("tests/eval/simple.pair")
         .arg("--matrix")
-        .arg("tests/clust/eval/simple.matrix.phy")
+        .arg("tests/eval/simple.matrix.phy")
         .output()?;
 
     let stdout = String::from_utf8(output.stdout)?;
@@ -244,9 +244,9 @@ fn test_eval_partition_internal_db() -> anyhow::Result<()> {
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg("tests/clust/eval/db.pair")
+        .arg("tests/eval/db.pair")
         .arg("--coords")
-        .arg("tests/clust/eval/db.coords.tsv")
+        .arg("tests/eval/db.coords.tsv")
         .output()?;
 
     let stdout = String::from_utf8(output.stdout)?;
@@ -378,7 +378,7 @@ fn test_eval_malformed_pair_format() -> anyhow::Result<()> {
         .arg("partition")
         .arg(malformed_path)
         .arg("--other")
-        .arg("tests/clust/eval/simple.pair")
+        .arg("tests/eval/simple.pair")
         .output()?;
 
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -402,7 +402,7 @@ fn test_eval_missing_other_for_external() -> anyhow::Result<()> {
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg("tests/clust/perfect_1.tsv")
+        .arg("tests/eval/perfect_1.tsv")
         .arg("--input-format")
         .arg("cluster")
         .output()?;
@@ -430,11 +430,11 @@ fn test_eval_partition_conflict_matrix_tree() -> anyhow::Result<()> {
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg("tests/clust/eval/simple.pair")
+        .arg("tests/eval/simple.pair")
         .arg("--matrix")
-        .arg("tests/clust/eval/simple.matrix.phy")
+        .arg("tests/eval/simple.matrix.phy")
         .arg("--tree")
-        .arg("tests/clust/eval/simple.matrix.phy") // any file, just to satisfy clap
+        .arg("tests/eval/simple.matrix.phy") // any file, just to satisfy clap
         .output()?;
 
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -499,11 +499,11 @@ fn test_eval_partition_conflict_other_coords() -> anyhow::Result<()> {
     let output = cmd
         .arg("eval")
         .arg("partition")
-        .arg("tests/clust/eval/simple.pair")
+        .arg("tests/eval/simple.pair")
         .arg("--other")
-        .arg("tests/clust/eval/simple.pair")
+        .arg("tests/eval/simple.pair")
         .arg("--coords")
-        .arg("tests/clust/eval/db.coords.tsv")
+        .arg("tests/eval/db.coords.tsv")
         .output()?;
 
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -534,7 +534,7 @@ fn test_eval_partition_matrix_missing_sample() -> anyhow::Result<()> {
         .arg("partition")
         .arg(partition_path)
         .arg("--matrix")
-        .arg("tests/clust/eval/simple.matrix.phy")
+        .arg("tests/eval/simple.matrix.phy")
         .output()?;
 
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -610,7 +610,7 @@ fn test_eval_partition_coords_missing_sample() -> anyhow::Result<()> {
         .arg("partition")
         .arg(partition_path)
         .arg("--coords")
-        .arg("tests/clust/eval/db.coords.tsv")
+        .arg("tests/eval/db.coords.tsv")
         .output()?;
 
     let stderr = String::from_utf8_lossy(&output.stderr);

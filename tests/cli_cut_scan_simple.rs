@@ -10,14 +10,14 @@ fn test_scan_height() {
     // (A,B): 0.1
     // Root ((A,B),C): 0.2
     let nwk = "((A:0.1,B:0.1):0.1,C:0.2);";
-    let nwk_file = "tests/mat/scan_test.nwk";
+    let nwk_file = "tests/cut/scan_test.nwk";
     // Ensure dir exists
-    if !std::path::Path::new("tests/mat").exists() {
-        fs::create_dir_all("tests/mat").unwrap();
+    if !std::path::Path::new("tests/cut").exists() {
+        fs::create_dir_all("tests/cut").unwrap();
     }
     fs::write(nwk_file, nwk).expect("Failed to write nwk");
 
-    let stats_file = "tests/mat/scan_stats.tsv";
+    let stats_file = "tests/cut/scan_stats.tsv";
 
     let (stdout, _) = NecomCmd::new()
         .args(&[
@@ -123,9 +123,9 @@ fn test_scan_simple_non_positive_step() {
 #[test]
 fn test_scan_k_integer_range() {
     let nwk = "((A:0.1,B:0.1):0.1,C:0.2);";
-    let nwk_file = "tests/mat/scan_k_test.nwk";
-    if !std::path::Path::new("tests/mat").exists() {
-        fs::create_dir_all("tests/mat").unwrap();
+    let nwk_file = "tests/cut/scan_k_test.nwk";
+    if !std::path::Path::new("tests/cut").exists() {
+        fs::create_dir_all("tests/cut").unwrap();
     }
     fs::write(nwk_file, nwk).expect("Failed to write nwk");
 

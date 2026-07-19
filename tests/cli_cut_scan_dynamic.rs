@@ -8,9 +8,9 @@ fn test_scan_dynamic_tree() {
     // min_module_size=2 -> {A,B},{C,D}
     // min_module_size=5 -> all unassigned (cluster 0)
     let nwk = "((A:0.1,B:0.1):0.8,(C:0.1,D:0.1):0.8);";
-    let nwk_file = "tests/mat/scan_dyn_test.nwk";
-    if !std::path::Path::new("tests/mat").exists() {
-        fs::create_dir_all("tests/mat").unwrap();
+    let nwk_file = "tests/cut/scan_dyn_test.nwk";
+    if !std::path::Path::new("tests/cut").exists() {
+        fs::create_dir_all("tests/cut").unwrap();
     }
     fs::write(nwk_file, nwk).expect("Failed to write nwk");
 
