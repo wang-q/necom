@@ -3,6 +3,7 @@
 mod common;
 
 use common::NecomCmd;
+use std::fmt::Write as _;
 use std::fs;
 
 // --- Helper: Generate Synthetic Blobs ---
@@ -21,8 +22,8 @@ fn generate_blobs(
         let x = 0.0 + (i as f64 * 0.1);
         let y = 0.0 + (i as f64 * 0.1);
         let id = format!("C1_{}", i);
-        data_out.push_str(&format!("{}\t{:.4},{:.4}\n", id, x, y));
-        truth_out.push_str(&format!("1\t{}\n", id));
+        writeln!(data_out, "{}\t{:.4},{:.4}", id, x, y)?;
+        writeln!(truth_out, "1\t{}", id)?;
     }
 
     // Cluster 2: Center (10,10), 10 points
@@ -30,8 +31,8 @@ fn generate_blobs(
         let x = 10.0 + (i as f64 * 0.1);
         let y = 10.0 + (i as f64 * 0.1);
         let id = format!("C2_{}", i);
-        data_out.push_str(&format!("{}\t{:.4},{:.4}\n", id, x, y));
-        truth_out.push_str(&format!("2\t{}\n", id));
+        writeln!(data_out, "{}\t{:.4},{:.4}", id, x, y)?;
+        writeln!(truth_out, "2\t{}", id)?;
     }
 
     // Cluster 3: Center (20,0), 10 points
@@ -39,8 +40,8 @@ fn generate_blobs(
         let x = 20.0 + (i as f64 * 0.1);
         let y = 0.0 + (i as f64 * 0.1);
         let id = format!("C3_{}", i);
-        data_out.push_str(&format!("{}\t{:.4},{:.4}\n", id, x, y));
-        truth_out.push_str(&format!("3\t{}\n", id));
+        writeln!(data_out, "{}\t{:.4},{:.4}", id, x, y)?;
+        writeln!(truth_out, "3\t{}", id)?;
     }
 
     fs::write(data_file, data_out)?;
@@ -75,7 +76,7 @@ fn compute_pairwise_distances(
     for (id1, x1, y1) in &points {
         for (id2, x2, y2) in &points {
             let dist = ((x1 - x2).powi(2) + (y1 - y2).powi(2)).sqrt();
-            out.push_str(&format!("{}\t{}\t{:.6}\n", id1, id2, dist));
+            writeln!(out, "{}\t{}\t{:.6}", id1, id2, dist)?;
         }
     }
 

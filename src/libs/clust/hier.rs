@@ -121,7 +121,9 @@ fn linkage_core(
 ///
 /// Only valid for methods satisfying the reducibility property:
 /// Single, Complete, Average, Weighted, Ward.
-/// (Centroid and Median are NOT reducible and may cause infinite loops or incorrect results with NN-chain).
+/// Centroid and Median are NOT reducible and may cause infinite loops or incorrect
+/// results with NN-chain; `linkage_core` therefore falls back to the primitive
+/// O(N^3) implementation for these methods.
 fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step> {
     let n = condensed.size();
     if n < 2 {

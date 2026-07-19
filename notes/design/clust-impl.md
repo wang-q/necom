@@ -1,7 +1,7 @@
 # clust 模块实现分析
 
 > **实现状态注记**：本文档记录 `necom clust` 模块的实现分析、优化路线与外部生态对比，从 `docs/clust.md` 剥离而来。
-> 截至 2026-07-16，Phase 1/2/5/6 及 Ward/Centroid 平方距离优化、In-place 接口已完成；Phase 3/4(Heap)/7 及 GMM/HDBSCAN/Louvain/Leiden 仍为规划。
+> 截至 2026-07-19，Phase 1/2/5/6/7 及 Ward/Centroid 平方距离优化、In-place 接口已完成；Phase 3/4(Heap) 及 GMM/HDBSCAN/Louvain/Leiden 仍为规划。
 
 ## 1. 内存数据布局
 
@@ -230,12 +230,12 @@
 | 2000 | (未测) | ~29.0 ms |
 | 4000 | (未测) | ~174 ms |
 
-#### Phase 7：真实分布与效果验证（计划中，未实现）
-参考 `linfa-hierarchical` 的 `test_blobs` 测试，计划增加以下内容以验证算法的统计有效性：
+#### Phase 7：真实分布与效果验证（已完成）
+参考 `linfa-hierarchical` 的 `test_blobs` 测试，已增加集成测试验证算法的统计有效性：
 1.  **真实分布测试 (Blobs Test)**:
     - 目标：验证算法能否正确聚类具有明显几何结构的合成数据（Statistical Correctness）。
-    - 计划：在 `tests/` 中添加集成测试，生成两个高斯分布的簇（Blob A 和 Blob B），计算距离矩阵，运行 `clust hier`，验证生成的 Newick 树是否将两个簇的点分在不同的主分支上。
-    - **注意**：由于 `necom cut` 命令已实现，该测试可以被激活。
+    - 实现：`tests/cli_clust_pipeline.rs` 中的 `test_clust_pipeline_full` 生成 3 个 2D 高斯分布簇（每簇 10 个点），计算欧氏距离矩阵后依次执行 `necom mat to-phylip`、`necom clust hier --method ward`、`necom cut --k 3`，最后用 `necom eval partition` 与 ground truth 对比。
+    - 验证结果：ARI ≈ 1.0，确认 Ward linkage 能将不同 blob 的点正确分到不同主分支。
 2.  **输入预处理文档 (已完成)**:
     - 目标：澄清输入要求。
     - 状态：已在 `docs/mat.md` 的 `necom mat transform` 小节和 `docs/clust.md` 的 Hierarchical Clustering 详细说明中更新，并增强了 `necom mat transform` 功能（支持对角线归一化），确保用户能正确地将相似度转换为距离。
