@@ -13,7 +13,7 @@ Notes:
     * `--lax` / `-l`: if the LCA of specified nodes is already the root, use the unspecified nodes as the ingroup instead. Useful for defining an outgroup by exclusion.
 * Operations:
     * Reroot (default): creates a bifurcating root at the target edge.
-    * `--deroot` / `-d`: splices out the ingroup to create a multifurcating root.
+    * `--deroot` / `-d`: converts a bifurcating root into a multifurcating root by collapsing its internal children into the root. Mutually exclusive with `--node` and `--lax`.
 * `--support-as-labels`: treat internal node labels as support values and shift them along the rerooting path to maintain split associations.
 * Topology cleanup: the original root's parent edge is merged, and degree-2 nodes created during the process are removed.
 

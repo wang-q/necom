@@ -37,7 +37,7 @@ The `PHYLIP` distance matrix format is a common format in phylogenetic analysis.
 - Separators: whitespace characters (spaces or tabs).
 - Matrix form: supports full square matrix or lower triangular matrix. The lower-triangular form may either include the diagonal (row `i` has `i+1` values) or omit it (row `i` has `i` values), in which case the diagonal is assumed to be `0.0`.
 - Name length: not restricted.
-- Note: if the first data row starts with a numeric token (e.g. `123`), it may be mistaken for the optional sequence-count header. Use non-numeric prefixes or omit the header line to avoid ambiguity.
+- Note: if the first data row starts with a numeric token (e.g. `123`), it may be mistaken for the optional sequence-count header. Use non-numeric prefixes, or prepend an explicit count header so the numeric name is not on the first line, to avoid ambiguity.
 
 **Strict PHYLIP (`strict` mode output)**:
 - Follows the original `PHYLIP` standard.

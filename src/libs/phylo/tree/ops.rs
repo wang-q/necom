@@ -473,12 +473,12 @@ pub fn remove_degree_two_nodes(tree: &mut Tree) -> anyhow::Result<()> {
 
 /// Deroot the tree by converting a bifurcating root into a multifurcating root.
 ///
-/// Both children of a bifurcating root are removed and their children are
-/// promoted to be direct children of the root. Edge lengths from the root to
-/// each removed child are added to that child's descendants, matching the
-/// behavior of `collapse_node`. Non-finite, negative, and zero lengths are
-/// normalized to 0.0 before summing, and non-positive sums are stored as
-/// `None`.
+/// Internal children of a bifurcating root are removed and their children are
+/// promoted to be direct children of the root; leaf children remain attached
+/// to the root. Edge lengths from the root to each removed internal child are
+/// added to that child's descendants, matching the behavior of
+/// `collapse_node`. Non-finite, negative, and zero lengths are normalized to
+/// 0.0 before summing, and non-positive sums are stored as `None`.
 ///
 /// If the root is not bifurcating (already multifurcating or degenerate),
 /// the tree is left unchanged and the call succeeds.
