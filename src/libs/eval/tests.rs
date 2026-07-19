@@ -423,6 +423,28 @@ fn test_calinski_harabasz_all_points_identical() {
 }
 
 #[test]
+fn test_calinski_harabasz_zero_wgss_distinct_clusters() {
+    // Two clusters, each with all points identical, but centroids differ.
+    // WGSS = 0, BGSS > 0 -> CH should be unbounded above.
+    let mut p = LabelMap::new();
+    p.insert("A1".to_string(), 1);
+    p.insert("A2".to_string(), 1);
+    p.insert("B1".to_string(), 2);
+    p.insert("B2".to_string(), 2);
+
+    let mut data = HashMap::new();
+    data.insert("A1".to_string(), vec![0.0, 0.0]);
+    data.insert("A2".to_string(), vec![0.0, 0.0]);
+    data.insert("B1".to_string(), vec![5.0, 0.0]);
+    data.insert("B2".to_string(), vec![5.0, 0.0]);
+
+    let coords = Coordinates { data, dim: 2 };
+
+    let score = calinski_harabasz_score(&p, &coords);
+    assert!(score.is_infinite(), "Expected +Infinity, got {}", score);
+}
+
+#[test]
 fn test_coordinates_from_path_normal() {
     let content = "A\t1.0\t2.0\t3.0\nB\t4.0\t5.0\t6.0\nC\t7.0\t8.0\t9.0\n";
     let path = write_temp_file(content, ".tsv");
@@ -466,6 +488,26 @@ fn test_coordinates_from_path_inconsistent_dims() {
     assert!(
         msg.contains("Inconsistent dimensions"),
         "expected dimension error, got: {}",
+        msg
+    );
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn test_coordinates_from_path_duplicate_name() {
+    let content = "A\t1.0\t2.0\nA\t3.0\t4.0\nB\t5.0\t6.0\n";
+    let path = write_temp_file(content, ".tsv");
+    let result = Coordinates::from_path(&path);
+    assert!(result.is_err());
+    let msg = format!("{}", result.unwrap_err());
+    assert!(
+        msg.contains("Duplicate sample name"),
+        "expected duplicate name error, got: {}",
+        msg
+    );
+    assert!(
+        msg.contains("A"),
+        "error should mention the duplicate name: {}",
         msg
     );
     let _ = std::fs::remove_file(&path);

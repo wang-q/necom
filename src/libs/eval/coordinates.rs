@@ -28,7 +28,9 @@ impl Coordinates {
         let reader = BufReader::new(file);
         let mut data = HashMap::new();
         let mut dim = 0;
-        let mut data_line_no = 0;
+        // 1-based row number for user-facing error messages, counting only
+        // successfully parsed data rows (leading comments/blanks are skipped).
+        let mut data_line_no = 1;
 
         for line in reader.lines() {
             let line = line?;
@@ -42,9 +44,7 @@ impl Coordinates {
                 let vec: Vec<f64> = fv.list().iter().map(|&v| v as f64).collect();
                 // Initialize dim on the first data row (not line index), so that
                 // leading comment/blank lines do not cause false "inconsistent
-                // dimensions" errors. data_line_no is incremented only for
-                // successfully parsed data rows, so error messages refer to the
-                // data-row number rather than the raw physical line index.
+                // dimensions" errors.
                 if dim == 0 {
                     dim = vec.len();
                 } else if vec.len() != dim {
@@ -54,6 +54,13 @@ impl Coordinates {
                         dim,
                         vec.len()
                     ));
+                }
+                if data.contains_key(fv.name()) {
+                    anyhow::bail!(
+                        "Duplicate sample name at data row {}: {}",
+                        data_line_no,
+                        fv.name()
+                    );
                 }
                 data.insert(fv.name().clone(), vec);
                 data_line_no += 1;
@@ -181,6 +188,12 @@ pub fn davies_bouldin_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
 /// - WGSS: Within-Group Sum of Squares (dispersion of points from their cluster centroids)
 ///
 /// Higher values indicate better clustering.
+///
+/// Degenerate cases:
+/// - If both WGSS and BGSS are zero (all points identical), returns `0.0`.
+/// - If WGSS is zero but BGSS is positive (perfectly compact, separated
+///   clusters), the score is unbounded and `f64::INFINITY` is returned,
+///   which the output formatter renders as `NA`.
 pub fn calinski_harabasz_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
     // 1. Group items by cluster
     let mut clusters: HashMap<u32, Vec<&String>> = HashMap::new();
@@ -245,11 +258,17 @@ pub fn calinski_harabasz_score(partition: &LabelMap, coords: &Coordinates) -> f6
     }
 
     if wgss == 0.0 {
-        // All points coincide with their cluster centroids. BGSS is also 0
-        // when all cluster centroids equal the global centroid. This is a
-        // degenerate input (e.g., all points identical), not a "perfect"
-        // clustering — return 0.0 for consistency with other degenerate cases.
-        0.0
+        if bgss == 0.0 {
+            // All points coincide with both their cluster centroids and the
+            // global centroid (e.g., all points identical). This is a
+            // degenerate input, not a "perfect" clustering — return 0.0 for
+            // consistency with other degenerate cases.
+            0.0
+        } else {
+            // Clusters are perfectly compact (zero within-cluster scatter)
+            // but have distinct centroids. The CH score is unbounded above.
+            f64::INFINITY
+        }
     } else {
         (bgss / (n_clusters as f64 - 1.0))
             / (wgss / (n_samples as f64 - n_clusters as f64))

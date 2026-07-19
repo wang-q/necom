@@ -25,7 +25,7 @@ pub use partition::{
 use std::collections::HashMap;
 use std::io::Write;
 
-/// Represents a clustering partition: Item -> ClusterID
+/// Item name -> cluster label.
 pub type LabelMap = HashMap<String, u32>;
 
 /// Evaluation target (clap-free). The caller loads resources and constructs
