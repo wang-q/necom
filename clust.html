@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-36a11b86.js";
+            window.path_to_searchindex_js = "searchindex-33db9da7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3f52531c.js"></script>
@@ -223,6 +223,7 @@
 <li><strong>Output</strong>: <code>cluster</code> (default) or <code>pair</code> format, controlled by <code>--format</code>.</li>
 <li><strong>Defaults</strong>: <code>--runs 10</code>, <code>--max-iter 100</code>.</li>
 <li><strong>Note</strong>: <code>--k</code> must not exceed the number of samples.</li>
+<li><strong>Note</strong>: If a cluster becomes empty during iteration, it is omitted from the output, so the final number of clusters may be less than <code>k</code>.</li>
 </ul>
 <h3 id="dbscan"><a class="header" href="#dbscan">DBSCAN</a></h3>
 <ul>
@@ -397,7 +398,7 @@ necom clust gmm input.tsv --k 5 --cov full &gt; clusters.tsv
 <li><strong>32 GiB</strong>: ~130,000 points</li>
 <li><strong>64 GiB</strong>: ~185,000 points</li>
 </ul>
-<p><strong>Conclusion</strong>: Even on a high-end server with 64 GiB memory, processing $N=200k$ is near the limit.</p>
+<p><strong>Implications</strong>: Even on a high-end server with 64 GiB memory, processing $N=200k$ is near the limit.</p>
 <p><strong>Recommended strategy</strong>: Use a “two-step” approach combining fast clustering with careful tree building.</p>
 <ol>
 <li><strong>Pre-clustering/compression</strong>: Use linear or near-linear algorithms (e.g., <code>necom clust k-medoids</code>, <code>necom clust mcl</code>, or external tools such as <code>mmseqs2</code>) to compress data into $K$ representative points ($K \approx 5000 \sim 10000$).</li>
@@ -405,13 +406,13 @@ necom clust gmm input.tsv --k 5 --cov full &gt; clusters.tsv
 </ol>
 <p><strong>Workflow example</strong>:</p>
 <pre><code class="language-bash"># 1. Fast clustering to select representatives (k=5000)
-necom clust k-medoids all_data.tsv --k 5000 --format pair &gt; clusters.tsv
+necom clust k-medoids all_distances.tsv --k 5000 --format pair &gt; clusters.tsv
 
 # 2. Extract representative list (Unix `cut`, not `necom cut`)
 cut -f1 clusters.tsv | sort -u &gt; representatives.list
 
 # 3. Extract sub-matrix for representatives
-necom mat subset all_data.tsv representatives.list -o sub_matrix.phy
+necom mat subset all_distances.phy representatives.list -o sub_matrix.phy
 
 # 4. Build tree on representatives
 necom clust hier sub_matrix.phy --method ward &gt; backbone.nwk

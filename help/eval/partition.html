@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-36a11b86.js";
+            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-3f52531c.js"></script>
@@ -198,7 +198,7 @@
 <li>Internal Evaluation (Partition + Matrix/Tree/Coords): evaluates a single partition without ground truth.
 <ul>
 <li><code>--matrix</code> / <code>--tree</code>: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau).</li>
-<li><code>--coords</code>: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski).</li>
+<li><code>--coords</code>: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski). All samples in the partition must be present in the coordinate file.</li>
 </ul>
 </li>
 <li>Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (<code>Group\tClusterID\tSampleID</code>).</li>

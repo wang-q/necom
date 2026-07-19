@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-36a11b86.js";
+            window.path_to_searchindex_js = "searchindex-33db9da7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3f52531c.js"></script>
@@ -282,6 +282,7 @@
 <li><code>--binary</code>: treat values as 0/1 before computing.</li>
 <li><code>--sim</code> / <code>--dis</code>: convert between distance and (dis)similarity.</li>
 <li>Accepts one file (self-comparison) or two files (cross-comparison).</li>
+<li><code>--parallel &lt;N&gt;</code>: number of worker threads (default 1). With <code>--parallel</code> &gt; 1, rows may be emitted in non-deterministic order.</li>
 </ul>
 <h4 id="conversion-models"><a class="header" href="#conversion-models">Conversion Models</a></h4>
 <p><code>necom mat transform</code> supports common similarity-to-distance conversions:</p>
@@ -306,8 +307,8 @@
 <p>The following conversions are not yet implemented:</p>
 <ul>
 <li><strong>Reciprocal</strong>: $D = 1/S - 1/Max$ (can be approximated with <code>--op linear</code>).</li>
-<li><strong>Cosine Similarity</strong>: $D = 1 - \cos(\theta)$.</li>
-<li><strong>Correlation</strong>: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.</li>
+<li><strong>Matrix-level Cosine Similarity conversion</strong>: $D = 1 - \cos(\theta)$.</li>
+<li><strong>Matrix-level Correlation conversion</strong>: $D = \sqrt{2(1 - r)}$ or $D = 1 - r$.</li>
 </ul>
 <p>For Cosine/Correlation distances, the workflow depends on the input form:</p>
 <ul>

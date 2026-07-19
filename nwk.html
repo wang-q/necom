@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-36a11b86.js";
+            window.path_to_searchindex_js = "searchindex-33db9da7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3f52531c.js"></script>
@@ -258,8 +258,9 @@
 <li>Unquoted labels are trimmed: leading and trailing whitespace is removed. Internal whitespace is preserved only when the label is quoted with single or double quotes.</li>
 <li>Labels containing Newick reserved characters (<code>( ) : ; , [ ]</code>) or whitespace must be quoted to round-trip correctly.</li>
 <li>Single quotes inside single-quoted labels are escaped by doubling (<code>''</code>), and double quotes inside double-quoted labels are escaped by doubling (<code>""</code>).</li>
-<li>Name-based selection filters (<code>-n</code>, <code>-l</code>, <code>-x</code>, <code>--lca</code>, <code>--name-list</code>) generally log a warning and continue when a requested name is not found, rather than abort. This applies to commands such as <code>rename</code>, <code>subtree</code>, <code>comment</code>, <code>prune</code>, and <code>order</code>.</li>
-<li><code>reroot</code> is an exception: if none of the names specified with <code>--node</code> are found, it reports an error and exits, because there is no valid target for rerooting.</li>
+<li>Name-based selection filters (<code>-n</code>, <code>-l</code>, <code>-x</code>, <code>--lca</code>) generally log a warning and continue when a requested name is not found, rather than abort. This applies to commands such as <code>rename</code>, <code>subtree</code>, <code>comment</code>, and <code>prune</code>.</li>
+<li><code>order --name-list</code> is an exception: entries in the name list that are not found among the leaf names cause the command to fail with an error listing the missing names.</li>
+<li><code>reroot</code> is also an exception: if none of the names specified with <code>--node</code> are found, it reports an error and exits, because there is no valid target for rerooting.</li>
 </ul>
 <hr>
 <h2 id="branch-length-handling"><a class="header" href="#branch-length-handling">Branch Length Handling</a></h2>

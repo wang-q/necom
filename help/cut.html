@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-36a11b86.js";
+            window.path_to_searchindex_js = "../searchindex-33db9da7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-3f52531c.js"></script>
@@ -228,6 +228,9 @@
 <li><code>--scan &lt;start&gt;,&lt;end&gt;,&lt;step&gt;</code> performs a parameter sweep. In scan mode, <code>--format</code> is ignored and output is always long format (<code>Group\tClusterID\tSampleID</code>). For <code>--dynamic-tree</code>, the scan value replaces the min cluster size at each step (the <code>--dynamic-tree</code> argument itself only selects the method).</li>
 <li><code>--stats-out &lt;FILE&gt;</code> writes scan summary statistics (<code>Group\tClusters\tSingletons\tNon-Singletons\tMaxSize</code>).</li>
 <li><code>--dynamic-hybrid</code> requires <code>--matrix</code>.</li>
+<li><code>--dynamic-tree</code> / <code>--dynamic-hybrid</code> may label leaves that fall below the minimum cluster size as unassigned (cluster <code>0</code>). Unassigned leaves are still emitted in the default output.</li>
+<li>In <code>--scan</code> output, cluster <code>0</code> keeps the label <code>0</code>; non-zero clusters are renumbered starting from <code>1</code>. The <code>--stats-out</code> <code>Clusters</code> column counts only non-zero clusters.</li>
+<li>Distance/height thresholds (<code>--height</code>, <code>--root-dist</code>, <code>--max-clade</code>, <code>--avg-clade</code>, <code>--med-clade</code>, <code>--sum-branch</code>, <code>--leaf-dist-*</code>, <code>--max-edge</code>, <code>--inconsistent</code>) must be non-negative.</li>
 </ul>
 <p>Examples:</p>
 <ol>

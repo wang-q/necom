@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-36a11b86.js";
+            window.path_to_searchindex_js = "searchindex-33db9da7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3f52531c.js"></script>
@@ -302,6 +302,7 @@
 <li><strong>Range</strong>: <code>[0, 1]</code>.</li>
 <li><strong>Disadvantages</strong>: Not corrected for chance.</li>
 <li><strong>Applicable</strong>: Scenarios with balanced cluster size distributions.</li>
+<li><strong>Implementation note</strong>: Because NMI is a ratio of MI to the geometric mean of the two entropies, the choice of logarithm base cancels out. The value is therefore independent of whether natural logs or base-2 logs are used.</li>
 </ul>
 </li>
 <li>
@@ -311,6 +312,7 @@
 <li><strong>Principle</strong>: $MI(U, V) = \sum \sum P(u,v) \log \frac{P(u,v)}{P(u)P(v)}$.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>.</li>
 <li><strong>Disadvantages</strong>: Difficult to interpret directly; strongly affected by partition entropy. Usually used as an intermediate step for AMI/NMI.</li>
+<li><strong>Implementation note</strong>: The implementation uses natural logarithms (matching scikit-learn), so the raw MI value is <code>ln(2)</code> times larger than a base-2 formulation. Normalized metrics (NMI, AMI, V-Measure) are unaffected because they are ratios.</li>
 </ul>
 </li>
 <li>

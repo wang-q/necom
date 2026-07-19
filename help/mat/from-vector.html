@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-36a11b86.js";
+            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-3f52531c.js"></script>
@@ -208,7 +208,9 @@
 <ul>
 <li><code>--binary</code> treats positive values as 1, all others as 0, before computing the score.</li>
 <li><code>--sim</code> converts a distance to a similarity; <code>--dis</code> converts a similarity to a dissimilarity.</li>
+<li>When both <code>--sim</code> and <code>--dis</code> are given, the conversion is applied in the order distance -&gt; similarity -&gt; dissimilarity.</li>
 <li><code>--parallel &lt;N&gt;</code> sets the number of worker threads (default 1).</li>
+<li>With <code>--parallel</code> &gt; 1, rows may be emitted in non-deterministic order; each row still pairs the first-file entry with all second-file entries in file order.</li>
 </ul>
 <p>Examples:</p>
 <ol>

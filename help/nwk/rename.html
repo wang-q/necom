@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-36a11b86.js";
+            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-3f52531c.js"></script>
@@ -190,7 +190,7 @@
 <li>For nodes with names, use <code>--node</code>.</li>
 <li>For unnamed internal nodes, use <code>--lca</code> with two comma-separated names.</li>
 <li>The total number of <code>--node</code> and <code>--lca</code> arguments must equal the number of <code>--rename</code> arguments.</li>
-<li>Do not mix <code>--node</code> and <code>--lca</code> alternately.</li>
+<li>Matching order: the first N <code>--rename</code> values are applied to the N <code>--node</code> arguments in order, and the remaining <code>--rename</code> values are applied to the <code>--lca</code> arguments in order. The order in which <code>--node</code>, <code>--lca</code>, and <code>--rename</code> arguments appear on the command line does not affect this matching.</li>
 <li>This command is designed for small edits, not batch replacement. For batch replacement, use <code>necom nwk replace</code> or external tools such as <code>sed</code> or <code>perl</code>.</li>
 </ul>
 <p>Examples:</p>

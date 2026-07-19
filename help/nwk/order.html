@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-36a11b86.js";
+            window.path_to_searchindex_js = "../../searchindex-33db9da7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-3f52531c.js"></script>
@@ -193,12 +193,12 @@
 <li>Sort orders:
 <ul>
 <li><code>--name-list</code>: by a list of names in the file, one per line.</li>
-<li><code>--alphanumeric</code> / <code>--alphanumeric-rev</code>: by alphanumeric order of labels.</li>
-<li><code>--num-descendants</code> / <code>--num-descendants-rev</code>: by number of descendants (ladderize).</li>
+<li><code>--alphanumeric</code> / <code>--alphanumeric-rev</code>: by alphanumeric order of labels, or in reverse order.</li>
+<li><code>--num-descendants</code> / <code>--num-descendants-rev</code>: by number of descendants (ladderize), or in reverse order.</li>
 <li><code>--deladderize</code> (alias <code>--dl</code>): alternate sort direction at each level.</li>
 </ul>
 </li>
-<li>Entries in <code>--name-list</code> that are not found among the leaf names are logged as warnings and skipped.</li>
+<li>Entries in <code>--name-list</code> that are not found among the leaf names cause the command to fail with an error listing the missing names.</li>
 </ul>
 <p>Examples:</p>
 <ol>
