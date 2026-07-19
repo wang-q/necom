@@ -14,9 +14,12 @@ Output:
 Notes:
 
 * External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, V-Measure, FMI, NMI, RI, Jaccard, Precision, and Recall.
+    * The two partitions must cover exactly the same sample set. If one partition contains samples missing from the other, the command errors out instead of silently dropping them.
+    * With `--no-singletons`, singleton clusters are first removed from `--other`; any samples that become unreferenced are excluded from evaluation, and the remaining sample sets must still match.
 * Internal Evaluation (Partition + Matrix/Tree/Coords): evaluates a single partition without ground truth.
-    * `--matrix` / `--tree`: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau).
+    * `--matrix` / `--tree`: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau). All samples in the partition must be present in the matrix or tree; otherwise the command errors out instead of producing `NaN` metrics.
     * `--coords`: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski). All samples in the partition must be present in the coordinate file.
+* Empty partitions are rejected (single mode and each batch group must contain at least one sample).
 * Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (`Group\tClusterID\tSampleID`).
 * `--other` / `--truth`: second partition for external evaluation (synonyms).
 * `--no-singletons`: exclude singleton clusters from `--other` before external evaluation.

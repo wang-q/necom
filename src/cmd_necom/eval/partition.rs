@@ -6,6 +6,7 @@ use necom::libs::eval::{
 };
 use necom::libs::pairmat::NamedMatrix;
 use necom::libs::phylo::tree::Tree;
+use std::collections::HashSet;
 use std::io::Write;
 
 /// Verify that every item in `partition` has a coordinate vector.
@@ -27,6 +28,66 @@ fn ensure_coords_cover_partition(
             "{} sample(s) from the partition are missing in --coords (showing up to 5): {:?}",
             missing.len(),
             missing.iter().take(5).copied().collect::<Vec<_>>()
+        );
+    }
+    Ok(())
+}
+
+/// Verify that every item in `partition` is present in `names`.
+///
+/// Prevents silent `NaN` metrics when the distance source (matrix or tree)
+/// does not contain a partition sample.
+fn ensure_names_cover_partition(
+    partition: &LabelMap,
+    names: &HashSet<String>,
+    source: &str,
+) -> anyhow::Result<()> {
+    let missing: Vec<&str> = partition
+        .keys()
+        .filter(|k| !names.contains(*k))
+        .map(|k| k.as_str())
+        .collect();
+    if !missing.is_empty() {
+        anyhow::bail!(
+            "{} sample(s) from the partition are missing in {} (showing up to 5): {:?}",
+            missing.len(),
+            source,
+            missing.iter().take(5).copied().collect::<Vec<_>>()
+        );
+    }
+    Ok(())
+}
+
+/// Verify that `partition` is not empty.
+fn ensure_non_empty(partition: &LabelMap, context: &str) -> anyhow::Result<()> {
+    if partition.is_empty() {
+        anyhow::bail!("{} is empty (no samples found)", context);
+    }
+    Ok(())
+}
+
+/// Verify that two partitions cover exactly the same sample set.
+///
+/// External metrics require the two partitions to be comparable; silently
+/// intersecting keys can hide mismatched inputs and produce misleading scores.
+fn ensure_partitions_align(p1: &LabelMap, p2: &LabelMap) -> anyhow::Result<()> {
+    let only_in_p1: Vec<&str> = p1
+        .keys()
+        .filter(|k| !p2.contains_key(*k))
+        .map(|k| k.as_str())
+        .collect();
+    let only_in_p2: Vec<&str> = p2
+        .keys()
+        .filter(|k| !p1.contains_key(*k))
+        .map(|k| k.as_str())
+        .collect();
+    if !only_in_p1.is_empty() || !only_in_p2.is_empty() {
+        anyhow::bail!(
+            "partition sample sets do not match ({} only in p1, {} only in --other): p1 {:?}, --other {:?}",
+            only_in_p1.len(),
+            only_in_p2.len(),
+            only_in_p1.iter().take(5).copied().collect::<Vec<_>>(),
+            only_in_p2.iter().take(5).copied().collect::<Vec<_>>()
         );
     }
     Ok(())
@@ -91,6 +152,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if format == PartitionFormat::Long {
         // Batch Mode
         let batches = load_batch_partitions(p1_path)?;
+        if batches.is_empty() {
+            anyhow::bail!("no batch groups found in partition file");
+        }
 
         // Determine the format for `--other`. In batch mode p1 is Long
         // (multi-partition), so the truth file cannot also be Long.
@@ -116,7 +180,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         let dist_provider: Option<Box<dyn DistanceMatrix>> =
             if let Some(matrix_path) = args.get_one::<String>("matrix") {
-                Some(Box::new(NamedMatrix::from_relaxed_phylip(matrix_path)?))
+                let matrix = NamedMatrix::from_relaxed_phylip(matrix_path)?;
+                let matrix_names: HashSet<String> =
+                    matrix.get_names().into_iter().cloned().collect();
+                for (_, p1) in &batches {
+                    ensure_names_cover_partition(p1, &matrix_names, "--matrix")?;
+                }
+                Some(Box::new(matrix))
             } else if let Some(tree_path) = args.get_one::<String>("tree") {
                 let trees = Tree::from_file(tree_path)?;
                 if trees.len() != 1 {
@@ -124,6 +194,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 }
                 // trees.len() == 1 verified above; .next() is guaranteed Some.
                 let tree = trees.into_iter().next().unwrap();
+                let tree_names: HashSet<String> =
+                    tree.get_leaf_names().into_iter().flatten().collect();
+                for (_, p1) in &batches {
+                    ensure_names_cover_partition(p1, &tree_names, "--tree")?;
+                }
                 Some(Box::new(TreeDistance::new(tree)))
             } else {
                 None
@@ -147,6 +222,23 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             );
         }
 
+        // Validate groups and align external partitions before running.
+        let mut processed_batches: Vec<(String, LabelMap)> =
+            Vec::with_capacity(batches.len());
+        for (group, mut p1) in batches {
+            ensure_non_empty(&p1, &format!("group {}", group))?;
+            if let Some(ref truth) = p2 {
+                if remove_singletons_flag {
+                    // Samples removed from the reference by --no-singletons
+                    // are excluded from evaluation rather than treated as a
+                    // mismatch.
+                    p1.retain(|k, _| truth.contains_key(k));
+                }
+                ensure_partitions_align(&p1, truth)?;
+            }
+            processed_batches.push((group, p1));
+        }
+
         let mut targets: Vec<EvalTarget<'_>> = vec![];
         if let Some(ref truth) = p2 {
             targets.push(EvalTarget::External(truth));
@@ -158,13 +250,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             targets.push(EvalTarget::Coords(c));
         }
 
-        run_batch(batches, &targets, &mut writer)?;
+        run_batch(processed_batches, &targets, &mut writer)?;
         writer.flush()?;
         return Ok(());
     }
 
     // Single Mode
     let p1 = load_partition(p1_path, format)?;
+    ensure_non_empty(&p1, "partition p1")?;
 
     // `--other-format` overrides the format for the `--other` file in single
     // mode too. Defaults to the same format as p1 when not specified.
@@ -182,9 +275,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         if remove_singletons_flag {
             remove_singletons(&mut p2);
         }
-        run_single(&p1, EvalTarget::External(&p2), &mut writer)?;
+        // Filter p1 to match p2 after singleton removal; otherwise require an
+        // exact sample-set match so users are not misled by silent intersection.
+        let mut p1_for_eval = p1.clone();
+        if remove_singletons_flag {
+            p1_for_eval.retain(|k, _| p2.contains_key(k));
+        }
+        ensure_partitions_align(&p1_for_eval, &p2)?;
+        run_single(&p1_for_eval, EvalTarget::External(&p2), &mut writer)?;
     } else if let Some(matrix_path) = args.get_one::<String>("matrix") {
         let matrix = NamedMatrix::from_relaxed_phylip(matrix_path)?;
+        let matrix_names: HashSet<String> =
+            matrix.get_names().into_iter().cloned().collect();
+        ensure_names_cover_partition(&p1, &matrix_names, "--matrix")?;
         run_single(&p1, EvalTarget::Matrix(&matrix), &mut writer)?;
     } else if let Some(tree_path) = args.get_one::<String>("tree") {
         let trees = Tree::from_file(tree_path)?;
@@ -193,6 +296,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
         // trees.len() == 1 verified above; .next() is guaranteed Some.
         let tree = trees.into_iter().next().unwrap();
+        let tree_names: HashSet<String> =
+            tree.get_leaf_names().into_iter().flatten().collect();
+        ensure_names_cover_partition(&p1, &tree_names, "--tree")?;
         let dist = TreeDistance::new(tree);
         run_single(&p1, EvalTarget::Matrix(&dist), &mut writer)?;
     } else if let Some(coords_path) = args.get_one::<String>("coords") {

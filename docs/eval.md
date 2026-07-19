@@ -29,6 +29,8 @@ Compare trees using Robinson-Foulds (RF) distance and its variants. Supports pai
 
 Evaluate clustering partition quality. Supports external comparison to a reference partition (ARI, AMI, V-Measure, FMI, NMI, Jaccard, etc.) and internal evaluation using a distance matrix, tree, or coordinate matrix (Silhouette, Dunn, Davies-Bouldin, Calinski-Harabasz, etc.). Batch mode evaluates multiple partitions from parameter scans.
 
+Input validation is strict: empty partitions are rejected, external evaluation requires matching sample sets, and internal evaluation requires every partition sample to be present in the supplied matrix, tree, or coordinate file. These checks prevent silent sample dropping and misleading `NaN` metrics.
+
 See [`docs/eval-partition.md`](eval-partition.md) for detailed metric definitions and the selection guide.
 
 ---

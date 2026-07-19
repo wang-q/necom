@@ -31,6 +31,10 @@ pub struct Metrics {
 }
 
 /// Evaluates two partitions and returns pairwise metrics.
+///
+/// Only samples present in both partitions are considered; callers that need
+/// strict sample-set matching should validate the inputs before calling this
+/// function (e.g., `necom eval partition` bails on mismatched sample sets).
 pub fn evaluate(p1: &LabelMap, p2: &LabelMap) -> Metrics {
     // 1. Find intersection of keys
     let keys1: HashSet<_> = p1.keys().collect();

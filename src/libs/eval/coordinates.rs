@@ -1,5 +1,6 @@
 use super::LabelMap;
 use crate::libs::feature::FeatureVector;
+use anyhow::Context;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -39,7 +40,9 @@ impl Coordinates {
             }
 
             // Only support FeatureVector format: name \t v1 \t v2 \t v3 (pure TSV)
-            let fv = FeatureVector::parse(&line)?;
+            let fv = FeatureVector::parse(&line).with_context(|| {
+                format!("failed to parse coordinate data row {}", data_line_no)
+            })?;
             if !fv.name().is_empty() {
                 let vec: Vec<f64> = fv.list().iter().map(|&v| v as f64).collect();
                 // Initialize dim on the first data row (not line index), so that

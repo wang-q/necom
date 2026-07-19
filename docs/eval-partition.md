@@ -22,6 +22,15 @@ This document describes the design philosophy, metrics, and selection guidance f
 
 This design allows evaluation tools to exist independently of clustering algorithms, supporting clustering results from any source.
 
+## Input Validation
+
+`necom eval partition` validates inputs before computing metrics to avoid silent failures:
+
+*   **Empty partitions**: A single partition or any batch group with no samples is rejected.
+*   **External evaluation** (`--other` / `--truth`): The two partitions must contain exactly the same sample set. The command errors out rather than intersecting keys silently.
+*   **Internal evaluation** (`--matrix`, `--tree`, `--coords`): Every sample in the partition must be present in the distance source. Missing samples produce a clear error instead of `NaN` metrics.
+*   **`--no-singletons`**: Singleton clusters are removed from the reference partition first; samples that become unreferenced are excluded from evaluation, and the remaining sample sets are still required to match.
+
 ## Core Metrics
 
 Clustering evaluation metrics usually fall into two categories: **external validity** (requires Ground Truth or a reference partition) and **internal validity** (depends only on the geometry/statistics of the data).

@@ -352,14 +352,16 @@ fn test_eval_partition_empty_input() -> anyhow::Result<()> {
         .arg(empty_path)
         .output()?;
 
-    assert!(output.status.success());
-    let stdout = String::from_utf8(output.stdout)?;
-    let lines: Vec<&str> = stdout.lines().collect();
-
-    if lines.len() > 1 {
-        let values: Vec<&str> = lines[1].split_whitespace().collect();
-        assert_eq!(values[0], "0.000000");
-    }
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure for empty partition, but command succeeded"
+    );
+    assert!(
+        stderr.contains("empty"),
+        "Expected empty partition error, got: {}",
+        stderr
+    );
 
     Ok(())
 }
@@ -450,6 +452,47 @@ fn test_eval_partition_conflict_matrix_tree() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_eval_partition_disjoint_sample_sets() -> anyhow::Result<()> {
+    // External evaluation requires the two partitions to cover the same sample
+    // set. If p1 contains samples not in --other, the command must bail rather
+    // than silently dropping them.
+    let mut p1_file = NamedTempFile::new()?;
+    p1_file.write_all("1\tA\n1\tB\n2\tC\n2\tD\n".as_bytes())?;
+    let p1_path = p1_file.path().to_str().unwrap();
+
+    let mut p2_file = NamedTempFile::new()?;
+    p2_file.write_all("1\tA\n1\tB\n2\tC\n".as_bytes())?;
+    let p2_path = p2_file.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(p1_path)
+        .arg("--other")
+        .arg(p2_path)
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure for disjoint sample sets, but command succeeded"
+    );
+    assert!(
+        stderr.contains("sample sets do not match"),
+        "Expected sample-set mismatch error, got: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("D"),
+        "Error should mention the missing sample D, got: {}",
+        stderr
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_eval_partition_conflict_other_coords() -> anyhow::Result<()> {
     // Mutual exclusion: providing both --other and --coords must error out.
     let mut cmd = Command::cargo_bin("necom")?;
@@ -471,6 +514,162 @@ fn test_eval_partition_conflict_other_coords() -> anyhow::Result<()> {
     assert!(
         stderr.contains("only one of"),
         "Expected mutual exclusion error, got: {}",
+        stderr
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_matrix_missing_sample() -> anyhow::Result<()> {
+    // Partition contains D, but the matrix only has A/B/C. This must bail
+    // with a clear message instead of silently returning NaN metrics.
+    let mut partition_file = NamedTempFile::new()?;
+    partition_file.write_all("1\tA\n1\tB\n2\tC\n2\tD\n".as_bytes())?;
+    let partition_path = partition_file.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(partition_path)
+        .arg("--matrix")
+        .arg("tests/clust/eval/simple.matrix.phy")
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure for missing matrix sample, but command succeeded"
+    );
+    assert!(
+        stderr.contains("missing in --matrix"),
+        "Expected missing --matrix sample error, got: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("D"),
+        "Error should mention the missing sample D, got: {}",
+        stderr
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_tree_missing_sample() -> anyhow::Result<()> {
+    // Partition contains D, but the tree only has A/B/C. This must bail
+    // with a clear message instead of silently returning NaN metrics.
+    let mut partition_file = NamedTempFile::new()?;
+    partition_file.write_all("1\tA\n1\tB\n2\tC\n2\tD\n".as_bytes())?;
+    let partition_path = partition_file.path().to_str().unwrap();
+
+    let mut tree_file = NamedTempFile::new()?;
+    tree_file.write_all("((A:0.1,B:0.1):0.2,C:0.3);".as_bytes())?;
+    let tree_path = tree_file.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(partition_path)
+        .arg("--tree")
+        .arg(tree_path)
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure for missing tree sample, but command succeeded"
+    );
+    assert!(
+        stderr.contains("missing in --tree"),
+        "Expected missing --tree sample error, got: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("D"),
+        "Error should mention the missing sample D, got: {}",
+        stderr
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_coords_missing_sample() -> anyhow::Result<()> {
+    // Partition contains X, but the coords file only has A/B/C/D. This must
+    // bail with a clear message instead of silently dropping the sample.
+    let mut partition_file = NamedTempFile::new()?;
+    partition_file.write_all("1\tA\n1\tB\n2\tC\n2\tX\n".as_bytes())?;
+    let partition_path = partition_file.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(partition_path)
+        .arg("--coords")
+        .arg("tests/clust/eval/db.coords.tsv")
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure for missing coords sample, but command succeeded"
+    );
+    assert!(
+        stderr.contains("missing in --coords"),
+        "Expected missing --coords sample error, got: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("X"),
+        "Error should mention the missing sample X, got: {}",
+        stderr
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_batch_matrix_missing_sample() -> anyhow::Result<()> {
+    // Batch long format with a group containing sample E, but the matrix only
+    // has A/B/C/D. This must bail with a clear message.
+    let mut long_file = NamedTempFile::new()?;
+    long_file.write_all("g1\t1\tA\ng1\t1\tB\ng1\t2\tC\ng1\t2\tE\n".as_bytes())?;
+    let long_path = long_file.path().to_str().unwrap();
+
+    let mut matrix_file = NamedTempFile::new()?;
+    matrix_file.write_all(
+        "4\nA\t0.0\t1.0\t2.0\t3.0\nB\t1.0\t0.0\t4.0\t5.0\nC\t2.0\t4.0\t0.0\t6.0\nD\t3.0\t5.0\t6.0\t0.0\n".as_bytes(),
+    )?;
+    let matrix_path = matrix_file.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(long_path)
+        .arg("--input-format")
+        .arg("long")
+        .arg("--matrix")
+        .arg(matrix_path)
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure for missing batch matrix sample, but command succeeded"
+    );
+    assert!(
+        stderr.contains("missing in --matrix"),
+        "Expected missing --matrix sample error, got: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("E"),
+        "Error should mention the missing sample E, got: {}",
         stderr
     );
 
