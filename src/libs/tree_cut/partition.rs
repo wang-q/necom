@@ -46,7 +46,10 @@ impl Partition {
     pub fn get_stats(&self) -> (usize, usize, usize, usize) {
         let mut sizes = HashMap::new();
         for &cluster_id in self.assignment.values() {
-            *sizes.entry(cluster_id).or_insert(0) += 1;
+            // Cluster 0 is reserved for unassigned leaves and is not a real cluster.
+            if cluster_id > 0 {
+                *sizes.entry(cluster_id).or_insert(0) += 1;
+            }
         }
         let mut singletons = 0;
         let mut non_singletons = 0;
@@ -232,9 +235,16 @@ pub fn format_scan_rows(
     cluster_ids.sort();
 
     let mut out = String::new();
-    for (i, cid) in cluster_ids.iter().enumerate() {
-        let cluster_label = i + 1;
-        if let Some(members) = clusters_map.get(cid) {
+    let mut nonzero_label = 0usize;
+    for &cid in &cluster_ids {
+        // Cluster 0 (unassigned) keeps label 0; real clusters are renumbered 1..N.
+        let cluster_label = if cid == 0 {
+            0
+        } else {
+            nonzero_label += 1;
+            nonzero_label
+        };
+        if let Some(members) = clusters_map.get(&cid) {
             let mut member_names: Vec<String> = Vec::with_capacity(members.len());
             for &mid in members {
                 if let Some(node) = tree.get_node(mid) {
@@ -286,6 +296,20 @@ mod tests {
                                // (num_clusters, singletons, non_singletons, max_size)
                                // Cluster 1 has 2 members (non-singleton); clusters 3 and 5 have 1 each.
         assert_eq!(part.get_stats(), (3, 2, 1, 2));
+    }
+
+    #[test]
+    fn test_partition_get_stats_with_unassigned() {
+        // Cluster 0 is reserved for unassigned leaves and must not be counted.
+        let mut part = Partition::new();
+        part.assignment.insert(0, 0); // unassigned
+        part.assignment.insert(1, 0); // unassigned
+        part.assignment.insert(2, 1); // cluster 1 (size 1)
+        part.assignment.insert(3, 2); // cluster 2 (size 2)
+        part.assignment.insert(4, 2);
+        part.num_clusters = 2;
+        // 2 real clusters, 1 singleton, 1 non-singleton, max size 2.
+        assert_eq!(part.get_stats(), (2, 1, 1, 2));
     }
 
     #[test]
@@ -382,5 +406,29 @@ mod tests {
         }];
         let out = format_clusters(&clusters, "cluster").unwrap();
         assert_eq!(out, "A\tB\tC\n");
+    }
+
+    #[test]
+    fn test_format_scan_rows_with_unassigned() {
+        let tree = parse_tree("((A:1,B:1):1,(C:1,D:1):1);");
+        let mut part = Partition::new();
+        // Simulate dynamic-tree output: A,B in cluster 1; C,D unassigned (cluster 0).
+        let a = tree.get_node_by_name("A").unwrap();
+        let b = tree.get_node_by_name("B").unwrap();
+        let c = tree.get_node_by_name("C").unwrap();
+        let d = tree.get_node_by_name("D").unwrap();
+        part.assignment.insert(a, 1);
+        part.assignment.insert(b, 1);
+        part.assignment.insert(c, 0);
+        part.assignment.insert(d, 0);
+        part.num_clusters = 1;
+
+        let out = format_scan_rows(&part, &tree, "test=1").unwrap();
+        let lines: Vec<&str> = out.lines().collect();
+        // Cluster 0 must keep label 0; cluster 1 is label 1.
+        assert!(lines.iter().any(|l| *l == "test=1\t1\tA"));
+        assert!(lines.iter().any(|l| *l == "test=1\t1\tB"));
+        assert!(lines.iter().any(|l| *l == "test=1\t0\tC"));
+        assert!(lines.iter().any(|l| *l == "test=1\t0\tD"));
     }
 }

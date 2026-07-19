@@ -262,8 +262,7 @@ pub fn get_node_by_name(tree: &Tree, name: &str) -> Option<NodeId> {
 
 /// Find the medoid index among `ids` (min sum of pairwise branch-length distances).
 ///
-/// Currently unused by the CLI, but retained for future medoid-based selection
-/// in visualization or evaluation pipelines.
+/// Used by `tree_cut::partition::find_representative` for `--rep medoid` in `necom cut`.
 pub(crate) fn tree_medoid(tree: &Tree, ids: &[NodeId]) -> Option<usize> {
     if ids.is_empty() {
         return None;

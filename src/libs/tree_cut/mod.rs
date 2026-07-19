@@ -178,7 +178,7 @@ pub(crate) fn compute_heights(
                 let child_node = tree
                     .get_node(child)
                     .ok_or_else(|| anyhow::anyhow!("node {} not found", child))?;
-                let len = child_node.length.unwrap_or(0.0); // If None, assume 0
+                let len = child_node.finite_length();
                 let h = heights.get(&child).copied().unwrap_or(0.0) + len;
                 if h > max_h {
                     max_h = h;

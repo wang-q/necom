@@ -73,6 +73,13 @@ pub fn build_method(
     deep: usize,
     leaf_depths: Option<(f64, f64, f64)>,
 ) -> anyhow::Result<Method> {
+    let require_non_negative = |v: f64, method: &str| -> anyhow::Result<()> {
+        if v < 0.0 {
+            anyhow::bail!("{} threshold must be non-negative, got {}", method, v);
+        }
+        Ok(())
+    };
+
     match name {
         "k" => {
             if val < 1.0 || val.fract() != 0.0 {
@@ -80,23 +87,108 @@ pub fn build_method(
             }
             Ok(Method::K(val as usize))
         }
-        "height" => Ok(Method::Height(val)),
-        "root_dist" => Ok(Method::RootDist(val)),
-        "max_clade" => Ok(Method::MaxClade(val)),
-        "avg_clade" => Ok(Method::AvgClade(val)),
-        "med_clade" => Ok(Method::MedClade(val)),
-        "sum_branch" => Ok(Method::SumBranch(val)),
-        "leaf_dist_max" => leaf_depths
-            .map(|(_, max, _)| Method::RootDist(max - val))
-            .ok_or_else(|| anyhow::anyhow!("leaf depths required for leaf-dist-max")),
-        "leaf_dist_min" => leaf_depths
-            .map(|(min, _, _)| Method::RootDist(min - val))
-            .ok_or_else(|| anyhow::anyhow!("leaf depths required for leaf-dist-min")),
-        "leaf_dist_avg" => leaf_depths
-            .map(|(_, _, avg)| Method::RootDist(avg - val))
-            .ok_or_else(|| anyhow::anyhow!("leaf depths required for leaf-dist-avg")),
-        "max_edge" => Ok(Method::SingleLinkage(val)),
-        "inconsistent" => Ok(Method::Inconsistent(val, deep)),
+        "height" => {
+            require_non_negative(val, "height")?;
+            Ok(Method::Height(val))
+        }
+        "root_dist" => {
+            require_non_negative(val, "root-dist")?;
+            Ok(Method::RootDist(val))
+        }
+        "max_clade" => {
+            require_non_negative(val, "max-clade")?;
+            Ok(Method::MaxClade(val))
+        }
+        "avg_clade" => {
+            require_non_negative(val, "avg-clade")?;
+            Ok(Method::AvgClade(val))
+        }
+        "med_clade" => {
+            require_non_negative(val, "med-clade")?;
+            Ok(Method::MedClade(val))
+        }
+        "sum_branch" => {
+            require_non_negative(val, "sum-branch")?;
+            Ok(Method::SumBranch(val))
+        }
+        "leaf_dist_max" => {
+            require_non_negative(val, "leaf-dist-max")?;
+            leaf_depths
+                .map(|(_, max, _)| Method::RootDist(max - val))
+                .ok_or_else(|| anyhow::anyhow!("leaf depths required for leaf-dist-max"))
+        }
+        "leaf_dist_min" => {
+            require_non_negative(val, "leaf-dist-min")?;
+            leaf_depths
+                .map(|(min, _, _)| Method::RootDist(min - val))
+                .ok_or_else(|| anyhow::anyhow!("leaf depths required for leaf-dist-min"))
+        }
+        "leaf_dist_avg" => {
+            require_non_negative(val, "leaf-dist-avg")?;
+            leaf_depths
+                .map(|(_, _, avg)| Method::RootDist(avg - val))
+                .ok_or_else(|| anyhow::anyhow!("leaf depths required for leaf-dist-avg"))
+        }
+        "max_edge" => {
+            require_non_negative(val, "max-edge")?;
+            Ok(Method::SingleLinkage(val))
+        }
+        "inconsistent" => {
+            require_non_negative(val, "inconsistent")?;
+            Ok(Method::Inconsistent(val, deep))
+        }
         _ => anyhow::bail!("unknown method: {}", name),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_build_method_negative_threshold_rejected() {
+        // All threshold-based methods should reject negative values.
+        let threshold_methods = [
+            "height",
+            "root_dist",
+            "max_clade",
+            "avg_clade",
+            "med_clade",
+            "sum_branch",
+            "leaf_dist_max",
+            "leaf_dist_min",
+            "leaf_dist_avg",
+            "max_edge",
+            "inconsistent",
+        ];
+        for name in threshold_methods {
+            let result = build_method(name, -1.0, 2, Some((1.0, 3.0, 2.0)));
+            assert!(
+                result.is_err(),
+                "method {} should reject negative threshold",
+                name
+            );
+            let msg = result.unwrap_err().to_string();
+            assert!(
+                msg.contains("non-negative"),
+                "error message should mention non-negative: {}",
+                msg
+            );
+        }
+    }
+
+    #[test]
+    fn test_build_method_zero_threshold_allowed() {
+        // Zero is a valid threshold for distance/height methods.
+        assert!(build_method("height", 0.0, 2, None).is_ok());
+        assert!(build_method("max_clade", 0.0, 2, None).is_ok());
+    }
+
+    #[test]
+    fn test_build_method_k_rejects_non_positive() {
+        assert!(build_method("k", 0.0, 2, None).is_err());
+        assert!(build_method("k", -1.0, 2, None).is_err());
+        assert!(build_method("k", 1.5, 2, None).is_err());
+        assert!(build_method("k", 2.0, 2, None).is_ok());
     }
 }

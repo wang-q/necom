@@ -41,6 +41,9 @@ Notes:
 * `--scan <start>,<end>,<step>` performs a parameter sweep. In scan mode, `--format` is ignored and output is always long format (`Group\tClusterID\tSampleID`). For `--dynamic-tree`, the scan value replaces the min cluster size at each step (the `--dynamic-tree` argument itself only selects the method).
 * `--stats-out <FILE>` writes scan summary statistics (`Group\tClusters\tSingletons\tNon-Singletons\tMaxSize`).
 * `--dynamic-hybrid` requires `--matrix`.
+* `--dynamic-tree` / `--dynamic-hybrid` may label leaves that fall below the minimum cluster size as unassigned (cluster `0`). Unassigned leaves are still emitted in the default output.
+* In `--scan` output, cluster `0` keeps the label `0`; non-zero clusters are renumbered starting from `1`. The `--stats-out` `Clusters` column counts only non-zero clusters.
+* Distance/height thresholds (`--height`, `--root-dist`, `--max-clade`, `--avg-clade`, `--med-clade`, `--sum-branch`, `--leaf-dist-*`, `--max-edge`, `--inconsistent`) must be non-negative.
 
 Examples:
 

@@ -50,7 +50,10 @@ pub fn cut_k(tree: &Tree, k: usize) -> Result<Partition> {
 
     impl Ord for NodeHeight {
         fn cmp(&self, other: &Self) -> Ordering {
-            self.h.partial_cmp(&other.h).unwrap_or(Ordering::Equal)
+            match self.h.partial_cmp(&other.h) {
+                Some(Ordering::Equal) | None => self.id.cmp(&other.id),
+                Some(order) => order,
+            }
         }
     }
 
@@ -221,6 +224,18 @@ mod tests {
         let part = cut_k(&tree, 2).unwrap();
         let clusters = cluster_names(&part, &tree);
         assert_eq!(clusters, vec![vec!["A", "B"], vec!["C"]]);
+    }
+
+    #[test]
+    fn test_cut_k_tie_break_deterministic() {
+        // Symmetric tree: both immediate children of the root have the same height.
+        // K=3 must deterministically split one of them; the node-id tie-breaker in
+        // NodeHeight::cmp makes the larger-id child split first.
+        // Tree: ((A:1,B:1):1,(C:1,D:1):1);
+        let tree = parse_tree("((A:1,B:1):1,(C:1,D:1):1);");
+        let part = cut_k(&tree, 3).unwrap();
+        let clusters = cluster_names(&part, &tree);
+        assert_eq!(clusters, vec![vec!["A", "B"], vec!["C"], vec!["D"]]);
     }
 
     #[test]
