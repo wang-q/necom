@@ -27,9 +27,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let outfile = crate::cmd_necom::args::get_outfile(args);
 
     // Parse method
-    let method = Method::from_str(method_str).map_err(|e| {
-        anyhow::anyhow!("invalid --clust-method '{}': {}", method_str, e)
-    })?;
+    let method = Method::from_str(method_str)
+        .with_context(|| format!("invalid --clust-method '{}'", method_str))?;
 
     // Read matrix
     let matrix = NamedMatrix::from_relaxed_phylip(infile)?;

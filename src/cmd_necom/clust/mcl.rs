@@ -52,7 +52,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // 3. Clustering
     // Mcl::new validates inflation > 1.0 (returns Err otherwise).
     let mut mcl = necom::libs::clust::mcl::Mcl::new(inflation)?;
-    mcl.set_prune_limit(prune);
+    mcl.set_prune_limit(prune)?;
     mcl.set_max_iter(max_iter)?;
     let mut clusters = mcl.perform_clustering(&matrix);
 

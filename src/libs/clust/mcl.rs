@@ -84,8 +84,19 @@ impl Mcl {
     ///
     /// Matrix entries smaller than or equal to this value will be set to zero to maintain sparsity
     /// and improve performance. Default is 1e-5.
-    pub fn set_prune_limit(&mut self, limit: f64) {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `limit` is negative or non-finite.
+    pub fn set_prune_limit(&mut self, limit: f64) -> anyhow::Result<()> {
+        if !limit.is_finite() || limit < 0.0 {
+            anyhow::bail!(
+                "prune limit must be a non-negative finite number, got {}",
+                limit
+            );
+        }
         self.prune_limit = limit;
+        Ok(())
     }
 
     /// Set the maximum number of iterations for the algorithm.
@@ -312,11 +323,37 @@ mod tests {
     #[test]
     fn test_mcl_parameter_config() {
         let mut mcl = Mcl::new(2.0).unwrap();
-        mcl.set_prune_limit(1e-4);
+        assert!(mcl.set_prune_limit(1e-4).is_ok());
         mcl.set_max_iter(50).unwrap();
 
         assert_eq!(mcl.prune_limit, 1e-4);
         assert_eq!(mcl.max_iter, 50);
+    }
+
+    #[test]
+    fn test_mcl_set_prune_limit_invalid() {
+        let mut mcl = Mcl::new(2.0).unwrap();
+
+        let err = mcl.set_prune_limit(-1e-5).unwrap_err();
+        assert!(
+            err.to_string().contains("prune limit"),
+            "error message should mention prune limit, got: {}",
+            err
+        );
+
+        let err = mcl.set_prune_limit(f64::NAN).unwrap_err();
+        assert!(
+            err.to_string().contains("prune limit"),
+            "error message should mention prune limit, got: {}",
+            err
+        );
+
+        let err = mcl.set_prune_limit(f64::INFINITY).unwrap_err();
+        assert!(
+            err.to_string().contains("prune limit"),
+            "error message should mention prune limit, got: {}",
+            err
+        );
     }
 
     #[test]

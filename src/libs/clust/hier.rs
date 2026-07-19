@@ -22,7 +22,7 @@ impl Method {
 }
 
 impl std::str::FromStr for Method {
-    type Err = String;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
@@ -33,7 +33,7 @@ impl std::str::FromStr for Method {
             "centroid" | "upgmc" => Ok(Method::Centroid),
             "median" | "wpgmc" => Ok(Method::Median),
             "ward" | "ward.d2" => Ok(Method::Ward),
-            _ => Err(format!("Unknown linkage method: {}", s)),
+            _ => anyhow::bail!("unknown linkage method: {}", s),
         }
     }
 }

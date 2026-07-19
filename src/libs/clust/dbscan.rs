@@ -189,10 +189,13 @@ where
     /// convention used by the other `clust` commands.
     pub fn results_cluster(&self) -> Vec<Vec<usize>> {
         let (cluster_map, noise_points) = self.all_clusters();
-        let mut res: Vec<Vec<usize>> = vec![];
+        let mut res: Vec<Vec<usize>> = Vec::new();
 
-        for (_, points) in cluster_map.iter() {
-            res.push(points.clone());
+        // Sort by cluster ID for deterministic output.
+        let mut cluster_ids: Vec<usize> = cluster_map.keys().copied().collect();
+        cluster_ids.sort();
+        for id in cluster_ids {
+            res.push(cluster_map[&id].clone());
         }
         for p in noise_points {
             res.push(vec![p]);
@@ -356,5 +359,26 @@ mod tests {
         let mut all_members: Vec<usize> = clusters.into_iter().flatten().collect();
         all_members.sort();
         assert_eq!(all_members, vec![0, 1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn test_results_cluster_order_is_deterministic() {
+        // Two well-separated clusters: {0,1} and {2,3}. Cluster IDs are assigned
+        // in the order the algorithm discovers core points, so cluster 0 precedes
+        // cluster 1. `results_cluster` must return clusters sorted by cluster ID
+        // to keep the output deterministic regardless of HashMap iteration order.
+        let mut dbscan = Dbscan::new(1.5_f32, 2).unwrap();
+        let mut m = crate::libs::pairmat::ScoringMatrix::<f32>::with_size_and_defaults(
+            4, 0.0, 10.0,
+        );
+        m.set(0, 1, 1.0);
+        m.set(2, 3, 1.0);
+
+        dbscan.perform_clustering(&m);
+        let clusters = dbscan.results_cluster();
+
+        assert_eq!(clusters.len(), 2);
+        assert_eq!(clusters[0], vec![0, 1]);
+        assert_eq!(clusters[1], vec![2, 3]);
     }
 }
