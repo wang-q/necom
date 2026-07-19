@@ -134,9 +134,17 @@ fn test_clust_pipeline_full() {
     // We know there are 3 clusters, so use --k 3
     let (_stdout, stderr) = NecomCmd::new()
         .args(&[
-            "cut", &tree_file, "--k", "3", "--format",
+            "cut",
+            "simple",
+            &tree_file,
+            "--method",
+            "k",
+            "--threshold",
+            "3",
+            "--format",
             "pair", // Output: Rep \t Member (compatible with eval)
-            "-o", &cut_file,
+            "-o",
+            &cut_file,
         ])
         .run();
     assert!(stderr.is_empty(), "cut failed: {}", stderr);

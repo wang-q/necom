@@ -31,11 +31,12 @@ D 1.0 1.0 0.2 0.0
     let (stdout, _stderr) = NecomCmd::new()
         .args(&[
             "cut",
+            "hybrid",
             tree_file.to_str().unwrap(),
-            "--dynamic-hybrid",
-            "2",
             "--matrix",
             mat_file.to_str().unwrap(),
+            "--min-size",
+            "2",
         ])
         .run();
 
@@ -82,11 +83,12 @@ E 0.5 0.5 1.0 1.0 0.0
     let (stdout, _stderr) = NecomCmd::new()
         .args(&[
             "cut",
+            "hybrid",
             tree_file.to_str().unwrap(),
-            "--dynamic-hybrid",
-            "2",
             "--matrix",
             mat_file.to_str().unwrap(),
+            "--min-size",
+            "2",
             "--no-pam-dendro", // Needed because E is far in tree
         ])
         .run();
@@ -104,4 +106,36 @@ E 0.5 0.5 1.0 1.0 0.0
         stdout
     );
     assert!(has_cd, "Cluster {{C,D}} missing:\n{}", stdout);
+}
+
+#[test]
+fn test_hybrid_min_size_zero_rejected() {
+    let temp = Builder::new()
+        .prefix("necom_test_hybrid_zero")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("hybrid_zero.nwk");
+    let mat_file = temp.path().join("hybrid_zero.phy");
+
+    fs::write(&tree_file, "(A,B);").unwrap();
+    fs::write(&mat_file, "2\nA 0.0 1.0\nB 1.0 0.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "hybrid",
+            tree_file.to_str().unwrap(),
+            "--matrix",
+            mat_file.to_str().unwrap(),
+            "--min-size",
+            "0",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("min cluster size")
+            && stderr.to_lowercase().contains("greater than 0"),
+        "Expected min-size >0 error, got: {}",
+        stderr
+    );
 }

@@ -18,18 +18,18 @@ pub struct ScanParams {
     pub dynamic_tree: bool,
 }
 
-/// Parse a `--scan` argument of the form `start,end,step`.
+/// Parse a `--range` argument of the form `start,end,step`.
 pub fn parse_scan_range(scan_str: &str) -> anyhow::Result<(f64, f64, f64)> {
     let parts: Vec<&str> = scan_str.split(',').collect();
     if parts.len() != 3 {
-        anyhow::bail!("--scan format must be start,end,step");
+        anyhow::bail!("--range format must be start,end,step");
     }
     let start: f64 = parts[0].parse()?;
     let end: f64 = parts[1].parse()?;
     let step: f64 = parts[2].parse()?;
 
     if step <= 0.0 {
-        anyhow::bail!("Scan step must be positive");
+        anyhow::bail!("--range step must be positive");
     }
     Ok((start, end, step))
 }

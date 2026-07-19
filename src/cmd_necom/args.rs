@@ -327,12 +327,12 @@ pub fn flat_rep_arg() -> Arg {
         .help("Representative selection method")
 }
 
-/// `--scan` argument for parameter sweep (format: start,end,step).
-pub fn scan_arg() -> Arg {
-    Arg::new("scan")
-        .long("scan")
+/// `--range` argument for parameter sweep (format: start,end,step).
+pub fn range_arg() -> Arg {
+    Arg::new("range")
+        .long("range")
         .num_args(1)
-        .help("Scan thresholds (format: start,end,step)")
+        .help("Scan range (format: start,end,step)")
 }
 
 /// `--stats-out` argument for scan summary output.
@@ -355,6 +355,15 @@ pub fn support_arg() -> Arg {
         )
 }
 
+/// `--min-size` argument for dynamic/hybrid cut (minimum cluster size).
+pub fn min_size_arg() -> Arg {
+    Arg::new("min_size")
+        .long("min-size")
+        .num_args(1)
+        .value_parser(clap::value_parser!(usize))
+        .help("Minimum cluster size")
+}
+
 /// `--deep` argument for inconsistent coefficient depth (default: 2).
 pub fn deep_arg() -> Arg {
     Arg::new("deep")
@@ -363,24 +372,6 @@ pub fn deep_arg() -> Arg {
         .default_value("2")
         .value_parser(clap::value_parser!(usize))
         .help("Depth for inconsistent coefficient calculation (default: 2)")
-}
-
-/// `--dynamic-tree` argument for dynamic tree cut (value: min cluster size).
-pub fn dynamic_tree_arg() -> Arg {
-    Arg::new("dynamic_tree")
-        .long("dynamic-tree")
-        .num_args(1)
-        .value_parser(clap::value_parser!(usize))
-        .help("Use dynamic tree cut method (value: min cluster size)")
-}
-
-/// `--dynamic-hybrid` argument for dynamic hybrid cut (value: min cluster size).
-pub fn dynamic_hybrid_arg() -> Arg {
-    Arg::new("dynamic_hybrid")
-        .long("dynamic-hybrid")
-        .num_args(1)
-        .value_parser(clap::value_parser!(usize))
-        .help("Use dynamic hybrid cut method (value: min cluster size)")
 }
 
 /// `--max-pam-dist` argument for hybrid cut PAM reassignment.

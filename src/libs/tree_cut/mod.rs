@@ -233,7 +233,7 @@ const SUPPORT_FILTER_SENTINEL: f64 = 1e20;
 /// because `Node::finite_length()` — used by `stat::compute_node_heights`,
 /// `balance::compute_avg_clade_distances`, `query::get_height`, etc. — maps
 /// non-finite lengths to `0.0`, which would silently disable the filter for
-/// `--avg-clade`, `--inconsistent`, `--dynamic-tree`, and `--dynamic-hybrid`.
+/// `avg-clade`/`inconsistent`/`dynamic`/`hybrid` cut methods.
 pub fn apply_support_filter(tree: &mut Tree, threshold: f64) {
     let root = match tree.get_root() {
         Some(r) => r,

@@ -39,11 +39,11 @@ Wide-table format; each line represents a cluster containing all its members.
 
 ### Long Format (batch, `--format long`)
 
-A dedicated TSV format (`Group\tClusterID\tSampleID`) for batch evaluation, auto-emitted by `necom cut --scan` and consumed by `necom eval partition --input-format long`. See [`docs/cut.md`](cut.md#output-format-in-scan-mode) for the full specification.
+A dedicated TSV format (`Group\tClusterID\tSampleID`) for batch evaluation, auto-emitted by `necom cut scan-simple` and `necom cut scan-dynamic` and consumed by `necom eval partition --input-format long`. See [`docs/cut.md`](cut.md#output-format-in-scan-mode) for the full specification.
 
 ## Distance Matrix
 
-Used by `clust hier`, `nj`, `upgma`, `eval partition --matrix`, and `cut --dynamic-hybrid`.
+Used by `clust hier`, `nj`, `upgma`, `eval partition --matrix`, and `cut hybrid --matrix`.
 
 ### PHYLIP Format
 

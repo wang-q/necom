@@ -28,7 +28,7 @@ fn main() -> anyhow::Result<()> {
     * clust - Algorithms: cc, dbscan, hier, k-medoids, mcl, nj, upgma
 
 * Tree cutting:
-    * cut   - Cut a Newick tree into flat partitions
+    * cut   - Cut a Newick tree into flat partitions (simple/dynamic/hybrid/scan-simple/scan-dynamic)
 
 * Evaluation:
     * eval - Metrics: compare, partition, replicate

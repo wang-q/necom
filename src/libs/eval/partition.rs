@@ -126,7 +126,7 @@ pub fn load_batch_partitions<P: AsRef<Path>>(
         if line.trim().is_empty() || line.starts_with('#') {
             continue;
         }
-        // Skip the exact header line emitted by `necom cut --scan`. Do NOT
+        // Skip the exact header line emitted by `necom cut scan-simple`. Do NOT
         // use prefix matching — user group IDs may legitimately start with
         // "Group" (e.g., "Group1") and would be silently dropped.
         if line == "Group\tClusterID\tSampleID" {

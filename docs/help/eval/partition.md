@@ -28,7 +28,7 @@ Notes:
     * Without ground truth (distance matrix or tree): Silhouette.
     * Without ground truth (coordinates): Davies-Bouldin or Calinski-Harabasz.
     * See [`docs/eval-partition.md`](../../eval-partition.md) for detailed metric definitions and the full selection guide.
-* Typical batch workflow: generate candidates with `necom cut --scan`, evaluate with `--input-format long`, then select the best threshold.
+* Typical batch workflow: generate candidates with `necom cut scan-simple`, evaluate with `--input-format long`, then select the best threshold.
 
 Examples:
 

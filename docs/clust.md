@@ -136,7 +136,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
   - Internal node height is half the merge distance (`height = distance / 2`), and branch length from child to parent is `parent_height - child_height`.
   - Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.
   - Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).
-  - Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of `necom cut --height`.
+  - Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of `necom cut simple --method height --threshold <H>`.
 - Numeric format: branch lengths are emitted with Rust's default float formatting. For a fixed-width, six-decimal view consistent with `necom nwk distance`, post-process the tree or use `necom nwk distance` on the resulting branch lengths.
 
 ### Notes
@@ -155,7 +155,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
   - General additive-distance scenarios: `clust nj`.
   - General hierarchical analysis or when `ward` is needed: `clust hier --method ward`.
 - Cut and evaluate:
-  - Cut: `necom cut --height H` or TreeCluster-style thresholds/constraints.
+  - Cut: `necom cut simple tree.nwk --method height --threshold H` or TreeCluster-style thresholds/constraints.
   - Internal evaluation (no Ground Truth): `necom eval partition --matrix ...` (Silhouette) (currently available); `necom eval tree` not yet implemented.
   - External evaluation (with Ground Truth): `necom eval partition` (ARI/AMI/V-Measure).
 
@@ -245,13 +245,13 @@ Combine `necom cut` scanning with `eval partition` batch evaluation to find the 
 necom clust hier matrix.phy --method ward > tree.nwk
 
 # 2. Scan thresholds, save to a file, and evaluate internal metrics (Silhouette)
-# necom cut outputs a long table in scan mode; write it to a file for eval partition
-necom cut tree.nwk --height 1.0 --scan 0,1.0,0.05 > partitions.tsv
+# necom cut scan-simple outputs a long table; write it to a file for eval partition
+necom cut scan-simple tree.nwk --method height --range 0,1.0,0.05 > partitions.tsv
 necom eval partition partitions.tsv --input-format long --matrix matrix.phy > evaluation.tsv
 
 # 3. Analyze evaluation.tsv to choose the best threshold (e.g., maximum Silhouette)
 # Assume the best threshold is 0.45
-necom cut tree.nwk --height 0.45 > final_clusters.tsv
+necom cut simple tree.nwk --method height --threshold 0.45 > final_clusters.tsv
 ```
 
 For input/output format conventions used by `necom clust` and other commands, see [`docs/formats.md`](formats.md).

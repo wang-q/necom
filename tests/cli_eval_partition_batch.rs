@@ -25,7 +25,7 @@ D 1.0 1.0 0.2 0.0
 "
     )?;
 
-    // 3. Run cut --scan
+    // 3. Run cut scan-simple
     // Scan range: 0.05 (below 0.1), 0.2 (between 0.1 and 0.5), 0.6 (above 0.5)
     // Actually scan logic: start, end, step.
     // 0.0, 0.6, 0.2 -> 0.0, 0.2, 0.4, 0.6
@@ -37,14 +37,11 @@ D 1.0 1.0 0.2 0.0
     let mut cmd_cut = Command::cargo_bin("necom")?;
     let output_cut = cmd_cut
         .arg("cut")
+        .arg("scan-simple")
         .arg(tree_file.path())
-        .arg("--height")
-        .arg("0.5") // dummy arg for group requirement, ignored by scan? No, method is required.
-        // Actually scan overrides the value?
-        // In my code:
-        // let method = if matches.contains_id("height") { cut::Method::Height(val) } ...
-        // So we need to provide --height <IGNORED_VAL> to satisfy ArgGroup, and --scan controls `val`.
-        .arg("--scan")
+        .arg("--method")
+        .arg("height")
+        .arg("--range")
         .arg("0.0,0.6,0.2")
         .output()?;
 

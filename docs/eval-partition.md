@@ -8,7 +8,7 @@ This document describes the design philosophy, metrics, and selection guidance f
 
 -   **Python `clusteval`**: The `fit()` method internally performs Grid Search (trying different $k$ or $\epsilon$), computes internal metrics (e.g., Silhouette), and returns the optimal result.
 -   **`necom` workflow**:
-    1.  **Generate**: Use `necom cut --scan` to generate a series of candidate partitions (`necom clust dbscan`'s `--scan` is not yet implemented).
+    1.  **Generate**: Use `necom cut scan-simple` to generate a series of candidate partitions (`necom clust dbscan`'s `--scan` is not yet implemented).
     2.  **Evaluate**: Use `necom eval partition` to compute evaluation metrics for these candidates in batch.
     3.  **Decide**: The user selects the optimal parameters based on metrics (e.g., Silhouette peak, Elbow point).
 

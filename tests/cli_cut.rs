@@ -58,7 +58,15 @@ fn create_expected_clusters(groups: Vec<Vec<&str>>) -> Vec<HashSet<String>> {
 #[test]
 fn test_nwk_cut_k() {
     let (stdout, _stderr) = NecomCmd::new()
-        .args(&["cut", "tests/newick/abcde.nwk", "--k", "2"])
+        .args(&[
+            "cut",
+            "simple",
+            "tests/newick/abcde.nwk",
+            "--method",
+            "k",
+            "--threshold",
+            "2",
+        ])
         .run();
 
     // Default format is 'cluster'.
@@ -82,7 +90,15 @@ fn test_nwk_cut_leaf_dist_max() {
     // Result: {A, B}, {C}.
 
     let (stdout, _stderr) = NecomCmd::new()
-        .args(&["cut", "tests/newick/abcde.nwk", "--leaf-dist-max", "1.5"])
+        .args(&[
+            "cut",
+            "simple",
+            "tests/newick/abcde.nwk",
+            "--method",
+            "leaf-dist-max",
+            "--threshold",
+            "1.5",
+        ])
         .run();
 
     let lines: Vec<&str> = stdout.lines().collect();
@@ -98,7 +114,15 @@ fn test_nwk_cut_max_edge() {
     // Cut at max-edge 0.5 -> All edges cut. {A}, {B}, {C}.
 
     let (stdout, _) = NecomCmd::new()
-        .args(&["cut", "tests/newick/abcde.nwk", "--max-edge", "0.5"])
+        .args(&[
+            "cut",
+            "simple",
+            "tests/newick/abcde.nwk",
+            "--method",
+            "max-edge",
+            "--threshold",
+            "0.5",
+        ])
         .run();
 
     let lines: Vec<&str> = stdout.lines().collect();
@@ -120,8 +144,11 @@ fn test_nwk_cut_pair_rep() {
     let (stdout, _) = NecomCmd::new()
         .args(&[
             "cut",
+            "simple",
             "tests/newick/abcde.nwk",
-            "--k",
+            "--method",
+            "k",
+            "--threshold",
             "2",
             "--format",
             "pair",
@@ -144,8 +171,11 @@ fn test_nwk_cut_pair_rep() {
     let (stdout, _) = NecomCmd::new()
         .args(&[
             "cut",
+            "simple",
             "tests/newick/abcde.nwk",
-            "--k",
+            "--method",
+            "k",
+            "--threshold",
             "2",
             "--format",
             "pair",
@@ -176,7 +206,15 @@ fn test_nwk_cut_cluster_rep() {
     // But we can verify that output format is correct (rep first).
 
     let (stdout, _) = NecomCmd::new()
-        .args(&["cut", "tests/newick/abcde.nwk", "--k", "2"])
+        .args(&[
+            "cut",
+            "simple",
+            "tests/newick/abcde.nwk",
+            "--method",
+            "k",
+            "--threshold",
+            "2",
+        ])
         .run();
     let lines: Vec<_> = stdout.lines().collect();
     // A\tB -> A is rep.
@@ -188,8 +226,11 @@ fn test_nwk_cut_height_pair() {
     let (stdout, _stderr) = NecomCmd::new()
         .args(&[
             "cut",
+            "simple",
             "tests/newick/abcde.nwk",
-            "--height",
+            "--method",
+            "height",
+            "--threshold",
             "0.5",
             "--format",
             "pair",
@@ -213,7 +254,15 @@ fn test_nwk_cut_height_pair() {
 #[test]
 fn test_nwk_cut_root_dist() {
     let (stdout, _stderr) = NecomCmd::new()
-        .args(&["cut", "tests/newick/abcde.nwk", "--root-dist", "0.5"])
+        .args(&[
+            "cut",
+            "simple",
+            "tests/newick/abcde.nwk",
+            "--method",
+            "root-dist",
+            "--threshold",
+            "0.5",
+        ])
         .run();
 
     // Root dist 0.5 -> {A,B}, {C}.
@@ -230,7 +279,15 @@ fn test_nwk_cut_root_dist() {
 #[test]
 fn test_nwk_cut_max_clade() {
     let (stdout, _stderr) = NecomCmd::new()
-        .args(&["cut", "tests/newick/abcde.nwk", "--max-clade", "2.5"])
+        .args(&[
+            "cut",
+            "simple",
+            "tests/newick/abcde.nwk",
+            "--method",
+            "max-clade",
+            "--threshold",
+            "2.5",
+        ])
         .run();
 
     // Max clade 2.5 -> {A,B} (diam 2), {C} (diam 0).
@@ -266,7 +323,15 @@ fn test_avg_clade() {
     // 1. Max clade 0.8 -> Split ((A,B),C) because 1.0 > 0.8
     // Expect: {A,B}, {C} (2 clusters)
     let (out_max, _) = NecomCmd::new()
-        .args(&["cut", nwk_file, "--max-clade", "0.8"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file,
+            "--method",
+            "max-clade",
+            "--threshold",
+            "0.8",
+        ])
         .run();
     let clusters_max = parse_clusters(&out_max);
     assert_eq!(clusters_max.len(), 2, "Max clade should split");
@@ -274,87 +339,19 @@ fn test_avg_clade() {
     // 2. Avg clade 0.8 -> Keep ((A,B),C) because 0.733 < 0.8
     // Expect: {A,B,C} (1 cluster)
     let (out_avg, _) = NecomCmd::new()
-        .args(&["cut", nwk_file, "--avg-clade", "0.8"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file,
+            "--method",
+            "avg-clade",
+            "--threshold",
+            "0.8",
+        ])
         .run();
     let clusters_avg = parse_clusters(&out_avg);
     assert_eq!(clusters_avg.len(), 1, "Avg clade should keep");
     assert_eq!(clusters_avg[0].len(), 3);
-}
-
-#[test]
-fn test_scan_height() {
-    // Tree: ((A:0.1,B:0.1):0.1,C:0.2);
-    // Node heights (distance from leaves):
-    // A, B, C: 0.0
-    // (A,B): 0.1
-    // Root ((A,B),C): 0.2
-    let nwk = "((A:0.1,B:0.1):0.1,C:0.2);";
-    let nwk_file = "tests/mat/scan_test.nwk";
-    // Ensure dir exists
-    if !std::path::Path::new("tests/mat").exists() {
-        fs::create_dir_all("tests/mat").unwrap();
-    }
-    fs::write(nwk_file, nwk).expect("Failed to write nwk");
-
-    let stats_file = "tests/mat/scan_stats.tsv";
-
-    let (stdout, _) = NecomCmd::new()
-        .args(&[
-            "cut",
-            nwk_file,
-            "--height",
-            "0",
-            "--scan",
-            "0,0.2,0.1",
-            "--stats-out",
-            stats_file,
-        ])
-        .run();
-
-    // Verify stdout (Long Format)
-    let out_lines: Vec<&str> = stdout.lines().collect();
-    assert!(out_lines.len() > 1);
-    assert_eq!(out_lines[0], "Group\tClusterID\tSampleID");
-
-    // Verify stats file
-    let stats_content =
-        fs::read_to_string(stats_file).expect("Failed to read stats file");
-    let lines: Vec<&str> = stats_content.lines().collect();
-
-    // Header + 3 rows
-    assert_eq!(lines.len(), 4, "Expected 4 lines output in stats file");
-    assert_eq!(
-        lines[0],
-        "Group\tClusters\tSingletons\tNon-Singletons\tMaxSize"
-    );
-
-    // t=0
-    let row0: Vec<&str> = lines[1].split('\t').collect();
-    assert_eq!(row0[0], "height=0");
-    assert_eq!(row0[1], "3"); // Clusters
-    assert_eq!(row0[2], "3"); // Singletons
-    assert_eq!(row0[3], "0"); // Non-Single
-    assert_eq!(row0[4], "1"); // MaxSize
-
-    // t=0.1
-    let row1: Vec<&str> = lines[2].split('\t').collect();
-    assert_eq!(row1[0], "height=0.1");
-    assert_eq!(row1[1], "2");
-    assert_eq!(row1[2], "1"); // {C}
-    assert_eq!(row1[3], "1"); // {A,B}
-    assert_eq!(row1[4], "2");
-
-    // t=0.2
-    let row2: Vec<&str> = lines[3].split('\t').collect();
-    assert_eq!(row2[0], "height=0.2");
-    assert_eq!(row2[1], "1");
-    assert_eq!(row2[2], "0");
-    assert_eq!(row2[3], "1"); // {A,B,C}
-    assert_eq!(row2[4], "3");
-
-    // Cleanup
-    let _ = fs::remove_file(nwk_file);
-    let _ = fs::remove_file(stats_file);
 }
 
 #[test]
@@ -405,7 +402,15 @@ fn test_scipy_workflow() {
     ]);
 
     let (cut_out, stderr) = NecomCmd::new()
-        .args(&["cut", nwk_file_str, "--height", "0.3"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file_str,
+            "--method",
+            "height",
+            "--threshold",
+            "0.3",
+        ])
         .run();
 
     let actual_dist_0_6 = parse_clusters(&cut_out);
@@ -429,7 +434,15 @@ fn test_scipy_workflow() {
     ]);
 
     let (cut_out_k4, _) = NecomCmd::new()
-        .args(&["cut", nwk_file_str, "--k", "4"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file_str,
+            "--method",
+            "k",
+            "--threshold",
+            "4",
+        ])
         .run();
 
     let actual_maxclust_4 = parse_clusters(&cut_out_k4);
@@ -472,7 +485,15 @@ fn test_scipy_workflow() {
     ]);
 
     let (cut_out_k8, _) = NecomCmd::new()
-        .args(&["cut", nwk_file_str, "--k", "8"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file_str,
+            "--method",
+            "k",
+            "--threshold",
+            "8",
+        ])
         .run();
 
     let actual_maxclust_8 = parse_clusters(&cut_out_k8);
@@ -506,7 +527,15 @@ fn test_scipy_workflow() {
     ]);
 
     let (cut_out_inc, _stderr) = NecomCmd::new()
-        .args(&["cut", nwk_file_str, "--inconsistent", "0.8"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file_str,
+            "--method",
+            "inconsistent",
+            "--threshold",
+            "0.8",
+        ])
         .run();
 
     let actual_inc_0_8 = parse_clusters(&cut_out_inc);
@@ -534,8 +563,11 @@ fn test_cut_support_filter() {
     let (stdout, _) = NecomCmd::new()
         .args(&[
             "cut",
+            "simple",
             nwk_file,
-            "--max-clade",
+            "--method",
+            "max-clade",
+            "--threshold",
             "0.5",
             "--support",
             "0", // Threshold 0 < 90, so edge is kept
@@ -560,7 +592,17 @@ fn test_cut_support_filter() {
     // C is singleton.
     // Result: {A,B}, {C}.
     let (stdout, _) = NecomCmd::new()
-        .args(&["cut", nwk_file, "--max-clade", "0.5", "--support", "95"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file,
+            "--method",
+            "max-clade",
+            "--threshold",
+            "0.5",
+            "--support",
+            "95",
+        ])
         .run();
 
     let mut out_lines: Vec<&str> = stdout.lines().collect();
@@ -584,7 +626,15 @@ fn test_cut_empty_tree_input() {
     fs::write(nwk_file, "").expect("Failed to write empty nwk");
 
     let (_, stderr) = NecomCmd::new()
-        .args(&["cut", nwk_file, "--k", "2"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file,
+            "--method",
+            "k",
+            "--threshold",
+            "2",
+        ])
         .run_fail();
 
     assert!(
@@ -603,7 +653,15 @@ fn test_cut_multitree_input_rejected() {
     fs::write(nwk_file, "(A,B);\n(C,D);\n").expect("Failed to write multi-tree nwk");
 
     let (_, stderr) = NecomCmd::new()
-        .args(&["cut", nwk_file, "--k", "2"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file,
+            "--method",
+            "k",
+            "--threshold",
+            "2",
+        ])
         .run_fail();
 
     assert!(
@@ -616,32 +674,9 @@ fn test_cut_multitree_input_rejected() {
 }
 
 #[test]
-fn test_cut_scan_with_dynamic_hybrid_rejected() {
+fn test_cut_missing_matrix_for_hybrid() {
     let (_, stderr) = NecomCmd::new()
-        .args(&[
-            "cut",
-            "tests/newick/abcde.nwk",
-            "--dynamic-hybrid",
-            "1",
-            "--matrix",
-            "tests/clust/eval/simple.matrix.phy",
-            "--scan",
-            "0,1,0.5",
-        ])
-        .run_fail();
-
-    assert!(
-        stderr.to_lowercase().contains("scan")
-            && stderr.to_lowercase().contains("dynamic-hybrid"),
-        "Expected scan+dynamic-hybrid rejection, got: {}",
-        stderr
-    );
-}
-
-#[test]
-fn test_cut_missing_matrix_for_dynamic_hybrid() {
-    let (_, stderr) = NecomCmd::new()
-        .args(&["cut", "tests/newick/abcde.nwk", "--dynamic-hybrid", "1"])
+        .args(&["cut", "hybrid", "tests/newick/abcde.nwk", "--min-size", "1"])
         .run_fail();
 
     assert!(
@@ -655,79 +690,40 @@ fn test_cut_missing_matrix_for_dynamic_hybrid() {
 #[test]
 fn test_negative_threshold_rejected() {
     let negative_methods = [
-        ("--height", "-1.0"),
-        ("--root-dist", "-1.0"),
-        ("--max-clade", "-1.0"),
-        ("--avg-clade", "-1.0"),
-        ("--med-clade", "-1.0"),
-        ("--sum-branch", "-1.0"),
-        ("--leaf-dist-max", "-1.0"),
-        ("--leaf-dist-min", "-1.0"),
-        ("--leaf-dist-avg", "-1.0"),
-        ("--max-edge", "-1.0"),
-        ("--inconsistent", "-1.0"),
+        "height",
+        "root-dist",
+        "max-clade",
+        "avg-clade",
+        "med-clade",
+        "sum-branch",
+        "leaf-dist-max",
+        "leaf-dist-min",
+        "leaf-dist-avg",
+        "max-edge",
+        "inconsistent",
     ];
 
-    for (flag, value) in &negative_methods {
-        // Use `--flag=value` form so clap does not interpret the leading `-`
-        // of the negative value as a short option.
-        let arg = format!("{}={}", flag, value);
+    for method in &negative_methods {
+        let arg = format!("--threshold={}", "-1.0");
         let (_, stderr) = NecomCmd::new()
-            .args(&["cut", "tests/newick/abcde.nwk", &arg])
+            .args(&[
+                "cut",
+                "simple",
+                "tests/newick/abcde.nwk",
+                "--method",
+                method,
+                &arg,
+            ])
             .run_fail();
 
         assert!(
             stderr.to_lowercase().contains("non-negative"),
             "Expected non-negative error for {} {}, got: {}",
-            flag,
-            value,
+            method,
+            "-1.0",
             stderr
         );
     }
-}
-
-#[test]
-fn test_scan_dynamic_tree() {
-    // Tree with two well-separated pairs: ((A:0.1,B:0.1):0.8,(C:0.1,D:0.1):0.8);
-    // min_module_size=2 -> {A,B},{C,D}
-    // min_module_size=5 -> all unassigned (cluster 0)
-    let nwk = "((A:0.1,B:0.1):0.8,(C:0.1,D:0.1):0.8);";
-    let nwk_file = "tests/mat/scan_dyn_test.nwk";
-    if !std::path::Path::new("tests/mat").exists() {
-        fs::create_dir_all("tests/mat").unwrap();
-    }
-    fs::write(nwk_file, nwk).expect("Failed to write nwk");
-
-    let (stdout, _) = NecomCmd::new()
-        .args(&[
-            "cut",
-            nwk_file,
-            "--dynamic-tree",
-            "2", // placeholder; scan value overrides
-            "--scan",
-            "2,5,3", // val=2, then val=5
-        ])
-        .run();
-
-    let lines: Vec<&str> = stdout.lines().collect();
-    assert!(lines.len() > 1);
-    assert_eq!(lines[0], "Group\tClusterID\tSampleID");
-
-    // Collect group labels
-    let groups: Vec<&str> = lines[1..]
-        .iter()
-        .map(|l| l.split('\t').next().unwrap_or(""))
-        .collect();
-    let unique_groups: std::collections::HashSet<&str> = groups.into_iter().collect();
-    // Must see two distinct scan groups (dynamic-tree=2 and dynamic-tree=5)
-    assert_eq!(
-        unique_groups.len(),
-        2,
-        "scan should produce 2 groups, got: {:?}",
-        unique_groups
-    );
-
-    let _ = fs::remove_file(nwk_file);
 }
 
 #[test]
@@ -746,7 +742,15 @@ fn test_cut_support_avg_clade() {
 
     // Without --support: 1 cluster
     let (stdout, _) = NecomCmd::new()
-        .args(&["cut", nwk_file, "--avg-clade", "0.8"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file,
+            "--method",
+            "avg-clade",
+            "--threshold",
+            "0.8",
+        ])
         .run();
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines.len(), 1, "Expected 1 cluster without --support");
@@ -754,7 +758,17 @@ fn test_cut_support_avg_clade() {
 
     // With --support 95: 2 clusters
     let (stdout, _) = NecomCmd::new()
-        .args(&["cut", nwk_file, "--avg-clade", "0.8", "--support", "95"])
+        .args(&[
+            "cut",
+            "simple",
+            nwk_file,
+            "--method",
+            "avg-clade",
+            "--threshold",
+            "0.8",
+            "--support",
+            "95",
+        ])
         .run();
     let mut lines: Vec<&str> = stdout.lines().collect();
     lines.sort();
@@ -763,4 +777,96 @@ fn test_cut_support_avg_clade() {
     assert_eq!(lines[1], "C");
 
     let _ = fs::remove_file(nwk_file);
+}
+
+#[test]
+fn test_cut_simple_missing_method() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "simple",
+            "tests/newick/abcde.nwk",
+            "--threshold",
+            "2",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("--method")
+            || stderr.to_lowercase().contains("required"),
+        "Expected missing --method error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_cut_simple_missing_threshold() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&["cut", "simple", "tests/newick/abcde.nwk", "--method", "k"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("--threshold")
+            || stderr.to_lowercase().contains("required"),
+        "Expected missing --threshold error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_cut_simple_unknown_method() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "simple",
+            "tests/newick/abcde.nwk",
+            "--method",
+            "not-a-method",
+            "--threshold",
+            "1.0",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("invalid value")
+            || stderr.to_lowercase().contains("unknown method"),
+        "Expected unknown method error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_cut_simple_k_non_integer_threshold() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "simple",
+            "tests/newick/abcde.nwk",
+            "--method",
+            "k",
+            "--threshold",
+            "1.5",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("positive integer")
+            || stderr.to_lowercase().contains("k must be"),
+        "Expected positive integer error for k, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_cut_overview_help() {
+    let (_, stderr) = NecomCmd::new().args(&["cut"]).run_fail();
+    assert!(
+        stderr.contains("simple")
+            && stderr.contains("dynamic")
+            && stderr.contains("hybrid")
+            && stderr.contains("scan-simple")
+            && stderr.contains("scan-dynamic"),
+        "Expected cut subcommand overview, got: {}",
+        stderr
+    );
 }

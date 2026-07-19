@@ -35,7 +35,13 @@ fn test_dynamic_tree_cut_basic() {
     fs::write(&tree_file, tree_content).unwrap();
 
     let (stdout, _stderr) = NecomCmd::new()
-        .args(&["cut", tree_file.to_str().unwrap(), "--dynamic-tree", "2"])
+        .args(&[
+            "cut",
+            "dynamic",
+            tree_file.to_str().unwrap(),
+            "--min-size",
+            "2",
+        ])
         .run();
 
     let lines: Vec<&str> = stdout.lines().collect();
@@ -72,8 +78,9 @@ fn test_dynamic_tree_cut_unassigned() {
     let (stdout, _) = NecomCmd::new()
         .args(&[
             "cut",
+            "dynamic",
             tree_file.to_str().unwrap(),
-            "--dynamic-tree",
+            "--min-size",
             "5",
             "--format",
             "pair", // Easier to check IDs
@@ -115,7 +122,13 @@ fn test_dynamic_tree_cut_multi_level() {
     fs::write(&tree_file, tree_content).unwrap();
 
     let (stdout, _stderr) = NecomCmd::new()
-        .args(&["cut", tree_file.to_str().unwrap(), "--dynamic-tree", "2"])
+        .args(&[
+            "cut",
+            "dynamic",
+            tree_file.to_str().unwrap(),
+            "--min-size",
+            "2",
+        ])
         .run();
 
     let clusters = parse_clusters(&stdout);
@@ -151,7 +164,13 @@ fn test_dynamic_tree_cut_with_support_filter() {
 
     // Without support: one cluster of four leaves + E
     let (out_no_support, _) = NecomCmd::new()
-        .args(&["cut", tree_file.to_str().unwrap(), "--dynamic-tree", "2"])
+        .args(&[
+            "cut",
+            "dynamic",
+            tree_file.to_str().unwrap(),
+            "--min-size",
+            "2",
+        ])
         .run();
     let clusters_no_support = parse_clusters(&out_no_support);
     assert!(
@@ -176,8 +195,9 @@ fn test_dynamic_tree_cut_with_support_filter() {
     let (out_support, _) = NecomCmd::new()
         .args(&[
             "cut",
+            "dynamic",
             tree_file.to_str().unwrap(),
-            "--dynamic-tree",
+            "--min-size",
             "2",
             "--support",
             "60",
@@ -194,5 +214,32 @@ fn test_dynamic_tree_cut_with_support_filter() {
     assert!(
         !clusters_support.iter().any(|c| c.len() == 4),
         "support filter should break the quartet apart"
+    );
+}
+
+#[test]
+fn test_dynamic_min_size_zero_rejected() {
+    let temp = Builder::new()
+        .prefix("necom_test_dynamic_zero")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("zero.nwk");
+    fs::write(&tree_file, "(A,B);").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "dynamic",
+            tree_file.to_str().unwrap(),
+            "--min-size",
+            "0",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("min cluster size")
+            && stderr.to_lowercase().contains("greater than 0"),
+        "Expected min-size >0 error, got: {}",
+        stderr
     );
 }
