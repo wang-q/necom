@@ -19,13 +19,13 @@ Subcommands:
 Examples:
 
 1. Cut into 5 clusters
-   `necom cut simple tree.nwk --method k --threshold 5`
+   `necom cut simple tree.nwk --k 5`
 
 2. Cut at height 0.5
-   `necom cut simple tree.nwk --method height --threshold 0.5`
+   `necom cut simple tree.nwk --height 0.5`
 
 3. Dynamic Tree Cut with min cluster size 20
    `necom cut dynamic tree.nwk --min-size 20`
 
 4. Scan thresholds and save statistics
-   `necom cut scan-simple tree.nwk --method max-clade --range 0,0.5,0.01
+   `necom cut scan-simple tree.nwk --method max-clade --range 0,0.5,0.01`

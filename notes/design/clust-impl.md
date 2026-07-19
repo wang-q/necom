@@ -236,7 +236,7 @@
 参考 `linfa-hierarchical` 的 `test_blobs` 测试，已增加集成测试验证算法的统计有效性：
 1.  **真实分布测试 (Blobs Test)**:
     - 目标：验证算法能否正确聚类具有明显几何结构的合成数据（Statistical Correctness）。
-    - 实现：`tests/cli_clust_pipeline.rs` 中的 `test_clust_pipeline_full` 生成 3 个 2D 高斯分布簇（每簇 10 个点），计算欧氏距离矩阵后依次执行 `necom mat to-phylip`、`necom clust hier --method ward`、`necom cut simple tree.nwk --method k --threshold 3`，最后用 `necom eval partition` 与 ground truth 对比。
+    - 实现：`tests/cli_clust_pipeline.rs` 中的 `test_clust_pipeline_full` 生成 3 个 2D 高斯分布簇（每簇 10 个点），计算欧氏距离矩阵后依次执行 `necom mat to-phylip`、`necom clust hier --method ward`、`necom cut simple tree.nwk --k 3`，最后用 `necom eval partition` 与 ground truth 对比。
     - 验证结果：ARI ≈ 1.0，确认 Ward linkage 能将不同 blob 的点正确分到不同主分支。
 2.  **输入预处理文档 (已完成)**:
     - 目标：澄清输入要求。

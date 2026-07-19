@@ -38,15 +38,15 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 
 ## Supported Modes and Algorithms
 
-`necom cut` provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below. All static methods are invoked through `necom cut simple --method <NAME> --threshold <T>`.
+`necom cut` provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below. All static methods are invoked through `necom cut simple --<METHOD> <T>`.
 
-### 1. Cut by Cluster Count (`--method k`)
+### 1. Cut by Cluster Count (`--k`)
 
 - **Definition**: Split the tree into $K$ clusters produced by $K-1$ cuts. Cutting order is based on node height (distance to the farthest leaf), prioritizing nodes with the largest height.
 - **Complexity**: $O(N \log N)$, where $N$ is the number of leaves. Requires sorting all internal nodes by height.
 - **Use case**: Exploratory analysis when you only want a fixed number of groups and do not care about the exact distance threshold.
 
-### 2. Cut by Height (`--method height`)
+### 2. Cut by Height (`--height`)
 
 - **Definition**: Cut all edges whose node height (distance to the farthest leaf) is greater than $H$.
   - For any resulting cluster $C$, all nodes $u$ in it satisfy $height(u) \le H$.
@@ -54,7 +54,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 - **Complexity**: $O(N)$. Only one post-order traversal is needed.
 - **Use case**: Suitable for ultrametric trees, where height strictly represents time or genetic distance.
 
-### 3. Cut by Root Distance (`--method root-dist`)
+### 3. Cut by Root Distance (`--root-dist`)
 
 - **Definition**: Cut all edges whose path length from the root exceeds $D$.
   - For the root node $r_C$ of any resulting cluster $C$, $dist(root, r_C) \le D$.
@@ -62,7 +62,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 - **Complexity**: $O(N)$. Only one pre-order traversal is needed.
 - **Use case**: Phylogenetic analysis defining clades that diverged a certain time after the common ancestor (root).
 
-### 4. Cut by Maximum Within-Cluster Diameter (`--method max-clade`)
+### 4. Cut by Maximum Within-Cluster Diameter (`--max-clade`)
 
 - **Definition**: Partition leaves into non-overlapping clusters $\{C_1, C_2, ..., C_m\}$ such that for each cluster $C_i$:
   1. **Monophyly**: Leaves in $C_i$ must form a clade in the original tree $T$.
@@ -72,7 +72,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 - **Complexity**: $O(N)$. Avoids the $O(N^2)$ all-pairs distance computation.
 - **Use case**: Virus subtyping, OTU clustering, and other scenarios requiring strict control of within-cluster divergence.
 
-### 5. Cut by Average Within-Cluster Distance (`--method avg-clade`)
+### 5. Cut by Average Within-Cluster Distance (`--avg-clade`)
 
 - **Definition**: Similar to `max-clade`, but the constraint is:
   1. **Monophyly**.
@@ -82,7 +82,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 - **Complexity**: $O(N)$.
 - **Use case**: Compared to maximum distance, average distance is more robust to individual outliers.
 
-### 6. Cut by Median Within-Cluster Distance (`--method med-clade`)
+### 6. Cut by Median Within-Cluster Distance (`--med-clade`)
 
 - **Definition**: Similar to `max-clade`, but the constraint is:
   1. **Monophyly**.
@@ -92,7 +92,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 - **Complexity**: $O(N^2 \log N)$ in the worst case. Significantly more expensive than the previous two methods.
 - **Note**: Not recommended for very large trees (e.g., >10k leaves) unless median robustness is truly required.
 
-### 7. Cut by Total Within-Cluster Branch Length (`--method sum-branch`)
+### 7. Cut by Total Within-Cluster Branch Length (`--sum-branch`)
 
 - **Definition**: Similar to `max-clade`, but the constraint is:
   1. **Monophyly**.
@@ -106,20 +106,20 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
     - Therefore, as a cutting threshold it tends to chop tight large clusters (because accumulated branch length easily exceeds the limit) while retaining loose small clusters.
     - Unless there is a specific biological reason (e.g., "limit the maximum evolutionary potential of each OTU"), it is generally not recommended as the primary cutting criterion.
 
-### 8. Cut by Leaf Distance (`--method leaf-dist-max/min/avg`)
+### 8. Cut by Leaf Distance (`--leaf-dist-max/min/avg`)
 
 - **Definition**: Cutting based on the distance from the cluster root to leaves.
-  - **Max Leaf Dist** (`--method leaf-dist-max`): Cut the tree so that the maximum distance from the cluster root to any leaf is $\le T$.
+  - **Max Leaf Dist** (`--leaf-dist-max`): Cut the tree so that the maximum distance from the cluster root to any leaf is $\le T$.
     - Equivalent to `root_dist(max_depth - T)`.
     - Similar to `height`, but suitable for non-ultrametric trees, aligned by the farthest leaf.
-  - **Min Leaf Dist** (`--method leaf-dist-min`): Cut the tree so that the minimum distance from the cluster root to any leaf is $\le T$.
+  - **Min Leaf Dist** (`--leaf-dist-min`): Cut the tree so that the minimum distance from the cluster root to any leaf is $\le T$.
     - Equivalent to `root_dist(min_depth - T)`.
-  - **Avg Leaf Dist** (`--method leaf-dist-avg`): Cut the tree so that the average distance from the cluster root to all leaves is $\le T$.
+  - **Avg Leaf Dist** (`--leaf-dist-avg`): Cut the tree so that the average distance from the cluster root to all leaves is $\le T$.
     - Equivalent to `root_dist(avg_depth - T)`.
 - **Complexity**: $O(N)$. Requires a prior traversal to compute depth statistics.
 - **Use case**: Non-ultrametric trees (e.g., virus trees), where "time" is not uniform and one needs to look back from sampling times (leaves).
 
-### 9. Cut by Maximum Edge Length (`--method max-edge`)
+### 9. Cut by Maximum Edge Length (`--max-edge`)
 
 - **Definition**: Cut all edges whose length is greater than $T$.
   - For any resulting cluster $C$, all edges $e$ in it satisfy $length(e) \le T$.
@@ -129,7 +129,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
   - Remove the influence of long branch attraction.
   - Quickly identify tightly connected groups while ignoring sparse connections.
 
-### 10. Cut by Inconsistency Coefficient (`--method inconsistent`)
+### 10. Cut by Inconsistency Coefficient (`--inconsistent`)
 
 - **Definition**: Cut based on the "inconsistency" of a node relative to its subtrees.
   - For each non-leaf node $i$, compute its inconsistency coefficient $I_i$.
@@ -249,7 +249,7 @@ Evaluating clustering quality usually requires a reference standard (Ground Trut
 # necom cut scan-simple input.nwk --method max-clade --range 0.01,0.10,0.01 > partitions.tsv
 
 # 2. Select the best threshold and generate final clusters
-necom cut simple input.nwk --method max-clade --threshold 0.05 > final_cluster.tsv
+necom cut simple input.nwk --max-clade 0.05 > final_cluster.tsv
 
 # 3. Extract the subtree corresponding to the first cluster in final_cluster.tsv
 head -1 final_cluster.tsv | tr '\t' '\n' > cluster1.names
@@ -265,7 +265,7 @@ For trees with uneven evolutionary rates, the inconsistency coefficient can find
 
 ```bash
 # Cut using inconsistency coefficient (default depth=2)
-necom cut simple tree.nwk --method inconsistent --threshold 1.5 > clusters.tsv
+necom cut simple tree.nwk --inconsistent 1.5 > clusters.tsv
 ```
 
 ## Choosing Threshold / Cluster Count: Scanning and Criteria

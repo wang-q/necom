@@ -136,7 +136,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
   - Internal node height is half the merge distance (`height = distance / 2`), and branch length from child to parent is `parent_height - child_height`.
   - Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.
   - Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).
-  - Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of `necom cut simple --method height --threshold <H>`.
+  - Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of `necom cut simple --height <H>`.
 - Numeric format: branch lengths are emitted with Rust's default float formatting. For a fixed-width, six-decimal view consistent with `necom nwk distance`, post-process the tree or use `necom nwk distance` on the resulting branch lengths.
 
 ### Notes
@@ -155,7 +155,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
   - General additive-distance scenarios: `clust nj`.
   - General hierarchical analysis or when `ward` is needed: `clust hier --method ward`.
 - Cut and evaluate:
-  - Cut: `necom cut simple tree.nwk --method height --threshold H` or TreeCluster-style thresholds/constraints.
+  - Cut: `necom cut simple tree.nwk --height H` or TreeCluster-style thresholds/constraints.
   - Internal evaluation (no Ground Truth): `necom eval partition --matrix ...` (Silhouette) (currently available); `necom eval tree` not yet implemented.
   - External evaluation (with Ground Truth): `necom eval partition` (ARI/AMI/V-Measure).
 
@@ -251,7 +251,7 @@ necom eval partition partitions.tsv --input-format long --matrix matrix.phy > ev
 
 # 3. Analyze evaluation.tsv to choose the best threshold (e.g., maximum Silhouette)
 # Assume the best threshold is 0.45
-necom cut simple tree.nwk --method height --threshold 0.45 > final_clusters.tsv
+necom cut simple tree.nwk --height 0.45 > final_clusters.tsv
 ```
 
 For input/output format conventions used by `necom clust` and other commands, see [`docs/formats.md`](formats.md).

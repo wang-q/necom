@@ -71,7 +71,7 @@ necom mat compare tests/mat/IBPA.phy tests/mat/IBPA.71.phy
 necom nwk stat tests/newick/catarrhini.nwk
 
 # Cut a tree into clusters by height
-necom cut simple tests/newick/catarrhini.nwk --method height --threshold 0.5
+necom cut simple tests/newick/catarrhini.nwk --height 0.5
 
 # Evaluate a partition against ground truth
 necom eval partition result.tsv --other truth.tsv
