@@ -20,7 +20,7 @@ pub fn make_subcommand() -> Command {
             Arg::new("num_descendants_rev")
                 .long("num-descendants-rev")
                 .action(ArgAction::SetTrue)
-                .help("By number of descendants, reversely"),
+                .help("By number of descendants, in reverse order"),
         )
         .group(
             ArgGroup::new("number-of-descendants")
@@ -36,7 +36,7 @@ pub fn make_subcommand() -> Command {
             Arg::new("alphanumeric_rev")
                 .long("alphanumeric-rev")
                 .action(ArgAction::SetTrue)
-                .help("By alphanumeric order of labels, reversely"),
+                .help("By alphanumeric order of labels, in reverse order"),
         )
         .group(
             ArgGroup::new("alphanumeric-order")
@@ -98,7 +98,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 .filter(|n| !leaf_names.contains(n))
                 .collect();
             if !missing.is_empty() {
-                log::warn!("name-list entries not found in tree: {:?}", missing);
+                anyhow::bail!(
+                    "name-list entries not found in tree: {}",
+                    missing.join(", ")
+                );
             }
             algo::sort_by_list(tree, &names);
         }

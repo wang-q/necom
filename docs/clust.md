@@ -205,7 +205,7 @@ For large-scale data with $N > 20,000$, the memory ($O(N^2)$) and computation ($
 - **32 GiB**: ~130,000 points
 - **64 GiB**: ~185,000 points
 
-**Conclusion**: Even on a high-end server with 64 GiB memory, processing $N=200k$ is near the limit.
+**Implications**: Even on a high-end server with 64 GiB memory, processing $N=200k$ is near the limit.
 
 **Recommended strategy**: Use a "two-step" approach combining fast clustering with careful tree building.
 1.  **Pre-clustering/compression**: Use linear or near-linear algorithms (e.g., `necom clust k-medoids`, `necom clust mcl`, or external tools such as `mmseqs2`) to compress data into $K$ representative points ($K \approx 5000 \sim 10000$).
@@ -214,13 +214,13 @@ For large-scale data with $N > 20,000$, the memory ($O(N^2)$) and computation ($
 **Workflow example**:
 ```bash
 # 1. Fast clustering to select representatives (k=5000)
-necom clust k-medoids all_data.tsv --k 5000 --format pair > clusters.tsv
+necom clust k-medoids all_distances.tsv --k 5000 --format pair > clusters.tsv
 
 # 2. Extract representative list (Unix `cut`, not `necom cut`)
 cut -f1 clusters.tsv | sort -u > representatives.list
 
 # 3. Extract sub-matrix for representatives
-necom mat subset all_data.tsv representatives.list -o sub_matrix.phy
+necom mat subset all_distances.phy representatives.list -o sub_matrix.phy
 
 # 4. Build tree on representatives
 necom clust hier sub_matrix.phy --method ward > backbone.nwk

@@ -177,7 +177,7 @@ graph LR
 
 *   **`necom eval compare`**（由 `nwk compare` 迁移）
     *   **功能**: 比较树 (RF, WRF, KF 距离)
-    *   **状态**: **已实现** (支持单文件内两两比较, 双文件比较; 单文件仅含 1 棵树时发出警告并仅输出表头)
+    *   **状态**: **已实现** (支持单文件内两两比较, 双文件比较; 单文件仅含 1 棵树时以清晰错误信息退出 (bail))
 
 *   **`necom nwk comment`**
     *   **功能**: 添加 NHX 注释 (color, dot, bar, rec, tri 等)

@@ -63,7 +63,7 @@ fn command_order_list() {
 }
 
 #[test]
-fn command_order_name_list_missing_warns() {
+fn command_order_name_list_missing_errors() {
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -81,16 +81,16 @@ fn command_order_name_list_missing_warns() {
             "--name-list",
             list_file.path().to_str().unwrap(),
         ])
-        .run();
+        .run_fail();
 
     assert!(
         stderr.contains("name-list entries not found in tree"),
-        "expected warning for missing names, got stderr: {}",
+        "expected error for missing names, got stderr: {}",
         stderr
     );
     assert!(
         stderr.contains("Missing1") && stderr.contains("Missing2"),
-        "expected missing names in warning, got stderr: {}",
+        "expected missing names in error, got stderr: {}",
         stderr
     );
 }
@@ -126,9 +126,9 @@ fn command_order_species() {
 
     std::fs::copy("tests/newick/species.nwk", temp_path.join("species.nwk")).unwrap();
 
-    // Generate a list of labels from the tree
+    // Generate a leaf-only list of labels from the tree
     NecomCmd::new()
-        .args(&["nwk", "label", "species.nwk", "-o", "species.list"])
+        .args(&["nwk", "label", "species.nwk", "-I", "-o", "species.list"])
         .current_dir(temp_path)
         .assert()
         .success();

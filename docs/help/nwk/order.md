@@ -11,10 +11,10 @@ Notes:
 * `--alphanumeric` and `--num-descendants` can be combined; sorting is first alphanumeric, then by number of descendants.
 * Sort orders:
     * `--name-list`: by a list of names in the file, one per line.
-    * `--alphanumeric` / `--alphanumeric-rev`: by alphanumeric order of labels.
-    * `--num-descendants` / `--num-descendants-rev`: by number of descendants (ladderize).
+    * `--alphanumeric` / `--alphanumeric-rev`: by alphanumeric order of labels, or in reverse order.
+    * `--num-descendants` / `--num-descendants-rev`: by number of descendants (ladderize), or in reverse order.
     * `--deladderize` (alias `--dl`): alternate sort direction at each level.
-* Entries in `--name-list` that are not found among the leaf names are logged as warnings and skipped.
+* Entries in `--name-list` that are not found among the leaf names cause the command to fail with an error listing the missing names.
 
 Examples:
 

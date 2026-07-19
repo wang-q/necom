@@ -1,6 +1,6 @@
 # necom eval 设计稿
 
-> **实现状态注记**：本文档为 `necom eval` 命令的**未实现工作计划**。`eval partition` 与 `eval compare` 已实现，用户文档见 [`docs/eval.md`](../../docs/eval.md) 与 [`docs/help/eval/`](../../docs/help/eval/)。本文档聚焦尚未实现的 `eval tree`（§3.2、§4）以及未来候选方向 `eval quartet`（§3.4）。`eval replicate`（§3.5）已实现，迁移自 `nwk support`。
+> **实现状态注记**：本文档为 `necom eval` 命令的**未实现工作计划**。`eval partition` 与 `eval compare` 已实现，用户文档见 [`docs/eval.md`](../../docs/eval.md) 与 [`docs/help/eval.md`](../../docs/help/eval.md)。本文档聚焦尚未实现的 `eval tree`（§3.2、§4）以及未来候选方向 `eval quartet`（§3.4）。`eval replicate`（§3.5）已实现，迁移自 `nwk support`。
 >
 > **代码现状订正（2026-07）**：本文档已根据 `src/` 实际代码核对。关键订正：`compute_avg_clade_distances` 实际位于 `libs/phylo/tree/balance.rs`（`stat.rs` 仅 re-export）；代码库**不存在**簇内最大两两距离（`max_clade`）的 O(N) 算法，`stat.rs::diameter` 为全树双 BFS；`get_distance`/`node_distance` 位于 `query.rs`，`distance.rs` 是 CLI 输出辅助。详见 §5。
 
@@ -28,7 +28,7 @@
 necom eval <subcommand>
 ```
 
-> §3.1（`eval compare`）与 §3.3（`eval partition`）已实现，用户文档见 [docs/eval.md](../../docs/eval.md) 与 [docs/help/eval/](../../docs/help/eval/)，故本节略过，仅保留尚未实现的子命令设计。
+> §3.1（`eval compare`）与 §3.3（`eval partition`）已实现，用户文档见 [docs/eval.md](../../docs/eval.md) 与 [docs/help/eval.md](../../docs/help/eval.md)，故本节略过，仅保留尚未实现的子命令设计。
 
 ### 3.2 `necom eval tree`
 
@@ -246,7 +246,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
   - 已良好分层（`EvalTarget`/`DistanceMatrix`/`TreeDistance`/`run_single`/`run_batch`，见 [mod.rs](../../src/libs/eval/mod.rs)）。`eval partition` 使用；`eval tree` 复用 `silhouette_score` + `TreeDistance`。
   - **缺失（需新增）**：Purity、Entropy（Phase 2）、Cophenetic 相关系数（Phase 1）。
 - **`libs/phylo/cmp.rs`**：树拓扑比较（RF、WRF、KF）。`eval tree` 复用；`eval compare` 已迁移为顶级命令。
-- **`libs/phylo/tree/balance.rs`**：`compute_avg_clade_distances`（[balance.rs](../../src/libs/phylo/tree/balance.rs)）的 O(N) 自底向上聚合，`stat.rs` 仅 re-export。当前唯一消费者是 [tree_cut/clade.rs](../../src/libs/clust/tree_cut/clade.rs)（即 `necom cut` 的底层）。
+- **`libs/phylo/tree/balance.rs`**：`compute_avg_clade_distances`（[balance.rs](../../src/libs/phylo/tree/balance.rs)）的 O(N) 自底向上聚合，`stat.rs` 仅 re-export。当前唯一消费者是 [tree_cut/clade.rs](../../src/libs/tree_cut/clade.rs)（即 `necom cut` 的底层）。
 - **`libs/phylo/tree/query.rs`**：叶子间距离（`get_distance`/`node_distance`，[query.rs](../../src/libs/phylo/tree/query.rs)）、LCA、`is_monophyletic`/`is_clade`（[query.rs](../../src/libs/phylo/tree/query.rs)）。
 - **`libs/phylo/tree/stat.rs`**：树统计（`diameter` 全树双 BFS、`compute_node_heights`、`TreeSummary` 等）。**注意**：`stat.rs::diameter` 不是簇内直径。
 - **`libs/phylo/tree/distance.rs`**：CLI 输出辅助（`dist_root`/`dist_pairwise`/`dist_phylip` 等），**不是**叶子间距离 API。早期草案将其与 `Tree::get_distance` 混淆，已订正。
@@ -256,7 +256,7 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 - **距离计算**：
   - 基础：复用 `Tree::node_distance`（[query.rs](../../src/libs/phylo/tree/query.rs)，自动在枝长和与边数间切换）。
-  - **clade 路径优化**：对 AvgDist，复用 [balance.rs](../../src/libs/phylo/tree/balance.rs) `compute_avg_clade_distances` 的 O(N) 聚合（返回 `HashMap<NodeId, f64>`，键为子树根）。该算法已在 [tree_cut/clade.rs](../../src/libs/clust/tree_cut/clade.rs) 中使用。
+  - **clade 路径优化**：对 AvgDist，复用 [balance.rs](../../src/libs/phylo/tree/balance.rs) `compute_avg_clade_distances` 的 O(N) 聚合（返回 `HashMap<NodeId, f64>`，键为子树根）。该算法已在 [tree_cut/clade.rs](../../src/libs/tree_cut/clade.rs) 中使用。
   - **任意 partition 路径**：无 O(N) 折中，必须 O(|C|²) 调用 `node_distance`。
 - **簇直径（max_clade）**：
   - **当前代码库不存在此算法**。`stat.rs::diameter` 是全树双 BFS，不适用。

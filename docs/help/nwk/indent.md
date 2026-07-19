@@ -1,4 +1,4 @@
-Re-format a Newick tree to make its structure easier to read.
+Reformat a Newick tree to make its structure easier to read.
 
 Input:
 
