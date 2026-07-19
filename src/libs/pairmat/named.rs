@@ -1,8 +1,22 @@
 use std::collections::HashSet;
 use std::io::BufRead;
 
+use indexmap::IndexMap;
+
 use super::condensed::{get_condensed_index, CondensedMatrix};
 use super::scoring::ScoringMatrix;
+
+/// Build a name-to-index map from a list of unique sequence names.
+fn build_name_map(names: Vec<String>) -> anyhow::Result<IndexMap<String, usize>> {
+    let size = names.len();
+    let mut map = IndexMap::with_capacity(size);
+    for (i, name) in names.into_iter().enumerate() {
+        if map.insert(name.clone(), i).is_some() {
+            anyhow::bail!("duplicate sequence name: {}", name);
+        }
+    }
+    Ok(map)
+}
 
 /// A named matrix for storing pairwise distances/scores with sequence names.
 ///
@@ -18,14 +32,8 @@ pub struct NamedMatrix {
 impl NamedMatrix {
     /// Create a new named matrix from a list of unique sequence names.
     pub fn new(names: Vec<String>) -> anyhow::Result<Self> {
-        let size = names.len();
-        let matrix = CondensedMatrix::new(size);
-        let mut names_map = indexmap::IndexMap::with_capacity(size);
-        for (i, name) in names.into_iter().enumerate() {
-            if names_map.insert(name.clone(), i).is_some() {
-                anyhow::bail!("duplicate sequence name: {}", name);
-            }
-        }
+        let names_map = build_name_map(names)?;
+        let matrix = CondensedMatrix::new(names_map.len());
 
         Ok(NamedMatrix {
             names: names_map,
@@ -39,15 +47,8 @@ impl NamedMatrix {
         names: Vec<String>,
         values: Vec<f32>,
     ) -> anyhow::Result<Self> {
-        let size = names.len();
-        let matrix = CondensedMatrix::from_vec(size, values)?;
-
-        let mut names_map = indexmap::IndexMap::with_capacity(size);
-        for (i, name) in names.into_iter().enumerate() {
-            if names_map.insert(name.clone(), i).is_some() {
-                anyhow::bail!("duplicate sequence name: {}", name);
-            }
-        }
+        let names_map = build_name_map(names)?;
+        let matrix = CondensedMatrix::from_vec(names_map.len(), values)?;
 
         Ok(NamedMatrix {
             names: names_map,
@@ -59,7 +60,7 @@ impl NamedMatrix {
     /// Create with numeric names ("0", "1", ...).
     pub fn with_ids(size: usize) -> Self {
         let matrix = CondensedMatrix::new(size);
-        let mut names_map = indexmap::IndexMap::with_capacity(size);
+        let mut names_map = IndexMap::with_capacity(size);
         for i in 0..size {
             names_map.insert(i.to_string(), i);
         }

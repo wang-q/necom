@@ -27,6 +27,7 @@ Notes:
 
 * `--binary` treats positive values as 1, all others as 0, before computing the score.
 * `--sim` converts a distance to a similarity; `--dis` converts a similarity to a dissimilarity.
+* When both `--sim` and `--dis` are given, the conversion is applied in the order distance -> similarity -> dissimilarity.
 * `--parallel <N>` sets the number of worker threads (default 1).
 
 Examples:

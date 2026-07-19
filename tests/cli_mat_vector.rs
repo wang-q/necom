@@ -31,6 +31,34 @@ fn command_mat_from_vector() {
 }
 
 #[test]
+fn command_mat_from_vector_cross_compare() {
+    use std::io::Write;
+    let mut tmp1 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp1, "A\t1\t0\t1").unwrap();
+    writeln!(tmp1, "B\t0\t1\t1").unwrap();
+
+    let mut tmp2 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp2, "C\t1\t1\t0").unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "from-vector",
+            tmp1.path().to_str().unwrap(),
+            tmp2.path().to_str().unwrap(),
+            "--mode",
+            "jaccard",
+            "--binary",
+        ])
+        .run();
+
+    // Cross-comparison emits one row per pair from set1 x set2 (2 rows).
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("A\tC\t"));
+    assert!(stdout.contains("B\tC\t"));
+}
+
+#[test]
 fn command_mat_from_vector_length_mismatch() {
     use std::io::Write;
     let mut tmp = tempfile::NamedTempFile::new().unwrap();

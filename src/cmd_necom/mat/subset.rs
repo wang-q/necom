@@ -25,8 +25,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Load and process matrix
     let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
 
-    let missing =
-        necom::libs::pairmat::write_subset(&matrix, &wanted_names, &mut writer)?;
+    let missing = necom::libs::pairmat::write_subset(
+        &matrix,
+        &wanted_names,
+        Some(6),
+        &mut writer,
+    )?;
     for name in &missing {
         log::warn!("Name not found in matrix: {}", name);
     }

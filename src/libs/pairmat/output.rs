@@ -75,9 +75,12 @@ pub fn write_phylip_matrix<W: Write>(
 }
 
 /// Write a submatrix restricted to `names`. Returns the list of names not found in `m`.
+///
+/// `precision` controls decimal places; `None` prints raw values.
 pub fn write_subset<W: Write>(
     m: &NamedMatrix,
     names: &[String],
+    precision: Option<usize>,
     writer: &mut W,
 ) -> anyhow::Result<Vec<String>> {
     let all_names = m.get_names();
@@ -93,11 +96,19 @@ pub fn write_subset<W: Write>(
 
     writeln!(writer, "{}", indices.len())?;
 
+    let write_value = |writer: &mut W, value: f32| -> anyhow::Result<()> {
+        match precision {
+            Some(p) => write!(writer, "{:.1$}", value, p)?,
+            None => write!(writer, "{}", value)?,
+        }
+        Ok(())
+    };
+
     for &i in &indices {
         write!(writer, "{}", all_names[i])?;
         for &j in &indices {
             writer.write_all(b"\t")?;
-            write!(writer, "{}", m.get(i, j))?;
+            write_value(writer, m.get(i, j))?;
         }
         writeln!(writer)?;
     }

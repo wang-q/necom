@@ -122,7 +122,7 @@ fn command_mat_subset() {
     // Verify output
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines[0].trim(), "3"); // Number of sequences
-    assert!(lines[1].starts_with("IBPA_ECOLI_GA\t0\t0.10219\t0.058394"));
+    assert!(lines[1].starts_with("IBPA_ECOLI_GA\t0.000000\t0.102190\t0.058394"));
     assert!(lines[3].starts_with("IBPA_ESCF3\t0.058394"));
 }
 
@@ -138,7 +138,7 @@ fn command_mat_subset_with_comments() {
 
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines[0].trim(), "3"); // Number of sequences
-    assert!(lines[1].starts_with("IBPA_ECOLI_GA\t0\t0.10219\t0.058394"));
+    assert!(lines[1].starts_with("IBPA_ECOLI_GA\t0.000000\t0.102190\t0.058394"));
     assert!(!stderr.contains("Name not found: #"));
     assert!(!stderr.contains("Name not found: comment"));
 }
@@ -569,4 +569,30 @@ fn command_mat_compare_nan_emits_na() {
         "expected 'pearson\\tNA' in stdout, got: {}",
         stdout
     );
+}
+
+#[test]
+fn command_mat_to_phylip_empty_input() {
+    // Empty pairwise input should produce a 0x0 PHYLIP matrix.
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["mat", "to-phylip", "stdin"])
+        .stdin("")
+        .run();
+
+    assert_eq!(stdout, "0\n");
+    assert!(stderr.is_empty(), "empty input should not produce warnings");
+}
+
+#[test]
+fn command_mat_subset_precision() {
+    // Subset output should use fixed 6-decimal precision.
+    let (stdout, _) = NecomCmd::new()
+        .args(&["mat", "subset", "tests/mat/IBPA.phy", "tests/mat/IBPA.list"])
+        .run();
+
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(lines[0].trim(), "3");
+    // The diagonal and first off-diagonal values should be emitted with
+    // exactly 6 decimal places.
+    assert!(lines[1].starts_with("IBPA_ECOLI_GA\t0.000000\t0.102190\t0.058394"));
 }

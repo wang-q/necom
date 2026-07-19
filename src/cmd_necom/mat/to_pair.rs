@@ -24,12 +24,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
     let names = matrix.get_names();
 
-    // Output pairwise distances (lower triangle only)
+    // Output pairwise distances (lower triangle including diagonal)
     for i in 0..matrix.size() {
         for j in 0..=i {
             let distance = matrix.get(i, j);
-            writer
-                .write_fmt(format_args!("{}\t{}\t{}\n", names[j], names[i], distance))?;
+            writeln!(writer, "{}\t{}\t{}", names[j], names[i], distance)?;
         }
     }
 

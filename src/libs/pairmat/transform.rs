@@ -1,5 +1,36 @@
 use super::named::NamedMatrix;
 
+/// Apply a single transformation operation to a scalar value.
+fn apply_transform(
+    val: f32,
+    method: &str,
+    max_val: f32,
+    scale: f32,
+    offset: f32,
+) -> anyhow::Result<f32> {
+    Ok(match method {
+        "linear" => val * scale + offset,
+        "inv-linear" => max_val - val,
+        "log" => {
+            if val > 0.0 {
+                -val.ln()
+            } else {
+                f32::INFINITY
+            }
+        }
+        "exp" => (-val).exp(),
+        "square" => val * val,
+        "sqrt" => {
+            if val >= 0.0 {
+                val.sqrt()
+            } else {
+                f32::NAN
+            }
+        }
+        _ => anyhow::bail!("unsupported transformation operation: {}", method),
+    })
+}
+
 /// Apply mathematical transformations to a matrix element-wise.
 ///
 /// Supports: linear, inv-linear, log, exp, square, sqrt.
@@ -53,27 +84,7 @@ pub fn transform_matrix(
             }
 
             // 2. Transform
-            val = match method {
-                "linear" => val * scale + offset,
-                "inv-linear" => max_val - val,
-                "log" => {
-                    if val > 0.0 {
-                        -val.ln()
-                    } else {
-                        f32::INFINITY
-                    }
-                }
-                "exp" => (-val).exp(),
-                "square" => val * val,
-                "sqrt" => {
-                    if val >= 0.0 {
-                        val.sqrt()
-                    } else {
-                        f32::NAN
-                    }
-                }
-                _ => anyhow::bail!("unsupported transformation operation: {}", method),
-            };
+            val = apply_transform(val, method, max_val, scale, offset)?;
 
             result.set(i, j, val);
         }
@@ -89,9 +100,9 @@ pub fn transform_matrix(
             d = if d > 1e-9 { 1.0 } else { 0.0 };
         }
         d = match method {
-            "linear" => d * scale + offset,
             // Keep the diagonal at 0 for a valid distance matrix.
             "inv-linear" => 0.0,
+            // log of a non-positive diagonal is defined as 0 (unlike off-diagonal Inf).
             "log" => {
                 if d > 0.0 {
                     -d.ln()
@@ -99,16 +110,7 @@ pub fn transform_matrix(
                     0.0
                 }
             }
-            "exp" => (-d).exp(),
-            "square" => d * d,
-            "sqrt" => {
-                if d >= 0.0 {
-                    d.sqrt()
-                } else {
-                    f32::NAN
-                }
-            }
-            _ => anyhow::bail!("unsupported transformation operation: {}", method),
+            _ => apply_transform(d, method, max_val, scale, offset)?,
         };
         new_diags[i] = d;
     }

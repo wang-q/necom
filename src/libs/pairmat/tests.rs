@@ -492,6 +492,24 @@ fn test_empty_matrix_boundary() {
 }
 
 #[test]
+fn test_write_subset_precision() {
+    let names = vec!["A".to_string(), "B".to_string()];
+    let mut m = NamedMatrix::new(names).unwrap();
+    m.set(0, 1, 0.5);
+
+    let mut buf = Vec::new();
+    super::output::write_subset(
+        &m,
+        &["A".to_string(), "B".to_string()],
+        Some(6),
+        &mut buf,
+    )
+    .unwrap();
+    let output = String::from_utf8(buf).unwrap();
+    assert_eq!(output, "2\nA\t0.000000\t0.500000\nB\t0.500000\t0.000000\n");
+}
+
+#[test]
 fn test_single_element_matrix_boundary() {
     use std::io::Write;
 

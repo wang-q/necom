@@ -27,13 +27,6 @@ impl FeatureVector {
         &self.list
     }
 
-    pub fn new() -> Self {
-        Self {
-            name: String::new(),
-            list: vec![],
-        }
-    }
-
     /// Constructed from range and seq
     ///
     /// ```ignore
@@ -69,7 +62,7 @@ impl FeatureVector {
     pub fn parse(line: &str) -> anyhow::Result<FeatureVector> {
         let trimmed = line.trim();
         if trimmed.is_empty() || trimmed.starts_with('#') {
-            return Ok(Self::new());
+            return Ok(Self::default());
         }
         let fields: Vec<&str> = trimmed.split('\t').collect();
         if fields.len() < 2 {
