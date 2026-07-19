@@ -43,18 +43,20 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         method.clone()
     };
 
-    let requested_methods: Vec<&str> = methods
-        .split(',')
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-        .collect();
-    if requested_methods.is_empty() {
-        anyhow::bail!("at least one comparison method required");
-    }
-    for m in &requested_methods {
-        if !VALID_METHODS.contains(m) {
+    let mut requested_methods: Vec<&str> = Vec::new();
+    for m in methods.split(',').map(str::trim) {
+        if m.is_empty() {
+            continue;
+        }
+        if !VALID_METHODS.contains(&m) {
             anyhow::bail!("unknown method: {}", m);
         }
+        if !requested_methods.contains(&m) {
+            requested_methods.push(m);
+        }
+    }
+    if requested_methods.is_empty() {
+        anyhow::bail!("at least one comparison method required");
     }
 
     let outfile = crate::cmd_necom::args::get_outfile(args);

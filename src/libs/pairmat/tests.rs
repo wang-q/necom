@@ -524,6 +524,33 @@ fn test_write_subset_precision() {
 }
 
 #[test]
+fn test_write_phylip_strict_name_truncation_bytes() {
+    let names = vec!["αβγδεζηθικλ".to_string(), "B".to_string()];
+    let mut m = NamedMatrix::new(names).unwrap();
+    m.set(0, 1, 0.5);
+
+    let mut buf = Vec::new();
+    super::output::write_phylip_matrix(
+        &m,
+        super::output::MatrixFormat::Strict,
+        Some(6),
+        &mut buf,
+    )
+    .unwrap();
+    let output = String::from_utf8(buf).unwrap();
+    let lines: Vec<&str> = output.lines().collect();
+
+    // First line is the count; second line starts with exactly 10 bytes of name.
+    assert_eq!(lines[0], "2");
+    let first_line = lines[1];
+    let name_field = &first_line[..10];
+    assert_eq!(name_field.len(), 10, "strict name field must be 10 bytes");
+    assert!(name_field.starts_with("α"));
+    // Full matrix row: "<name> 0.000000 0.500000" (diagonal then off-diagonal).
+    assert_eq!(&first_line[10..], " 0.000000 0.500000");
+}
+
+#[test]
 fn test_single_element_matrix_boundary() {
     use std::io::Write;
 

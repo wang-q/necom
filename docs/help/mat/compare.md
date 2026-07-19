@@ -23,6 +23,7 @@ Notes:
 * Useful for evaluating consistency between distance calculation methods, or measuring information loss before and after clustering (Cophenetic Correlation).
 * Default method is `pearson`.
 * Multiple methods can be requested as a comma-separated list.
+* Non-finite scores (`NaN` / `Inf`) are emitted as `NA` to keep the TSV parseable.
 
 Examples:
 

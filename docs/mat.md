@@ -92,7 +92,7 @@ $$k = N \cdot i - \frac{i(i+1)}{2} + (j - i - 1) \quad \text{for} \quad i < j$$
 
 The diagonal is implicitly `0.0`, and the matrix is symmetric. This is the
 standard condensed distance matrix layout used by many statistical packages
-(e.g., SciPy, R) and by the NN-chain implementation in `necom clust hier`.
+(e.g., SciPy) and by the NN-chain implementation in `necom clust hier`.
 
 #### ScoringMatrix<T>
 
@@ -249,12 +249,14 @@ necom clust hier sub_matrix.phy --method ward > sub_tree.nwk
 # Compare distance matrices based on K-mer (mash) and alignment (ani)
 necom mat compare mash_dist.phy ani_dist.phy --method pearson,spearman
 
-# Example output:
+# stdout (tab-separated):
+Method	Score
+pearson	0.985432
+spearman	0.971234
+
+# stderr (info-level logging):
 # Sequences in matrices: 100 and 100
 # Common sequences: 100
-# Method    Score
-# pearson   0.985432
-# spearman  0.971234
 ```
 
 ### Scenario D: Prepare Data for the Phylip Software Package

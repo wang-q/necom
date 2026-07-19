@@ -1,4 +1,4 @@
-Convert a PHYLIP matrix between formats and normalize it while preserving all distance values.
+Convert a PHYLIP matrix between formats.
 
 Input:
 
@@ -28,9 +28,9 @@ Output:
 
 Notes:
 
-* `strict` mode truncates names to 10 characters, which can cause name collisions if names share a 10-character prefix.
+* `strict` mode truncates names to 10 characters and formats distances to 6 decimal places, which can cause name collisions and precision loss.
 * `full` and `lower` preserve original names without truncation.
-* All distance values are preserved exactly across all formats; only the layout differs.
+* `full` and `lower` preserve distance values as-is; `strict` may round them to 6 decimal places.
 
 Examples:
 

@@ -62,7 +62,20 @@ pub fn write_phylip_matrix<W: Write>(
                 }
             }
             MatrixFormat::Strict => {
-                write!(writer, "{:<10}", name.chars().take(10).collect::<String>())?;
+                // Strict PHYLIP reserves exactly 10 bytes for the name.
+                let truncated = if name.len() <= 10 {
+                    name.as_str()
+                } else {
+                    let mut end = 10;
+                    while end > 0 && !name.is_char_boundary(end) {
+                        end -= 1;
+                    }
+                    &name[..end]
+                };
+                writer.write_all(truncated.as_bytes())?;
+                for _ in truncated.len()..10 {
+                    writer.write_all(b" ")?;
+                }
                 for j in 0..size {
                     write!(writer, " {:.6}", m.get(i, j))?;
                 }

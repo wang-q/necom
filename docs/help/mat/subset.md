@@ -3,7 +3,7 @@ Extract a submatrix from a PHYLIP matrix using a list of names.
 Input:
 
 * Matrix: PHYLIP distance matrix (full or lower-triangular).
-* List: one name per line.
+* List: names separated by whitespace (one or more per line).
 * Empty lines and lines starting with `#` in the list file are ignored.
 
 Output:
