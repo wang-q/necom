@@ -66,6 +66,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     } else {
         // ids with names
         let id_of: BTreeMap<_, _> = tree.get_name_id();
+        let duplicates = necom::libs::phylo::tree::stat::duplicate_names(&tree);
 
         // All IDs matched
         let mut ids = BTreeSet::new();
@@ -73,6 +74,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         if let Some(nodes) = args.get_many::<String>("node") {
             for name in nodes {
                 if let Some(&id) = id_of.get(name) {
+                    super::common::warn_duplicate_name(&duplicates, name);
                     ids.insert(id);
                 } else {
                     log::warn!("node name not found in tree: {}", name);

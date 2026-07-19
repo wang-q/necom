@@ -75,6 +75,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for tree in &mut trees {
         // ids with names
         let id_of: BTreeMap<_, _> = tree.get_name_id();
+        let duplicates = necom::libs::phylo::tree::stat::duplicate_names(tree);
 
         // all IDs to be modified
         let mut rename_of: BTreeMap<_, _> = BTreeMap::new();
@@ -82,6 +83,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         // ids supplied by --node
         for (i, name) in names.iter().enumerate() {
             if let Some(id) = id_of.get(name) {
+                super::common::warn_duplicate_name(&duplicates, name);
                 let rename = renames.get(i).ok_or_else(|| {
                     anyhow::anyhow!("rename entry missing at index {}", i)
                 })?;
@@ -94,6 +96,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         // ids supplied by --lca
         for (i, lca) in lcas.iter().enumerate() {
             let (first, last) = super::common::parse_lca_pair(lca)?;
+            super::common::warn_duplicate_name(&duplicates, first);
+            super::common::warn_duplicate_name(&duplicates, last);
 
             match (id_of.get(first), id_of.get(last)) {
                 (Some(id1), Some(id2)) => {

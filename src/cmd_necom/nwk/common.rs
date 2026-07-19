@@ -86,7 +86,7 @@ fn flag(args: &ArgMatches, id: &str) -> bool {
 }
 
 /// Warn once for each duplicate name that is being matched by name.
-fn warn_duplicate_name(duplicates: &HashSet<String>, name: &str) {
+pub(crate) fn warn_duplicate_name(duplicates: &HashSet<String>, name: &str) {
     if duplicates.contains(name) {
         log::warn!(
             "duplicate node name '{}' matched multiple nodes; using one match",

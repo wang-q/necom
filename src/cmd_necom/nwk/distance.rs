@@ -85,12 +85,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let name_id_map = tree.get_name_id();
     let existing_names: std::collections::HashSet<&String> =
         name_id_map.keys().collect();
+    // Build a reverse id -> name map for O(1) lookup per selected id.
+    let id_name_map: std::collections::HashMap<usize, &String> =
+        name_id_map.iter().map(|(n, &i)| (i, n)).collect();
     for &id in &ids {
-        let label = if let Some(name) =
-            name_id_map
-                .iter()
-                .find_map(|(n, &i)| if i == id { Some(n) } else { None })
-        {
+        let label = if let Some(&name) = id_name_map.get(&id) {
             name.clone()
         } else {
             // Synthetic label for unnamed nodes; ensure it does not collide.
