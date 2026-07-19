@@ -2,7 +2,7 @@
 
 ## 背景
 
-当前 `necom cut` 单命令承载了 14 个互斥切割方法、动态切割、混合切割、参数扫描、矩阵输入、支持值过滤等大量参数，帮助文档冗长，用户容易误用。本方案将 `cut` 拆为 4 个子命令，使命令职责清晰、参数聚焦。
+当前 `necom cut` 单命令承载了 14 个互斥切割方法、动态切割、混合切割、参数扫描、矩阵输入、支持值过滤等大量参数，帮助文档冗长，用户容易误用。本方案将 `cut` 拆为 5 个子命令，使命令职责清晰、参数聚焦。
 
 ## 目标
 
@@ -13,10 +13,11 @@
 ## 拆分后的命令结构
 
 ```text
-necom cut simple   <infile> --method <METHOD> --threshold <T> [options]
-necom cut dynamic  <infile> --min-size <N> [options]
-necom cut hybrid   <infile> --matrix <M> --min-size <N> [options]
-necom cut scan     <infile> --method <METHOD>|--dynamic-tree --range <start,end,step> [options]
+necom cut simple        <infile> --method <METHOD> --threshold <T> [options]
+necom cut dynamic       <infile> --min-size <N> [options]
+necom cut hybrid        <infile> --matrix <M> --min-size <N> [options]
+necom cut scan-simple   <infile> --method <METHOD> --range <start,end,step> [options]
+necom cut scan-dynamic  <infile> --range <start,end,step> [options]
 ```
 
 ### `cut simple`
@@ -49,17 +50,29 @@ necom cut scan     <infile> --method <METHOD>|--dynamic-tree --range <start,end,
 - `--max-tree-height` 可选 f64。
 - 公共输出选项同上。
 
-### `cut scan`
+### `cut scan-simple`
 
-覆盖原 `--scan`：
+覆盖原 standard 方法的 `--scan`：
 
-- `--method` 与 `--dynamic-tree` 二选一。
+- `--method` 必填。
 - `--range <start,end,step>` 必填。
-- `--deep` 可选，默认 2（仅 inconsistent 有效）。
+- `--deep` 可选，默认 2（method=inconsistent 时有效）。
 - `--stats-out` 可选。
-- `--deep-split`, `--max-tree-height`, `--max-pam-dist`, `--no-pam-dendro` 仅在 `--dynamic-tree` 扫描时有效。
 - `--support` 可选。
 - 输出固定为 long 格式（`Group\tClusterID\tSampleID`），不提供 `--format`/`--rep`。
+
+### `cut scan-dynamic`
+
+覆盖原 `--dynamic-tree` 的 `--scan`：
+
+- `--range <start,end,step>` 必填。
+- `--deep-split` flag。
+- `--max-tree-height` 可选 f64。
+- `--stats-out` 可选。
+- `--support` 可选。
+- 输出固定为 long 格式，不提供 `--format`/`--rep`。
+
+> 注意：两个 scan 命令都不包含 `--matrix`、`--max-pam-dist`、`--no-pam-dendro`，因为 hybrid 不支持扫描。
 
 ## 源码目录变更
 
@@ -71,7 +84,8 @@ src/cmd_necom/
     simple.rs            # cut simple
     dynamic.rs           # cut dynamic
     hybrid.rs            # cut hybrid
-    scan.rs              # cut scan
+    scan_simple.rs       # cut scan-simple（模块名 scan_simple；clap 命令名 scan-simple）
+    scan_dynamic.rs      # cut scan-dynamic（模块名 scan_dynamic；clap 命令名 scan-dynamic）
 ```
 
 `src/cmd_necom/mod.rs` 保持 `pub mod cut;` 不变；目录模块自动解析。
@@ -119,16 +133,21 @@ src/cmd_necom/
 5. 调用 `tree_cut::dispatch_cut`。
 6. 格式化并输出。
 
-### `scan::execute`
+### `scan_simple::execute`
 
 1. `load_tree(args)`。
-2. 解析 `--range`（格式 `start,end,step`，沿用 `tree_cut::scan::parse_scan_range`）。
-3. 确定扫描模式：
-   - 若 `--dynamic-tree` flag 存在：`method_name = None`，`dynamic_tree = true`。
-   - 否则：`method_name = Some(method)`，方法名归一化，`dynamic_tree = false`。
-4. 构造 `ScanParams`。
-5. 初始化 stats_writer（若 `--stats-out`）。
-6. 调用 `tree_cut::scan::run_scan`。
+2. 解析 `--method`（归一化为下划线形式）和 `--range`。
+3. 构造 `ScanParams { method_name: Some(name), dynamic_tree: false, ... }`。
+4. 初始化 stats_writer（若 `--stats-out`）。
+5. 调用 `tree_cut::scan::run_scan`，dynamic 相关参数（`deep_split`, `max_tree_height`, `no_pam_dendro`, `max_pam_dist`）传默认值。
+
+### `scan_dynamic::execute`
+
+1. `load_tree(args)`。
+2. 解析 `--range`。
+3. 构造 `ScanParams { method_name: None, dynamic_tree: true, ... }`。
+4. 初始化 stats_writer（若 `--stats-out`）。
+5. 调用 `tree_cut::scan::run_scan`，传入 `--deep-split`、`--max-tree-height`，其余参数传默认值。
 
 ## 参数帮助函数清理
 
@@ -136,34 +155,31 @@ src/cmd_necom/
 
 - `dynamic_tree_arg()`
 - `dynamic_hybrid_arg()`
-- `scan_arg()`（新 `cut scan` 使用 `--range`）
+- `scan_arg()`（新 `scan-simple` / `scan-dynamic` 使用 `--range`）
 
 以下函数继续保留并在新子命令中使用：
 
-- `rep_arg()`
-- `support_arg()`
-- `deep_arg()`
-- `stats_out_arg()`
-- `deep_split_arg()`
-- `max_tree_height_arg()`
-- `max_pam_dist_arg()`
-- `no_pam_dendro_arg()`
+- `rep_arg()`、`support_arg()`、`deep_arg()`：simple / dynamic / hybrid 共用。
+- `stats_out_arg()`：scan-simple / scan-dynamic 使用。
+- `deep_split_arg()`、`max_tree_height_arg()`：dynamic / hybrid / scan-dynamic 共用。
+- `max_pam_dist_arg()`、`no_pam_dendro_arg()`：仅 hybrid 使用。
 
 若实施时发现某些函数最终未被引用，则一并删除。
 
 ## 文档更新
 
 1. 创建目录 `docs/help/cut/`。
-2. 重写 `docs/help/cut.md` 为总览页，列出 4 个子命令及跳转示例。
+2. 重写 `docs/help/cut.md` 为总览页，列出 5 个子命令及跳转示例。
 3. 新增：
    - `docs/help/cut/simple.md`
    - `docs/help/cut/dynamic.md`
    - `docs/help/cut/hybrid.md`
-   - `docs/help/cut/scan.md`
+   - `docs/help/cut/scan-simple.md`
+   - `docs/help/cut/scan-dynamic.md`
    - 遵循现有 `docs/help/*.md` 风格（`Section Name:`、`* ` 列表、缩进代码示例）。
 4. 更新 `src/necom.rs` 的 `after_help`，将 `cut` 一行补充为类似：
    ```text
-   * cut   - Cut a Newick tree into flat partitions (simple/dynamic/hybrid/scan)
+   * cut   - Cut a Newick tree into flat partitions (simple/dynamic/hybrid/scan-simple/scan-dynamic)
    ```
 
 ## 测试迁移
@@ -177,15 +193,15 @@ src/cmd_necom/
   - `--dynamic-tree 20` → `cut dynamic ... --min-size 20`
 - `tests/cli_cut_hybrid.rs`
   - `--dynamic-hybrid 20` → `cut hybrid ... --min-size 20 --matrix ...`
-- 新增或迁移 scan 测试到 `tests/cli_cut_scan.rs`。
+- 新增 `tests/cli_cut_scan_simple.rs` 和 `tests/cli_cut_scan_dynamic.rs`，分别覆盖原 `--scan` 在 standard 方法和 dynamic-tree 下的用法。
 
 ## 实施顺序
 
 1. 删除 `src/cmd_necom/cut.rs`。
 2. 创建 `src/cmd_necom/cut/mod.rs` 及路由。
-3. 创建 `simple.rs`、`dynamic.rs`、`hybrid.rs`、`scan.rs` 骨架，`execute` 可先 `unimplemented!()`。
+3. 创建 `simple.rs`、`dynamic.rs`、`hybrid.rs`、`scan_simple.rs`、`scan_dynamic.rs` 骨架，`execute` 可先 `unimplemented!()`。
 4. `cargo check` 确认模块解析正确。
-5. 依次实现 `simple`、`dynamic`、`hybrid`、`scan`。
+5. 依次实现 `simple`、`dynamic`、`hybrid`、`scan-simple`、`scan-dynamic`。
 6. 从 `args.rs` 删除不再使用的帮助函数。
 7. 更新文档。
 8. 迁移测试。
