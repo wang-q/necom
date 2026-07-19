@@ -747,13 +747,3 @@ fn test_cut_support_avg_clade() {
 
     let _ = fs::remove_file(nwk_file);
 }
-
-// NOTE: A `test_cut_support_dynamic_tree` test was originally planned to verify
-// Bug #2 (support filter sentinel) for `--dynamic-tree`. However, `dynamic.rs`
-// has a pre-existing bug where its private `compute_node_heights` only caches
-// the root's height, causing `cutree_static` to default all non-root nodes to
-// height 0.0 and always cut at the root's immediate children. This masks any
-// effect of the support filter on `--dynamic-tree` output, making the test
-// unable to distinguish between the old (f64::INFINITY) and new (1e20) sentinel.
-// Bug #2 is adequately covered by `test_cut_support_avg_clade`, which exercises
-// the `compute_avg_clade_distances` → `finite_length()` path.

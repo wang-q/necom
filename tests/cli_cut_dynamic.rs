@@ -1,9 +1,28 @@
+use std::collections::HashSet;
 use std::fs;
 use tempfile::Builder;
 
 #[path = "common/mod.rs"]
 mod common;
 use common::NecomCmd;
+
+fn parse_clusters(output: &str) -> Vec<HashSet<String>> {
+    let mut clusters = Vec::new();
+    for line in output.lines() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let set: HashSet<String> =
+            line.split_whitespace().map(|s| s.to_string()).collect();
+        clusters.push(set);
+    }
+    clusters.sort_by(|a, b| {
+        let min_a = a.iter().min().unwrap();
+        let min_b = b.iter().min().unwrap();
+        min_a.cmp(min_b)
+    });
+    clusters
+}
 
 #[test]
 fn test_dynamic_tree_cut_basic() {
@@ -74,4 +93,114 @@ fn test_dynamic_tree_cut_unassigned() {
     // So we expect 4 lines, all belonging to the same representative.
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines.len(), 4);
+}
+
+#[test]
+fn test_dynamic_tree_cut_multi_level() {
+    let temp = Builder::new()
+        .prefix("necom_test_dynamic_multi")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("multi.nwk");
+    // Heights:
+    //   (A,B) = 10.0
+    //   (C,D) = 0.1
+    //   quartet = 10.1
+    //   E = 0.0
+    //   root = 10.2
+    // cut_height = 0.99 * 10.2 = 10.098
+    // root (10.2) > cut_height -> descend
+    // quartet (10.1) > cut_height -> descend
+    // (A,B) (10.0) <= cut_height -> cluster root {A,B}
+    // (C,D) (0.1) <= cut_height -> cluster root {C,D}
+    // This verifies that cutree_static can perform multi-level cuts now that
+    // all node heights are computed, not just the root.
+    let tree_content = "(((A:10,B:10):0.1,(C:0.1,D:0.1):0.1):0.1,E:0.1);";
+    fs::write(&tree_file, tree_content).unwrap();
+
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&["cut", tree_file.to_str().unwrap(), "--dynamic-tree", "2"])
+        .run();
+
+    if !stderr.is_empty() {
+        println!("STDERR: {}", stderr);
+    }
+
+    let clusters = parse_clusters(&stdout);
+    let expected: Vec<HashSet<String>> = vec![
+        ["A", "B"].iter().map(|s| s.to_string()).collect(),
+        ["C", "D"].iter().map(|s| s.to_string()).collect(),
+        ["E"].iter().map(|s| s.to_string()).collect(),
+    ];
+    assert_eq!(clusters, expected);
+}
+
+#[test]
+fn test_dynamic_tree_cut_with_support_filter() {
+    let temp = Builder::new()
+        .prefix("necom_test_dynamic_support")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("support.nwk");
+    // (C,D) internal node has support 50.
+    // Heights without support filter:
+    //   (A,B) = 0.1, (C,D) = 0.1, quartet = 0.2, E = 0.0, root = 1.0
+    //   cut_height = 0.99 -> quartet stays whole -> {A,B,C,D}, {E}
+    // With --support 60:
+    //   edge (C,D)->parent becomes 1e20
+    //   (C,D) height = 1e20, quartet height = 1e20, root height = 1e20
+    //   cut_height = 0.99 * 1e20
+    //   root and quartet exceed cut_height, so cutree_static descends
+    //   (A,B) height 0.2 <= cut_height -> cluster {A,B}
+    //   C and D fall below min_module_size 2 -> unassigned (cluster 0)
+    //   E also unassigned (cluster 0)
+    let tree_content = "(((A:0.1,B:0.1):0.1,(C:0.1,D:0.1)50:0.1):0.8,E:0.1);";
+    fs::write(&tree_file, tree_content).unwrap();
+
+    // Without support: one cluster of four leaves + E
+    let (out_no_support, _) = NecomCmd::new()
+        .args(&["cut", tree_file.to_str().unwrap(), "--dynamic-tree", "2"])
+        .run();
+    let clusters_no_support = parse_clusters(&out_no_support);
+    assert!(
+        clusters_no_support.iter().any(|c| {
+            c.len() == 4
+                && c.contains("A")
+                && c.contains("B")
+                && c.contains("C")
+                && c.contains("D")
+        }),
+        "expected {{A,B,C,D}} cluster without support, got {:?}",
+        clusters_no_support
+    );
+    assert!(
+        clusters_no_support
+            .iter()
+            .any(|c| c == &["E"].iter().map(|s| s.to_string()).collect()),
+        "expected {{E}} cluster without support"
+    );
+
+    // With support 60: masked edge forces deeper cut, producing {A,B}; C, D, E unassigned
+    let (out_support, _) = NecomCmd::new()
+        .args(&[
+            "cut",
+            tree_file.to_str().unwrap(),
+            "--dynamic-tree",
+            "2",
+            "--support",
+            "60",
+        ])
+        .run();
+    let clusters_support = parse_clusters(&out_support);
+    assert!(
+        clusters_support
+            .iter()
+            .any(|c| c == &["A", "B"].iter().map(|s| s.to_string()).collect()),
+        "expected {{A,B}} cluster with support, got {:?}",
+        clusters_support
+    );
+    assert!(
+        !clusters_support.iter().any(|c| c.len() == 4),
+        "support filter should break the quartet apart"
+    );
 }

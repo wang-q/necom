@@ -1,5 +1,6 @@
 use super::Partition;
 use crate::libs::phylo::node::NodeId;
+use crate::libs::phylo::tree::stat::compute_node_heights;
 use crate::libs::phylo::tree::Tree;
 use std::collections::HashMap;
 
@@ -45,9 +46,8 @@ pub fn cutree_dynamic_tree(
         return Ok(Partition::new());
     }
 
-    // Pre-calculate heights for all nodes (weighted=true)
-    let mut node_heights = HashMap::new();
-    compute_node_heights(tree, root, &mut node_heights);
+    // Pre-calculate heights for all nodes using weighted finite branch lengths.
+    let node_heights = compute_node_heights(tree);
 
     let max_h = *node_heights.get(&root).unwrap_or(&0.0);
     let cut_height = options.max_tree_height.unwrap_or(0.99 * max_h);
@@ -207,20 +207,6 @@ pub fn cutree_dynamic_tree(
 }
 
 // --- Helpers ---
-
-fn compute_node_heights(
-    tree: &Tree,
-    node_id: NodeId,
-    cache: &mut HashMap<NodeId, f64>,
-) -> f64 {
-    if let Some(h) = cache.get(&node_id) {
-        return *h;
-    }
-
-    let h = tree.get_height(node_id, true); // true = weighted
-    cache.insert(node_id, h);
-    h
-}
 
 /// Simulates static cut (cutree).
 /// Returns Map: LeafID -> ClusterID. 0 for too small clusters.
