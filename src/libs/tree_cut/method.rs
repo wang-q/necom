@@ -74,8 +74,12 @@ pub fn build_method(
     leaf_depths: Option<(f64, f64, f64)>,
 ) -> anyhow::Result<Method> {
     let require_non_negative = |v: f64, method: &str| -> anyhow::Result<()> {
-        if v < 0.0 {
-            anyhow::bail!("{} threshold must be non-negative, got {}", method, v);
+        if !v.is_finite() || v < 0.0 {
+            anyhow::bail!(
+                "{} threshold must be a non-negative finite number, got {}",
+                method,
+                v
+            );
         }
         Ok(())
     };
@@ -182,6 +186,24 @@ mod tests {
         // Zero is a valid threshold for distance/height methods.
         assert!(build_method("height", 0.0, 2, None).is_ok());
         assert!(build_method("max_clade", 0.0, 2, None).is_ok());
+    }
+
+    #[test]
+    fn test_build_method_non_finite_threshold_rejected() {
+        for (value, label) in [
+            (f64::NAN, "NaN"),
+            (f64::INFINITY, "+Inf"),
+            (f64::NEG_INFINITY, "-Inf"),
+        ] {
+            let result = build_method("height", value, 2, None);
+            assert!(result.is_err(), "height should reject {}", label);
+            let msg = result.unwrap_err().to_string();
+            assert!(
+                msg.contains("non-negative finite"),
+                "error message should mention non-negative finite: {}",
+                msg
+            );
+        }
     }
 
     #[test]

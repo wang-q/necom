@@ -8,10 +8,13 @@ use std::collections::HashMap;
 /// break against pathological non-convergence; normal inputs converge in <10.
 const MAX_DEEP_SPLIT_ITERATIONS: usize = 100;
 
-/// Parameters for Dynamic Tree Cut
+/// Parameters for Dynamic Tree Cut.
 pub struct DynamicTreeOptions {
+    /// Minimum number of leaves in a cluster module.
     pub min_module_size: usize,
+    /// Whether to enable iterative deep splitting.
     pub deep_split: bool,
+    /// Optional upper bound on joining height (defaults to 99% of tree height).
     pub max_tree_height: Option<f64>,
 }
 

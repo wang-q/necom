@@ -11,6 +11,7 @@ pub mod inconsistent;
 pub mod link;
 pub mod method;
 pub mod partition;
+pub mod scan;
 pub mod simple;
 
 pub use method::{build_method, Method, METHOD_NAMES};
@@ -62,6 +63,9 @@ pub fn build_dispatch(
     matrix: Option<NamedMatrix>,
 ) -> Result<CutDispatch> {
     if let Some(min_module_size) = dynamic_tree {
+        if min_module_size == 0 {
+            anyhow::bail!("dynamic-tree min cluster size must be greater than 0");
+        }
         return Ok(CutDispatch::DynamicTree(DynamicTreeOptions {
             min_module_size,
             deep_split,
@@ -70,6 +74,9 @@ pub fn build_dispatch(
     }
 
     if let Some(min_cluster_size) = dynamic_hybrid {
+        if min_cluster_size == 0 {
+            anyhow::bail!("dynamic-hybrid min cluster size must be greater than 0");
+        }
         let dist_matrix = matrix
             .ok_or_else(|| anyhow::anyhow!("--matrix is required for dynamic-hybrid"))?;
         return Ok(CutDispatch::DynamicHybrid(HybridOptions {
@@ -262,5 +269,70 @@ pub fn apply_support_filter(tree: &mut Tree, threshold: f64) {
         if let Some(node) = tree.get_node_mut(id) {
             node.length = Some(SUPPORT_FILTER_SENTINEL);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tiny_tree() -> Tree {
+        Tree::from_newick("((A:0.1,B:0.1):0.1,C:0.2);").expect("valid newick")
+    }
+
+    #[test]
+    fn test_build_dispatch_dynamic_tree_zero_rejected() {
+        let tree = tiny_tree();
+        let result = build_dispatch(
+            &tree,
+            None,
+            0.0,
+            2,
+            Some(0),
+            None,
+            None,
+            false,
+            false,
+            None,
+            None,
+        );
+        assert!(result.is_err());
+        let msg = result.err().unwrap().to_string();
+        assert!(
+            msg.contains("dynamic-tree min cluster size must be greater than 0"),
+            "got: {}",
+            msg
+        );
+    }
+
+    #[test]
+    fn test_build_dispatch_dynamic_hybrid_zero_rejected() {
+        let tree = tiny_tree();
+        // Condensed upper-triangle values for A-B, A-C, B-C.
+        let matrix = NamedMatrix::new_from_values(
+            vec!["A".to_string(), "B".to_string(), "C".to_string()],
+            vec![0.2, 1.0, 1.0],
+        )
+        .expect("valid matrix");
+        let result = build_dispatch(
+            &tree,
+            None,
+            0.0,
+            2,
+            None,
+            Some(0),
+            None,
+            false,
+            false,
+            None,
+            Some(matrix),
+        );
+        assert!(result.is_err());
+        let msg = result.err().unwrap().to_string();
+        assert!(
+            msg.contains("dynamic-hybrid min cluster size must be greater than 0"),
+            "got: {}",
+            msg
+        );
     }
 }

@@ -7,15 +7,25 @@ use std::collections::HashMap;
 
 /// Options for hybrid tree cutting.
 pub struct HybridOptions {
+    /// Minimum number of leaves required for a valid cluster.
     pub min_cluster_size: usize,
+    /// Pre-loaded distance matrix for PAM stage.
     pub dist_matrix: NamedMatrix,
+    /// Maximum joining height for initial tree cut (optional).
     pub cut_height: Option<f64>,
-    pub deep_split: usize,             // 0..4, default 1
-    pub max_core_scatter: Option<f64>, // relative 0..1
-    pub min_gap: Option<f64>,          // relative 0..1
+    /// Deep split aggressiveness (0..4, default 1).
+    pub deep_split: usize,
+    /// Maximum core scatter threshold (relative, 0..1).
+    pub max_core_scatter: Option<f64>,
+    /// Minimum gap threshold (relative, 0..1).
+    pub min_gap: Option<f64>,
+    /// Whether to enable PAM reassignment stage.
     pub pam_stage: bool,
+    /// Whether PAM should respect dendrogram structure.
     pub pam_respects_dendro: bool,
+    /// Maximum distance for PAM reassignment (optional).
     pub max_pam_dist: Option<f64>,
+    /// Whether to respect small clusters during merging.
     pub respect_small_clusters: bool,
 }
 

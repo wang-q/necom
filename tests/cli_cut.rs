@@ -57,13 +57,9 @@ fn create_expected_clusters(groups: Vec<Vec<&str>>) -> Vec<HashSet<String>> {
 
 #[test]
 fn test_nwk_cut_k() {
-    let (stdout, stderr) = NecomCmd::new()
+    let (stdout, _stderr) = NecomCmd::new()
         .args(&["cut", "tests/newick/abcde.nwk", "--k", "2"])
         .run();
-
-    if !stderr.is_empty() {
-        println!("STDERR: {}", stderr);
-    }
 
     // Default format is 'cluster'.
     // K=2 -> {A,B} and {C}.
@@ -85,13 +81,9 @@ fn test_nwk_cut_leaf_dist_max() {
     // D(1) > 0.5 -> Cut {A, B}.
     // Result: {A, B}, {C}.
 
-    let (stdout, stderr) = NecomCmd::new()
+    let (stdout, _stderr) = NecomCmd::new()
         .args(&["cut", "tests/newick/abcde.nwk", "--leaf-dist-max", "1.5"])
         .run();
-
-    if !stderr.is_empty() {
-        println!("STDERR: {}", stderr);
-    }
 
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines.len(), 2);

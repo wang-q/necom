@@ -34,13 +34,9 @@ fn test_dynamic_tree_cut_basic() {
     let tree_content = "((A:0.1,B:0.1):0.8,(C:0.1,D:0.1):0.8);";
     fs::write(&tree_file, tree_content).unwrap();
 
-    let (stdout, stderr) = NecomCmd::new()
+    let (stdout, _stderr) = NecomCmd::new()
         .args(&["cut", tree_file.to_str().unwrap(), "--dynamic-tree", "2"])
         .run();
-
-    if !stderr.is_empty() {
-        println!("STDERR: {}", stderr);
-    }
 
     let lines: Vec<&str> = stdout.lines().collect();
     // Should have 2 clusters: {A,B} and {C,D}
@@ -118,13 +114,9 @@ fn test_dynamic_tree_cut_multi_level() {
     let tree_content = "(((A:10,B:10):0.1,(C:0.1,D:0.1):0.1):0.1,E:0.1);";
     fs::write(&tree_file, tree_content).unwrap();
 
-    let (stdout, stderr) = NecomCmd::new()
+    let (stdout, _stderr) = NecomCmd::new()
         .args(&["cut", tree_file.to_str().unwrap(), "--dynamic-tree", "2"])
         .run();
-
-    if !stderr.is_empty() {
-        println!("STDERR: {}", stderr);
-    }
 
     let clusters = parse_clusters(&stdout);
     let expected: Vec<HashSet<String>> = vec![

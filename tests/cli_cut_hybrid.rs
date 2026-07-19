@@ -28,7 +28,7 @@ D 1.0 1.0 0.2 0.0
 ";
     fs::write(&mat_file, mat_content).unwrap();
 
-    let (stdout, stderr) = NecomCmd::new()
+    let (stdout, _stderr) = NecomCmd::new()
         .args(&[
             "cut",
             tree_file.to_str().unwrap(),
@@ -38,10 +38,6 @@ D 1.0 1.0 0.2 0.0
             mat_file.to_str().unwrap(),
         ])
         .run();
-
-    if !stderr.is_empty() {
-        println!("STDERR: {}", stderr);
-    }
 
     let lines: Vec<&str> = stdout.lines().collect();
     // Should have 2 clusters: {A,B} and {C,D}
@@ -83,7 +79,7 @@ E 0.5 0.5 1.0 1.0 0.0
     // We use --no-pam-dendro because in the tree, E is far from A/B (root split),
     // and standard PAM logic would prevent crossing such a high branch.
 
-    let (stdout, stderr) = NecomCmd::new()
+    let (stdout, _stderr) = NecomCmd::new()
         .args(&[
             "cut",
             tree_file.to_str().unwrap(),
@@ -94,10 +90,6 @@ E 0.5 0.5 1.0 1.0 0.0
             "--no-pam-dendro", // Needed because E is far in tree
         ])
         .run();
-
-    if !stderr.is_empty() {
-        println!("STDERR: {}", stderr);
-    }
 
     // Verify that E is grouped with A and B
     let lines: Vec<&str> = stdout.lines().collect();
