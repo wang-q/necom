@@ -103,10 +103,10 @@ where
     /// In the above example, points `0` and `1` form a single cluster, points
     /// `2` and `3` form a different cluster, and point `4` does not belong any
     /// cluster (it is a noise point).
-    pub fn perform_clustering(
-        &mut self,
-        matrix: &crate::libs::pairmat::ScoringMatrix<T>,
-    ) -> &Vec<Option<usize>> {
+    pub fn perform_clustering<M>(&mut self, matrix: &M) -> &Vec<Option<usize>>
+    where
+        M: crate::libs::pairmat::MatrixView<T>,
+    {
         self.clusters = vec![None; matrix.size()];
         self.visited = vec![false; matrix.size()];
         self.current_cluster = 0;
@@ -127,12 +127,14 @@ where
         self.clusters.as_ref()
     }
 
-    fn expand_cluster(
+    fn expand_cluster<M>(
         &mut self,
-        matrix: &crate::libs::pairmat::ScoringMatrix<T>,
+        matrix: &M,
         point: usize,
         mut neighbors: VecDeque<usize>,
-    ) {
+    ) where
+        M: crate::libs::pairmat::MatrixView<T>,
+    {
         self.clusters[point] = Some(self.current_cluster);
 
         while let Some(other_point) = neighbors.pop_front() {
@@ -149,11 +151,10 @@ where
         }
     }
 
-    fn region_query(
-        &self,
-        matrix: &crate::libs::pairmat::ScoringMatrix<T>,
-        point: usize,
-    ) -> VecDeque<usize> {
+    fn region_query<M>(&self, matrix: &M, point: usize) -> VecDeque<usize>
+    where
+        M: crate::libs::pairmat::MatrixView<T>,
+    {
         let mut neighbors = VecDeque::new();
         for other_point in 0..matrix.size() {
             let dist = matrix.get(point, other_point);

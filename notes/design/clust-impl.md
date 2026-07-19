@@ -10,7 +10,8 @@
 ### 1.1 构树类
 - **命令**：`hier`, `upgma`, `nj`
 - **输入**：PHYLIP 矩阵 (Dense)
-- **数据结构**：`NamedMatrix` (内部封装 `CondensedMatrix`)
+- **加载数据结构**：`NamedMatrix` (内部封装 `CondensedMatrix`)
+- **算法接口**：`hier::linkage` / `hier::linkage_with_algo` 已改为泛型，接收任意 `MatrixView<f32>`；内部将视图拷贝为 `CondensedMatrix` 后执行 NN-chain / Primitive 算法。`hier` 命令仍通过 `NamedMatrix::into_parts()` 直接取得 `CondensedMatrix` 并调用 `linkage_inplace`，保持零拷贝。
 - **特点**：
   - **全连接/稠密 (Dense)**：存储上三角矩阵，内存占用 $O(N^2)$。
   - **内存瓶颈**：当 $N=100k$ 时，`f32` 矩阵需占用约 **18.6 GiB** 内存。这是单机内存处理全连接矩阵的实用极限。
@@ -19,11 +20,12 @@
 ### 1.2 扁平聚类
 - **命令**：`k-medoids`, `mcl`, `dbscan`
 - **输入**：Pair Scores TSV (Sparse-like)
-- **数据结构**：`ScoringMatrix` (内部封装 `HashMap<(usize, usize), f32>`)
+- **加载数据结构**：`NamedMatrix::from_pair_scores` 直接构建底层 `CondensedMatrix`（含对角线向量），避免经过 `ScoringMatrix` 造成内存双份。
+- **算法接口**：`MatrixView` trait 统一了 `ScoringMatrix` 与 `NamedMatrix` 的只读访问；DBSCAN / K-Medoids / MCL 均通过 `&dyn MatrixView<f32>` 类似的泛型接口接收矩阵。
 - **特点**：
-  - **稀疏 (Sparse-ish)**：仅存储输入文件中存在的边。
-  - **开销**：虽然不分配 $N^2$ 数组，但 `HashMap` 的每个 Entry 内存开销较大（Key+Value+Overhead），且查找速度不如数组索引。
-  - **适用性**：适合边数 $E \ll N^2$ 的稀疏场景。
+  - **加载阶段**：`NamedMatrix` 以稠密上三角 `Vec<f32>` 存储，配合 `IndexMap` 名称索引，适合 Pair TSV 展开后的大部分场景。
+  - **算法阶段**：通过 `MatrixView` 屏蔽底层实现，保持原有 $O(N^2)$ 访问语义。
+  - **适用性**：对极稀疏输入，`ScoringMatrix`（`HashMap<usize, f32>`，压缩 key）仍可作为 `MatrixView` 的实现按需使用。
 
 ### 1.3 图连通分量
 - **命令**：`cc`

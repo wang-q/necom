@@ -7,7 +7,7 @@
 //! should pass `members` sorted by name so the alphabetically-first
 //! member wins.
 
-use crate::libs::pairmat::ScoringMatrix;
+use crate::libs::pairmat::MatrixView;
 
 /// Find the medoid of a cluster.
 ///
@@ -19,11 +19,10 @@ use crate::libs::pairmat::ScoringMatrix;
 /// Tie-breaking: the first member achieving the extremal sum wins, so
 /// callers should sort `members` by name beforehand for deterministic
 /// alphabetical tie-breaking.
-pub fn find_medoid(
-    matrix: &ScoringMatrix<f32>,
-    members: &[usize],
-    find_max: bool,
-) -> Option<usize> {
+pub fn find_medoid<M>(matrix: &M, members: &[usize], find_max: bool) -> Option<usize>
+where
+    M: MatrixView<f32>,
+{
     if members.is_empty() {
         return None;
     }
@@ -56,6 +55,7 @@ pub fn find_medoid(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::libs::pairmat::ScoringMatrix;
 
     fn build_matrix(size: usize, default: f32) -> ScoringMatrix<f32> {
         ScoringMatrix::<f32>::with_size_and_defaults(size, 0.0, default)

@@ -27,6 +27,7 @@
 
 - **数据结构**：
   - `CondensedMatrix`、`NamedMatrix`、`ScoringMatrix<T>`：见 §1-§3。
+  - `MatrixView<T>`：只读矩阵视图 trait，`ScoringMatrix` 与 `NamedMatrix` 均实现此接口，供聚类算法统一访问（`mod.rs`）。
   - `get_condensed_index(size, row, col)`：上三角线性索引计算（`condensed.rs`）。
 
 - **I/O 与格式**：

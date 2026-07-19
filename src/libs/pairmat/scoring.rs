@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::io::BufRead;
 
+use super::MatrixView;
+
 /// Triangular number `T(i) = i * (i - 1) / 2`.
 ///
 /// Uses `saturating_sub` so that `T(0) == 0` without underflow on `usize`.
@@ -169,6 +171,19 @@ where
         } else {
             self.missing.unwrap_or_default()
         }
+    }
+}
+
+impl<T> MatrixView<T> for ScoringMatrix<T>
+where
+    T: Default + Copy + PartialOrd,
+{
+    fn size(&self) -> usize {
+        self.size()
+    }
+
+    fn get(&self, row: usize, col: usize) -> T {
+        self.get(row, col)
     }
 }
 

@@ -46,13 +46,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // 2. Load Matrix
-
-    // Load matrix from pairwise distances
-    let (matrix, names) = necom::libs::pairmat::ScoringMatrix::from_pair_scores(
+    let matrix = necom::libs::pairmat::NamedMatrix::from_pair_scores(
         infile,
         opt_same,
         opt_missing,
     )?;
+    let names: Vec<String> = matrix.get_names().iter().map(|s| s.to_string()).collect();
 
     // 3. Clustering
     let mut dbscan = necom::libs::clust::dbscan::Dbscan::new(opt_eps, opt_min_points)?;

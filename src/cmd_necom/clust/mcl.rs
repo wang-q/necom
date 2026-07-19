@@ -42,19 +42,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // 2. Load Matrix
-    // ScoringMatrix::from_pair_scores is only implemented for f32
-    let (sm, names) = necom::libs::pairmat::ScoringMatrix::<f32>::from_pair_scores(
+    let matrix = necom::libs::pairmat::NamedMatrix::from_pair_scores(
         infile,
         opt_same,
         opt_missing,
     )?;
+    let names: Vec<String> = matrix.get_names().iter().map(|s| s.to_string()).collect();
 
     // 3. Clustering
     // Mcl::new validates inflation > 1.0 (returns Err otherwise).
     let mut mcl = necom::libs::clust::mcl::Mcl::new(inflation)?;
     mcl.set_prune_limit(prune);
     mcl.set_max_iter(max_iter)?;
-    let mut clusters = mcl.perform_clustering(&sm);
+    let mut clusters = mcl.perform_clustering(&matrix);
 
     // 4. Output
     let out = if opt_rep == "first" {
@@ -69,7 +69,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             &mut clusters,
             &names,
             opt_format,
-            |c| necom::libs::clust::medoid::find_medoid(&sm, c, true),
+            |c| necom::libs::clust::medoid::find_medoid(&matrix, c, true),
         )?
     };
     writer.write_all(out.as_bytes())?;

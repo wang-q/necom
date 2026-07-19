@@ -13,5 +13,22 @@ pub use output::{
 pub use scoring::ScoringMatrix;
 pub use transform::transform_matrix;
 
+/// A read-only view of a square symmetric matrix.
+///
+/// Provides the minimal interface required by clustering algorithms:
+/// matrix size and symmetric element access.
+pub trait MatrixView<T = f32>
+where
+    T: Copy + PartialOrd,
+{
+    /// Number of rows/columns in the matrix.
+    fn size(&self) -> usize;
+
+    /// Get the value at `(row, col)`.
+    ///
+    /// The matrix is symmetric, so `get(row, col)` equals `get(col, row)`.
+    fn get(&self, row: usize, col: usize) -> T;
+}
+
 #[cfg(test)]
 mod tests;

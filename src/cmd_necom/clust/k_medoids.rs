@@ -56,12 +56,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // 2. Load Matrix
-    let (sm, names): (necom::libs::pairmat::ScoringMatrix<f32>, Vec<String>) =
-        necom::libs::pairmat::ScoringMatrix::from_pair_scores(
-            infile,
-            opt_same,
-            opt_missing,
-        )?;
+    let matrix = necom::libs::pairmat::NamedMatrix::from_pair_scores(
+        infile,
+        opt_same,
+        opt_missing,
+    )?;
+    let names: Vec<String> = matrix.get_names().iter().map(|s| s.to_string()).collect();
 
     if opt_k > names.len() {
         anyhow::bail!(
@@ -77,7 +77,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if let Some(&seed) = args.get_one::<u64>("seed") {
         kmedoids = kmedoids.with_seed(seed);
     }
-    let mut clusters = kmedoids.perform_clustering(&sm);
+    let mut clusters = kmedoids.perform_clustering(&matrix);
 
     // 4. Output
     let out = if opt_rep == "first" {
@@ -92,7 +92,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             &mut clusters,
             &names,
             opt_format,
-            |c| necom::libs::clust::medoid::find_medoid(&sm, c, false),
+            |c| necom::libs::clust::medoid::find_medoid(&matrix, c, false),
         )?
     };
     writer.write_all(out.as_bytes())?;

@@ -68,10 +68,10 @@ impl KMedoids {
     }
 
     /// Perform clustering on the given distance matrix
-    pub fn perform_clustering(
-        &self,
-        matrix: &crate::libs::pairmat::ScoringMatrix<f32>,
-    ) -> Vec<Vec<usize>> {
+    pub fn perform_clustering<M>(&self, matrix: &M) -> Vec<Vec<usize>>
+    where
+        M: crate::libs::pairmat::MatrixView<f32>,
+    {
         let n = matrix.size();
         if n == 0 || self.k == 0 || self.runs == 0 || self.max_iter == 0 {
             return vec![];

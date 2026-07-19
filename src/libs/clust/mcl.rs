@@ -104,17 +104,17 @@ impl Mcl {
         Ok(())
     }
 
-    /// Perform MCL clustering on the given ScoringMatrix.
+    /// Perform MCL clustering on the given matrix view.
     ///
     /// # Returns
     ///
     /// A vector of clusters, where each cluster is a vector of node indices
-    /// corresponding to the input `ScoringMatrix`.
-    pub fn perform_clustering(
-        &self,
-        sm: &crate::libs::pairmat::ScoringMatrix<f32>,
-    ) -> Vec<Vec<usize>> {
-        let mut matrix = SparseMat::from_scoring_matrix(sm);
+    /// corresponding to the input matrix.
+    pub fn perform_clustering<M>(&self, matrix: &M) -> Vec<Vec<usize>>
+    where
+        M: crate::libs::pairmat::MatrixView<f32>,
+    {
+        let mut matrix = SparseMat::from_matrix_view(matrix);
         matrix.normalize();
 
         let mut changed = true;
@@ -164,16 +164,19 @@ struct SparseMat {
 }
 
 impl SparseMat {
-    fn from_scoring_matrix(sm: &crate::libs::pairmat::ScoringMatrix<f32>) -> Self {
-        let size = sm.size();
+    fn from_matrix_view<M>(matrix: &M) -> Self
+    where
+        M: crate::libs::pairmat::MatrixView<f32>,
+    {
+        let size = matrix.size();
         let mut cols: Vec<Vec<(usize, f64)>> = vec![Vec::new(); size];
 
-        // Iterating N^2 is required as ScoringMatrix is generic
-        // Assuming reasonably sparse or small N
+        // Iterating N^2 is required to materialize the dense matrix view.
+        // Assuming reasonably sparse or small N.
         #[allow(clippy::needless_range_loop)]
         for i in 0..size {
             for j in 0..size {
-                let val = sm.get(i, j) as f64;
+                let val = matrix.get(i, j) as f64;
                 // MCL assumes non-negative similarities; drop negatives and
                 // float noise below the sparse threshold to keep the matrix
                 // sparse without affecting clustering quality.

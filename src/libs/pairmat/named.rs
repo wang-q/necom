@@ -4,6 +4,7 @@ use std::io::BufRead;
 use indexmap::{IndexMap, IndexSet};
 
 use super::condensed::{get_condensed_index, CondensedMatrix};
+use super::MatrixView;
 
 /// Build a name-to-index map from a list of unique sequence names.
 fn build_name_map(names: Vec<String>) -> anyhow::Result<IndexMap<String, usize>> {
@@ -448,5 +449,15 @@ impl NamedMatrix {
             .collect::<anyhow::Result<Vec<f32>>>()?;
 
         Ok(Some((name, values)))
+    }
+}
+
+impl MatrixView<f32> for NamedMatrix {
+    fn size(&self) -> usize {
+        self.size()
+    }
+
+    fn get(&self, row: usize, col: usize) -> f32 {
+        self.get(row, col)
     }
 }

@@ -1,4 +1,4 @@
-use crate::libs::pairmat::{CondensedMatrix, NamedMatrix};
+use crate::libs::pairmat::{get_condensed_index, CondensedMatrix, MatrixView};
 use crate::libs::phylo::tree::Tree;
 
 /// Linkage method for hierarchical clustering.
@@ -62,23 +62,36 @@ pub enum Algorithm {
     Auto,
 }
 
-/// Perform hierarchical clustering on a condensed distance matrix.
+/// Perform hierarchical clustering on a distance matrix view.
 ///
 /// Returns a list of steps (merges) forming the dendrogram.
 /// The length of the result will be N-1 for a matrix of size N.
-pub fn linkage(matrix: &NamedMatrix, method: Method) -> anyhow::Result<Vec<Step>> {
+pub fn linkage<M>(matrix: &M, method: Method) -> anyhow::Result<Vec<Step>>
+where
+    M: MatrixView<f32>,
+{
     linkage_with_algo(matrix, method, Algorithm::Auto)
 }
 
 /// Perform hierarchical clustering with explicit algorithm selection.
-pub fn linkage_with_algo(
-    matrix: &NamedMatrix,
+pub fn linkage_with_algo<M>(
+    matrix: &M,
     method: Method,
     algo: Algorithm,
-) -> anyhow::Result<Vec<Step>> {
-    // Create a mutable copy of the condensed matrix
-    let mut condensed =
-        CondensedMatrix::from_vec(matrix.size(), matrix.values().to_vec())?;
+) -> anyhow::Result<Vec<Step>>
+where
+    M: MatrixView<f32>,
+{
+    let n = matrix.size();
+    let len = if n == 0 { 0 } else { n * (n - 1) / 2 };
+    let mut data = vec![0.0; len];
+    for i in 0..n {
+        for j in (i + 1)..n {
+            let idx = get_condensed_index(n, i, j);
+            data[idx] = matrix.get(i, j);
+        }
+    }
+    let mut condensed = CondensedMatrix::from_vec(n, data)?;
 
     Ok(linkage_core(&mut condensed, method, algo))
 }
@@ -486,6 +499,7 @@ fn lance_williams(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::libs::pairmat::NamedMatrix;
 
     // Helper to create a NamedMatrix for testing
     fn create_test_matrix(size: usize) -> NamedMatrix {
