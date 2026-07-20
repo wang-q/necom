@@ -167,9 +167,9 @@ Partition evaluation has moved to [`necom eval partition`](eval.md). See [`docs/
 
 GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Algorithms considered but not adopted (K-Means, Spectral, OPTICS, BIRCH, etc.) are documented in [`notes/design/clust-impl.md`](../notes/design/clust-impl.md).
 
-### Bootstrap Support for Hierarchical Clustering [Planned]
+### Bootstrap Support for Hierarchical Clustering [Moved to `necom eval`]
 
-`necom clust boot` will compute multiscale-bootstrap BP/AU/SI support values (pvclust-style) for each internal node of a hierarchical clustering tree, quantifying the stability of clusters under feature resampling. Design details are in [`notes/design/clust-boot.md`](../notes/design/clust-boot.md).
+`necom eval boot` will compute multiscale-bootstrap BP/AU/SI support values (pvclust-style) for each internal node of a hierarchical clustering tree, quantifying the stability of clusters under feature resampling. Design details are in [`notes/design/eval-boot.md`](../notes/design/eval-boot.md).
 
 ### GMM (Gaussian Mixture Models) [Planned]
 

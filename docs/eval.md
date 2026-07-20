@@ -64,6 +64,10 @@ Four evaluation dimensions:
 *   **Phylo**: Local RF to reference tree, Monophyly Check, ConflictScore.
 *   **Fit**: Cophenetic Correlation against an original distance matrix.
 
+### boot (Not Implemented)
+
+Multiscale bootstrap (pvclust-style) support values for hierarchical clustering. Takes an observation matrix, resamples features at multiple scales, rebuilds the hierarchical tree each time, and fits BP/AU/SI values for every internal node. Design details are in [`notes/design/eval-boot.md`](../notes/design/eval-boot.md).
+
 ### quartet (Future Candidate, Not Designed)
 
 Quartet-based consistency or support values for branches. **Not yet designed; the namespace is not reserved.** Boundary: if the goal is to *infer* a new tree from quartets, it belongs to `nwk`; if the goal is to *assess* branch support of a given tree, it belongs to `eval`.

@@ -2,11 +2,11 @@
 
 `necom nwk` 提供完整的 Newick 格式系统发育树处理功能，包括解析、操作、分析和可视化。
 
-> **实现状态注记**：截至 2026-07-18，`necom nwk` 主体命令体系（stat/distance/indent/comment/to-*/topo/label/reroot/prune/subtree/order/rename/replace）已实现；NHX 注释值对 Newick 结构字符（`:`、`=`、`;`、`,`、`]`、`\`）做完整转义以保证 round-trip；Forest/LaTeX 输出对 `dot`/`bar`/`rec`/`tri` 等可视化属性值也进行 LaTeX 特殊字符转义。
+> **实现状态注记**：截至 2026-07-20，`necom nwk` 主体命令体系（stat/distance/indent/comment/to-*/topo/label/reroot/prune/subtree/order/rename/replace）已实现；NHX 注释值对 Newick 结构字符（`:`、`=`、`;`、`,`、`]`、`\`）做完整转义以保证 round-trip；Forest/LaTeX 输出对 `dot`/`bar`/`rec`/`tri` 等可视化属性值也进行 LaTeX 特殊字符转义。
 >
 > **未实现且无具体计划**：`nwk condense`（由 `subtree --condense` 提供，不计划独立子命令）；`match`/`ed`/`gen`/`duration`（来自 `newick_utils` 映射，见 §3）；`colless_yule`/`colless_pda`/`sackin_yule`/`sackin_pda` 标准化统计指标；`inorder` 遍历（仅适用二叉树，`necom` 支持多叉树故未实现）。
 >
-> **规划中**：`print_entity`（ASCII 树状图，用于终端调试展示）；`generate_random_tree`（Yule/Coalescent 模型，主要用于模拟研究，优先级较低）。
+> **规划中**：`generate_random_tree`（Yule/Coalescent 模型，主要用于模拟研究，优先级较低）。终端可读树形展示可直接使用 `necom nwk indent`。
 >
 > **关联文档**：[eval-planned.md](eval-planned.md)（`necom eval` 命令的未来工作计划，其中 `eval tree` 子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
 
@@ -25,7 +25,7 @@ src/libs/phylo/
 │   ├── query.rs        # 路径/距离/LCA 查询
 │   ├── stat.rs         # 统计指标 (height, diameter, cherries, colless, sackin)
 │   ├── balance.rs      # 平衡指标实现 (cherries, colless, sackin)；stat.rs 提供转发包装
-│   ├── distance.rs     # 节点距离计算
+│   ├── distance.rs     # CLI 距离输出辅助（dist_root / dist_pairwise / dist_phylip），非叶子间距离 API
 │   ├── support.rs      # Bootstrap 支持率计算
 │   ├── algo.rs         # 高级算法 (Sort, etc.)
 │   └── tests.rs        # 内部集成测试
@@ -309,7 +309,7 @@ graph LR
 ### 计划中
 
 *   **可视化**:
-    *   `print_entity()` (或类似): 在终端打印 ASCII 树状图，用于快速调试和展示。
+    *   `print_entity()` (或类似): 不计划实现；终端可读树形展示可直接使用 `necom nwk indent`。
 *   **树生成**:
     *   `generate_random_tree()` (Yule/Coalescent 模型): 主要用于模拟研究。优先级较低。
 
@@ -331,67 +331,14 @@ graph LR
 
 ### 5.2 LaTeX Forest 输出
 
-`necom` 的可视化功能深度集成了 LaTeX Forest 包，配合精心设计的模板 (`src/assets/template.tex`)，能够生成出版级质量的进化树。
+LaTeX Forest 输出的详细用法、样式系统与工作流见用户文档 [`docs/nwk-tex.md`](../../docs/nwk-tex.md)。
 
-#### 核心命令
+核心命令速查：
 
-*   **`necom nwk to-forest`**: 生成原始 Forest 代码。适合嵌入现有 LaTeX 文档。
-*   **`necom nwk to-tex`**: 生成完整 `.tex` 文档。自动合并模板，可直接用 `xelatex` 编译。
+*   **`necom nwk to-forest`**: 生成原始 Forest 代码，适合嵌入现有 LaTeX 文档。
+*   **`necom nwk to-tex`**: 生成完整 `.tex` 文档，可直接用 `tectonic` 编译。
 
-#### 样式系统
-
-模板定义了四种核心样式，可以通过 Newick 文件中的 NHX 注释直接调用：
-
-1.  **`dot` (节点圆点)**
-    *   **效果**: 在节点处绘制实心圆点。
-    *   **用法**: `[&&NHX:dot=red]` (指定颜色) 或自动应用于带名称的内部节点。
-
-2.  **`bar` (垂直短杠)**
-    *   **效果**: 在父节点与子节点的连线上绘制垂直短杠，常用于标记性状演化或事件。
-    *   **用法**: `[&&NHX:bar=blue]`。
-
-3.  **`rec` (背景矩形)**
-    *   **效果**: 为整个子树（Clade）绘制背景矩形框。利用 `fit to=tree` 实现。
-    *   **用法**: `[&&NHX:rec=LemonChiffon]`。常配合模板中定义的柔和色系使用。
-
-4.  **`tri` (三角形)**
-    *   **效果**: 在节点右侧绘制三角形，常用于表示折叠的子树 (Collapsed Clade) 或强调叶节点。
-    *   **用法**: `[&&NHX:tri=green]`。
-
-#### 颜色与全局设置
-
-*   **配色方案**: 模板内置了一组柔和的莫兰迪色系（如 `ChampagnePink`, `TeaRose`, `Celadon` 等）。
-*   **自动对齐**: 默认启用 `tier=word`，强制所有叶节点对齐（Cladogram 风格）。
-*   **字体支持**:
-    *   **默认**: 使用 `Noto Sans` 系列（需安装），兼容性好。
-    *   **高级 (`--no-default-style`)**: 保留模板中预设的 `Fira Sans` (英) 和 `Source Han Sans SC` (中) 设置，适合需要特定设计感的场景。
-
-#### 高级特性
-
-*   **Phylogram 模式 (`--bl`)**:
-    *   绘制带分支长度的系统发育树。
-    *   **自动比例尺**: 程序会根据树高自动计算合适的比例尺（如 0.01, 0.05, 1.0 等），并绘制在右下角。
-*   **Forest 直通车 (`--forest`)**:
-    *   允许将外部生成的 Forest 代码文件（非 Newick）直接嵌入模板生成 PDF。
-*   **特殊字符处理**:
-    *   Newick 名称中的下划线 `_` 会被自动转换为空格，避免 LaTeX 编译错误。
-    *   节点名、label、comment 以及可视化属性 `dot`/`bar`/`rec`/`tri` 中的 LaTeX 特殊字符（`{ } \ # $ % & ~ ^`）会被自动转义，防止破坏 Forest 语法或导致编译失败。
-
-#### 工作流示例
-
-1.  **准备数据**: 使用 `necom nwk comment` 命令或是手动为节点添加样式注释。
-    ```bash
-    # 为节点 A 和 B 的最近公共祖先 (LCA) 添加背景矩形和标签
-    necom nwk comment input.nwk --lca A,B --rec TeaRose --label Group1 > annotated.nwk
-    ```
-2.  **转换**:
-    ```bash
-    necom nwk to-tex annotated.nwk > output.tex
-    ```
-3.  **编译**:
-    ```bash
-    tectonic output.tex
-    ```
+样式通过 NHX 注释控制：`dot`（节点圆点）、`bar`（垂直短杠）、`rec`（背景矩形）、`tri`（三角形）。
 
 ---
 

@@ -1,7 +1,7 @@
 # clust 模块实现分析
 
 > **实现状态注记**：本文档记录 `necom clust` 模块的实现分析、优化路线与外部生态对比，从 `docs/clust.md` 剥离而来。
-> 截至 2026-07-19，Phase 1/2/5/6/7 及 Ward/Centroid 平方距离优化、In-place 接口已完成；Phase 3/4(Heap) 及 GMM/HDBSCAN/Louvain/Leiden 仍为规划。
+> 截至 2026-07-20，Phase 1/2/5/6/7 及 Ward/Centroid 平方距离优化、In-place 接口已完成；Phase 3/4(Heap) 及 GMM/HDBSCAN/Louvain/Leiden 仍为规划。
 
 ## 1. 内存数据布局
 
@@ -42,7 +42,7 @@
   - **优化**：支持稀疏矩阵；通过 `n_jobs` 并行化；核心逻辑部分使用 Cython 加速。
   - **适用性**：能处理数百万量级的数据（如果维度不高）。
 - **necom 实现**：
-  - **核心**：基于 `ScoringMatrix` 的朴素 $O(N^2)$ 距离遍历；`region_query` 为线性扫描。
+  - **核心**：基于 `MatrixView` 泛型接口的朴素 $O(N^2)$ 距离遍历；`region_query` 对当前输入矩阵（`NamedMatrix`/`CondensedMatrix` 或 `ScoringMatrix`）做线性扫描。
   - **特点**：代码简洁，无需额外空间索引库；输出包含"代表点对"等生物学便利功能。
   - **局限**：缺乏空间索引，在大规模（>1万点）或高维数据上性能不如 sklearn。
 - **未来方向**：对于大规模向量输入，需引入空间索引（如 R-tree/KD-tree）或并行化邻域搜索。
@@ -129,16 +129,12 @@
   - `necom` 规划：未来可支持从 `pair.tsv`（稀疏边列表）直接构建 Linkage，而不强制转为全距离矩阵，从而支持超大规模序列聚类。
 
 ### 5.3 现有 Rust 生态参考
-- **kodama**（[GitHub](https://github.com/m4b/kodama)）：
-  - 实现了现代层次聚类算法（NN-chain），性能对标 `fastcluster`。
-  - 核心接口 `linkage` 接受 Condensed Matrix（上三角压缩），输出 Stepwise Dendrogram。
-  - 提供了完整的 `Method` 枚举（Single, Complete, Average, Ward 等）。
-  - **决策**：`necom` 将参考 `kodama` 的 NN-chain 算法实现自己的逻辑，保持对核心数据结构的完全控制（如适配稀疏输入）。
-  - **价值**：参考 `kodama` 的测试用例和基准测试思路来验证 `necom` 实现的正确性与性能。
+
+`necom` 未引入外部层次聚类 crate；`hier` 的 NN-chain 实现直接参考 Daniel Müllner (2011) 的通用聚类算法以及 SciPy `fast_linkage` 的设计，并针对 `CondensedMatrix` 与稀疏输入场景自研。
+
 - **linfa-hierarchical**（[GitHub](https://github.com/rust-ml/linfa)）：
   - 提供了符合 `linfa` 生态的 `Transformer` 接口。
-  - 内部直接调用 `kodama`，并增加了对 Similarity Kernel 的支持（自动转为 Distance）。
-  - **借鉴**：参考其清晰的参数校验（`ParamGuard`）和从 Stepwise Dendrogram 到 Flat Clusters 的后处理逻辑（`src/lib.rs` 中的 `clusters` HashMap 维护）。
+  - **借鉴**：参考其清晰的参数校验（`ParamGuard`）和从 Stepwise Dendrogram 到 Flat Clusters 的后处理逻辑（`clusters` HashMap 维护）。
 
 ### 5.4 阶段性实现路线
 
@@ -180,11 +176,11 @@
 参见 `docs/clust.md` 中的"大规模数据策略"章节。
 
 #### Phase 4：性能与正确性优化
-通过分析 `kodama`、`scikit-learn` 和 `scipy` 实现，确定以下优化方向：
+通过分析 `scikit-learn` 和 `scipy` 实现，确定以下优化方向：
 1.  **Generic Clustering Algorithm (Heap)**:
     - 目标：优化 **Centroid** 和 **Median** 方法。
     - 方案：参考 SciPy 的 `fast_linkage` 实现（基于 Müllner 2011），引入 Binary Heap 维护最近邻距离。这将把这两个方法的复杂度从 $O(N^3)$ 降至 $O(N^2 \log N)$。
-    - 状态：**未实现**（截至 2026-07-19）。
+    - 状态：**未实现**（截至 2026-07-20）。
     - 优先级：中（除非用户有大量 Centroid/Median 聚类需求）。
 2.  **Ward/Centroid 平方距离优化 (已完成)**:
     - 改进：在算法开始时一次性将距离矩阵平方，使用简化版 Lance-Williams 更新，仅在输出时开方。
@@ -192,28 +188,28 @@
 3.  **In-place 接口 (已完成)**:
     - 引入 `linkage_inplace`，允许消耗输入的 `CondensedMatrix`（避免克隆），节省 $O(N^2)$ 内存复制开销。
 4.  **Chain 循环优化 (已分析)**:
-    - 分析：`kodama` 使用了高效的 `ActiveList` (双向链表) 来跳过非活跃节点。
+    - 分析：SciPy / `fastcluster` 等实现使用了高效的 `ActiveList` (双向链表) 来跳过非活跃节点。
     - 结论：虽然这能将寻找最近邻的复杂度从 $O(N)$ 降至 $O(K)$，但鉴于 Condensed Matrix 的顺序访问对 CPU 缓存非常友好，且当前实现在 $N=400$ 时仅需 ~1ms，引入链表的跳跃访问可能收益有限甚至负优化（对于中小规模数据）。
     - 决策：暂不实施，直至 profiling 显示 NN 搜索成为显著瓶颈。
 5.  **MST 算法 (已分析)**:
-    - 分析：`scikit-learn` 和 `kodama` 对 Single Linkage 使用 MST 算法。
+    - 分析：`scikit-learn` 对 Single Linkage 使用 MST 算法。
     - 结论：对于稠密矩阵，NN-Chain 和 Prim MST 都是 $O(N^2)$。当前的 NN-Chain 实现通用且足够高效。MST 主要优势在于处理稀疏图输入（Phase 3 范畴）。
     - 决策：维持现状。
 
 #### Phase 5：测试覆盖率增强（已完成）
-参考 `kodama` 和 `scikit-learn` 的测试策略，已增加以下测试以提升稳健性：
-1.  **Fuzzing / Randomized Testing (Kodama)**:
+参考 `scikit-learn` 与公开 NN-chain 实现的测试策略，已增加以下测试以提升稳健性：
+1.  **Fuzzing / Randomized Testing**:
     - 目标：验证 NN-Chain 算法与 Primitive 算法在大量随机输入下的一致性。
     - 状态：已实现 `test_nn_chain_fuzzing`，循环测试 20 个不同大小（$N=10 \sim 105$）的随机矩阵，验证输出 Step 数量和合并距离的一致性（包括 Ward 方法）。
 2.  **Monotonicity Check (Sklearn)**:
     - 目标：验证生成的 Dendrogram 是否满足单调性（除了 Centroid/Median 方法）。
     - 状态：已实现 `test_monotonicity`，断言所有单调方法的 `steps[i].distance <= steps[i+1].distance`。
-3.  **Edge Cases (Kodama)**:
+3.  **Edge Cases**:
     - 目标：验证极小输入的处理 ($N=0, 1, 2$)。
     - 状态：已实现 `test_edge_cases`，确保空输入或单点输入正确返回空结果。
 
 #### Phase 6：基准测试增强（已完成）
-参考 `kodama` 和 `scikit-learn` 的基准测试策略，已实施了以下测试：
+参考 `scikit-learn` 与公开 NN-chain 实现的基准测试策略，已实施了以下测试：
 1.  **多尺度性能曲线 (Scalability)**:
     - 验证了 NN-Chain 算法在 $N=1000 \sim 4000$ 范围内的 $O(N^2)$ 扩展性。
     - **Ward** 与 **Average** 的性能曲线几乎重合，证明了平方距离优化的有效性。

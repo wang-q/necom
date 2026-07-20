@@ -8,6 +8,7 @@
 - [Tree Cutting](cut.md)
 - [Matrix Processing](mat.md)
 - [Newick Trees](nwk.md)
+- [LaTeX Forest Output](nwk-tex.md)
 - [Evaluation](eval.md)
 - [Partition Evaluation Deep Dive](eval-partition.md)
 - [Pipelines](pl.md)
