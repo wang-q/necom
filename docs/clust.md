@@ -75,11 +75,11 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 
 - **Principle**: Neighbor-Joining. Iteratively merges the pair of nodes with the smallest net divergence by minimizing total tree length (based on the Q-matrix-corrected distances). Does not assume a molecular clock and allows different evolutionary rates across branches.
 - **Command**: `necom clust nj`
-- **Characteristics**: Distance-matrix tree-building algorithm that outputs a **midpoint-rooted Newick tree**.
+- **Characteristics**: Distance-matrix tree-building algorithm that outputs a Newick tree rooted at the midpoint of the final edge.
 - **Use cases**: General additive distances (no molecular-clock assumption); evolutionary tree construction.
 - **Advantages**: Fast; robust to different evolutionary rates.
 - **Input**: PHYLIP distance matrix (strict or relaxed).
-- **Output**: Midpoint-rooted Newick tree.
+- **Output**: Newick tree rooted at the midpoint of the final edge.
 - **Note**: For non-additive distances, negative branch lengths are clamped to 0 so the output remains a valid Newick tree.
 
 ### Hierarchical Clustering
@@ -104,7 +104,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Module**: `clust`, alongside `k-medoids`, `mcl`, etc.
 - **Goal**: Statistically meaningful dendrograms (merge heights express the cost of the linkage criterion), without enforcing "evolution/molecular-clock" semantics.
 - **Synergy with existing necom capabilities**:
-  - Tree building: `clust upgma` (rooted, ultrametric) and `clust nj` (additive, midpoint-rooted) already exist.
+  - Tree building: `clust upgma` (rooted, ultrametric) and `clust nj` (additive, rooted at the midpoint of the final edge) already exist.
   - Cutting: tree-cut grouping via `necom cut`.
   - Evaluation: `necom eval partition --matrix` / `--tree` / `--coords` (currently available); `necom eval tree` not yet implemented.
 
@@ -115,7 +115,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
   - R `hclust(method="average")` is equivalent to "average linkage"; UPGMA is a specialized version under the "ultrametric (molecular clock)" assumption, producing a rooted, strictly ultrametric tree whose branch lengths have "time/evolution" meaning.
   - Conclusion: The linkage updates are identical, but the semantics differ; UPGMA leans toward phylogenetic scenarios, while `clust hier` leans toward statistical clustering.
 - Relationship to NJ:
-  - NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an "additive minimum-length tree" that does not belong to the linkage-update paradigm and outputs a **midpoint-rooted Newick tree**.
+  - NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an "additive minimum-length tree" that does not belong to the linkage-update paradigm and outputs a Newick tree rooted at the midpoint of the final edge.
   - For general additive distances, NJ is more robust than UPGMA; if the distances are ultrametric, UPGMA/hclust-average and NJ usually agree topologically (unrooted view).
 
 ### Methods and Algorithm Essentials

@@ -28,18 +28,28 @@ pub fn connected_components<R: BufRead>(
 
     for line in reader.lines() {
         let line = line?;
-        if line.trim().is_empty() || line.starts_with('#') {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
             continue;
         }
-        let fields: Vec<&str> = line.split('\t').collect();
+        let fields: Vec<&str> = trimmed.split('\t').map(str::trim).collect();
         if fields.len() < 2 {
             anyhow::bail!(
                 "invalid pairwise relation line (expected at least 2 tab-separated columns): {}",
                 line
             );
         }
-        let a = names.insert_full(fields[0].to_string()).0;
-        let b = names.insert_full(fields[1].to_string()).0;
+        let n1 = fields[0].to_string();
+        let n2 = fields[1].to_string();
+        if n1.is_empty() || n2.is_empty() {
+            log::warn!(
+                "skipping pairwise relation line with empty node name: {}",
+                line
+            );
+            continue;
+        }
+        let a = names.insert_full(n1).0;
+        let b = names.insert_full(n2).0;
         graph.add_edge(a, b, ());
     }
 
@@ -109,5 +119,32 @@ mod tests {
             "unexpected error: {}",
             err
         );
+    }
+
+    #[test]
+    fn test_connected_components_trims_whitespace() -> anyhow::Result<()> {
+        // Leading/trailing whitespace on the line and within fields must be ignored,
+        // matching the behavior of NamedMatrix::from_pair_scores used by other commands.
+        let data = "  A \t B \nC\tD\t0.5\n";
+        let reader = BufReader::new(data.as_bytes());
+        let (names, mut components) = connected_components(reader)?;
+        assert_eq!(names, vec!["A", "B", "C", "D"]);
+        sort_components(&mut components);
+        assert_eq!(components, vec![vec![0, 1], vec![2, 3]]);
+        Ok(())
+    }
+
+    #[test]
+    fn test_connected_components_skips_empty_names() -> anyhow::Result<()> {
+        // Lines with an empty node name after trimming should be skipped rather than
+        // creating an empty-named node or self-loop. A completely empty middle field
+        // ("A\t\tB") is used because leading/trailing whitespace is removed by trim.
+        let data = "A\t\tB\nA\tB\n";
+        let reader = BufReader::new(data.as_bytes());
+        let (names, mut components) = connected_components(reader)?;
+        assert_eq!(names, vec!["A", "B"]);
+        sort_components(&mut components);
+        assert_eq!(components, vec![vec![0, 1]]);
+        Ok(())
     }
 }

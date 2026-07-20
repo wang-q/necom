@@ -6,7 +6,7 @@ Input:
 
 Output:
 
-* A midpoint-rooted Newick tree.
+* A Newick tree rooted at the midpoint of the final edge.
 
 Notes:
 
