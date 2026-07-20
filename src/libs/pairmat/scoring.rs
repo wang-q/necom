@@ -198,13 +198,16 @@ where
 impl ScoringMatrix<f32> {
     /// Load a `ScoringMatrix<f32>` and ordered name list from a 3-column pairwise TSV.
     /// Self-pairs default to `same`; missing pairs default to `missing`.
+    ///
+    /// Parsed entries are stored as numeric indices rather than strings to keep
+    /// peak memory low for large inputs.
     pub fn from_pair_scores(
         infile: &str,
         same: f32,
         missing: f32,
     ) -> anyhow::Result<(Self, Vec<String>)> {
         let mut names = indexmap::IndexSet::new();
-        let mut entries: Vec<(String, String, f32)> = Vec::new();
+        let mut entries: Vec<(usize, usize, f32)> = Vec::new();
 
         let reader = crate::reader(infile)?;
         for line in reader.lines() {
@@ -247,30 +250,25 @@ impl ScoringMatrix<f32> {
                 }
             };
 
-            names.insert(n1.clone());
-            names.insert(n2.clone());
-            entries.push((n1, n2, score));
+            let (i1, _) = names.insert_full(n1);
+            let (i2, _) = names.insert_full(n2);
+            entries.push((i1, i2, score));
         }
 
         let size = names.len();
         let mut matrix = Self::with_size_and_defaults(size, same, missing);
-        let name_to_index: indexmap::IndexMap<String, usize> = names
-            .iter()
-            .enumerate()
-            .map(|(i, n)| (n.clone(), i))
-            .collect();
 
-        for (n1, n2, score) in entries {
-            let i1 = name_to_index[&n1];
-            let i2 = name_to_index[&n2];
+        for (i1, i2, score) in entries {
             let (i, j) = if i1 <= i2 { (i1, i2) } else { (i2, i1) };
             let key = condensed_index_with_diag(i, j);
             if let Some(&existing) = matrix.data.get(&key) {
                 if existing != score {
+                    let name1 = names.get_index(i).expect("valid pair index");
+                    let name2 = names.get_index(j).expect("valid pair index");
                     log::warn!(
                         "conflicting pairwise entry for ({}, {}): existing {} vs new {}; using last value",
-                        n1,
-                        n2,
+                        name1,
+                        name2,
                         existing,
                         score
                     );

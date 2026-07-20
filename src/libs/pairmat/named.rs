@@ -209,13 +209,16 @@ impl NamedMatrix {
     ///
     /// Constructs the underlying `CondensedMatrix` directly instead of going through
     /// an intermediate `ScoringMatrix`, reducing peak memory for large inputs.
+    /// Parsed entries are stored as numeric indices rather than strings, and duplicate
+    /// detection uses a dense `Vec<bool>` instead of a hash set, so dense inputs only
+    /// pay for the matrix itself plus one byte per pair during construction.
     pub fn from_pair_scores(
         infile: &str,
         same: f32,
         missing: f32,
     ) -> anyhow::Result<Self> {
         let mut names = IndexSet::new();
-        let mut entries: Vec<(String, String, f32)> = Vec::new();
+        let mut entries: Vec<(usize, usize, f32)> = Vec::new();
 
         let reader = crate::reader(infile)?;
         for line in reader.lines() {
@@ -258,35 +261,28 @@ impl NamedMatrix {
                 }
             };
 
-            names.insert(n1.clone());
-            names.insert(n2.clone());
-            entries.push((n1, n2, score));
+            let (i1, _) = names.insert_full(n1);
+            let (i2, _) = names.insert_full(n2);
+            entries.push((i1, i2, score));
         }
 
         let size = names.len();
         let len = if size == 0 { 0 } else { size * (size - 1) / 2 };
         let mut matrix = CondensedMatrix::from_vec(size, vec![missing; len])?;
         let mut diags = vec![same; size];
-        let mut seen_pairs: HashSet<(usize, usize)> = HashSet::new();
+        let mut seen_pairs: Vec<bool> = vec![false; len];
         let mut seen_self_pairs: HashSet<usize> = HashSet::new();
 
-        let name_to_index: IndexMap<String, usize> = names
-            .iter()
-            .enumerate()
-            .map(|(i, n)| (n.clone(), i))
-            .collect();
-
-        for (n1, n2, score) in entries {
-            let i1 = name_to_index[&n1];
-            let i2 = name_to_index[&n2];
+        for (i1, i2, score) in entries {
             if i1 == i2 {
                 if !seen_self_pairs.insert(i1) {
                     let existing = diags[i1];
                     if existing != score {
+                        let name = names.get_index(i1).expect("valid self-pair index");
                         log::warn!(
                             "conflicting pairwise entry for ({}, {}): existing {} vs new {}; using last value",
-                            n1,
-                            n2,
+                            name,
+                            name,
                             existing,
                             score
                         );
@@ -296,18 +292,22 @@ impl NamedMatrix {
                 continue;
             }
             let (row, col) = if i1 < i2 { (i1, i2) } else { (i2, i1) };
-            if !seen_pairs.insert((row, col)) {
+            let idx = get_condensed_index(size, row, col);
+            if seen_pairs[idx] {
                 let existing = matrix.get(row, col);
                 if existing != score {
+                    let name1 = names.get_index(row).expect("valid pair index");
+                    let name2 = names.get_index(col).expect("valid pair index");
                     log::warn!(
                         "conflicting pairwise entry for ({}, {}): existing {} vs new {}; using last value",
-                        n1,
-                        n2,
+                        name1,
+                        name2,
                         existing,
                         score
                     );
                 }
             }
+            seen_pairs[idx] = true;
             matrix.set(row, col, score);
         }
 
