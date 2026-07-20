@@ -31,6 +31,16 @@ This design allows evaluation tools to exist independently of clustering algorit
 *   **Internal evaluation** (`--matrix`, `--tree`, `--coords`): Every sample in the partition must be present in the distance source. Missing samples produce a clear error instead of `NaN` metrics.
 *   **`--no-singletons`**: Singleton clusters are removed from the reference partition first; samples that become unreferenced are excluded from evaluation, and the remaining sample sets are still required to match.
 
+## Output Format
+
+`necom eval partition` writes a TSV with a header row followed by one result row.
+
+*   **External evaluation**: one row of pair-based metrics (`ari`, `ami`, `homogeneity`, `completeness`, `v_measure`, `fmi`, `nmi`, `mi`, `ri`, `jaccard`, `precision`, `recall`).
+*   **Distance-based internal evaluation**: `silhouette`, `dunn`, `c_index`, `gamma`, `tau`.
+*   **Coordinate-based internal evaluation**: `davies_bouldin`, `calinski_harabasz`, `pbm`, `ball_hall`, `xie_beni`, `wemmert_gancarski`.
+*   **Batch mode** (`--input-format long`): one row per `Group`, with the `Group` column preserved as the first column.
+*   Non-finite metric values (`NaN`, `+Infinity`, or `-Infinity`) are emitted as `NA` to keep the TSV parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly compact and well-separated, or Xie-Beni when two centroids coincide.
+
 ## Core Metrics
 
 Clustering evaluation metrics usually fall into two categories: **external validity** (requires Ground Truth or a reference partition) and **internal validity** (depends only on the geometry/statistics of the data).

@@ -8,34 +8,19 @@ Input:
 Output:
 
 * TSV with a header row.
-* External evaluation: one row of pair-based metrics. Column names are lowercase `snake_case`: `ari`, `ami`, `homogeneity`, `completeness`, `v_measure`, `fmi`, `nmi`, `mi`, `ri`, `jaccard`, `precision`, `recall`.
+* External evaluation: one row of pair-based metrics (`ari`, `ami`, `homogeneity`, `completeness`, `v_measure`, `fmi`, `nmi`, `mi`, `ri`, `jaccard`, `precision`, `recall`).
 * Distance-based internal evaluation: `silhouette`, `dunn`, `c_index`, `gamma`, `tau`.
 * Coordinate-based internal evaluation: `davies_bouldin`, `calinski_harabasz`, `pbm`, `ball_hall`, `xie_beni`, `wemmert_gancarski`.
-* Batch mode (`--input-format long`): one row per `Group`, with the `Group` column preserved as the first column.
+* Batch mode (`--input-format long`): one row per `Group`, with `Group` as the first column.
 
 Notes:
 
-* External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, Homogeneity, Completeness, V-Measure, FMI, NMI, MI, RI, Jaccard, Precision, and Recall.
-    * The two partitions must cover exactly the same sample set. If one partition contains samples missing from the other, the command errors out instead of silently dropping them.
-    * With `--no-singletons`, singleton clusters are first removed from `--other`; any samples that become unreferenced are excluded from evaluation, and the remaining sample sets must still match.
-* Internal Evaluation (Partition + Matrix/Tree/Coords): evaluates a single partition without ground truth.
-    * `--matrix` / `--tree`: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau). All samples in the partition must be present in the matrix or tree; otherwise the command errors out instead of producing `NaN` metrics.
-    * `--coords`: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski). All samples in the partition must be present in the coordinate file.
-* Empty partitions are rejected (single mode and each batch group must contain at least one sample).
-* Only one evaluation target may be provided per run: `--other` / `--truth`, `--matrix`, `--tree`, or `--coords`. Providing more than one is an error.
-* Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (`Group\tClusterID\tSampleID`).
-* Non-finite metric values (`NaN`, `+Infinity`, or `-Infinity`) are emitted as `NA` to keep the TSV parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly compact and well-separated, or Xie-Beni when two centroids coincide.
-* `--other` / `--truth`: second partition for external evaluation (synonyms).
-* `--no-singletons`: exclude singleton clusters from `--other` before external evaluation.
-* `--input-format`: supports `pair` (default), `cluster`, or `long` (required for batch mode).
-* `--other-format`: format for the `--other` file (`cluster` or `pair`). Defaults to the value of `--input-format` in single mode, or `cluster` in batch mode (since the truth file is a single partition, not Long).
-* In batch mode, the `Group` column is preserved as the first column of the output.
-* Quick metric selection:
-    * With ground truth: ARI or AMI.
-    * Without ground truth (distance matrix or tree): Silhouette.
-    * Without ground truth (coordinates): Davies-Bouldin or Calinski-Harabasz.
-    * See [`docs/eval-partition.md`](../../eval-partition.md) for detailed metric definitions and the full selection guide.
-* Typical batch workflow: generate candidates with `necom cut scan-simple`, evaluate with `--input-format long`, then select the best threshold.
+* Only one evaluation target may be provided per run: `--other` / `--truth`, `--matrix`, `--tree`, or `--coords`.
+* Empty partitions are rejected in single mode and for each batch group.
+* External evaluation requires the two partitions to cover exactly the same sample set.
+* Internal evaluation requires every partition sample to be present in the distance source.
+* With `--no-singletons`, singleton clusters are removed from `--other` before external evaluation.
+* See [`docs/eval-partition.md`](../../eval-partition.md) for detailed metric definitions and selection guidance.
 
 Examples:
 
