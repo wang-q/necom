@@ -1,12 +1,28 @@
 use anyhow::Context;
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use necom::libs::phylo::tree::{self, support, Tree};
+use necom::libs::phylo::tree::{support, Tree};
 use std::collections::BTreeSet;
-use std::io::Write;
+use std::io::{Read, Write};
 
 /// Collect the set of named leaf labels in `tree`.
 fn leaf_name_set(tree: &Tree) -> BTreeSet<String> {
     tree.get_leaf_names().into_iter().flatten().collect()
+}
+
+/// Load trees from `infile`, bailing with a clear message when the input is
+/// empty or contains no parseable trees.
+fn load_trees(infile: &str) -> anyhow::Result<Vec<Tree>> {
+    let mut reader =
+        necom::reader(infile).with_context(|| format!("failed to open {}", infile))?;
+    let mut content = String::new();
+    reader
+        .read_to_string(&mut content)
+        .with_context(|| format!("failed to read {}", infile))?;
+    if content.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    Tree::from_newick_multi(&content)
+        .with_context(|| format!("failed to parse '{}'", infile))
 }
 
 /// Build the clap subcommand for replicate.
@@ -49,20 +65,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let percent = args.get_flag("percent");
     let override_root = args.get_flag("override_root");
 
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
-    // 1. Read Replicate Trees
     // We read replicates first to build the leaf map and counts, similar to nw_support logic
-    let replicates = tree::io::from_file(replicates_file)?;
+    let replicates = load_trees(replicates_file)?;
     if replicates.is_empty() {
         anyhow::bail!("No replicate trees found");
     }
     let total_reps = replicates.len();
 
     // 2. Read Target Trees
-    let mut targets = tree::io::from_file(target_file)?;
+    let mut targets = load_trees(target_file)?;
     if targets.is_empty() {
         anyhow::bail!("No target trees found");
     }
@@ -106,6 +117,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             );
         }
     }
+
+    // Open the output writer only after input validation so that invalid
+    // invocations do not truncate an existing output file.
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // 4. Count Clades in Replicates
     let counts = support::count_clades(&replicates, &leaf_map)

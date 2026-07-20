@@ -158,6 +158,7 @@ Clustering evaluation metrics usually fall into two categories: **external valid
 - **Davies-Bouldin Index (DBI)**
   - **Principle**: Computes the "similarity" of each cluster pair (within-cluster dispersion sum / centroid distance), then takes the mean of each cluster's worst (largest) similarity.
   - **Range**: `[0, +∞)`. **Smaller is better**.
+  - **Boundary cases**: If two cluster centroids coincide and at least one has non-zero scatter, the similarity is undefined (infinite). The implementation substitutes a large finite proxy (`1e10`) so the TSV remains parseable.
   - **Advantages**: Faster than Silhouette.
   - **Applicable**: Evaluating centroid-based clustering algorithms.
 
@@ -172,6 +173,7 @@ Clustering evaluation metrics usually fall into two categories: **external valid
 - **PBM Index**
   - **Principle**: Composite index based on total dispersion, within-cluster dispersion, and maximum centroid distance.
   - **Range**: `[0, +∞)`. **Larger is better**.
+  - **Boundary cases**: If within-cluster dispersion is zero while total dispersion is positive (perfectly compact clusters), the score is infinite and is reported as `NA` to keep the TSV parseable.
 
 - **Ball-Hall Index**
   - **Principle**: Mean of average within-cluster dispersions.
@@ -180,6 +182,7 @@ Clustering evaluation metrics usually fall into two categories: **external valid
 - **Xie-Beni Index**
   - **Principle**: Ratio of within-cluster compactness to between-cluster separation (minimum centroid distance).
   - **Range**: `[0, +∞)`. **Smaller is better**.
+  - **Boundary cases**: If the closest pair of cluster centroids coincide, separation is zero and the score is infinite; it is reported as `NA` to keep the TSV parseable.
 
 - **Wemmert-Gancarski Index**
   - **Principle**: Compactness index based on relative distances (distance to own centroid / distance to nearest other centroid).

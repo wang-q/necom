@@ -173,6 +173,78 @@ g2\t2\tD\n";
 }
 
 #[test]
+fn test_eval_partition_batch_coords() -> anyhow::Result<()> {
+    let long_content = "Group\tClusterID\tSampleID\n\
+g1\t1\tA\n\
+g1\t1\tB\n\
+g1\t2\tC\n\
+g1\t2\tD\n\
+g2\t1\tA\n\
+g2\t1\tB\n\
+g2\t2\tC\n\
+g2\t2\tD\n";
+    let mut long_file = NamedTempFile::new()?;
+    write!(long_file, "{}", long_content)?;
+
+    let coords_content = "A\t0.0\t0.0\nB\t1.0\t0.0\nC\t5.0\t0.0\nD\t6.0\t0.0\n";
+    let mut coords_file = NamedTempFile::new()?;
+    write!(coords_file, "{}", coords_content)?;
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(long_file.path())
+        .arg("--input-format")
+        .arg("long")
+        .arg("--coords")
+        .arg(coords_file.path())
+        .output()?;
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout)?;
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert!(lines[0].starts_with("Group\t"));
+    assert!(lines[0].contains("davies_bouldin"));
+    assert_eq!(lines.len(), 3, "expected 2 group rows + 1 header");
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_batch_tree() -> anyhow::Result<()> {
+    let long_content = "Group\tClusterID\tSampleID\n\
+g1\t1\tA\n\
+g1\t1\tB\n\
+g1\t2\tC\n\
+g1\t2\tD\n";
+    let mut long_file = NamedTempFile::new()?;
+    write!(long_file, "{}", long_content)?;
+
+    let mut tree_file = NamedTempFile::new()?;
+    writeln!(tree_file, "((A:0.1,B:0.1):0.4,(C:0.1,D:0.1):0.4);")?;
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(long_file.path())
+        .arg("--input-format")
+        .arg("long")
+        .arg("--tree")
+        .arg(tree_file.path())
+        .output()?;
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout)?;
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(lines[0], "Group\tsilhouette\tdunn\tc_index\tgamma\ttau");
+    assert_eq!(lines.len(), 2, "expected 1 group row + 1 header");
+
+    Ok(())
+}
+
+#[test]
 fn test_eval_partition_batch_conflict_other_matrix() -> anyhow::Result<()> {
     // Mutual exclusion in batch mode: --other and --matrix together must error.
     let long_content = "Group\tClusterID\tSampleID\n\

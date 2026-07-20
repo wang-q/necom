@@ -157,6 +157,51 @@ fn test_eval_partition_single_vs_singletons() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_eval_partition_truth_alias() -> anyhow::Result<()> {
+    // `--truth` is a visible alias for `--other` and should behave identically.
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg("tests/eval/perfect_1.tsv")
+        .arg("--truth")
+        .arg("tests/eval/perfect_2.tsv")
+        .arg("--input-format")
+        .arg("cluster")
+        .output()?;
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout)?;
+    let lines: Vec<&str> = stdout.lines().collect();
+    let values: Vec<&str> = lines[1].split_whitespace().collect();
+    assert!((values[0].parse::<f64>()? - 1.0).abs() < 1e-6);
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_other_format_single_mode() -> anyhow::Result<()> {
+    // p1 is pair format (default), but --other is cluster format.
+    // --other-format must override the default for --other.
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg("tests/eval/pair_1.tsv")
+        .arg("--other")
+        .arg("tests/eval/perfect_2.tsv")
+        .arg("--other-format")
+        .arg("cluster")
+        .output()?;
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout)?;
+    let lines: Vec<&str> = stdout.lines().collect();
+    let values: Vec<&str> = lines[1].split_whitespace().collect();
+    assert!((values[0].parse::<f64>()? - 1.0).abs() < 1e-6);
+    Ok(())
+}
+
+#[test]
 fn test_eval_partition_pair_format() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("necom")?;
     let output = cmd
@@ -488,6 +533,37 @@ fn test_eval_partition_disjoint_sample_sets() -> anyhow::Result<()> {
         "Error should mention the missing sample D, got: {}",
         stderr
     );
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_outfile_not_truncated_on_error() -> anyhow::Result<()> {
+    // If the command fails before producing output, an existing outfile must
+    // not be truncated. Regression test for opening the writer too early.
+    let mut existing = NamedTempFile::new()?;
+    existing.write_all(b"preserve me")?;
+    let out_path = existing.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg("tests/eval/perfect_1.tsv")
+        .arg("--other")
+        .arg("tests/eval/perfect_2.tsv")
+        .arg("--matrix")
+        .arg("tests/eval/simple.matrix.phy")
+        .arg("--outfile")
+        .arg(out_path)
+        .output()?;
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("only one of"), "got stderr: {}", stderr);
+
+    let preserved = std::fs::read_to_string(out_path)?;
+    assert_eq!(preserved, "preserve me");
 
     Ok(())
 }

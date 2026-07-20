@@ -127,9 +127,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         Err(e) => anyhow::bail!("Invalid format: {}", e),
     };
 
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
     let remove_singletons_flag = args.get_flag("no_singletons");
 
     // Enforce mutual exclusion of evaluation targets. This applies uniformly
@@ -148,6 +145,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             count
         );
     }
+
+    // Open the output writer only after argument validation so that invalid
+    // invocations do not truncate an existing output file.
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     if format == PartitionFormat::Long {
         // Batch Mode

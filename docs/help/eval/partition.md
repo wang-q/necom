@@ -8,8 +8,9 @@ Input:
 Output:
 
 * TSV with a header row.
-* External evaluation: one row of pair-based metrics (ARI, AMI, V-Measure, etc.).
-* Internal evaluation: one row of distance-based or coordinate-based metrics (Silhouette, Dunn, ... or Davies-Bouldin, Calinski-Harabasz, ...).
+* External evaluation: one row of pair-based metrics. Column names are lowercase `snake_case`: `ari`, `ami`, `homogeneity`, `completeness`, `v_measure`, `fmi`, `nmi`, `mi`, `ri`, `jaccard`, `precision`, `recall`.
+* Distance-based internal evaluation: `silhouette`, `dunn`, `c_index`, `gamma`, `tau`.
+* Coordinate-based internal evaluation: `davies_bouldin`, `calinski_harabasz`, `pbm`, `ball_hall`, `xie_beni`, `wemmert_gancarski`.
 * Batch mode (`--input-format long`): one row per `Group`, with the `Group` column preserved as the first column.
 
 Notes:
@@ -21,7 +22,9 @@ Notes:
     * `--matrix` / `--tree`: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau). All samples in the partition must be present in the matrix or tree; otherwise the command errors out instead of producing `NaN` metrics.
     * `--coords`: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski). All samples in the partition must be present in the coordinate file.
 * Empty partitions are rejected (single mode and each batch group must contain at least one sample).
+* Only one evaluation target may be provided per run: `--other` / `--truth`, `--matrix`, `--tree`, or `--coords`. Providing more than one is an error.
 * Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (`Group\tClusterID\tSampleID`).
+* Non-finite metric values (`NaN` or `+Infinity`) are emitted as `NA` to keep the TSV parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly compact and well-separated, or Xie-Beni when two centroids coincide.
 * `--other` / `--truth`: second partition for external evaluation (synonyms).
 * `--no-singletons`: exclude singleton clusters from `--other` before external evaluation.
 * `--input-format`: supports `pair` (default), `cluster`, or `long` (required for batch mode).

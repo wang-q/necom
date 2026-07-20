@@ -115,6 +115,88 @@ fn test_eval_replicate_override_root_label() {
 }
 
 #[test]
+fn test_eval_replicate_outfile_not_truncated_on_empty_replicates() {
+    // If the command fails before producing output, an existing outfile must
+    // not be truncated. Regression test for opening the writer too early.
+    let mut existing = NamedTempFile::new().unwrap();
+    existing.write_all(b"preserve me").unwrap();
+    let out_path = existing.path().to_str().unwrap();
+
+    let mut target_file = NamedTempFile::new().unwrap();
+    writeln!(target_file, "((A,B),(C,D));").unwrap();
+
+    let replicates_file = NamedTempFile::new().unwrap();
+    // Truly empty file should trigger "No replicate trees found".
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "eval",
+            "replicate",
+            target_file.path().to_str().unwrap(),
+            replicates_file.path().to_str().unwrap(),
+            "--outfile",
+            out_path,
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("No replicate trees found"),
+        "expected empty replicates error, got stderr: {}",
+        stderr
+    );
+
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn test_eval_replicate_rejects_empty_target_file() {
+    let target_file = NamedTempFile::new().unwrap();
+
+    let mut replicates_file = NamedTempFile::new().unwrap();
+    writeln!(replicates_file, "((A,B),(C,D));").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "eval",
+            "replicate",
+            target_file.path().to_str().unwrap(),
+            replicates_file.path().to_str().unwrap(),
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("No target trees found"),
+        "expected empty target error, got stderr: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_eval_replicate_rejects_mismatched_target_leaf_sets() {
+    let mut target_file = NamedTempFile::new().unwrap();
+    writeln!(target_file, "((A,B),(C,D));").unwrap();
+
+    let mut replicates_file = NamedTempFile::new().unwrap();
+    writeln!(replicates_file, "((A,B),(C,E));").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "eval",
+            "replicate",
+            target_file.path().to_str().unwrap(),
+            replicates_file.path().to_str().unwrap(),
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("target tree 1 leaf set differs from replicate trees"),
+        "expected target leaf-set mismatch error, got stderr: {}",
+        stderr
+    );
+}
+
+#[test]
 fn test_eval_replicate_rejects_mismatched_replicate_leaf_sets() {
     let mut target_file = NamedTempFile::new().unwrap();
     writeln!(target_file, "(A,B);").unwrap();

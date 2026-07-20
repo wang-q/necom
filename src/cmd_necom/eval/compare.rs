@@ -14,7 +14,6 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("compare_file")
                 .num_args(1)
-                .index(2)
                 .help("Second input filename (optional)"),
         )
         .arg(

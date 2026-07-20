@@ -107,6 +107,27 @@ fn command_eval_compare_branch_lengths() {
 }
 
 #[test]
+fn command_eval_compare_include_trivial() {
+    let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
+    // Same topology, one branch length differs. With trivial splits included,
+    // WRF/KF should account for the single-leaf branch length difference.
+    writeln!(file, "((A:0.1,B:0.2):0.2,(C:0.1,D:0.1):0.2);").unwrap();
+    writeln!(file, "((A:0.1,B:0.1):0.2,(C:0.1,D:0.1):0.2);").unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "eval",
+            "compare",
+            file.path().to_str().unwrap(),
+            "--include-trivial",
+        ])
+        .run();
+
+    // Trivial split B has length 0.2 vs 0.1, contributing 0.1 to WRF and KF.
+    assert!(stdout.contains("1\t2\t0\t0.1\t0.1"));
+}
+
+#[test]
 fn command_eval_compare_rejects_duplicate_leaf_names() {
     let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
     // Duplicate leaf name A should be rejected with a clear error.

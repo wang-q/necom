@@ -196,6 +196,54 @@ fn test_evaluate_perfect() {
 }
 
 #[test]
+fn test_evaluate_single_cluster_perfect() {
+    // Both partitions consist of a single cluster: entropy is zero, MI is zero,
+    // but all agreement scores should be 1.0.
+    let mut p1 = LabelMap::new();
+    p1.insert("A".to_string(), 0);
+    p1.insert("B".to_string(), 0);
+    p1.insert("C".to_string(), 0);
+
+    let mut p2 = LabelMap::new();
+    p2.insert("A".to_string(), 1);
+    p2.insert("B".to_string(), 1);
+    p2.insert("C".to_string(), 1);
+
+    let m = evaluate(&p1, &p2);
+    assert_eq!(m.ari, 1.0);
+    assert_eq!(m.ami, 1.0);
+    assert_eq!(m.homogeneity, 1.0);
+    assert_eq!(m.completeness, 1.0);
+    assert_eq!(m.v_measure, 1.0);
+    assert_eq!(m.fmi, 1.0);
+    assert_eq!(m.nmi, 1.0);
+}
+
+#[test]
+fn test_evaluate_all_singletons_perfect() {
+    // Each sample is its own cluster and the label mapping is one-to-one.
+    // MI equals its expected value, so AMI must be 1.0.
+    let mut p1 = LabelMap::new();
+    p1.insert("A".to_string(), 0);
+    p1.insert("B".to_string(), 1);
+    p1.insert("C".to_string(), 2);
+
+    let mut p2 = LabelMap::new();
+    p2.insert("A".to_string(), 5);
+    p2.insert("B".to_string(), 6);
+    p2.insert("C".to_string(), 7);
+
+    let m = evaluate(&p1, &p2);
+    assert_eq!(m.ari, 1.0);
+    assert_eq!(m.ami, 1.0);
+    assert_eq!(m.homogeneity, 1.0);
+    assert_eq!(m.completeness, 1.0);
+    assert_eq!(m.v_measure, 1.0);
+    assert_eq!(m.fmi, 1.0);
+    assert_eq!(m.nmi, 1.0);
+}
+
+#[test]
 fn test_evaluate_disjoint() {
     // P1: {A,B}, {C,D} -> Labels: 1, 1, 2, 2
     // P2: {A,C}, {B,D} -> Labels: 1, 2, 1, 2

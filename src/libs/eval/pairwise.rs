@@ -153,7 +153,9 @@ impl ConcordanceMatrix {
     fn jaccard_index(&self) -> f64 {
         let denom = self.tp + self.fp + self.fn_;
         if denom == 0.0 {
-            0.0
+            // Both partitions are all-singletons (or n < 2): the set of
+            // same-cluster pairs is empty in both, so similarity is 1.0.
+            1.0
         } else {
             self.tp / denom
         }
@@ -162,7 +164,9 @@ impl ConcordanceMatrix {
     fn precision(&self) -> f64 {
         let denom = self.tp + self.fp;
         if denom == 0.0 {
-            0.0
+            // No same-cluster pairs in the predicted partition: perfect
+            // precision for all-singletons (or n < 2).
+            1.0
         } else {
             self.tp / denom
         }
@@ -171,7 +175,9 @@ impl ConcordanceMatrix {
     fn recall(&self) -> f64 {
         let denom = self.tp + self.fn_;
         if denom == 0.0 {
-            0.0
+            // No same-cluster pairs in the reference partition: perfect
+            // recall for all-singletons (or n < 2).
+            1.0
         } else {
             self.tp / denom
         }
@@ -181,6 +187,9 @@ impl ConcordanceMatrix {
         let prec = self.precision();
         let rec = self.recall();
         if prec * rec == 0.0 {
+            // Only possible when precision and recall are both 0.0, which
+            // cannot happen after the all-singletons fix above. Keep the
+            // guard for numeric safety.
             0.0
         } else {
             (prec * rec).sqrt()
@@ -253,7 +262,11 @@ fn calculate_v_measure_and_mi(
 
     // Normalized Mutual Information (NMI)
     // NMI = MI / sqrt(H(U) * H(V))
-    let nmi = if h_a * h_b == 0.0 {
+    // When both partitions have zero entropy (single-cluster perfect match),
+    // MI is also zero; following sklearn convention, NMI = 1.0.
+    let nmi = if h_a == 0.0 && h_b == 0.0 {
+        1.0
+    } else if h_a * h_b == 0.0 {
         0.0
     } else {
         mi / (h_a * h_b).sqrt()
@@ -337,7 +350,9 @@ fn calculate_ami(
     }
 
     if mean_h - expected_mi == 0.0 {
-        return 0.0;
+        // Perfect agreement (e.g., identical all-singletons partitions).
+        // MI equals its expected value and the score is 1.0.
+        return 1.0;
     }
 
     (mi - expected_mi) / (mean_h - expected_mi)
