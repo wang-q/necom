@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "../../searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-57acacb7.js"></script>
@@ -208,9 +208,9 @@
 <li><code>strict</code>:
 <ul>
 <li>Standard PHYLIP format.</li>
-<li>Names truncated to 10 characters.</li>
+<li>Names truncated to 10 bytes.</li>
 <li>Names left-aligned with space padding.</li>
-<li>Distances in fixed-width format (6 decimal places).</li>
+<li>Distances formatted to 6 decimal places, space-separated.</li>
 <li>Space-separated values.</li>
 <li>Use this for compatibility with the original PHYLIP toolkit.</li>
 </ul>
@@ -218,7 +218,7 @@
 </ul>
 <p>Notes:</p>
 <ul>
-<li><code>strict</code> mode truncates names to 10 characters and formats distances to 6 decimal places, which can cause name collisions and precision loss.</li>
+<li><code>strict</code> mode truncates names to 10 bytes and formats distances to 6 decimal places, which can cause name collisions and precision loss.</li>
 <li><code>full</code> and <code>lower</code> preserve original names without truncation.</li>
 <li><code>full</code> and <code>lower</code> preserve distance values as-is; <code>strict</code> may round them to 6 decimal places.</li>
 </ul>

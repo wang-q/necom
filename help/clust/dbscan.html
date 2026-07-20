@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "../../searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-57acacb7.js"></script>
@@ -204,6 +204,7 @@
 </ul>
 </li>
 <li>In <code>cluster</code> format, the representative is placed first; in <code>pair</code> format, it is the first column.</li>
+<li>Noise points (points not assigned to any density cluster) are emitted as single-member clusters. In <code>pair</code> format this appears as <code>Name &lt;tab&gt; Name</code>.</li>
 <li>The neighborhood count used by <code>--min-points</code> includes the point itself when <code>--same</code> is 0.0 (default), because self-distance is then 0 and is always &lt;= eps. Setting <code>--same</code> to a value greater than <code>eps</code> excludes the point from its own neighborhood.</li>
 </ul>
 <p>Examples:</p>

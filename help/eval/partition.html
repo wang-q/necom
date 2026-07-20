@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "../../searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-57acacb7.js"></script>
@@ -189,40 +189,19 @@
 <p>Output:</p>
 <ul>
 <li>TSV with a header row.</li>
-<li>External evaluation: one row of pair-based metrics (ARI, AMI, V-Measure, etc.).</li>
-<li>Internal evaluation: one row of distance-based or coordinate-based metrics (Silhouette, Dunn, … or Davies-Bouldin, Calinski-Harabasz, …).</li>
-<li>Batch mode (<code>--input-format long</code>): one row per <code>Group</code>, with the <code>Group</code> column preserved as the first column.</li>
+<li>External evaluation: one row of pair-based metrics (<code>ari</code>, <code>ami</code>, <code>homogeneity</code>, <code>completeness</code>, <code>v_measure</code>, <code>fmi</code>, <code>nmi</code>, <code>mi</code>, <code>ri</code>, <code>jaccard</code>, <code>precision</code>, <code>recall</code>).</li>
+<li>Distance-based internal evaluation: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>.</li>
+<li>Coordinate-based internal evaluation: <code>davies_bouldin</code>, <code>calinski_harabasz</code>, <code>pbm</code>, <code>ball_hall</code>, <code>xie_beni</code>, <code>wemmert_gancarski</code>.</li>
+<li>Batch mode (<code>--input-format long</code>): one row per <code>Group</code>, with <code>Group</code> as the first column.</li>
 </ul>
 <p>Notes:</p>
 <ul>
-<li>External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, Homogeneity, Completeness, V-Measure, FMI, NMI, MI, RI, Jaccard, Precision, and Recall.
-<ul>
-<li>The two partitions must cover exactly the same sample set. If one partition contains samples missing from the other, the command errors out instead of silently dropping them.</li>
-<li>With <code>--no-singletons</code>, singleton clusters are first removed from <code>--other</code>; any samples that become unreferenced are excluded from evaluation, and the remaining sample sets must still match.</li>
-</ul>
-</li>
-<li>Internal Evaluation (Partition + Matrix/Tree/Coords): evaluates a single partition without ground truth.
-<ul>
-<li><code>--matrix</code> / <code>--tree</code>: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau). All samples in the partition must be present in the matrix or tree; otherwise the command errors out instead of producing <code>NaN</code> metrics.</li>
-<li><code>--coords</code>: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski). All samples in the partition must be present in the coordinate file.</li>
-</ul>
-</li>
-<li>Empty partitions are rejected (single mode and each batch group must contain at least one sample).</li>
-<li>Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (<code>Group\tClusterID\tSampleID</code>).</li>
-<li><code>--other</code> / <code>--truth</code>: second partition for external evaluation (synonyms).</li>
-<li><code>--no-singletons</code>: exclude singleton clusters from <code>--other</code> before external evaluation.</li>
-<li><code>--input-format</code>: supports <code>pair</code> (default), <code>cluster</code>, or <code>long</code> (required for batch mode).</li>
-<li><code>--other-format</code>: format for the <code>--other</code> file (<code>cluster</code> or <code>pair</code>). Defaults to the value of <code>--input-format</code> in single mode, or <code>cluster</code> in batch mode (since the truth file is a single partition, not Long).</li>
-<li>In batch mode, the <code>Group</code> column is preserved as the first column of the output.</li>
-<li>Quick metric selection:
-<ul>
-<li>With ground truth: ARI or AMI.</li>
-<li>Without ground truth (distance matrix or tree): Silhouette.</li>
-<li>Without ground truth (coordinates): Davies-Bouldin or Calinski-Harabasz.</li>
-<li>See <a href="../../eval-partition.html"><code>docs/eval-partition.md</code></a> for detailed metric definitions and the full selection guide.</li>
-</ul>
-</li>
-<li>Typical batch workflow: generate candidates with <code>necom cut scan-simple</code>, evaluate with <code>--input-format long</code>, then select the best threshold.</li>
+<li>Only one evaluation target may be provided per run: <code>--other</code> / <code>--truth</code>, <code>--matrix</code>, <code>--tree</code>, or <code>--coords</code>.</li>
+<li>Empty partitions are rejected in single mode and for each batch group.</li>
+<li>External evaluation requires the two partitions to cover exactly the same sample set.</li>
+<li>Internal evaluation requires every partition sample to be present in the distance source.</li>
+<li>With <code>--no-singletons</code>, singleton clusters are removed from <code>--other</code> before external evaluation.</li>
+<li>See <a href="../../eval-partition.html"><code>docs/eval-partition.md</code></a> for detailed metric definitions and selection guidance.</li>
 </ul>
 <p>Examples:</p>
 <ol>

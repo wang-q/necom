@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "../../searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-57acacb7.js"></script>
@@ -192,10 +192,11 @@
 </ul>
 <p>Notes:</p>
 <ul>
-<li>Exactly one method flag must be provided: <code>--k</code>, <code>--height</code>, <code>--root-dist</code>, <code>--max-clade</code>, <code>--avg-clade</code>, <code>--med-clade</code>, <code>--sum-branch</code>, <code>--leaf-dist-max</code>, <code>--leaf-dist-min</code>, <code>--leaf-dist-avg</code>, <code>--max-edge</code>, <code>--inconsistent</code>.</li>
+<li>Exactly one method flag must be provided: <code>--k</code>, <code>--height</code>, <code>--root-dist</code>, <code>--max-clade</code>, <code>--avg-clade</code>, <code>--med-clade</code>, <code>--sum-branch</code>, <code>--leaf-dist-max</code>, <code>--leaf-dist-min</code>, <code>--leaf-dist-avg</code>, <code>--max-edge</code> (<code>--single-linkage</code>), <code>--inconsistent</code>.</li>
 <li><code>--range</code> is required and must be <code>start,end,step</code> with comma separators and no spaces.</li>
 <li><code>--k --range</code> requires integer values and the start must be at least <code>1</code>.</li>
 <li><code>--deep</code> controls the depth for the <code>inconsistent</code> method (default: <code>2</code>).</li>
+<li>Distance/height thresholds must be non-negative finite numbers.</li>
 <li><code>--support &lt;S&gt;</code> treats edges with support <code>&lt; S</code> as effectively infinite length.</li>
 <li>The <code>--format</code> and <code>--rep</code> options are not available in scan mode.</li>
 </ul>

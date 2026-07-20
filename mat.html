@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -210,17 +210,17 @@
 <p><code>necom</code> supports both Strict and Relaxed <code>PHYLIP</code> formats.</p>
 <p><strong>Relaxed PHYLIP (default input support)</strong>:</p>
 <ul>
-<li>First line: number of samples (usually required; if omitted, the program attempts to infer it automatically from the data rows).</li>
+<li>First line: optional number of samples. If omitted, the program infers the size from the data rows.</li>
 <li>Data rows: sample name followed by distance values.</li>
 <li>Separators: whitespace characters (spaces or tabs).</li>
 <li>Matrix form: supports full square matrix or lower triangular matrix. The lower-triangular form may either include the diagonal (row <code>i</code> has <code>i+1</code> values) or omit it (row <code>i</code> has <code>i</code> values), in which case the diagonal is assumed to be <code>0.0</code>.</li>
 <li>Name length: not restricted.</li>
-<li>Note: if the first data row starts with a numeric token (e.g. <code>123</code>), it may be mistaken for the optional sequence-count header. Use non-numeric prefixes, or prepend an explicit count header so the numeric name is not on the first line, to avoid ambiguity.</li>
+<li>Note: a first line that is a single integer is always interpreted as the optional sequence-count header. To use a purely numeric sequence name on the first line, prepend an explicit count header, or make sure the first line also contains distance values (full or lower-with-diagonal layouts). For lower-triangular matrices without diagonal values, numeric names must be preceded by an explicit count header.</li>
 </ul>
 <p><strong>Strict PHYLIP (<code>strict</code> mode output)</strong>:</p>
 <ul>
 <li>Follows the original <code>PHYLIP</code> standard.</li>
-<li>Sequence names: strictly truncated to 10 characters, left-aligned and space-padded.</li>
+<li>Sequence names: strictly truncated to 10 bytes, left-aligned and space-padded.</li>
 <li>Numeric format: space-separated, usually kept to 6 decimal places.</li>
 </ul>
 <p>Variants:</p>

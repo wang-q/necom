@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -233,7 +233,7 @@
 <li><strong>Use cases</strong>: <strong>Non-convex</strong> cluster shapes, uneven density distributions, <strong>outlier detection</strong>.</li>
 <li><strong>Advantages</strong>: Does not require specifying the number of clusters K; identifies noise.</li>
 <li><strong>Input</strong>: Pairwise distances <code>.tsv</code> (lower is better).</li>
-<li><strong>Output</strong>: <code>cluster</code> (one cluster per line, first element is the representative) or <code>pair</code> (representative–member pairs).</li>
+<li><strong>Output</strong>: <code>cluster</code> (one cluster per line, first element is the representative) or <code>pair</code> (representative–member pairs). Noise points are emitted as single-member clusters.</li>
 <li><strong>Defaults</strong>: <code>--eps 0.05</code>, <code>--min-points 4</code>.</li>
 <li><strong>Note on <code>--min-points</code></strong>: By default (<code>--same 0.0</code>), the neighborhood count includes the point itself because self-distance is 0 and is always &lt;= <code>eps</code>. If <code>--same</code> is set to a value greater than <code>eps</code>, the point is not counted as its own neighbor and may fail to become a core point.</li>
 <li><strong>Unimplemented options</strong>: Parameter scanning and scoring such as <code>--scan</code>, <code>--opt-eps</code>, <code>--min-pct</code> are not yet implemented; planning details are in <a href="../notes/design/dbscan-planned.html"><code>notes/design/dbscan-planned.md</code></a>. They may be provided later as subcommands of <code>necom clust dbscan</code> or standalone scripts.</li>
@@ -253,11 +253,11 @@
 <ul>
 <li><strong>Principle</strong>: Neighbor-Joining. Iteratively merges the pair of nodes with the smallest net divergence by minimizing total tree length (based on the Q-matrix-corrected distances). Does not assume a molecular clock and allows different evolutionary rates across branches.</li>
 <li><strong>Command</strong>: <code>necom clust nj</code></li>
-<li><strong>Characteristics</strong>: Distance-matrix tree-building algorithm that outputs a <strong>midpoint-rooted Newick tree</strong>.</li>
+<li><strong>Characteristics</strong>: Distance-matrix tree-building algorithm that outputs a Newick tree rooted at the midpoint of the final edge.</li>
 <li><strong>Use cases</strong>: General additive distances (no molecular-clock assumption); evolutionary tree construction.</li>
 <li><strong>Advantages</strong>: Fast; robust to different evolutionary rates.</li>
 <li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
-<li><strong>Output</strong>: Midpoint-rooted Newick tree.</li>
+<li><strong>Output</strong>: Newick tree rooted at the midpoint of the final edge.</li>
 <li><strong>Note</strong>: For non-additive distances, negative branch lengths are clamped to 0 so the output remains a valid Newick tree.</li>
 </ul>
 <h3 id="hierarchical-clustering"><a class="header" href="#hierarchical-clustering">Hierarchical Clustering</a></h3>
@@ -281,7 +281,7 @@
 <li><strong>Goal</strong>: Statistically meaningful dendrograms (merge heights express the cost of the linkage criterion), without enforcing “evolution/molecular-clock” semantics.</li>
 <li><strong>Synergy with existing necom capabilities</strong>:
 <ul>
-<li>Tree building: <code>clust upgma</code> (rooted, ultrametric) and <code>clust nj</code> (additive, midpoint-rooted) already exist.</li>
+<li>Tree building: <code>clust upgma</code> (rooted, ultrametric) and <code>clust nj</code> (additive, rooted at the midpoint of the final edge) already exist.</li>
 <li>Cutting: tree-cut grouping via <code>necom cut</code>.</li>
 <li>Evaluation: <code>necom eval partition --matrix</code> / <code>--tree</code> / <code>--coords</code> (currently available); <code>necom eval tree</code> not yet implemented.</li>
 </ul>
@@ -298,7 +298,7 @@
 </li>
 <li>Relationship to NJ:
 <ul>
-<li>NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an “additive minimum-length tree” that does not belong to the linkage-update paradigm and outputs a <strong>midpoint-rooted Newick tree</strong>.</li>
+<li>NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an “additive minimum-length tree” that does not belong to the linkage-update paradigm and outputs a Newick tree rooted at the midpoint of the final edge.</li>
 <li>For general additive distances, NJ is more robust than UPGMA; if the distances are ultrametric, UPGMA/hclust-average and NJ usually agree topologically (unrooted view).</li>
 </ul>
 </li>

@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -214,7 +214,7 @@ Implements basic cuts by cluster count and height, with logic consistent with <c
 </li>
 </ul>
 <h2 id="supported-modes-and-algorithms"><a class="header" href="#supported-modes-and-algorithms">Supported Modes and Algorithms</a></h2>
-<p><code>necom cut</code> provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below. All static methods are invoked through <code>necom cut simple --&lt;METHOD&gt; &lt;T&gt;</code>.</p>
+<p><code>necom cut</code> provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below. All static methods are invoked through <code>necom cut simple &lt;infile&gt; --&lt;METHOD&gt; &lt;T&gt;</code>.</p>
 <h3 id="1-cut-by-cluster-count---k"><a class="header" href="#1-cut-by-cluster-count---k">1. Cut by Cluster Count (<code>--k</code>)</a></h3>
 <ul>
 <li><strong>Definition</strong>: Split the tree into $K$ clusters produced by $K-1$ cuts. Cutting order is based on node height (distance to the farthest leaf), prioritizing nodes with the largest height.</li>

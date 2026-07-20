@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -314,7 +314,7 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <li><strong>Use cases</strong>: <strong>Non-convex</strong> cluster shapes, uneven density distributions, <strong>outlier detection</strong>.</li>
 <li><strong>Advantages</strong>: Does not require specifying the number of clusters K; identifies noise.</li>
 <li><strong>Input</strong>: Pairwise distances <code>.tsv</code> (lower is better).</li>
-<li><strong>Output</strong>: <code>cluster</code> (one cluster per line, first element is the representative) or <code>pair</code> (representative–member pairs).</li>
+<li><strong>Output</strong>: <code>cluster</code> (one cluster per line, first element is the representative) or <code>pair</code> (representative–member pairs). Noise points are emitted as single-member clusters.</li>
 <li><strong>Defaults</strong>: <code>--eps 0.05</code>, <code>--min-points 4</code>.</li>
 <li><strong>Note on <code>--min-points</code></strong>: By default (<code>--same 0.0</code>), the neighborhood count includes the point itself because self-distance is 0 and is always &lt;= <code>eps</code>. If <code>--same</code> is set to a value greater than <code>eps</code>, the point is not counted as its own neighbor and may fail to become a core point.</li>
 <li><strong>Unimplemented options</strong>: Parameter scanning and scoring such as <code>--scan</code>, <code>--opt-eps</code>, <code>--min-pct</code> are not yet implemented; planning details are in <a href="../notes/design/dbscan-planned.html"><code>notes/design/dbscan-planned.md</code></a>. They may be provided later as subcommands of <code>necom clust dbscan</code> or standalone scripts.</li>
@@ -334,11 +334,11 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <ul>
 <li><strong>Principle</strong>: Neighbor-Joining. Iteratively merges the pair of nodes with the smallest net divergence by minimizing total tree length (based on the Q-matrix-corrected distances). Does not assume a molecular clock and allows different evolutionary rates across branches.</li>
 <li><strong>Command</strong>: <code>necom clust nj</code></li>
-<li><strong>Characteristics</strong>: Distance-matrix tree-building algorithm that outputs a <strong>midpoint-rooted Newick tree</strong>.</li>
+<li><strong>Characteristics</strong>: Distance-matrix tree-building algorithm that outputs a Newick tree rooted at the midpoint of the final edge.</li>
 <li><strong>Use cases</strong>: General additive distances (no molecular-clock assumption); evolutionary tree construction.</li>
 <li><strong>Advantages</strong>: Fast; robust to different evolutionary rates.</li>
 <li><strong>Input</strong>: PHYLIP distance matrix (strict or relaxed).</li>
-<li><strong>Output</strong>: Midpoint-rooted Newick tree.</li>
+<li><strong>Output</strong>: Newick tree rooted at the midpoint of the final edge.</li>
 <li><strong>Note</strong>: For non-additive distances, negative branch lengths are clamped to 0 so the output remains a valid Newick tree.</li>
 </ul>
 <h3 id="hierarchical-clustering"><a class="header" href="#hierarchical-clustering">Hierarchical Clustering</a></h3>
@@ -362,7 +362,7 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <li><strong>Goal</strong>: Statistically meaningful dendrograms (merge heights express the cost of the linkage criterion), without enforcing “evolution/molecular-clock” semantics.</li>
 <li><strong>Synergy with existing necom capabilities</strong>:
 <ul>
-<li>Tree building: <code>clust upgma</code> (rooted, ultrametric) and <code>clust nj</code> (additive, midpoint-rooted) already exist.</li>
+<li>Tree building: <code>clust upgma</code> (rooted, ultrametric) and <code>clust nj</code> (additive, rooted at the midpoint of the final edge) already exist.</li>
 <li>Cutting: tree-cut grouping via <code>necom cut</code>.</li>
 <li>Evaluation: <code>necom eval partition --matrix</code> / <code>--tree</code> / <code>--coords</code> (currently available); <code>necom eval tree</code> not yet implemented.</li>
 </ul>
@@ -379,7 +379,7 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 </li>
 <li>Relationship to NJ:
 <ul>
-<li>NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an “additive minimum-length tree” that does not belong to the linkage-update paradigm and outputs a <strong>midpoint-rooted Newick tree</strong>.</li>
+<li>NJ (Neighbor-Joining) minimizes total tree length via the Q matrix, producing an “additive minimum-length tree” that does not belong to the linkage-update paradigm and outputs a Newick tree rooted at the midpoint of the final edge.</li>
 <li>For general additive distances, NJ is more robust than UPGMA; if the distances are ultrametric, UPGMA/hclust-average and NJ usually agree topologically (unrooted view).</li>
 </ul>
 </li>
@@ -554,7 +554,7 @@ Implements basic cuts by cluster count and height, with logic consistent with <c
 </li>
 </ul>
 <h2 id="supported-modes-and-algorithms"><a class="header" href="#supported-modes-and-algorithms">Supported Modes and Algorithms</a></h2>
-<p><code>necom cut</code> provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below. All static methods are invoked through <code>necom cut simple --&lt;METHOD&gt; &lt;T&gt;</code>.</p>
+<p><code>necom cut</code> provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below. All static methods are invoked through <code>necom cut simple &lt;infile&gt; --&lt;METHOD&gt; &lt;T&gt;</code>.</p>
 <h3 id="1-cut-by-cluster-count---k"><a class="header" href="#1-cut-by-cluster-count---k">1. Cut by Cluster Count (<code>--k</code>)</a></h3>
 <ul>
 <li><strong>Definition</strong>: Split the tree into $K$ clusters produced by $K-1$ cuts. Cutting order is based on node height (distance to the farthest leaf), prioritizing nodes with the largest height.</li>
@@ -1011,17 +1011,17 @@ necom eval partition partitions.tsv --input-format long --matrix dist.phy
 <p><code>necom</code> supports both Strict and Relaxed <code>PHYLIP</code> formats.</p>
 <p><strong>Relaxed PHYLIP (default input support)</strong>:</p>
 <ul>
-<li>First line: number of samples (usually required; if omitted, the program attempts to infer it automatically from the data rows).</li>
+<li>First line: optional number of samples. If omitted, the program infers the size from the data rows.</li>
 <li>Data rows: sample name followed by distance values.</li>
 <li>Separators: whitespace characters (spaces or tabs).</li>
 <li>Matrix form: supports full square matrix or lower triangular matrix. The lower-triangular form may either include the diagonal (row <code>i</code> has <code>i+1</code> values) or omit it (row <code>i</code> has <code>i</code> values), in which case the diagonal is assumed to be <code>0.0</code>.</li>
 <li>Name length: not restricted.</li>
-<li>Note: if the first data row starts with a numeric token (e.g. <code>123</code>), it may be mistaken for the optional sequence-count header. Use non-numeric prefixes, or prepend an explicit count header so the numeric name is not on the first line, to avoid ambiguity.</li>
+<li>Note: a first line that is a single integer is always interpreted as the optional sequence-count header. To use a purely numeric sequence name on the first line, prepend an explicit count header, or make sure the first line also contains distance values (full or lower-with-diagonal layouts). For lower-triangular matrices without diagonal values, numeric names must be preceded by an explicit count header.</li>
 </ul>
 <p><strong>Strict PHYLIP (<code>strict</code> mode output)</strong>:</p>
 <ul>
 <li>Follows the original <code>PHYLIP</code> standard.</li>
-<li>Sequence names: strictly truncated to 10 characters, left-aligned and space-padded.</li>
+<li>Sequence names: strictly truncated to 10 bytes, left-aligned and space-padded.</li>
 <li>Numeric format: space-separated, usually kept to 6 decimal places.</li>
 </ul>
 <p>Variants:</p>
@@ -1247,7 +1247,7 @@ neighbor &lt; input.infile
 <h3 id="replace"><a class="header" href="#replace">replace</a></h3>
 <p>Batch replace node names or append annotations from a TSV file. Use <code>--mode</code> to choose label, taxid, species, or asis replacement.</p>
 <h3 id="reroot"><a class="header" href="#reroot">reroot</a></h3>
-<p>Reroot the tree. The default is midpoint rooting; use <code>-n</code> for outgroup rooting.</p>
+<p>Reroot the tree. The default is midpoint rooting; use <code>-n</code> to specify the ingroup, rerooting on the edge leading to the LCA of the specified nodes.</p>
 <h3 id="subtree"><a class="header" href="#subtree">subtree</a></h3>
 <p>Extract the subtree rooted at the LCA of selected nodes, or condense it into a single node with <code>--condense</code>.</p>
 <h3 id="topo"><a class="header" href="#topo">topo</a></h3>
@@ -1439,7 +1439,7 @@ latexmk -xelatex tree.tex
 <p>Assign support values to internal nodes of a target tree based on replicate trees (e.g., from bootstrap or jackknife resampling). Outputs the annotated tree (Newick). All trees must share the same leaf set.</p>
 <hr>
 <h2 id="branch-length-handling-1"><a class="header" href="#branch-length-handling-1">Branch Length Handling</a></h2>
-<p><code>necom eval compare</code> treats non-finite branch lengths (<code>NaN</code>, positive/negative infinity), negative values, and zero values as <code>0.0</code> during computation. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.</p>
+<p><code>necom eval compare</code> normalizes non-finite branch lengths (<code>NaN</code>, positive/negative infinity) and negative values to <code>0.0</code> during computation; zero values are left as <code>0.0</code>. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.</p>
 <hr>
 <h2 id="planned-subcommands-1"><a class="header" href="#planned-subcommands-1">Planned Subcommands</a></h2>
 <p>The following subcommands are <strong>not yet implemented</strong>. Their CLI surface is not yet finalized; the descriptions below reflect the current design direction, not commitments. See <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a> for design status.</p>
@@ -1556,6 +1556,15 @@ latexmk -xelatex tree.tex
 <li><strong>External evaluation</strong> (<code>--other</code> / <code>--truth</code>): The two partitions must contain exactly the same sample set. The command errors out rather than intersecting keys silently.</li>
 <li><strong>Internal evaluation</strong> (<code>--matrix</code>, <code>--tree</code>, <code>--coords</code>): Every sample in the partition must be present in the distance source. Missing samples produce a clear error instead of <code>NaN</code> metrics.</li>
 <li><strong><code>--no-singletons</code></strong>: Singleton clusters are removed from the reference partition first; samples that become unreferenced are excluded from evaluation, and the remaining sample sets are still required to match.</li>
+</ul>
+<h2 id="output-format"><a class="header" href="#output-format">Output Format</a></h2>
+<p><code>necom eval partition</code> writes a TSV with a header row followed by one result row.</p>
+<ul>
+<li><strong>External evaluation</strong>: one row of pair-based metrics (<code>ari</code>, <code>ami</code>, <code>homogeneity</code>, <code>completeness</code>, <code>v_measure</code>, <code>fmi</code>, <code>nmi</code>, <code>mi</code>, <code>ri</code>, <code>jaccard</code>, <code>precision</code>, <code>recall</code>).</li>
+<li><strong>Distance-based internal evaluation</strong>: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>.</li>
+<li><strong>Coordinate-based internal evaluation</strong>: <code>davies_bouldin</code>, <code>calinski_harabasz</code>, <code>pbm</code>, <code>ball_hall</code>, <code>xie_beni</code>, <code>wemmert_gancarski</code>.</li>
+<li><strong>Batch mode</strong> (<code>--input-format long</code>): one row per <code>Group</code>, with the <code>Group</code> column preserved as the first column.</li>
+<li>Non-finite metric values (<code>NaN</code>, <code>+Infinity</code>, or <code>-Infinity</code>) are emitted as <code>NA</code> to keep the TSV parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly compact and well-separated, or Xie-Beni when two centroids coincide.</li>
 </ul>
 <h2 id="core-metrics"><a class="header" href="#core-metrics">Core Metrics</a></h2>
 <p>Clustering evaluation metrics usually fall into two categories: <strong>external validity</strong> (requires Ground Truth or a reference partition) and <strong>internal validity</strong> (depends only on the geometry/statistics of the data).</p>
@@ -1745,6 +1754,7 @@ latexmk -xelatex tree.tex
 <ul>
 <li><strong>Principle</strong>: Computes the “similarity” of each cluster pair (within-cluster dispersion sum / centroid distance), then takes the mean of each cluster’s worst (largest) similarity.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If two cluster centroids coincide and at least one has non-zero scatter, the similarity is undefined (infinite). The implementation substitutes a large finite proxy (<code>1e10</code>) so the TSV remains parseable.</li>
 <li><strong>Advantages</strong>: Faster than Silhouette.</li>
 <li><strong>Applicable</strong>: Evaluating centroid-based clustering algorithms.</li>
 </ul>
@@ -1768,6 +1778,7 @@ latexmk -xelatex tree.tex
 <ul>
 <li><strong>Principle</strong>: Composite index based on total dispersion, within-cluster dispersion, and maximum centroid distance.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Larger is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If within-cluster dispersion is zero while total dispersion is positive (perfectly compact clusters), the score is infinite and is reported as <code>NA</code> to keep the TSV parseable.</li>
 </ul>
 </li>
 <li>
@@ -1782,6 +1793,7 @@ latexmk -xelatex tree.tex
 <ul>
 <li><strong>Principle</strong>: Ratio of within-cluster compactness to between-cluster separation (minimum centroid distance).</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If the closest pair of cluster centroids coincide, separation is zero and the score is infinite; it is reported as <code>NA</code> to keep the TSV parseable.</li>
 </ul>
 </li>
 <li>
@@ -1942,7 +1954,7 @@ GeneB	1.1	0.6	3.1
 </ul>
 <p>Notes:</p>
 <ul>
-<li>Exactly one method option must be provided: <code>--k</code>, <code>--height</code>, <code>--root-dist</code>, <code>--max-clade</code>, <code>--avg-clade</code>, <code>--med-clade</code>, <code>--sum-branch</code>, <code>--leaf-dist-max</code>, <code>--leaf-dist-min</code>, <code>--leaf-dist-avg</code>, <code>--max-edge</code>, <code>--inconsistent</code>.</li>
+<li>Exactly one method option must be provided: <code>--k</code>, <code>--height</code>, <code>--root-dist</code>, <code>--max-clade</code>, <code>--avg-clade</code>, <code>--med-clade</code>, <code>--sum-branch</code>, <code>--leaf-dist-max</code>, <code>--leaf-dist-min</code>, <code>--leaf-dist-avg</code>, <code>--max-edge</code> (<code>--single-linkage</code>), <code>--inconsistent</code>.</li>
 <li><code>--k</code> must be a positive integer.</li>
 <li><code>--deep</code> controls the depth used by the <code>inconsistent</code> method (default: <code>2</code>).</li>
 <li><code>--rep</code> selects the cluster representative: <code>root</code> (default), <code>first</code>, or <code>medoid</code>.</li>
@@ -2057,10 +2069,11 @@ GeneB	1.1	0.6	3.1
 </ul>
 <p>Notes:</p>
 <ul>
-<li>Exactly one method flag must be provided: <code>--k</code>, <code>--height</code>, <code>--root-dist</code>, <code>--max-clade</code>, <code>--avg-clade</code>, <code>--med-clade</code>, <code>--sum-branch</code>, <code>--leaf-dist-max</code>, <code>--leaf-dist-min</code>, <code>--leaf-dist-avg</code>, <code>--max-edge</code>, <code>--inconsistent</code>.</li>
+<li>Exactly one method flag must be provided: <code>--k</code>, <code>--height</code>, <code>--root-dist</code>, <code>--max-clade</code>, <code>--avg-clade</code>, <code>--med-clade</code>, <code>--sum-branch</code>, <code>--leaf-dist-max</code>, <code>--leaf-dist-min</code>, <code>--leaf-dist-avg</code>, <code>--max-edge</code> (<code>--single-linkage</code>), <code>--inconsistent</code>.</li>
 <li><code>--range</code> is required and must be <code>start,end,step</code> with comma separators and no spaces.</li>
 <li><code>--k --range</code> requires integer values and the start must be at least <code>1</code>.</li>
 <li><code>--deep</code> controls the depth for the <code>inconsistent</code> method (default: <code>2</code>).</li>
+<li>Distance/height thresholds must be non-negative finite numbers.</li>
 <li><code>--support &lt;S&gt;</code> treats edges with support <code>&lt; S</code> as effectively infinite length.</li>
 <li>The <code>--format</code> and <code>--rep</code> options are not available in scan mode.</li>
 </ul>
@@ -2095,6 +2108,7 @@ GeneB	1.1	0.6	3.1
 <ul>
 <li>The <code>--range</code> option is required and must be <code>start,end,step</code> with comma separators and no spaces.</li>
 <li>All three range values must be non-negative integers and the step must be positive.</li>
+<li><code>start</code> must be at least <code>1</code> because the min cluster size must be greater than <code>0</code>.</li>
 <li><code>--deep-split</code> enables more aggressive splitting (default: off).</li>
 <li><code>--max-tree-height</code> sets the maximum joining height; if omitted, 99% of the tree height is used.</li>
 <li><code>--support &lt;S&gt;</code> treats edges with support <code>&lt; S</code> as effectively infinite length.</li>
@@ -2187,6 +2201,7 @@ GeneB	1.1	0.6	3.1
 </ul>
 </li>
 <li>In <code>cluster</code> format, the representative is placed first; in <code>pair</code> format, it is the first column.</li>
+<li>Noise points (points not assigned to any density cluster) are emitted as single-member clusters. In <code>pair</code> format this appears as <code>Name &lt;tab&gt; Name</code>.</li>
 <li>The neighborhood count used by <code>--min-points</code> includes the point itself when <code>--same</code> is 0.0 (default), because self-distance is then 0 and is always &lt;= eps. Setting <code>--same</code> to a value greater than <code>eps</code> excludes the point from its own neighborhood.</li>
 </ul>
 <p>Examples:</p>
@@ -2340,7 +2355,7 @@ GeneB	1.1	0.6	3.1
 </ul>
 <p>Output:</p>
 <ul>
-<li>A midpoint-rooted Newick tree.</li>
+<li>A Newick tree rooted at the midpoint of the final edge.</li>
 </ul>
 <p>Notes:</p>
 <ul>
@@ -2486,9 +2501,9 @@ GeneB	1.1	0.6	3.1
 <li><code>strict</code>:
 <ul>
 <li>Standard PHYLIP format.</li>
-<li>Names truncated to 10 characters.</li>
+<li>Names truncated to 10 bytes.</li>
 <li>Names left-aligned with space padding.</li>
-<li>Distances in fixed-width format (6 decimal places).</li>
+<li>Distances formatted to 6 decimal places, space-separated.</li>
 <li>Space-separated values.</li>
 <li>Use this for compatibility with the original PHYLIP toolkit.</li>
 </ul>
@@ -2496,7 +2511,7 @@ GeneB	1.1	0.6	3.1
 </ul>
 <p>Notes:</p>
 <ul>
-<li><code>strict</code> mode truncates names to 10 characters and formats distances to 6 decimal places, which can cause name collisions and precision loss.</li>
+<li><code>strict</code> mode truncates names to 10 bytes and formats distances to 6 decimal places, which can cause name collisions and precision loss.</li>
 <li><code>full</code> and <code>lower</code> preserve original names without truncation.</li>
 <li><code>full</code> and <code>lower</code> preserve distance values as-is; <code>strict</code> may round them to 6 decimal places.</li>
 </ul>
@@ -2663,8 +2678,8 @@ GeneB	1.1	0.6	3.1
 <li>Useful for converting similarity matrices to distance matrices.</li>
 <li>Use <code>--normalize</code> to normalize based on diagonal elements before transformation: <code>x_norm(i, j) = x(i, j) / sqrt(x(i, i) * x(j, j))</code>.
 <ul>
-<li><code>--normalize</code> requires diagonal data in the input; if absent, off-diagonal results will be <code>0</code>.</li>
-<li>Diagonal values less than or equal to <code>1e-9</code> are treated as zero, producing <code>0</code> for the corresponding row/column.</li>
+<li><code>--normalize</code> requires diagonal data in the input; if absent, every diagonal is treated as <code>0.0</code>, so off-diagonal values become <code>0.0</code> before the selected <code>--op</code> is applied.</li>
+<li>Diagonal values less than or equal to <code>1e-9</code> are treated as zero, producing <code>0.0</code> for the corresponding row/column.</li>
 <li>Normalization is applied before the transformation op: off-diagonal <code>x(i,j) / sqrt(d_i*d_j)</code> then <code>--op</code>, diagonal normalized to <code>1.0</code> (or <code>0.0</code> if <code>d_i &lt;= 1e-9</code>) then <code>--op</code>.</li>
 </ul>
 </li>
@@ -2769,7 +2784,7 @@ GeneB	1.1	0.6	3.1
 <li><code>Celadon</code> (185,251,192)</li>
 </ul>
 </li>
-<li><code>--remove &lt;REGEX&gt;</code> scans all nodes and removes parts of comments matching the regex.</li>
+<li><code>--remove &lt;REGEX&gt;</code> scans all nodes and removes whole property entries whose serialized <code>key=value</code> (or bare <code>key</code>) matches the regex.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -3385,40 +3400,19 @@ GeneB	1.1	0.6	3.1
 <p>Output:</p>
 <ul>
 <li>TSV with a header row.</li>
-<li>External evaluation: one row of pair-based metrics (ARI, AMI, V-Measure, etc.).</li>
-<li>Internal evaluation: one row of distance-based or coordinate-based metrics (Silhouette, Dunn, … or Davies-Bouldin, Calinski-Harabasz, …).</li>
-<li>Batch mode (<code>--input-format long</code>): one row per <code>Group</code>, with the <code>Group</code> column preserved as the first column.</li>
+<li>External evaluation: one row of pair-based metrics (<code>ari</code>, <code>ami</code>, <code>homogeneity</code>, <code>completeness</code>, <code>v_measure</code>, <code>fmi</code>, <code>nmi</code>, <code>mi</code>, <code>ri</code>, <code>jaccard</code>, <code>precision</code>, <code>recall</code>).</li>
+<li>Distance-based internal evaluation: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>.</li>
+<li>Coordinate-based internal evaluation: <code>davies_bouldin</code>, <code>calinski_harabasz</code>, <code>pbm</code>, <code>ball_hall</code>, <code>xie_beni</code>, <code>wemmert_gancarski</code>.</li>
+<li>Batch mode (<code>--input-format long</code>): one row per <code>Group</code>, with <code>Group</code> as the first column.</li>
 </ul>
 <p>Notes:</p>
 <ul>
-<li>External Evaluation (Partition vs Partition): compares two partitions (e.g., ground truth vs result). Metrics include ARI, AMI, Homogeneity, Completeness, V-Measure, FMI, NMI, MI, RI, Jaccard, Precision, and Recall.
-<ul>
-<li>The two partitions must cover exactly the same sample set. If one partition contains samples missing from the other, the command errors out instead of silently dropping them.</li>
-<li>With <code>--no-singletons</code>, singleton clusters are first removed from <code>--other</code>; any samples that become unreferenced are excluded from evaluation, and the remaining sample sets must still match.</li>
-</ul>
-</li>
-<li>Internal Evaluation (Partition + Matrix/Tree/Coords): evaluates a single partition without ground truth.
-<ul>
-<li><code>--matrix</code> / <code>--tree</code>: distance-based metrics (Silhouette, Dunn, C-Index, Gamma, Tau). All samples in the partition must be present in the matrix or tree; otherwise the command errors out instead of producing <code>NaN</code> metrics.</li>
-<li><code>--coords</code>: coordinate-based metrics (Davies-Bouldin, Calinski-Harabasz, PBM, Ball-Hall, Xie-Beni, Wemmert-Gancarski). All samples in the partition must be present in the coordinate file.</li>
-</ul>
-</li>
-<li>Empty partitions are rejected (single mode and each batch group must contain at least one sample).</li>
-<li>Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (<code>Group\tClusterID\tSampleID</code>).</li>
-<li><code>--other</code> / <code>--truth</code>: second partition for external evaluation (synonyms).</li>
-<li><code>--no-singletons</code>: exclude singleton clusters from <code>--other</code> before external evaluation.</li>
-<li><code>--input-format</code>: supports <code>pair</code> (default), <code>cluster</code>, or <code>long</code> (required for batch mode).</li>
-<li><code>--other-format</code>: format for the <code>--other</code> file (<code>cluster</code> or <code>pair</code>). Defaults to the value of <code>--input-format</code> in single mode, or <code>cluster</code> in batch mode (since the truth file is a single partition, not Long).</li>
-<li>In batch mode, the <code>Group</code> column is preserved as the first column of the output.</li>
-<li>Quick metric selection:
-<ul>
-<li>With ground truth: ARI or AMI.</li>
-<li>Without ground truth (distance matrix or tree): Silhouette.</li>
-<li>Without ground truth (coordinates): Davies-Bouldin or Calinski-Harabasz.</li>
-<li>See <a href="#necom-eval-partition"><code>docs/eval-partition.md</code></a> for detailed metric definitions and the full selection guide.</li>
-</ul>
-</li>
-<li>Typical batch workflow: generate candidates with <code>necom cut scan-simple</code>, evaluate with <code>--input-format long</code>, then select the best threshold.</li>
+<li>Only one evaluation target may be provided per run: <code>--other</code> / <code>--truth</code>, <code>--matrix</code>, <code>--tree</code>, or <code>--coords</code>.</li>
+<li>Empty partitions are rejected in single mode and for each batch group.</li>
+<li>External evaluation requires the two partitions to cover exactly the same sample set.</li>
+<li>Internal evaluation requires every partition sample to be present in the distance source.</li>
+<li>With <code>--no-singletons</code>, singleton clusters are removed from <code>--other</code> before external evaluation.</li>
+<li>See <a href="#necom-eval-partition"><code>docs/eval-partition.md</code></a> for detailed metric definitions and selection guidance.</li>
 </ul>
 <p>Examples:</p>
 <ol>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "../../searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-57acacb7.js"></script>
@@ -194,6 +194,7 @@
 <ul>
 <li>The <code>--range</code> option is required and must be <code>start,end,step</code> with comma separators and no spaces.</li>
 <li>All three range values must be non-negative integers and the step must be positive.</li>
+<li><code>start</code> must be at least <code>1</code> because the min cluster size must be greater than <code>0</code>.</li>
 <li><code>--deep-split</code> enables more aggressive splitting (default: off).</li>
 <li><code>--max-tree-height</code> sets the maximum joining height; if omitted, 99% of the tree height is used.</li>
 <li><code>--support &lt;S&gt;</code> treats edges with support <code>&lt; S</code> as effectively infinite length.</li>

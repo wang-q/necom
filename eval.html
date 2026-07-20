@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -217,7 +217,7 @@
 <p>Assign support values to internal nodes of a target tree based on replicate trees (e.g., from bootstrap or jackknife resampling). Outputs the annotated tree (Newick). All trees must share the same leaf set.</p>
 <hr>
 <h2 id="branch-length-handling"><a class="header" href="#branch-length-handling">Branch Length Handling</a></h2>
-<p><code>necom eval compare</code> treats non-finite branch lengths (<code>NaN</code>, positive/negative infinity), negative values, and zero values as <code>0.0</code> during computation. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.</p>
+<p><code>necom eval compare</code> normalizes non-finite branch lengths (<code>NaN</code>, positive/negative infinity) and negative values to <code>0.0</code> during computation; zero values are left as <code>0.0</code>. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.</p>
 <hr>
 <h2 id="planned-subcommands"><a class="header" href="#planned-subcommands">Planned Subcommands</a></h2>
 <p>The following subcommands are <strong>not yet implemented</strong>. Their CLI surface is not yet finalized; the descriptions below reflect the current design direction, not commitments. See <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a> for design status.</p>

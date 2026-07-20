@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-13d610d6.js";
+            window.path_to_searchindex_js = "searchindex-b3240ac6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -220,6 +220,15 @@
 <li><strong>External evaluation</strong> (<code>--other</code> / <code>--truth</code>): The two partitions must contain exactly the same sample set. The command errors out rather than intersecting keys silently.</li>
 <li><strong>Internal evaluation</strong> (<code>--matrix</code>, <code>--tree</code>, <code>--coords</code>): Every sample in the partition must be present in the distance source. Missing samples produce a clear error instead of <code>NaN</code> metrics.</li>
 <li><strong><code>--no-singletons</code></strong>: Singleton clusters are removed from the reference partition first; samples that become unreferenced are excluded from evaluation, and the remaining sample sets are still required to match.</li>
+</ul>
+<h2 id="output-format"><a class="header" href="#output-format">Output Format</a></h2>
+<p><code>necom eval partition</code> writes a TSV with a header row followed by one result row.</p>
+<ul>
+<li><strong>External evaluation</strong>: one row of pair-based metrics (<code>ari</code>, <code>ami</code>, <code>homogeneity</code>, <code>completeness</code>, <code>v_measure</code>, <code>fmi</code>, <code>nmi</code>, <code>mi</code>, <code>ri</code>, <code>jaccard</code>, <code>precision</code>, <code>recall</code>).</li>
+<li><strong>Distance-based internal evaluation</strong>: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>.</li>
+<li><strong>Coordinate-based internal evaluation</strong>: <code>davies_bouldin</code>, <code>calinski_harabasz</code>, <code>pbm</code>, <code>ball_hall</code>, <code>xie_beni</code>, <code>wemmert_gancarski</code>.</li>
+<li><strong>Batch mode</strong> (<code>--input-format long</code>): one row per <code>Group</code>, with the <code>Group</code> column preserved as the first column.</li>
+<li>Non-finite metric values (<code>NaN</code>, <code>+Infinity</code>, or <code>-Infinity</code>) are emitted as <code>NA</code> to keep the TSV parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly compact and well-separated, or Xie-Beni when two centroids coincide.</li>
 </ul>
 <h2 id="core-metrics"><a class="header" href="#core-metrics">Core Metrics</a></h2>
 <p>Clustering evaluation metrics usually fall into two categories: <strong>external validity</strong> (requires Ground Truth or a reference partition) and <strong>internal validity</strong> (depends only on the geometry/statistics of the data).</p>
@@ -409,6 +418,7 @@
 <ul>
 <li><strong>Principle</strong>: Computes the “similarity” of each cluster pair (within-cluster dispersion sum / centroid distance), then takes the mean of each cluster’s worst (largest) similarity.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If two cluster centroids coincide and at least one has non-zero scatter, the similarity is undefined (infinite). The implementation substitutes a large finite proxy (<code>1e10</code>) so the TSV remains parseable.</li>
 <li><strong>Advantages</strong>: Faster than Silhouette.</li>
 <li><strong>Applicable</strong>: Evaluating centroid-based clustering algorithms.</li>
 </ul>
@@ -432,6 +442,7 @@
 <ul>
 <li><strong>Principle</strong>: Composite index based on total dispersion, within-cluster dispersion, and maximum centroid distance.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Larger is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If within-cluster dispersion is zero while total dispersion is positive (perfectly compact clusters), the score is infinite and is reported as <code>NA</code> to keep the TSV parseable.</li>
 </ul>
 </li>
 <li>
@@ -446,6 +457,7 @@
 <ul>
 <li><strong>Principle</strong>: Ratio of within-cluster compactness to between-cluster separation (minimum centroid distance).</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If the closest pair of cluster centroids coincide, separation is zero and the score is infinite; it is reported as <code>NA</code> to keep the TSV parseable.</li>
 </ul>
 </li>
 <li>
