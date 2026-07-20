@@ -275,3 +275,30 @@ fn nwk_order_bad_name_list_does_not_truncate_outfile() {
     assert!(!success, "expected failure for nonexistent name list");
     assert_outfile_preserved(out_path);
 }
+
+#[test]
+fn nwk_subtree_empty_condense_does_not_truncate_outfile() {
+    // --condense with empty name must fail validation before the writer is
+    // opened, so any pre-existing outfile is preserved. The check runs before
+    // infile/name-list are loaded, so any infile path suffices.
+    let existing = sentinel_outfile(SENTINEL);
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, stderr) = run_with_outfile(
+        &[
+            "nwk",
+            "subtree",
+            "tests/newick/catarrhini.nwk",
+            "--name-list",
+            "/nonexistent/names.txt",
+            "--condense",
+            "",
+        ],
+        out_path,
+    );
+    assert!(!success, "expected failure for empty --condense name");
+    assert!(
+        stderr.contains("--condense requires a non-empty name"),
+        "expected helpful error message, got: {stderr}"
+    );
+    assert_outfile_preserved(out_path);
+}

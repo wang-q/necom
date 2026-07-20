@@ -128,7 +128,8 @@ This normalization prevents invalid values from polluting sums, maxima, or dista
 ### Length detection and distance threshold
 
 *   `stat` counts an edge as "with length" only when its branch length is a positive finite value. Missing, zero, and non-finite lengths are reported as "without length".
-*   `distance` uses the sum of branch lengths only when its absolute value exceeds `1e-9`; otherwise it falls back to the topological edge count. This avoids treating near-zero floating-point values as meaningful distances.
+*   `distance` in `root`, `parent`, `pairwise`, and `lca` modes uses the sum of branch lengths only when its absolute value exceeds `1e-9`; otherwise it falls back to the topological edge count. This avoids treating near-zero floating-point values as meaningful distances.
+*   `distance --mode phylip` uses a tree-wide decision: if any edge in the tree carries a positive finite length, the full matrix is computed from branch lengths; otherwise it falls back to topological edge counts for all pairs.
 
 ---
 

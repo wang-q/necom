@@ -41,6 +41,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let condense_name = args.get_one::<String>("condense");
     let is_condense = condense_name.is_some();
 
+    // Validate --condense early so an empty name does not truncate the output
+    // file before the error is reported.
+    if is_condense {
+        let name = condense_name.map_or("", |s| s.as_str());
+        if name.is_empty() {
+            anyhow::bail!("--condense requires a non-empty name argument");
+        }
+    }
+
     let infile = args
         .get_one::<String>("infile")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: infile"))?;
@@ -98,11 +107,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
 
         if is_condense {
-            // condense_name is Some here (is_condense == condense_name.is_some()).
+            // condense_name was validated non-empty above; safe to unwrap.
             let name = condense_name.map_or("", |s| s.as_str());
-            if name.is_empty() {
-                anyhow::bail!("--condense requires a non-empty name argument");
-            }
 
             // Count named nodes in the selected set, matching the documented semantics.
             let member_count = ids
