@@ -9,7 +9,7 @@
 **phylogenetic-tree manipulation**.
 
 The name is formed from its three command families — **NWK**, **CLUST**, and **MAT** — with vowels
-inserted in alphabetical order. It also echoes the Latin *nexum* ("tie" or "bond"), reflecting the
+inserted in alphabetical order. It also echoes the Latin *nexum*("tie" or "bond"), reflecting the
 toolkit's focus on connections between clusters, matrix entries, and tree nodes.
 
 ## Features
@@ -32,14 +32,15 @@ toolkit's focus on connections between clusters, matrix entries, and tree nodes.
 
 ## Commands
 
-| Command | Subcommands |
-| --- | --- |
-| `necom clust` | `cc`, `dbscan`, `hier`, `k-medoids`, `mcl`, `nj`, `upgma` |
-| `necom cut` | `simple`, `dynamic`, `hybrid`, `scan-simple`, `scan-dynamic` |
-| `necom eval` | `compare`, `partition`, `replicate` |
-| `necom mat` | `compare`, `format`, `from-vector`, `subset`, `to-pair`, `to-phylip`, `transform` |
-| `necom nwk` | `stat`, `distance`, `reroot`, `prune`, `label`, `order`, `indent`, `comment`, `rename`, `replace`, `subtree`, `topo`, `to-dot`, `to-forest`, `to-svg`, `to-tex` |
-| `necom pl` | `condense` |
+- `necom clust` — `cc`, `dbscan`, `hier`, `k-medoids`, `mcl`, `nj`, `upgma`
+- `necom cut` — `simple`, `dynamic`, `hybrid`, `scan-simple`, `scan-dynamic`
+- `necom eval` — `compare`, `partition`, `replicate`
+- `necom mat` — `compare`, `format`, `from-vector`, `subset`, `to-pair`, `to-phylip`, `transform`
+- `necom nwk`
+    - Information: `stat`, `label`, `distance`
+    - Manipulation: `order`, `prune`, `rename`, `replace`, `reroot`, `subtree`, `topo`
+    - Visualization: `comment`, `indent`, `to-dot`, `to-forest`, `to-svg`, `to-tex`
+- `necom pl` — `condense`
 
 ## Install
 
@@ -125,18 +126,17 @@ Extended documentation for each command is available in `docs/`:
 - [`docs/pl.md`](docs/pl.md) — integrated pipelines
 - [`docs/formats.md`](docs/formats.md) — shared file format conventions
 
-Per-subcommand help text lives under [`docs/help/`](docs/help/) and is also reachable via
-`necom <command> <subcommand> --help`. The rendered mdBook site is published at
-<https://wang-q.github.io/necom/>.
+Per-subcommand help text lives under [`docs/help/`](docs/help/) and is also reachable
+via `necom <command> <subcommand> --help`. The rendered mdBook site is published at
+[https://wang-q.github.io/necom/](https://wang-q.github.io/necom/).
 
 ## Author
 
-Qiang Wang <wang-q@outlook.com>
+Qiang Wang [wang-q@outlook.com](mailto:wang-q@outlook.com)
 
 ## License
 
 MIT.
 
-Copyright by Qiang Wang.
+Copyright by Qiang Wang. 2024-
 
-Written by Qiang Wang <wang-q@outlook.com>, 2024-
