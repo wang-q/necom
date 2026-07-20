@@ -32,12 +32,12 @@ The `PHYLIP` distance matrix format is a common format in phylogenetic analysis.
 `necom` supports both Strict and Relaxed `PHYLIP` formats.
 
 **Relaxed PHYLIP (default input support)**:
-- First line: number of samples (usually required; if omitted, the program attempts to infer it automatically from the data rows).
+- First line: optional number of samples. If omitted, the program infers the size from the data rows.
 - Data rows: sample name followed by distance values.
 - Separators: whitespace characters (spaces or tabs).
 - Matrix form: supports full square matrix or lower triangular matrix. The lower-triangular form may either include the diagonal (row `i` has `i+1` values) or omit it (row `i` has `i` values), in which case the diagonal is assumed to be `0.0`.
 - Name length: not restricted.
-- Note: if the first data row starts with a numeric token (e.g. `123`), it may be mistaken for the optional sequence-count header. Use non-numeric prefixes, or prepend an explicit count header so the numeric name is not on the first line, to avoid ambiguity.
+- Note: a first line that is a single integer is always interpreted as the optional sequence-count header. To use a purely numeric sequence name on the first line, prepend an explicit count header, or make sure the first line also contains distance values (full or lower-with-diagonal layouts). For lower-triangular matrices without diagonal values, numeric names must be preceded by an explicit count header.
 
 **Strict PHYLIP (`strict` mode output)**:
 - Follows the original `PHYLIP` standard.

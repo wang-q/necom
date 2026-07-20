@@ -367,7 +367,9 @@ impl NamedMatrix {
         if rows.len() != size {
             match declared_size {
                 Some(d) => anyhow::bail!(
-                    "PHYLIP matrix declares {} sequences but found {}",
+                    "PHYLIP matrix declares {} sequences but found {} data rows. \
+                     If the first line is a sequence name rather than the count, \
+                     add an explicit count header before the first data row",
                     d,
                     rows.len()
                 ),
@@ -377,6 +379,22 @@ impl NamedMatrix {
                     rows.len()
                 ),
             }
+        }
+
+        // Warn when a single-integer header happens to match the number of data
+        // rows and the first sequence name is also numeric. In that case the
+        // first line could have been a numeric sequence name (with no values),
+        // so the caller may have intended an unheaded lower-triangular matrix.
+        if declared_size == Some(rows.len())
+            && !rows.is_empty()
+            && rows[0].0.parse::<usize>().is_ok()
+        {
+            log::warn!(
+                "Ambiguous PHYLIP input: the first line ({}) is interpreted as the \
+                 sequence-count header because it is a single integer. If it was meant \
+                 to be a sequence name, add an explicit count header before the first data row",
+                declared_size.unwrap()
+            );
         }
 
         if size == 0 {

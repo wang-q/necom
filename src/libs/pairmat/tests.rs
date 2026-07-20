@@ -760,3 +760,77 @@ fn test_scoring_matrix_from_pair_scores_empty_name() {
     assert_eq!(names, vec!["A".to_string(), "C".to_string()]);
     assert_eq!(matrix.get(0, 1), 0.3);
 }
+
+#[test]
+fn test_from_relaxed_phylip_numeric_name_with_values() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // No header; the first sequence name is purely numeric but includes values,
+    // so it must be parsed as a data row rather than a count header.
+    writeln!(tmp, "123 0.0 0.5").unwrap();
+    writeln!(tmp, "456 0.5 0.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    assert_eq!(matrix.size(), 2);
+    assert_eq!(matrix.get_names(), vec!["123", "456"]);
+    assert_eq!(matrix.get_by_name("123", "456"), Some(0.5));
+}
+
+#[test]
+fn test_from_relaxed_phylip_numeric_name_after_header() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Explicit count header lets the first data row use a numeric name.
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "123 0.0 0.5").unwrap();
+    writeln!(tmp, "456 0.5 0.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    assert_eq!(matrix.size(), 2);
+    assert_eq!(matrix.get_names(), vec!["123", "456"]);
+    assert_eq!(matrix.get_by_name("123", "456"), Some(0.5));
+}
+
+#[test]
+fn test_from_relaxed_phylip_numeric_header_mismatch_error() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Single integer first line is interpreted as a count header, but the file
+    // does not contain that many data rows.
+    writeln!(tmp, "123").unwrap();
+    writeln!(tmp, "456 0.1").unwrap();
+    writeln!(tmp, "789 0.2 0.3").unwrap();
+
+    let result = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap());
+    assert!(
+        result.is_err(),
+        "numeric-only first line with mismatched row count should error"
+    );
+    let msg = format!("{}", result.unwrap_err());
+    assert!(
+        msg.contains("add an explicit count header"),
+        "error should suggest adding a count header, got: {}",
+        msg
+    );
+}
+
+#[test]
+fn test_from_relaxed_phylip_numeric_header_ambiguity_warning() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // The first line is a single integer that matches the row count, and the
+    // first sequence name is also numeric. Parsing succeeds, but the caller
+    // should be warned that the first line may have been a numeric name.
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "3 0.1").unwrap();
+    writeln!(tmp, "4 0.2 0.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    assert_eq!(matrix.size(), 2);
+    assert_eq!(matrix.get_names(), vec!["3", "4"]);
+    assert_eq!(matrix.get_by_name("3", "4"), Some(0.2));
+}

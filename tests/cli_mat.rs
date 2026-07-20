@@ -762,3 +762,63 @@ fn command_mat_compare_reordered_names() {
     // Identical lower triangles (after reordering) → perfect correlation.
     assert_method_score(&stdout, "pearson", 1.0, 1e-6);
 }
+
+#[test]
+fn command_mat_format_numeric_name_with_values() {
+    // A purely numeric sequence name on the first line is safe as long as the
+    // line also contains distance values (so it cannot be a count header).
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "123 0.0 0.5").unwrap();
+    writeln!(tmp, "456 0.5 0.0").unwrap();
+    tmp.flush().unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["mat", "format", tmp.path().to_str().unwrap()])
+        .run();
+
+    assert!(stdout.contains("123\t0\t0.5"));
+    assert!(stdout.contains("456\t0.5\t0"));
+}
+
+#[test]
+fn command_mat_format_numeric_name_with_header() {
+    // With an explicit count header, numeric sequence names can appear on any
+    // data row, including the first one.
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "123 0.0 0.5").unwrap();
+    writeln!(tmp, "456 0.5 0.0").unwrap();
+    tmp.flush().unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["mat", "format", tmp.path().to_str().unwrap()])
+        .run();
+
+    assert!(stdout.contains("123\t0\t0.5"));
+    assert!(stdout.contains("456\t0.5\t0"));
+}
+
+#[test]
+fn command_mat_format_numeric_header_mismatch_error() {
+    // A single-integer first line is interpreted as a count header. If the
+    // file does not contain that many rows, the error message should suggest
+    // adding an explicit count header.
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "123").unwrap();
+    writeln!(tmp, "456 0.1").unwrap();
+    writeln!(tmp, "789 0.2 0.3").unwrap();
+    tmp.flush().unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["mat", "format", tmp.path().to_str().unwrap()])
+        .run_fail();
+
+    assert!(
+        stderr.contains("add an explicit count header"),
+        "expected explicit-header hint in stderr, got: {}",
+        stderr
+    );
+}
