@@ -136,3 +136,22 @@ fn test_scan_dynamic_missing_range() {
         stderr
     );
 }
+
+#[test]
+fn test_scan_dynamic_start_greater_than_end_rejected() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "scan-dynamic",
+            "tests/newick/abcde.nwk",
+            "--range",
+            "5,2,1",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("start must not exceed end"),
+        "Expected start<=end error, got: {}",
+        stderr
+    );
+}

@@ -200,3 +200,43 @@ fn test_scan_simple_missing_range() {
         stderr
     );
 }
+
+#[test]
+fn test_scan_simple_start_greater_than_end_rejected() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "scan-simple",
+            "tests/newick/abcde.nwk",
+            "--height",
+            "--range",
+            "0.5,0.2,0.1",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("start must not exceed end"),
+        "Expected start<=end error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_scan_simple_non_finite_range_rejected() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "scan-simple",
+            "tests/newick/abcde.nwk",
+            "--height",
+            "--range",
+            "inf,1,0.1",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("finite"),
+        "Expected finite range error, got: {}",
+        stderr
+    );
+}

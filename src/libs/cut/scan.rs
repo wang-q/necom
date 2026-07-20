@@ -28,6 +28,12 @@ pub fn parse_scan_range(scan_str: &str) -> anyhow::Result<(f64, f64, f64)> {
     let end: f64 = parts[1].parse()?;
     let step: f64 = parts[2].parse()?;
 
+    if !start.is_finite() || !end.is_finite() || !step.is_finite() {
+        anyhow::bail!("--range values must be finite numbers");
+    }
+    if start > end {
+        anyhow::bail!("--range start must not exceed end");
+    }
     if step <= 0.0 {
         anyhow::bail!("--range step must be positive");
     }
@@ -56,6 +62,9 @@ pub fn parse_scan_range_usize(scan_str: &str) -> anyhow::Result<(usize, usize, u
         }
     }
 
+    if values[0] > values[1] {
+        anyhow::bail!("--range start must not exceed end");
+    }
     if values[2] == 0 {
         anyhow::bail!("--range step must be positive");
     }
@@ -217,6 +226,26 @@ mod tests {
     fn test_parse_scan_range_rejects_bad_format() {
         assert!(parse_scan_range("0,1").is_err());
         assert!(parse_scan_range("0,1,2,3").is_err());
+    }
+
+    #[test]
+    fn test_parse_scan_range_rejects_start_greater_than_end() {
+        let err = parse_scan_range("0.5,0.2,0.1").unwrap_err().to_string();
+        assert!(err.contains("start must not exceed end"), "got: {}", err);
+    }
+
+    #[test]
+    fn test_parse_scan_range_rejects_non_finite_values() {
+        assert!(parse_scan_range("inf,1,0.1").is_err());
+        assert!(parse_scan_range("0,inf,0.1").is_err());
+        assert!(parse_scan_range("0,1,inf").is_err());
+        assert!(parse_scan_range("nan,1,0.1").is_err());
+    }
+
+    #[test]
+    fn test_parse_scan_range_usize_rejects_start_greater_than_end() {
+        let err = parse_scan_range_usize("5,2,1").unwrap_err().to_string();
+        assert!(err.contains("start must not exceed end"), "got: {}", err);
     }
 
     #[test]
