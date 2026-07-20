@@ -32,6 +32,10 @@ pub struct Metrics {
 
 /// Evaluates two partitions and returns pairwise metrics.
 ///
+/// `p1` is treated as the candidate/predicted clustering and `p2` as the
+/// reference/true clustering. This matters for asymmetric metrics such as
+/// homogeneity and completeness.
+///
 /// Only samples present in both partitions are considered; callers that need
 /// strict sample-set matching should validate the inputs before calling this
 /// function (e.g., `necom eval partition` bails on mismatched sample sets).
@@ -255,11 +259,13 @@ fn calculate_v_measure_and_mi(
         mi / (h_a * h_b).sqrt()
     };
 
-    // Homogeneity = 1 - H(U|V) / H(U) = MI(U,V) / H(U)
-    // Completeness = 1 - H(V|U) / H(V) = MI(U,V) / H(V)
+    // With p1 as the candidate clustering (K) and p2 as the reference classes
+    // (C):
+    //   Homogeneity   = 1 - H(C|K) / H(C) = MI(K,C) / H(C)
+    //   Completeness  = 1 - H(K|C) / H(K) = MI(K,C) / H(K)
 
-    let homogeneity = if h_a == 0.0 { 1.0 } else { mi / h_a };
-    let completeness = if h_b == 0.0 { 1.0 } else { mi / h_b };
+    let homogeneity = if h_b == 0.0 { 1.0 } else { mi / h_b };
+    let completeness = if h_a == 0.0 { 1.0 } else { mi / h_a };
 
     let v_measure = if homogeneity + completeness == 0.0 {
         0.0

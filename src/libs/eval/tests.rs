@@ -521,3 +521,167 @@ fn test_coordinates_from_path_empty_file() {
     assert!(result.is_err());
     let _ = std::fs::remove_file(&path);
 }
+
+#[test]
+fn test_evaluate_homogeneity_completeness_asymmetry() {
+    // p1 (candidate): cluster 0 = {A, B, C}, cluster 1 = {D}
+    // p2 (reference): class 0 = {A, B}, class 1 = {C, D}
+    //
+    // Homogeneity (clusters pure w.r.t. classes): cluster 0 is mixed (A,B in
+    // class 0 and C in class 1), so homogeneity < 1.
+    // Completeness (classes contained in single clusters): class 1 {C,D} is
+    // split across clusters 0 and 1, so completeness < 1.
+    //
+    // Hand-computed with sklearn conventions:
+    //   H(K) = -(3/4 ln(3/4) + 1/4 ln(1/4)) = 0.562335
+    //   H(C) = -(1/2 ln(1/2) + 1/2 ln(1/2)) = 0.693147
+    //   MI   = 0.215762
+    //   homogeneity = MI / H(C) = 0.311278
+    //   completeness = MI / H(K) = 0.383670
+    let mut p1 = LabelMap::new();
+    p1.insert("A".to_string(), 0);
+    p1.insert("B".to_string(), 0);
+    p1.insert("C".to_string(), 0);
+    p1.insert("D".to_string(), 1);
+
+    let mut p2 = LabelMap::new();
+    p2.insert("A".to_string(), 0);
+    p2.insert("B".to_string(), 0);
+    p2.insert("C".to_string(), 1);
+    p2.insert("D".to_string(), 1);
+
+    let m = evaluate(&p1, &p2);
+    assert!(
+        (m.homogeneity - 0.311_278_124_5).abs() < 1e-6,
+        "homogeneity was {}",
+        m.homogeneity
+    );
+    assert!(
+        (m.completeness - 0.383_688_546_6).abs() < 1e-6,
+        "completeness was {}",
+        m.completeness
+    );
+}
+
+#[test]
+fn test_evaluate_perfect_homogeneity_incomplete() {
+    // p1 (candidate): each reference class is split into its own cluster,
+    // so homogeneity = 1 but completeness < 1.
+    // p2 (reference): class 0 = {A, B}, class 1 = {C, D}
+    // p1: cluster 0 = {A}, cluster 1 = {B}, cluster 2 = {C}, cluster 3 = {D}
+    let mut p1 = LabelMap::new();
+    p1.insert("A".to_string(), 0);
+    p1.insert("B".to_string(), 1);
+    p1.insert("C".to_string(), 2);
+    p1.insert("D".to_string(), 3);
+
+    let mut p2 = LabelMap::new();
+    p2.insert("A".to_string(), 0);
+    p2.insert("B".to_string(), 0);
+    p2.insert("C".to_string(), 1);
+    p2.insert("D".to_string(), 1);
+
+    let m = evaluate(&p1, &p2);
+    assert!(
+        (m.homogeneity - 1.0).abs() < 1e-9,
+        "homogeneity was {}",
+        m.homogeneity
+    );
+    assert!(
+        m.completeness < 1.0,
+        "completeness should be < 1, got {}",
+        m.completeness
+    );
+}
+
+#[test]
+fn test_evaluate_complete_but_impure() {
+    // p1 (candidate): one cluster contains both reference classes, so
+    // completeness = 1 but homogeneity < 1.
+    // p2 (reference): class 0 = {A, B}, class 1 = {C, D}
+    // p1: cluster 0 = {A, B, C, D}
+    let mut p1 = LabelMap::new();
+    p1.insert("A".to_string(), 0);
+    p1.insert("B".to_string(), 0);
+    p1.insert("C".to_string(), 0);
+    p1.insert("D".to_string(), 0);
+
+    let mut p2 = LabelMap::new();
+    p2.insert("A".to_string(), 0);
+    p2.insert("B".to_string(), 0);
+    p2.insert("C".to_string(), 1);
+    p2.insert("D".to_string(), 1);
+
+    let m = evaluate(&p1, &p2);
+    assert!(
+        (m.completeness - 1.0).abs() < 1e-9,
+        "completeness was {}",
+        m.completeness
+    );
+    assert!(
+        m.homogeneity < 1.0,
+        "homogeneity should be < 1, got {}",
+        m.homogeneity
+    );
+}
+
+#[test]
+fn test_coord_metrics_missing_sample_return_nan() {
+    // Partition references sample E, but coordinates omit it. Coordinate-based
+    // metrics should return NaN instead of silently dropping the sample.
+    let mut p = LabelMap::new();
+    p.insert("A".to_string(), 1);
+    p.insert("B".to_string(), 1);
+    p.insert("C".to_string(), 2);
+    p.insert("E".to_string(), 2);
+
+    let mut data = HashMap::new();
+    data.insert("A".to_string(), vec![0.0, 0.0]);
+    data.insert("B".to_string(), vec![1.0, 0.0]);
+    data.insert("C".to_string(), vec![5.0, 0.0]);
+    // E is intentionally missing.
+
+    let coords = Coordinates { data, dim: 2 };
+
+    assert!(davies_bouldin_score(&p, &coords).is_nan());
+    assert!(calinski_harabasz_score(&p, &coords).is_nan());
+    assert!(pbm_score(&p, &coords).is_nan());
+    assert!(ball_hall_score(&p, &coords).is_nan());
+    assert!(xie_beni_score(&p, &coords).is_nan());
+    assert!(wemmert_gancarski_score(&p, &coords).is_nan());
+}
+
+#[test]
+fn test_silhouette_score_with_singleton_cluster() {
+    // Cluster 0 has one member, cluster 1 has three members. The singleton
+    // contributes 0 to the average, per scikit-learn convention.
+    let mut p = LabelMap::new();
+    p.insert("A".to_string(), 0);
+    p.insert("B".to_string(), 1);
+    p.insert("C".to_string(), 1);
+    p.insert("D".to_string(), 1);
+
+    let names = vec![
+        "A".to_string(),
+        "B".to_string(),
+        "C".to_string(),
+        "D".to_string(),
+    ];
+    let mut dist_mat = NamedMatrix::new(names).unwrap();
+    // Distances on a line: A=0, B=1, C=2, D=3
+    dist_mat.set_by_name("A", "B", 1.0).unwrap();
+    dist_mat.set_by_name("A", "C", 2.0).unwrap();
+    dist_mat.set_by_name("A", "D", 3.0).unwrap();
+    dist_mat.set_by_name("B", "C", 1.0).unwrap();
+    dist_mat.set_by_name("B", "D", 2.0).unwrap();
+    dist_mat.set_by_name("C", "D", 1.0).unwrap();
+
+    let score = silhouette_score(&p, &dist_mat);
+    // A (singleton) contributes 0. B: (1 - 1.5) / 1.5 = -1/3. C and D: 0.5.
+    // Average = (0 - 1/3 + 0.5 + 0.5) / 4 = 1/6.
+    assert!(
+        (score - 0.166_666_666_7).abs() < 1e-6,
+        "Score was {}",
+        score
+    );
+}

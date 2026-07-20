@@ -94,9 +94,10 @@ pub fn davies_bouldin_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
     // 1. Group items by cluster
     let mut clusters: HashMap<u32, Vec<&String>> = HashMap::new();
     for (item, &cluster_id) in partition {
-        if coords.data.contains_key(item) {
-            clusters.entry(cluster_id).or_default().push(item);
+        if !coords.data.contains_key(item) {
+            return f64::NAN;
         }
+        clusters.entry(cluster_id).or_default().push(item);
     }
 
     let n_clusters = clusters.len();
@@ -122,7 +123,10 @@ pub fn davies_bouldin_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
         // Calculate Centroid
         let mut centroid = vec![0.0; coords.dim];
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             for (d, val) in vec.iter().enumerate() {
                 centroid[d] += val;
             }
@@ -134,7 +138,10 @@ pub fn davies_bouldin_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
         // Calculate Scatter (Average distance to centroid)
         let mut sum_dist = 0.0;
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             sum_dist += euclidean_dist(vec, &centroid);
         }
         let scatter = sum_dist / n_members as f64;
@@ -203,10 +210,11 @@ pub fn calinski_harabasz_score(partition: &LabelMap, coords: &Coordinates) -> f6
     let mut clusters: HashMap<u32, Vec<&String>> = HashMap::new();
     let mut all_items = Vec::new();
     for (item, &cluster_id) in partition {
-        if coords.data.contains_key(item) {
-            clusters.entry(cluster_id).or_default().push(item);
-            all_items.push(item);
+        if !coords.data.contains_key(item) {
+            return f64::NAN;
         }
+        clusters.entry(cluster_id).or_default().push(item);
+        all_items.push(item);
     }
 
     let n_clusters = clusters.len();
@@ -219,7 +227,10 @@ pub fn calinski_harabasz_score(partition: &LabelMap, coords: &Coordinates) -> f6
     // 2. Calculate Global Centroid
     let mut global_centroid = vec![0.0; coords.dim];
     for item in &all_items {
-        let vec = coords.data.get(*item).expect("contains_key filtered");
+        let vec = coords
+            .data
+            .get(*item)
+            .expect("partition samples verified above");
         for (d, val) in vec.iter().enumerate() {
             global_centroid[d] += val;
         }
@@ -241,7 +252,10 @@ pub fn calinski_harabasz_score(partition: &LabelMap, coords: &Coordinates) -> f6
         // Cluster Centroid
         let mut cluster_centroid = vec![0.0; coords.dim];
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             for (d, val) in vec.iter().enumerate() {
                 cluster_centroid[d] += val;
             }
@@ -256,7 +270,10 @@ pub fn calinski_harabasz_score(partition: &LabelMap, coords: &Coordinates) -> f6
 
         // WGSS contribution: sum ||x - C_k||^2
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             wgss += euclidean_dist(vec, &cluster_centroid).powi(2);
         }
     }
@@ -295,10 +312,11 @@ pub fn pbm_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
     let mut clusters: HashMap<u32, Vec<&String>> = HashMap::new();
     let mut all_items = Vec::new();
     for (item, &cluster_id) in partition {
-        if coords.data.contains_key(item) {
-            clusters.entry(cluster_id).or_default().push(item);
-            all_items.push(item);
+        if !coords.data.contains_key(item) {
+            return f64::NAN;
         }
+        clusters.entry(cluster_id).or_default().push(item);
+        all_items.push(item);
     }
 
     let k = clusters.len();
@@ -311,7 +329,10 @@ pub fn pbm_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
     // 2. Calculate Global Centroid
     let mut global_centroid = vec![0.0; coords.dim];
     for item in &all_items {
-        let vec = coords.data.get(*item).expect("contains_key filtered");
+        let vec = coords
+            .data
+            .get(*item)
+            .expect("partition samples verified above");
         for (d, val) in vec.iter().enumerate() {
             global_centroid[d] += val;
         }
@@ -323,7 +344,10 @@ pub fn pbm_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
     // 3. Calculate E_T (Total Scatter)
     let mut e_t = 0.0;
     for item in &all_items {
-        let vec = coords.data.get(*item).expect("contains_key filtered");
+        let vec = coords
+            .data
+            .get(*item)
+            .expect("partition samples verified above");
         e_t += euclidean_dist(vec, &global_centroid);
     }
 
@@ -340,7 +364,10 @@ pub fn pbm_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
         // Cluster Centroid
         let mut cluster_centroid = vec![0.0; coords.dim];
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             for (d, val) in vec.iter().enumerate() {
                 cluster_centroid[d] += val;
             }
@@ -351,7 +378,10 @@ pub fn pbm_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
 
         // E_W contribution
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             e_w += euclidean_dist(vec, &cluster_centroid);
         }
 
@@ -389,9 +419,10 @@ pub fn ball_hall_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
     // 1. Group items by cluster
     let mut clusters: HashMap<u32, Vec<&String>> = HashMap::new();
     for (item, &cluster_id) in partition {
-        if coords.data.contains_key(item) {
-            clusters.entry(cluster_id).or_default().push(item);
+        if !coords.data.contains_key(item) {
+            return f64::NAN;
         }
+        clusters.entry(cluster_id).or_default().push(item);
     }
 
     let k = clusters.len();
@@ -410,7 +441,10 @@ pub fn ball_hall_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
         // Cluster Centroid
         let mut cluster_centroid = vec![0.0; coords.dim];
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             for (d, val) in vec.iter().enumerate() {
                 cluster_centroid[d] += val;
             }
@@ -422,7 +456,10 @@ pub fn ball_hall_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
         // Sum of squared distances
         let mut sum_sq_dist = 0.0;
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             sum_sq_dist += euclidean_dist(vec, &cluster_centroid).powi(2);
         }
 
@@ -455,10 +492,11 @@ pub fn xie_beni_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
     let mut clusters: HashMap<u32, Vec<&String>> = HashMap::new();
     let mut all_items = Vec::new();
     for (item, &cluster_id) in partition {
-        if coords.data.contains_key(item) {
-            clusters.entry(cluster_id).or_default().push(item);
-            all_items.push(item);
+        if !coords.data.contains_key(item) {
+            return f64::NAN;
         }
+        clusters.entry(cluster_id).or_default().push(item);
+        all_items.push(item);
     }
 
     let k = clusters.len();
@@ -481,7 +519,10 @@ pub fn xie_beni_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
         // Cluster Centroid
         let mut cluster_centroid = vec![0.0; coords.dim];
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             for (d, val) in vec.iter().enumerate() {
                 cluster_centroid[d] += val;
             }
@@ -492,7 +533,10 @@ pub fn xie_beni_score(partition: &LabelMap, coords: &Coordinates) -> f64 {
 
         // WGSS contribution
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             wgss += euclidean_dist(vec, &cluster_centroid).powi(2);
         }
 
@@ -531,10 +575,11 @@ pub fn wemmert_gancarski_score(partition: &LabelMap, coords: &Coordinates) -> f6
     let mut clusters: HashMap<u32, Vec<&String>> = HashMap::new();
     let mut all_items = Vec::new();
     for (item, &cluster_id) in partition {
-        if coords.data.contains_key(item) {
-            clusters.entry(cluster_id).or_default().push(item);
-            all_items.push(item);
+        if !coords.data.contains_key(item) {
+            return f64::NAN;
         }
+        clusters.entry(cluster_id).or_default().push(item);
+        all_items.push(item);
     }
 
     let k = clusters.len();
@@ -555,7 +600,10 @@ pub fn wemmert_gancarski_score(partition: &LabelMap, coords: &Coordinates) -> f6
         }
         let mut cluster_centroid = vec![0.0; coords.dim];
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             for (d, val) in vec.iter().enumerate() {
                 cluster_centroid[d] += val;
             }
@@ -579,7 +627,10 @@ pub fn wemmert_gancarski_score(partition: &LabelMap, coords: &Coordinates) -> f6
         let mut sum_r = 0.0;
 
         for item in members {
-            let vec = coords.data.get(*item).expect("contains_key filtered");
+            let vec = coords
+                .data
+                .get(*item)
+                .expect("partition samples verified above");
             let dist_intra = euclidean_dist(vec, current_centroid);
 
             // Find min dist to other centroids
