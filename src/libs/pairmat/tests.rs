@@ -482,6 +482,33 @@ fn test_transform_normalize_with_linear() {
 }
 
 #[test]
+fn test_transform_normalize_negative_diags() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full 2x2 with all-negative diagonals. Prior to the fix, `max_diag` was
+    // computed with `fold(0.0f32, ...)` which masked negative values and
+    // reported `max_diag == 0.0`. The fix uses `NEG_INFINITY` so the true max
+    // is reported in the warning. Behaviorally, negative diagonals must be
+    // treated like zero diagonals (the `<= 1e-9` branch zeros off-diagonals).
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A -4.0 6.0").unwrap();
+    writeln!(tmp, "B 6.0 -9.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    // normalize then linear with scale=2.0, offset=1.0
+    let transformed =
+        super::transform_matrix(&matrix, "linear", 1.0, 2.0, 1.0, true).unwrap();
+
+    // Both diagonals are negative, so d_i <= 1e-9 triggers the zero branch:
+    // off-diag val = 0.0 -> 0.0*2.0+1.0 = 1.0
+    assert_eq!(transformed.get(0, 1), 1.0);
+    // Diagonals: d <= 1e-9 -> 0.0 -> 0.0*2.0+1.0 = 1.0
+    assert_eq!(transformed.get(0, 0), 1.0);
+    assert_eq!(transformed.get(1, 1), 1.0);
+}
+
+#[test]
 fn test_empty_matrix_boundary() {
     use std::io::Write;
 

@@ -56,14 +56,22 @@ pub fn transform_matrix(
         .unwrap_or_else(|| vec![0.0; size]);
     let has_diags = result.get_diags().is_some();
 
-    // Warn if normalize is requested but diagonals are missing or all zero
+    // Warn if normalize is requested but diagonals are missing or non-positive.
+    // Non-positive diagonals trigger the `d_i <= 1e-9` branch in the normalize
+    // step, which zeros out the corresponding off-diagonal values, making the
+    // transformation a no-op for those rows/columns.
     if normalize {
         if !has_diags {
             log::warn!("--normalize requested but no diagonal values found; treating them as 0.0.");
         }
-        let max_diag = diags.iter().fold(0.0f32, |a, &b| a.max(b));
-        if max_diag == 0.0 {
-            log::warn!("--normalize requested but all diagonal values are 0.0.");
+        // Start from NEG_INFINITY so all-negative diagonals report their true
+        // max instead of being masked by a 0.0 initial value.
+        let max_diag = diags.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+        if max_diag <= 0.0 {
+            log::warn!(
+                "--normalize requested but all diagonal values are non-positive (max = {}).",
+                max_diag
+            );
         }
     }
 
