@@ -20,6 +20,25 @@ fn load_trees(infile: &str) -> anyhow::Result<Vec<Tree>> {
         .with_context(|| format!("failed to parse '{}'", infile))
 }
 
+/// Verify that every leaf in `tree` carries a name.
+///
+/// `support::build_leaf_map` silently skips unnamed leaves, which would make
+/// clade bitsets ignore their positions and produce incorrect support values
+/// (clades containing unnamed leaves would be matched as if the unnamed leaves
+/// did not exist). Reject such trees upfront so the user gets a clear error
+/// instead of misleading output.
+fn ensure_all_leaves_named(tree: &Tree, label: &str) -> anyhow::Result<()> {
+    for name in tree.get_leaf_names() {
+        if name.is_none() {
+            anyhow::bail!(
+                "{} contains an unnamed leaf; all leaves must be named for support value calculation",
+                label
+            );
+        }
+    }
+    Ok(())
+}
+
 /// Build the clap subcommand for replicate.
 pub fn make_subcommand() -> Command {
     Command::new("replicate")
@@ -76,16 +95,20 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         anyhow::bail!("No target trees found");
     }
 
-    // 3. Build Leaf Map (from first replicate)
+    // 3. Build Leaf Map (from first replicate).
+    // `build_leaf_map` silently skips unnamed leaves, which would corrupt
+    // clade bitsets; reject such trees first so the error is precise.
+    ensure_all_leaves_named(&replicates[0], "replicate tree 1")?;
     let leaf_map = support::build_leaf_map(&replicates[0])
         .with_context(|| "build_leaf_map failed")?;
 
     // 3.5 Validate that all replicate trees share the same leaf set.
     let first_replicate_leaves: BTreeSet<String> = leaf_map.keys().cloned().collect();
     for (i, rep) in replicates.iter().enumerate().skip(1) {
-        let rep_leaf_map = support::build_leaf_map(rep).with_context(|| {
-            format!("replicate tree {} has invalid leaf names", i + 1)
-        })?;
+        let label = format!("replicate tree {}", i + 1);
+        ensure_all_leaves_named(rep, &label)?;
+        let rep_leaf_map = support::build_leaf_map(rep)
+            .with_context(|| format!("{} has invalid leaf names", label))?;
         let rep_leaves: BTreeSet<String> = rep_leaf_map.keys().cloned().collect();
         if rep_leaves != first_replicate_leaves {
             let only_rep: Vec<_> =
@@ -104,8 +127,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // 3.6 Validate that every target tree shares the same leaf set as the replicates.
     let replicate_leaves = first_replicate_leaves;
     for (i, target) in targets.iter().enumerate() {
+        let label = format!("target tree {}", i + 1);
+        ensure_all_leaves_named(target, &label)?;
         let target_leaf_map = support::build_leaf_map(target)
-            .with_context(|| format!("target tree {} has invalid leaf names", i + 1))?;
+            .with_context(|| format!("{} has invalid leaf names", label))?;
         let target_leaves: BTreeSet<String> = target_leaf_map.keys().cloned().collect();
         if target_leaves != replicate_leaves {
             let only_target: Vec<_> =

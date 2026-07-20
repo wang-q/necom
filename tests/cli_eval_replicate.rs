@@ -220,3 +220,56 @@ fn test_eval_replicate_rejects_mismatched_replicate_leaf_sets() {
         stderr
     );
 }
+
+#[test]
+fn test_eval_replicate_rejects_unnamed_leaf_in_replicate() {
+    // Regression: `build_leaf_map` silently skips unnamed leaves, which would
+    // make clade bitsets ignore their positions and produce incorrect support
+    // values. The command must reject such trees upfront.
+    let mut target_file = NamedTempFile::new().unwrap();
+    writeln!(target_file, "((A,B),(C,D));").unwrap();
+
+    // First replicate is fine; second has an unnamed leaf (empty name).
+    let mut replicates_file = NamedTempFile::new().unwrap();
+    writeln!(replicates_file, "((A,B),(C,D));").unwrap();
+    writeln!(replicates_file, "((A,B),(C,D),);").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "eval",
+            "replicate",
+            target_file.path().to_str().unwrap(),
+            replicates_file.path().to_str().unwrap(),
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("replicate tree 2 contains an unnamed leaf"),
+        "expected unnamed-leaf error for replicate, got stderr: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_eval_replicate_rejects_unnamed_leaf_in_target() {
+    let mut target_file = NamedTempFile::new().unwrap();
+    writeln!(target_file, "((A,B),(C,D),);").unwrap();
+
+    let mut replicates_file = NamedTempFile::new().unwrap();
+    writeln!(replicates_file, "((A,B),(C,D));").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "eval",
+            "replicate",
+            target_file.path().to_str().unwrap(),
+            replicates_file.path().to_str().unwrap(),
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("target tree 1 contains an unnamed leaf"),
+        "expected unnamed-leaf error for target, got stderr: {}",
+        stderr
+    );
+}

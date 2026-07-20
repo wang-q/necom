@@ -8,6 +8,7 @@ Input:
 Notes:
 
 * Support values are written as internal node labels.
+* All leaves must be named; trees with unnamed leaves are rejected (unnamed leaves would corrupt clade bitsets and produce misleading support values).
 * All trees must share the same set of leaves; replicate trees are checked against the first replicate and target trees are checked against the replicate set.
 * The root node is not annotated; any existing root label is preserved.
 * `--percent` / `-p`: output support values as integer percentages (0–100), truncated toward zero.
