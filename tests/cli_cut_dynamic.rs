@@ -242,8 +242,8 @@ fn test_dynamic_tree_cut_asymmetric_heights() {
     // Left clade (A,B) has height 10; right clade (C,D) has height 0.1.
     // cut_height = 0.99 * 10.1 ≈ 9.999.
     // Root and (A,B) exceed cut_height, so they are split; A and B fall
-    // below min_module_size 2 and become unassigned. They are emitted as
-    // a single cluster 0 line in the default output. (C,D) stays a cluster.
+    // below min_module_size 2 and become unassigned. Each unassigned leaf is
+    // emitted as its own singleton cluster. (C,D) stays a cluster.
     let tree_content = "((A:10,B:0.1):0.1,(C:0.1,D:0.1):0.1);";
     fs::write(&tree_file, tree_content).unwrap();
 
@@ -259,8 +259,7 @@ fn test_dynamic_tree_cut_asymmetric_heights() {
         ])
         .run();
 
-    // Group members by their cluster representative so unassigned leaves
-    // are captured as a single group rather than one line per leaf.
+    // Group members by their cluster representative.
     let mut rep_to_members: HashMap<String, HashSet<String>> = HashMap::new();
     for line in stdout.lines() {
         let mut parts = line.split_whitespace();
@@ -277,7 +276,8 @@ fn test_dynamic_tree_cut_asymmetric_heights() {
     });
 
     let expected: Vec<HashSet<String>> = vec![
-        ["A", "B"].iter().map(|s| s.to_string()).collect(),
+        ["A"].iter().map(|s| s.to_string()).collect(),
+        ["B"].iter().map(|s| s.to_string()).collect(),
         ["C", "D"].iter().map(|s| s.to_string()).collect(),
     ];
     assert_eq!(clusters, expected);

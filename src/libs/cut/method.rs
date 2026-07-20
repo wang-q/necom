@@ -117,21 +117,51 @@ pub fn build_method(
         }
         "leaf_dist_max" => {
             require_non_negative(val, "leaf-dist-max")?;
-            leaf_depths
-                .map(|(_, max, _)| Method::RootDist(max - val))
-                .ok_or_else(|| anyhow::anyhow!("leaf depths required for leaf-dist-max"))
+            match leaf_depths {
+                Some((_, max, _)) => {
+                    if val > max {
+                        anyhow::bail!(
+                            "--leaf-dist-max threshold {} exceeds maximum leaf depth {}",
+                            val,
+                            max
+                        );
+                    }
+                    Ok(Method::RootDist(max - val))
+                }
+                None => Err(anyhow::anyhow!("leaf depths required for leaf-dist-max")),
+            }
         }
         "leaf_dist_min" => {
             require_non_negative(val, "leaf-dist-min")?;
-            leaf_depths
-                .map(|(min, _, _)| Method::RootDist(min - val))
-                .ok_or_else(|| anyhow::anyhow!("leaf depths required for leaf-dist-min"))
+            match leaf_depths {
+                Some((min, _, _)) => {
+                    if val > min {
+                        anyhow::bail!(
+                            "--leaf-dist-min threshold {} exceeds minimum leaf depth {}",
+                            val,
+                            min
+                        );
+                    }
+                    Ok(Method::RootDist(min - val))
+                }
+                None => Err(anyhow::anyhow!("leaf depths required for leaf-dist-min")),
+            }
         }
         "leaf_dist_avg" => {
             require_non_negative(val, "leaf-dist-avg")?;
-            leaf_depths
-                .map(|(_, _, avg)| Method::RootDist(avg - val))
-                .ok_or_else(|| anyhow::anyhow!("leaf depths required for leaf-dist-avg"))
+            match leaf_depths {
+                Some((_, _, avg)) => {
+                    if val > avg {
+                        anyhow::bail!(
+                            "--leaf-dist-avg threshold {} exceeds average leaf depth {}",
+                            val,
+                            avg
+                        );
+                    }
+                    Ok(Method::RootDist(avg - val))
+                }
+                None => Err(anyhow::anyhow!("leaf depths required for leaf-dist-avg")),
+            }
         }
         "max_edge" => {
             require_non_negative(val, "max-edge")?;
@@ -212,5 +242,17 @@ mod tests {
         assert!(build_method("k", -1.0, 2, None).is_err());
         assert!(build_method("k", 1.5, 2, None).is_err());
         assert!(build_method("k", 2.0, 2, None).is_ok());
+    }
+
+    #[test]
+    fn test_build_method_leaf_dist_rejects_threshold_exceeding_depth() {
+        // leaf_depths = (min=1.0, max=3.0, avg=2.0).
+        let depths = Some((1.0, 3.0, 2.0));
+        assert!(build_method("leaf_dist_max", 3.0, 2, depths).is_ok());
+        assert!(build_method("leaf_dist_max", 3.1, 2, depths).is_err());
+        assert!(build_method("leaf_dist_min", 1.0, 2, depths).is_ok());
+        assert!(build_method("leaf_dist_min", 1.1, 2, depths).is_err());
+        assert!(build_method("leaf_dist_avg", 2.0, 2, depths).is_ok());
+        assert!(build_method("leaf_dist_avg", 2.1, 2, depths).is_err());
     }
 }

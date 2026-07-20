@@ -56,7 +56,10 @@ pub fn load_tree(args: &ArgMatches) -> Result<Tree> {
         cut::apply_support_filter(&mut trees[0], support_threshold);
     }
 
-    Ok(trees.into_iter().next().expect("single tree"))
+    trees
+        .into_iter()
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("expected single tree"))
 }
 
 /// Common output options for simple/dynamic/hybrid cuts.

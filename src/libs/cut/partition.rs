@@ -148,8 +148,18 @@ pub fn partition_to_clusters(
     let clusters_map = partition.get_clusters();
     let root_dists = crate::libs::phylo::tree::stat::compute_root_distances(tree);
 
-    let mut clusters: Vec<Cluster> = Vec::with_capacity(clusters_map.len());
-    for members in clusters_map.values() {
+    // Cluster ID 0 is reserved for unassigned leaves. To preserve the
+    // "unassigned" semantics in the default output, each unassigned leaf is
+    // emitted as its own singleton cluster rather than aggregated under an
+    // arbitrary representative.
+    let mut unassigned: Vec<NodeId> = clusters_map.get(&0).cloned().unwrap_or_default();
+
+    let mut clusters: Vec<Cluster> =
+        Vec::with_capacity(clusters_map.len() + unassigned.len().saturating_sub(1));
+    for (&cid, members) in &clusters_map {
+        if cid == 0 {
+            continue;
+        }
         let mut member_info: Vec<(NodeId, String)> = Vec::with_capacity(members.len());
         for &mid in members {
             if let Some(node) = tree.get_node(mid) {
@@ -165,6 +175,27 @@ pub fn partition_to_clusters(
         };
         cluster.rep_index = find_representative(&cluster, tree, rep_mode, &root_dists);
         clusters.push(cluster);
+    }
+
+    unassigned.sort_by(|a, b| {
+        let name_a = tree
+            .get_node(*a)
+            .and_then(|n| n.name.clone())
+            .unwrap_or_else(|| format!("Leaf_{}", a));
+        let name_b = tree
+            .get_node(*b)
+            .and_then(|n| n.name.clone())
+            .unwrap_or_else(|| format!("Leaf_{}", b));
+        name_a.cmp(&name_b)
+    });
+    for &mid in &unassigned {
+        if let Some(node) = tree.get_node(mid) {
+            let name = node.name.clone().unwrap_or_else(|| format!("Leaf_{}", mid));
+            clusters.push(Cluster {
+                members: vec![(mid, name.clone())],
+                rep_index: Some(0),
+            });
+        }
     }
 
     // Sort clusters: first by size (descending), then by first member name.
@@ -430,5 +461,32 @@ mod tests {
         assert!(lines.contains(&"test=1\t1\tB"));
         assert!(lines.contains(&"test=1\t0\tC"));
         assert!(lines.contains(&"test=1\t0\tD"));
+    }
+
+    #[test]
+    fn test_partition_to_clusters_splits_unassigned() {
+        let tree = parse_tree("((A:1,B:1):1,(C:1,D:1):1);");
+        let mut part = Partition::new();
+        // Cluster 1: A,B. Cluster 0 (unassigned): C,D.
+        let a = tree.get_node_by_name("A").unwrap();
+        let b = tree.get_node_by_name("B").unwrap();
+        let c = tree.get_node_by_name("C").unwrap();
+        let d = tree.get_node_by_name("D").unwrap();
+        part.assignment.insert(a, 1);
+        part.assignment.insert(b, 1);
+        part.assignment.insert(c, 0);
+        part.assignment.insert(d, 0);
+        part.num_clusters = 1;
+
+        let clusters = partition_to_clusters(&part, &tree, RepMode::Root);
+        assert_eq!(clusters.len(), 3, "expected {{A,B}}, {{C}}, {{D}}");
+
+        let names: Vec<Vec<&str>> = clusters
+            .iter()
+            .map(|c| c.members.iter().map(|(_, n)| n.as_str()).collect())
+            .collect();
+        assert!(names.contains(&vec!["A", "B"]));
+        assert!(names.contains(&vec!["C"]));
+        assert!(names.contains(&vec!["D"]));
     }
 }

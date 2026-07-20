@@ -86,12 +86,19 @@ pub fn run_scan(
     }
 
     let n_steps = compute_n_steps(params.start, params.end, params.step)?;
+    let mut values: Vec<f64> = Vec::with_capacity((n_steps + 2) as usize);
     for i in 0..=n_steps {
-        let val = params.start + (i as f64) * params.step;
-        if val > params.end + 1e-9 {
-            break;
+        values.push(params.start + (i as f64) * params.step);
+    }
+    // Ensure the explicit end value is included even when step does not
+    // evenly divide the interval (e.g. 0,10,3 should emit 10).
+    if let Some(&last) = values.last() {
+        if params.end > last + 1e-9 {
+            values.push(params.end);
         }
+    }
 
+    for val in values {
         let dispatch = if params.dynamic_tree {
             build_dynamic_tree_dispatch(tree, val, max_tree_height, deep_split)?
         } else {
@@ -138,7 +145,7 @@ pub fn run_scan(
 /// Compute the number of scan steps using integer arithmetic to avoid
 /// floating-point drift.
 fn compute_n_steps(start: f64, end: f64, step: f64) -> anyhow::Result<i64> {
-    let n_steps_f = ((end - start) / step).round();
+    let n_steps_f = ((end - start) / step).floor();
     if !n_steps_f.is_finite() || n_steps_f < 0.0 || n_steps_f > i64::MAX as f64 {
         anyhow::bail!(
             "scan range too large: start={}, end={}, step={}",
@@ -227,5 +234,87 @@ mod tests {
         assert_eq!(format_scan_value(3.0), "3");
         assert_eq!(format_scan_value(0.1), "0.1");
         assert_eq!(format_scan_value(0.25), "0.25");
+    }
+
+    #[test]
+    fn test_run_scan_includes_end_when_step_not_divisor() {
+        // Tree: ((A:0.1,B:0.1):0.1,C:0.2);
+        let tree =
+            crate::libs::phylo::tree::Tree::from_newick("((A:0.1,B:0.1):0.1,C:0.2);")
+                .expect("valid newick");
+        let mut output = Vec::new();
+        let mut stats: Option<Box<dyn std::io::Write>> = None;
+        let params = ScanParams {
+            start: 0.0,
+            end: 0.2,
+            step: 0.15,
+            method_name: Some("height"),
+            dynamic_tree: false,
+        };
+        run_scan(
+            &tree,
+            &mut output,
+            &mut stats,
+            params,
+            2,
+            None,
+            false,
+            false,
+            None,
+        )
+        .expect("scan should succeed");
+        let out = String::from_utf8(output).expect("valid utf-8");
+        let groups: Vec<&str> = out
+            .lines()
+            .skip(1)
+            .filter_map(|l| l.split('\t').next())
+            .collect();
+        // 0.15 does not divide 0.2; the explicit end 0.2 must still appear.
+        assert!(groups.contains(&"height=0"), "missing height=0");
+        assert!(groups.contains(&"height=0.15"), "missing height=0.15");
+        assert!(groups.contains(&"height=0.2"), "missing height=0.2");
+    }
+
+    #[test]
+    fn test_run_scan_no_duplicate_end_when_step_divides_evenly() {
+        // Tree: ((A:0.1,B:0.1):0.1,C:0.2);
+        let tree =
+            crate::libs::phylo::tree::Tree::from_newick("((A:0.1,B:0.1):0.1,C:0.2);")
+                .expect("valid newick");
+        let mut output = Vec::new();
+        let mut stats: Option<Box<dyn std::io::Write>> = None;
+        let params = ScanParams {
+            start: 0.0,
+            end: 0.2,
+            step: 0.1,
+            method_name: Some("height"),
+            dynamic_tree: false,
+        };
+        run_scan(
+            &tree,
+            &mut output,
+            &mut stats,
+            params,
+            2,
+            None,
+            false,
+            false,
+            None,
+        )
+        .expect("scan should succeed");
+        let out = String::from_utf8(output).expect("valid utf-8");
+        let groups: std::collections::HashSet<&str> = out
+            .lines()
+            .skip(1)
+            .filter_map(|l| l.split('\t').next())
+            .collect();
+        assert_eq!(
+            groups.iter().filter(|&&g| g == "height=0.2").count(),
+            1,
+            "end value must appear exactly once"
+        );
+        assert!(groups.contains("height=0"));
+        assert!(groups.contains("height=0.1"));
+        assert!(groups.contains("height=0.2"));
     }
 }
