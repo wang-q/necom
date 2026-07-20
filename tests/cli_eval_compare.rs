@@ -213,3 +213,134 @@ fn command_eval_compare_two_files_second_empty() {
         stderr
     );
 }
+
+// ============================================================================
+// Leaf-set mismatch regression tests
+// ============================================================================
+//
+// `compute_tree_metrics` requires exact leaf-set equality between the two
+// trees being compared. Previously, the writer was opened before any leaf-set
+// validation, so a mismatch discovered mid-loop would leave a partial output
+// file (header + some rows) on disk. The following tests verify that:
+//
+// 1. A leaf-set mismatch is detected and reported with a clear message.
+// 2. The writer is NOT opened before validation, so an existing outfile is
+//    not truncated when a mismatch is found.
+
+#[test]
+fn command_eval_compare_single_file_leaf_mismatch_bails() {
+    // Tree 1 has leaves {A,B,C,D}; tree 2 has leaves {A,B,C,E}.
+    let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file, "((A,B),(C,D));").unwrap();
+    writeln!(file, "((A,B),(C,E));").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["eval", "compare", file.path().to_str().unwrap()])
+        .run_fail();
+
+    assert!(
+        stderr.contains("different leaf set from tree 1"),
+        "expected leaf-set mismatch error, got stderr: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("only here") && stderr.contains("only in first"),
+        "expected diff details in error, got stderr: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_eval_compare_two_files_cross_leaf_mismatch_bails() {
+    // File 1 has {A,B,C,D}; file 2 has {A,B,C,E}.
+    let mut file1 = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file1, "((A,B),(C,D));").unwrap();
+
+    let mut file2 = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file2, "((A,B),(C,E));").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "eval",
+            "compare",
+            file1.path().to_str().unwrap(),
+            file2.path().to_str().unwrap(),
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("leaf sets differ between input files"),
+        "expected cross-file leaf-set mismatch error, got stderr: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_eval_compare_leaf_mismatch_does_not_truncate_outfile() {
+    // Pre-populate an outfile with sentinel content. Run compare with inputs
+    // that will fail leaf-set validation. The outfile must still contain the
+    // sentinel content (i.e., the writer was never opened).
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+
+    let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file, "((A,B),(C,D));").unwrap();
+    writeln!(file, "((A,B),(C,E));").unwrap();
+
+    let (success, _, _) = run_with_outfile(
+        &["eval", "compare", file.path().to_str().unwrap()],
+        out_path,
+    );
+    assert!(!success, "expected failure for leaf-set mismatch");
+
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_eval_compare_two_files_cross_mismatch_does_not_truncate_outfile() {
+    // Same as above but for the two-file cross-file leaf-set mismatch path.
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+
+    let mut file1 = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file1, "((A,B),(C,D));").unwrap();
+
+    let mut file2 = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file2, "((A,B),(C,E));").unwrap();
+
+    let (success, _, _) = run_with_outfile(
+        &[
+            "eval",
+            "compare",
+            file1.path().to_str().unwrap(),
+            file2.path().to_str().unwrap(),
+        ],
+        out_path,
+    );
+    assert!(
+        !success,
+        "expected failure for cross-file leaf-set mismatch"
+    );
+
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+// Helpers for writer non-truncation regression tests.
+fn run_with_outfile(args: &[&str], out_path: &str) -> (bool, String, String) {
+    let mut cmd = assert_cmd::Command::cargo_bin("necom").unwrap();
+    cmd.args(args);
+    cmd.arg("--outfile").arg(out_path);
+    let output = cmd.output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    (output.status.success(), stdout, stderr)
+}
+
+fn sentinel_outfile(content: &str) -> tempfile::NamedTempFile {
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    tmp.write_all(content.as_bytes()).unwrap();
+    tmp
+}

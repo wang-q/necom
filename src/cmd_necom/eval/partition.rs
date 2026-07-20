@@ -88,12 +88,11 @@ fn ensure_partitions_align(
         .collect();
     if !only_in_p1.is_empty() || !only_in_p2.is_empty() {
         anyhow::bail!(
-            "partition sample sets do not match ({} only in {}, {} only in --other): {} {:?}, --other {:?}",
+            "partition sample sets do not match: {} only in {} {:?}, {} only in the other partition {:?}",
             only_in_p1.len(),
             p1_context,
-            only_in_p2.len(),
-            p1_context,
             only_in_p1.iter().take(5).copied().collect::<Vec<_>>(),
+            only_in_p2.len(),
             only_in_p2.iter().take(5).copied().collect::<Vec<_>>()
         );
     }

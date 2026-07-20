@@ -1,6 +1,7 @@
 use anyhow::Context;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use necom::libs::phylo::tree::Tree;
+use std::collections::BTreeSet;
 use std::io::{Read, Write};
 
 /// Build the clap subcommand for compare.
@@ -39,6 +40,51 @@ fn load_trees(infile: &str) -> anyhow::Result<Vec<Tree>> {
     }
     Tree::from_newick_multi(&content)
         .with_context(|| format!("failed to parse '{}'", infile))
+}
+
+/// Build a sorted set of leaf names for `tree`, bailing on unnamed or
+/// duplicate leaves. Used by [`validate_leaf_consistency`] to pre-check leaf
+/// sets before the writer is opened, so that mismatches do not leave a
+/// partial output file behind.
+fn canonical_leaf_set(tree: &Tree) -> anyhow::Result<BTreeSet<String>> {
+    let mut names = BTreeSet::new();
+    for name in tree.get_leaf_names() {
+        let name =
+            name.ok_or_else(|| anyhow::anyhow!("tree contains an unnamed leaf"))?;
+        if !names.insert(name.clone()) {
+            anyhow::bail!("duplicate leaf name: {}", name);
+        }
+    }
+    Ok(names)
+}
+
+/// Validate that all trees in `trees` share the same leaf set.
+///
+/// `compute_tree_metrics` requires exact leaf-set equality for every pair.
+/// Running this check upfront (before the writer is opened) avoids writing a
+/// partial output file (header + some rows) when a later pair fails.
+fn validate_leaf_consistency(trees: &[Tree], label: &str) -> anyhow::Result<()> {
+    if trees.len() < 2 {
+        return Ok(());
+    }
+    let first = canonical_leaf_set(&trees[0])
+        .with_context(|| format!("invalid leaves in tree 1 of {}", label))?;
+    for (i, t) in trees.iter().enumerate().skip(1) {
+        let here = canonical_leaf_set(t)
+            .with_context(|| format!("invalid leaves in tree {} of {}", i + 1, label))?;
+        if here != first {
+            let only_here: Vec<_> = here.difference(&first).collect();
+            let only_first: Vec<_> = first.difference(&here).collect();
+            anyhow::bail!(
+                "tree {} in {} has a different leaf set from tree 1: only here {:?}, only in first {:?}",
+                i + 1,
+                label,
+                only_here,
+                only_first
+            );
+        }
+    }
+    Ok(())
 }
 
 /// Execute the compare command.
@@ -82,6 +128,33 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             "need at least 2 trees for pairwise comparison, got {}",
             trees1.len()
         );
+    }
+
+    // Pre-validate leaf-set consistency across all trees that will be
+    // compared. `compute_tree_metrics` requires exact leaf-set equality; doing
+    // this check before opening the writer avoids leaving a partial output
+    // file (header + some rows) when a later pair mismatches.
+    validate_leaf_consistency(&trees1, "first input file")?;
+    if compare_file.is_some() {
+        validate_leaf_consistency(trees2, "second input file")?;
+        // Cross-file: every tree in file1 must also share the leaf set with
+        // every tree in file2. Since each file is internally consistent
+        // (checked above), comparing the first tree of each file is enough.
+        if !trees1.is_empty() && !trees2.is_empty() {
+            let l1 = canonical_leaf_set(&trees1[0])
+                .with_context(|| "invalid leaves in tree 1 of first input file")?;
+            let l2 = canonical_leaf_set(&trees2[0])
+                .with_context(|| "invalid leaves in tree 1 of second input file")?;
+            if l1 != l2 {
+                let only_l1: Vec<_> = l1.difference(&l2).collect();
+                let only_l2: Vec<_> = l2.difference(&l1).collect();
+                anyhow::bail!(
+                    "leaf sets differ between input files: only in first {:?}, only in second {:?}",
+                    only_l1,
+                    only_l2
+                );
+            }
+        }
     }
 
     // 3. Output writer
