@@ -40,6 +40,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if opt_min_points == 0 {
         anyhow::bail!("--min-points must be at least 1");
     }
+    if !opt_same.is_finite() {
+        anyhow::bail!("--same must be a finite number, got {}", opt_same);
+    }
+    if !opt_missing.is_finite() {
+        anyhow::bail!("--missing must be a finite number, got {}", opt_missing);
+    }
 
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer = necom::writer(outfile)

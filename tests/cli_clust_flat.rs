@@ -710,3 +710,173 @@ fn command_clust_kmedoids_max_iter_zero() {
         stderr
     );
 }
+
+#[test]
+fn command_clust_dbscan_same_nan() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "dbscan", input.to_str().unwrap(), "--same", "nan"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("same"),
+        "expected --same error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_dbscan_missing_nan() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "dbscan",
+            input.to_str().unwrap(),
+            "--missing",
+            "nan",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("missing"),
+        "expected --missing error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_kmedoids_same_nan() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "k-medoids",
+            input.to_str().unwrap(),
+            "-k",
+            "2",
+            "--same",
+            "nan",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("same"),
+        "expected --same error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_kmedoids_missing_nan() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "k-medoids",
+            input.to_str().unwrap(),
+            "-k",
+            "2",
+            "--missing",
+            "nan",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("missing"),
+        "expected --missing error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_mcl_same_nan() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t1.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "mcl", input.to_str().unwrap(), "--same", "nan"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("same"),
+        "expected --same error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_mcl_missing_nan() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t1.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["clust", "mcl", input.to_str().unwrap(), "--missing", "nan"])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("missing"),
+        "expected --missing error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_mcl_inflation_nan() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t1.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "mcl",
+            input.to_str().unwrap(),
+            "--inflation",
+            "nan",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("inflation"),
+        "expected inflation error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_clust_mcl_inflation_inf() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t1.0\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "mcl",
+            input.to_str().unwrap(),
+            "--inflation",
+            "inf",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("inflation"),
+        "expected inflation error, got: {}",
+        stderr
+    );
+}

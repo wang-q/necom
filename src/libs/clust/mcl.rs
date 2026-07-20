@@ -70,8 +70,11 @@ impl Mcl {
     /// Returns an error if `inflation` is not greater than 1.0, since values
     /// <= 1.0 prevent the algorithm from converging to a sparse partition.
     pub fn new(inflation: f64) -> anyhow::Result<Self> {
-        if inflation <= 1.0 {
-            anyhow::bail!("inflation must be greater than 1.0, got {}", inflation);
+        if !inflation.is_finite() || inflation <= 1.0 {
+            anyhow::bail!(
+                "inflation must be a finite number greater than 1.0, got {}",
+                inflation
+            );
         }
         Ok(Self {
             inflation,
@@ -400,6 +403,26 @@ mod tests {
 
         // inflation < 1.0 must fail for the same reason.
         let err = Mcl::new(0.5).unwrap_err();
+        assert!(
+            err.to_string().contains("inflation"),
+            "error message should mention inflation, got: {}",
+            err
+        );
+
+        // Non-finite inflation values must fail to avoid undefined arithmetic.
+        let err = Mcl::new(f64::NAN).unwrap_err();
+        assert!(
+            err.to_string().contains("inflation"),
+            "error message should mention inflation, got: {}",
+            err
+        );
+        let err = Mcl::new(f64::INFINITY).unwrap_err();
+        assert!(
+            err.to_string().contains("inflation"),
+            "error message should mention inflation, got: {}",
+            err
+        );
+        let err = Mcl::new(f64::NEG_INFINITY).unwrap_err();
         assert!(
             err.to_string().contains("inflation"),
             "error message should mention inflation, got: {}",

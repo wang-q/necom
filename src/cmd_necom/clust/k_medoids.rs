@@ -50,6 +50,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if max_iter == 0 {
         anyhow::bail!("--max-iter must be greater than 0");
     }
+    if !opt_same.is_finite() {
+        anyhow::bail!("--same must be a finite number, got {}", opt_same);
+    }
+    if !opt_missing.is_finite() {
+        anyhow::bail!("--missing must be a finite number, got {}", opt_missing);
+    }
     let outfile = crate::cmd_necom::args::get_outfile(args);
 
     let mut writer = necom::writer(outfile)

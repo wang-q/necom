@@ -20,6 +20,7 @@ Notes:
     * `medoid` (default): point with minimum sum of distances to other cluster members.
     * `first`: alphabetically first member.
 * In `cluster` format, the representative is placed first; in `pair` format, it is the first column.
+* Noise points (points not assigned to any density cluster) are emitted as single-member clusters. In `pair` format this appears as `Name <tab> Name`.
 * The neighborhood count used by `--min-points` includes the point itself when `--same` is 0.0 (default), because self-distance is then 0 and is always <= eps. Setting `--same` to a value greater than `eps` excludes the point from its own neighborhood.
 
 Examples:
