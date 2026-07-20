@@ -77,7 +77,8 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
 
     // 2. Calculate Absolute Thresholds
     // deep_split is a boolean flag: false = default thresholds, true = more
-    // aggressive thresholds. Only the first two WGCNA presets are exposed.
+    // aggressive thresholds. Only the first two presets from the original
+    // dynamicTreeCut implementation are exposed.
     let deep_split_idx = if options.deep_split { 1 } else { 0 };
     let def_mcs = [0.64, 0.73];
     let def_mg = [(1.0 - def_mcs[0]) * 0.75, (1.0 - def_mcs[1]) * 0.75];
