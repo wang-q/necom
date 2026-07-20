@@ -286,6 +286,12 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
         let cid = i + 1;
 
         // Find Medoid
+        // Skip clusters with no members defensively (should not happen in
+        // practice — `final_clusters` is populated only with non-empty member
+        // lists, but we guard against a panic on `members[0]`).
+        if members.is_empty() {
+            continue;
+        }
         let mut min_total_dist = f64::MAX;
         let mut best_medoid = members[0];
 
@@ -317,6 +323,15 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
     if options.pam_stage && !medoids.is_empty() {
         let max_pam_dist = options.max_pam_dist.unwrap_or(cut_height);
 
+        // Iterate cluster IDs in sorted order so ties in distance resolve
+        // deterministically to the lowest cluster ID (HashMap iteration is
+        // nondeterministic).
+        let sorted_cids: Vec<usize> = {
+            let mut v: Vec<usize> = medoids.keys().copied().collect();
+            v.sort_unstable();
+            v
+        };
+
         // Identify unassigned nodes (Cluster 0).
         // If respect_small_clusters is true, we first try to assign small clusters as blocks
         // before handling individual objects.
@@ -324,11 +339,18 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
         // If respect_small_clusters is true, we first try to assign small_clusters as blocks
         if options.respect_small_clusters {
             for members in &small_clusters {
+                if members.is_empty() {
+                    continue;
+                }
                 // Find best cluster for this block
                 let mut best_cid = 0;
                 let mut min_avg_dist = f64::MAX;
 
-                for (&cid, &medoid_idx) in &medoids {
+                for &cid in &sorted_cids {
+                    let medoid_idx = match medoids.get(&cid) {
+                        Some(&m) => m,
+                        None => continue,
+                    };
                     let mut total_dist = 0.0;
                     for &m in members {
                         total_dist += matrix.get(m, medoid_idx) as f64;
@@ -394,7 +416,11 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
             let mut best_cid = 0;
             let mut min_dist = f64::MAX;
 
-            for (&cid, &medoid_idx) in &medoids {
+            for &cid in &sorted_cids {
+                let medoid_idx = match medoids.get(&cid) {
+                    Some(&m) => m,
+                    None => continue,
+                };
                 let d = matrix.get(idx, medoid_idx) as f64;
 
                 if d < min_dist {

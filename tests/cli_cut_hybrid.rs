@@ -278,3 +278,133 @@ fn test_hybrid_missing_leaf_name_rejected() {
         stderr
     );
 }
+
+/// Regression test for nondeterministic PAM reassignment.
+///
+/// Symmetric setup: leaf `E` is equidistant (0.5) from both cluster medoids
+/// ({A,B} medoid = A, {C,D} medoid = C). With sorted cluster-ID iteration, E
+/// must always be assigned to the lower cluster ID (1 -> {A,B}). Before the
+/// fix, HashMap iteration order could give {C,D} instead.
+#[test]
+fn test_hybrid_pam_tie_breaking_deterministic() {
+    let temp = Builder::new()
+        .prefix("necom_test_hybrid_pam_tie")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("tie.nwk");
+    let mat_file = temp.path().join("tie.phy");
+
+    let tree_content = "((A:0.1,B:0.1):0.8,(C:0.1,D:0.1):0.8,E:0.5);";
+    fs::write(&tree_file, tree_content).unwrap();
+
+    // E is equidistant (0.5) from A, B, C, D.
+    let mat_content = "5
+A 0.0 0.2 1.0 1.0 0.5
+B 0.2 0.0 1.0 1.0 0.5
+C 1.0 1.0 0.0 0.2 0.5
+D 1.0 1.0 0.2 0.0 0.5
+E 0.5 0.5 0.5 0.5 0.0
+";
+    fs::write(&mat_file, mat_content).unwrap();
+
+    let expected_abe: HashSet<String> =
+        ["A", "B", "E"].iter().map(|s| s.to_string()).collect();
+    let expected_cd: HashSet<String> =
+        ["C", "D"].iter().map(|s| s.to_string()).collect();
+
+    // Run multiple times: HashMap iteration order varies across processes
+    // (random hash seed on Linux), so nondeterministic tie-breaking would
+    // surface as different cluster assignments across runs.
+    for run in 0..10 {
+        let (stdout, _stderr) = NecomCmd::new()
+            .args(&[
+                "cut",
+                "hybrid",
+                tree_file.to_str().unwrap(),
+                "--matrix",
+                mat_file.to_str().unwrap(),
+                "--min-size",
+                "2",
+                "--no-pam-dendro",
+            ])
+            .run();
+
+        let clusters = parse_clusters(&stdout);
+        assert_eq!(
+            clusters.len(),
+            2,
+            "run {}: expected 2 clusters, got {}:\n{}",
+            run,
+            clusters.len(),
+            stdout
+        );
+        assert!(
+            clusters.contains(&expected_abe),
+            "run {}: E should tie-break to cluster 1 ({{A,B}}), got:\n{}",
+            run,
+            stdout
+        );
+        assert!(
+            clusters.contains(&expected_cd),
+            "run {}: cluster {{C,D}} missing, got:\n{}",
+            run,
+            stdout
+        );
+    }
+}
+
+/// Regression test ensuring repeated hybrid runs on a non-trivial tree yield
+/// identical output. Guards against any future source of nondeterminism
+/// (HashMap iteration, unstable sorting, etc.) in the cut pipeline.
+#[test]
+fn test_hybrid_repeated_runs_stable() {
+    let temp = Builder::new()
+        .prefix("necom_test_hybrid_stable")
+        .tempdir()
+        .unwrap();
+    let tree_file = temp.path().join("stable.nwk");
+    let mat_file = temp.path().join("stable.phy");
+
+    // Slightly asymmetric tree with several leaves to exercise both block
+    // assignment (via small_clusters) and individual PAM reassignment.
+    let tree_content =
+        "(((A:0.1,B:0.1):0.3,(C:0.1,D:0.1):0.3):0.5,((E:0.1,F:0.1):0.3,(G:0.1,H:0.1):0.3):0.5,I:0.9);";
+    fs::write(&tree_file, tree_content).unwrap();
+
+    let mat_content = "9
+A 0.0 0.2 0.5 0.5 1.0 1.0 1.0 1.0 0.7
+B 0.2 0.0 0.5 0.5 1.0 1.0 1.0 1.0 0.7
+C 0.5 0.5 0.0 0.2 1.0 1.0 1.0 1.0 0.7
+D 0.5 0.5 0.2 0.0 1.0 1.0 1.0 1.0 0.7
+E 1.0 1.0 1.0 1.0 0.0 0.2 0.5 0.5 0.7
+F 1.0 1.0 1.0 1.0 0.2 0.0 0.5 0.5 0.7
+G 1.0 1.0 1.0 1.0 0.5 0.5 0.0 0.2 0.7
+H 1.0 1.0 1.0 1.0 0.5 0.5 0.2 0.0 0.7
+I 0.7 0.7 0.7 0.7 0.7 0.7 0.7 0.7 0.0
+";
+    fs::write(&mat_file, mat_content).unwrap();
+
+    let args: [&str; 7] = [
+        "cut",
+        "hybrid",
+        tree_file.to_str().unwrap(),
+        "--matrix",
+        mat_file.to_str().unwrap(),
+        "--min-size",
+        "2",
+    ];
+
+    let baseline = {
+        let (stdout, _stderr) = NecomCmd::new().args(&args[..]).run();
+        stdout
+    };
+
+    for run in 1..=10 {
+        let (stdout, _stderr) = NecomCmd::new().args(&args[..]).run();
+        assert_eq!(
+            stdout, baseline,
+            "run {}: hybrid cut output differs from baseline",
+            run,
+        );
+    }
+}

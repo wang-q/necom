@@ -58,19 +58,23 @@ pub fn cut_single_linkage(tree: &Tree, threshold: f64) -> Result<Partition> {
     // Then Cluster 1 is empty in terms of leaves.
 
     // So we need to normalize cluster IDs based on actual leaf assignments.
-    let mut old_to_new = HashMap::new();
-    let mut new_id_counter = 0;
+    // Sort old IDs before renumbering so the mapping is deterministic
+    // (HashMap iteration order is random, which would otherwise make the
+    // cluster_label assignment in `format_scan_rows` nondeterministic).
+    let mut old_ids: Vec<usize> = part.assignment.values().copied().collect();
+    old_ids.sort_unstable();
+    old_ids.dedup();
+
+    let old_to_new: HashMap<usize, usize> = old_ids
+        .into_iter()
+        .enumerate()
+        .map(|(i, old_id)| (old_id, i + 1))
+        .collect();
 
     for val in part.assignment.values_mut() {
-        if let Some(&new_id) = old_to_new.get(val) {
-            *val = new_id;
-        } else {
-            new_id_counter += 1;
-            old_to_new.insert(*val, new_id_counter);
-            *val = new_id_counter;
-        }
+        *val = old_to_new[val];
     }
-    part.num_clusters = new_id_counter;
+    part.num_clusters = old_to_new.len();
 
     Ok(part)
 }
@@ -126,5 +130,56 @@ mod tests {
     fn test_cut_single_linkage_empty_tree() {
         let tree = Tree::new();
         assert!(cut_single_linkage(&tree, 1.0).is_err());
+    }
+
+    /// Regression test for nondeterministic cluster ID renumbering.
+    ///
+    /// `cut_single_linkage` renumbers cluster IDs based on HashMap iteration,
+    /// which is random per-process. Sorting old IDs before renumbering (the
+    /// fix) makes the output deterministic. This test runs the cut multiple
+    /// times and asserts identical assignments every time.
+    #[test]
+    fn test_cut_single_linkage_renumbering_deterministic() {
+        // Symmetric tree: all leaf edges have length 0.3, internal edges 0.1.
+        // threshold=0.2 cuts all leaf edges -> 4 singleton clusters.
+        let tree = parse_tree("((A:0.3,B:0.3):0.1,(C:0.3,D:0.3):0.1);");
+
+        let baseline = cut_single_linkage(&tree, 0.2).unwrap();
+        for run in 1..=20 {
+            let part = cut_single_linkage(&tree, 0.2).unwrap();
+            // Same leaf -> same cluster ID across runs.
+            for (leaf, cid) in &baseline.assignment {
+                assert_eq!(
+                    part.assignment.get(leaf),
+                    Some(cid),
+                    "run {}: leaf {} reassigned from {} to {}",
+                    run,
+                    leaf,
+                    cid,
+                    part.assignment.get(leaf).unwrap_or(&0),
+                );
+            }
+            assert_eq!(
+                part.num_clusters, baseline.num_clusters,
+                "run {}: num_clusters differs",
+                run,
+            );
+        }
+    }
+
+    /// Regression test ensuring `cut_single_linkage` assigns contiguous
+    /// cluster IDs 1..K with no gaps after renumbering.
+    #[test]
+    fn test_cut_single_linkage_contiguous_ids() {
+        // Tree: ((A:0.3,B:0.3):0.1,(C:0.3,D:0.3):0.1);
+        // threshold=0.2 -> 4 singletons, IDs must be 1, 2, 3, 4.
+        let tree = parse_tree("((A:0.3,B:0.3):0.1,(C:0.3,D:0.3):0.1);");
+        let part = cut_single_linkage(&tree, 0.2).unwrap();
+
+        let mut ids: Vec<usize> = part.assignment.values().copied().collect();
+        ids.sort_unstable();
+        ids.dedup();
+        assert_eq!(ids, vec![1, 2, 3, 4], "cluster IDs must be contiguous 1..4");
+        assert_eq!(part.num_clusters, 4);
     }
 }

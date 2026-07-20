@@ -240,3 +240,47 @@ fn test_scan_simple_non_finite_range_rejected() {
         stderr
     );
 }
+
+/// Regression test for nondeterministic `cut_single_linkage` renumbering.
+///
+/// `--max-edge` cuts long branches and renumbers cluster IDs based on HashMap
+/// iteration. Before the fix, the cluster_label <-> member mapping in scan
+/// output varied across runs. Run the same scan N times and require byte-level
+/// identical output.
+#[test]
+fn test_scan_max_edge_deterministic_across_runs() {
+    let nwk = "((A:0.3,B:0.3):0.1,(C:0.3,D:0.3):0.1);";
+    let nwk_file = "tests/cut/scan_max_edge_det.nwk";
+    if !std::path::Path::new("tests/cut").exists() {
+        fs::create_dir_all("tests/cut").unwrap();
+    }
+    fs::write(nwk_file, nwk).expect("Failed to write nwk");
+
+    let args: [&str; 6] = [
+        "cut",
+        "scan-simple",
+        nwk_file,
+        "--max-edge",
+        "--range",
+        "0.2,0.2,0.1",
+    ];
+
+    let baseline = {
+        let (stdout, _) = NecomCmd::new().args(&args[..]).run();
+        stdout
+    };
+
+    // Multiple runs must produce identical output. HashMap iteration order
+    // varies across processes, so nondeterministic renumbering would surface
+    // as different cluster_label assignments in the scan rows.
+    for run in 1..=10 {
+        let (stdout, _) = NecomCmd::new().args(&args[..]).run();
+        assert_eq!(
+            stdout, baseline,
+            "run {}: scan-simple --max-edge output differs from baseline",
+            run,
+        );
+    }
+
+    let _ = fs::remove_file(nwk_file);
+}
