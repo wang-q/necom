@@ -319,6 +319,10 @@ pub fn pearson_correlation(a: &[f32], b: &[f32]) -> f32 {
 }
 
 /// Computes the cosine similarity between two vectors.
+///
+/// # Contract
+/// Caller must ensure `a.len() == b.len()`; otherwise the result is silently
+/// incorrect. Use [`vector_score`] for a length-checked entry point.
 pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     let dot_product = dot_product(a, b);
     let denominator = norm_l2(a) * norm_l2(b);
@@ -331,6 +335,10 @@ pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
 }
 
 /// Computes the weighted Jaccard similarity between two vectors.
+///
+/// # Contract
+/// Caller must ensure `a.len() == b.len()`; otherwise the result is silently
+/// incorrect. Use [`vector_score`] for a length-checked entry point.
 pub fn weighted_jaccard_similarity(a: &[f32], b: &[f32]) -> f32 {
     let numerator = jaccard_intersection(a, b);
     let denominator = jaccard_union(a, b);
