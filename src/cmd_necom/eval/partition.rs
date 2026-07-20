@@ -176,10 +176,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         );
     }
 
-    // Open the output writer only after argument validation so that invalid
-    // invocations do not truncate an existing output file.
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
+    // The output writer is opened only after all input loading and validation
+    // has succeeded (see `run_batch` / `run_single` call sites below). Opening
+    // it earlier would truncate an existing outfile when a later step fails.
 
     if format == PartitionFormat::Long {
         // Batch Mode
@@ -294,6 +293,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             targets.push(EvalTarget::Coords(c));
         }
 
+        // Open the writer only after all inputs have been loaded and validated.
+        let mut writer = necom::writer(outfile)
+            .with_context(|| format!("Failed to open writer for {}", outfile))?;
         run_batch(processed_batches, &targets, &mut writer)?;
         writer.flush()?;
         return Ok(());
@@ -313,8 +315,37 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         None => format,
     };
 
+    // Compute the evaluation target (and adjust p1 for `--other` mode) before
+    // opening the writer, so that input loading/validation failures do not
+    // truncate an existing outfile. `Prepared` owns both the (possibly
+    // filtered) p1 and the target; `SingleTarget::as_eval_target` borrows the
+    // target so `run_single` can consume the prepared pair after the writer is
+    // opened.
+    enum SingleTarget {
+        External(LabelMap),
+        Matrix(NamedMatrix),
+        Tree(TreeDistance),
+        Coords(Coordinates),
+    }
+
+    impl SingleTarget {
+        fn as_eval_target(&self) -> EvalTarget<'_> {
+            match self {
+                SingleTarget::External(p) => EvalTarget::External(p),
+                SingleTarget::Matrix(m) => EvalTarget::Matrix(m),
+                SingleTarget::Tree(t) => EvalTarget::Matrix(t),
+                SingleTarget::Coords(c) => EvalTarget::Coords(c),
+            }
+        }
+    }
+
+    struct Prepared {
+        p1: LabelMap,
+        target: SingleTarget,
+    }
+
     // Mutual exclusion is already enforced above, so at most one branch fires.
-    if let Some(p2_path) = args.get_one::<String>("other") {
+    let prepared = if let Some(p2_path) = args.get_one::<String>("other") {
         let mut p2 = load_partition(p2_path, other_format)?;
         if remove_singletons_flag {
             remove_singletons(&mut p2);
@@ -331,13 +362,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             p1_for_eval.retain(|k, _| p2.contains_key(k));
         }
         ensure_partitions_align(&p1_for_eval, &p2, "p1")?;
-        run_single(&p1_for_eval, EvalTarget::External(&p2), &mut writer)?;
+        Prepared {
+            p1: p1_for_eval,
+            target: SingleTarget::External(p2),
+        }
     } else if let Some(matrix_path) = args.get_one::<String>("matrix") {
         let matrix = NamedMatrix::from_relaxed_phylip(matrix_path)?;
         let matrix_names: HashSet<String> =
             matrix.get_names().into_iter().cloned().collect();
         ensure_names_cover_partition(&p1, &matrix_names, "--matrix")?;
-        run_single(&p1, EvalTarget::Matrix(&matrix), &mut writer)?;
+        Prepared {
+            p1,
+            target: SingleTarget::Matrix(matrix),
+        }
     } else if let Some(tree_path) = args.get_one::<String>("tree") {
         let trees = Tree::from_file(tree_path)?;
         if trees.len() != 1 {
@@ -349,17 +386,27 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             tree.get_leaf_names().into_iter().flatten().collect();
         ensure_names_cover_partition(&p1, &tree_names, "--tree")?;
         let dist = TreeDistance::new(tree)?;
-        run_single(&p1, EvalTarget::Matrix(&dist), &mut writer)?;
+        Prepared {
+            p1,
+            target: SingleTarget::Tree(dist),
+        }
     } else if let Some(coords_path) = args.get_one::<String>("coords") {
         let coords = Coordinates::from_path(coords_path)?;
         ensure_coords_cover_partition(&p1, &coords)?;
-        run_single(&p1, EvalTarget::Coords(&coords), &mut writer)?;
+        Prepared {
+            p1,
+            target: SingleTarget::Coords(coords),
+        }
     } else {
         anyhow::bail!(
             "Either --other/--truth (for external eval), --matrix, --tree, or --coords (for internal eval) must be provided."
         );
-    }
+    };
 
+    // Open the writer only after all inputs have been loaded and validated.
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
+    run_single(&prepared.p1, prepared.target.as_eval_target(), &mut writer)?;
     writer.flush()?;
     Ok(())
 }

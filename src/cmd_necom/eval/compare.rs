@@ -68,18 +68,20 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Single-file mode requires at least 2 trees for pairwise comparison.
     // Two-file mode can proceed with a single tree on each side.
     // Check before opening the writer so a failed run does not leave an
-    // empty output file behind.
-    if compare_file.is_none() && trees1.len() < 2 {
-        anyhow::bail!(
-            "need at least 2 trees for pairwise comparison, got {}",
-            trees1.len()
-        );
-    }
+    // empty output file behind. Empty-file checks fire first so users get a
+    // precise "no trees found" message rather than a misleading "need at
+    // least 2 trees" when the input is actually empty.
     if trees1.is_empty() {
         anyhow::bail!("no trees found in first input file");
     }
     if compare_file.is_some() && trees2.is_empty() {
         anyhow::bail!("no trees found in second input file");
+    }
+    if compare_file.is_none() && trees1.len() < 2 {
+        anyhow::bail!(
+            "need at least 2 trees for pairwise comparison, got {}",
+            trees1.len()
+        );
     }
 
     // 3. Output writer

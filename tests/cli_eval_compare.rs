@@ -52,6 +52,31 @@ fn command_eval_compare_single_file_one_tree_bails() {
 }
 
 #[test]
+fn command_eval_compare_single_file_empty_bails_with_no_trees_message() {
+    // Single-file mode with an EMPTY file should report "no trees found in
+    // first input file", not the misleading "need at least 2 trees" message.
+    // Regression test for check ordering: the empty check must fire before
+    // the `< 2` check, otherwise users see "got 0" instead of a clear
+    // "no trees found" diagnostic.
+    let empty_file = Builder::new().suffix(".nwk").tempfile().unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["eval", "compare", empty_file.path().to_str().unwrap()])
+        .run_fail();
+
+    assert!(
+        stderr.contains("no trees found in first input file"),
+        "expected 'no trees found' message for empty single-file input, got stderr: {}",
+        stderr
+    );
+    assert!(
+        !stderr.contains("need at least 2 trees"),
+        "should not see 'need at least 2 trees' for an empty file, got stderr: {}",
+        stderr
+    );
+}
+
+#[test]
 fn command_eval_compare_two_files() {
     let mut file1 = Builder::new().suffix(".nwk").tempfile().unwrap();
     writeln!(file1, "((A,B),(C,D));").unwrap(); // Tree 1

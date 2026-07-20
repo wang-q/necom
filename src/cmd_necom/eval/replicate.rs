@@ -121,15 +121,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
     }
 
-    // Open the output writer only after input validation so that invalid
-    // invocations do not truncate an existing output file.
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
     // 4. Count Clades in Replicates
     let counts = support::count_clades(&replicates, &leaf_map)
         .with_context(|| "count_clades failed")?;
+
+    // Open the output writer only after all input loading and clade counting
+    // has succeeded, so that any failure during those steps does not truncate
+    // an existing output file.
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // 5. Annotate Target Trees
     for target in &mut targets {

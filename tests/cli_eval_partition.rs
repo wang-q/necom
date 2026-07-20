@@ -569,6 +569,108 @@ fn test_eval_partition_outfile_not_truncated_on_error() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_eval_partition_outfile_preserved_on_p1_load_failure() -> anyhow::Result<()> {
+    // Regression test: when p1 fails to load (e.g., file does not exist), an
+    // existing outfile must not be truncated. Before the fix, the writer was
+    // opened before input loading, truncating the outfile on failure.
+    let mut existing = NamedTempFile::new()?;
+    existing.write_all(b"preserve me")?;
+    let out_path = existing.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg("/nonexistent/path/to/p1.tsv")
+        .arg("--other")
+        .arg("tests/eval/perfect_2.tsv")
+        .arg("--input-format")
+        .arg("cluster")
+        .arg("--outfile")
+        .arg(out_path)
+        .output()?;
+
+    assert!(
+        !output.status.success(),
+        "Expected failure for nonexistent p1, but command succeeded"
+    );
+    let preserved = std::fs::read_to_string(out_path)?;
+    assert_eq!(preserved, "preserve me");
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_outfile_preserved_on_matrix_load_failure() -> anyhow::Result<()> {
+    // Regression test: when --matrix fails to load (e.g., declared size
+    // doesn't match the number of data rows), an existing outfile must not be
+    // truncated. This exercises the single-mode code path where the matrix is
+    // loaded after p1 succeeds.
+    let mut existing = NamedTempFile::new()?;
+    existing.write_all(b"preserve me")?;
+    let out_path = existing.path().to_str().unwrap();
+
+    let mut malformed_matrix = NamedTempFile::new()?;
+    // Declares 4 sequences but only provides 2 data rows.
+    malformed_matrix.write_all(b"4\nA\t0.0\t1.0\t2.0\t3.0\nB\t1.0\t0.0\t4.0\t5.0\n")?;
+    let matrix_path = malformed_matrix.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg("tests/eval/perfect_1.tsv")
+        .arg("--input-format")
+        .arg("cluster")
+        .arg("--matrix")
+        .arg(matrix_path)
+        .arg("--outfile")
+        .arg(out_path)
+        .output()?;
+
+    assert!(
+        !output.status.success(),
+        "Expected failure for malformed --matrix, but command succeeded"
+    );
+    let preserved = std::fs::read_to_string(out_path)?;
+    assert_eq!(preserved, "preserve me");
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_outfile_preserved_on_batch_p1_load_failure() -> anyhow::Result<()>
+{
+    // Regression test for batch mode: when the Long-format p1 fails to load,
+    // an existing outfile must not be truncated.
+    let mut existing = NamedTempFile::new()?;
+    existing.write_all(b"preserve me")?;
+    let out_path = existing.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg("/nonexistent/path/to/long.tsv")
+        .arg("--input-format")
+        .arg("long")
+        .arg("--other")
+        .arg("tests/eval/perfect_2.tsv")
+        .arg("--outfile")
+        .arg(out_path)
+        .output()?;
+
+    assert!(
+        !output.status.success(),
+        "Expected failure for nonexistent batch p1, but command succeeded"
+    );
+    let preserved = std::fs::read_to_string(out_path)?;
+    assert_eq!(preserved, "preserve me");
+
+    Ok(())
+}
+
+#[test]
 fn test_eval_partition_conflict_other_coords() -> anyhow::Result<()> {
     // Mutual exclusion: providing both --other and --coords must error out.
     let mut cmd = Command::cargo_bin("necom")?;
