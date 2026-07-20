@@ -87,6 +87,40 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .get_one::<f32>("missing")
         .context("missing required argument: missing")?;
 
+    // Warn when --max-val / --scale / --offset are explicitly provided but the
+    // selected --op does not use them, mirroring the --same / --missing warning
+    // behavior so the silent ignore does not surprise the user.
+    let max_val_cli = args
+        .value_source("max_val")
+        .map(|s| s == ValueSource::CommandLine)
+        .unwrap_or(false);
+    let scale_cli = args
+        .value_source("scale")
+        .map(|s| s == ValueSource::CommandLine)
+        .unwrap_or(false);
+    let offset_cli = args
+        .value_source("offset")
+        .map(|s| s == ValueSource::CommandLine)
+        .unwrap_or(false);
+    if max_val_cli && op != "inv-linear" {
+        log::warn!(
+            "--max-val is ignored with --op {} (only used by --op inv-linear)",
+            op
+        );
+    }
+    if scale_cli && op != "linear" {
+        log::warn!(
+            "--scale is ignored with --op {} (only used by --op linear)",
+            op
+        );
+    }
+    if offset_cli && op != "linear" {
+        log::warn!(
+            "--offset is ignored with --op {} (only used by --op linear)",
+            op
+        );
+    }
+
     // Load and Transform the matrix before opening the writer so input-loading
     // (and transform) failures do not truncate an existing outfile.
     let matrix = if format == "pair" {

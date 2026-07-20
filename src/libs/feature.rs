@@ -128,6 +128,32 @@ pub fn load_feature_vectors(
     Ok(entries)
 }
 
+/// Validate that all feature vectors across both sets share the same length.
+///
+/// Returns an error on the first vector whose length differs from the first
+/// vector in `entries1`. An empty input is treated as length 0 and passes.
+pub fn validate_uniform_length(
+    entries1: &[FeatureVector],
+    entries2: &[FeatureVector],
+) -> anyhow::Result<()> {
+    let expected = entries1
+        .first()
+        .or_else(|| entries2.first())
+        .map(|e| e.list().len())
+        .unwrap_or(0);
+    for e in entries1.iter().chain(entries2.iter()) {
+        if e.list().len() != expected {
+            anyhow::bail!(
+                "vector length mismatch: {} has {} value(s), expected {}",
+                e.name(),
+                e.list().len(),
+                expected
+            );
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -233,5 +259,48 @@ mod tests {
         assert_eq!(entries[1].list(), &vec![0.0, 0.0, 1.0, 1.0]);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_validate_uniform_length_ok() {
+        let e1 = FeatureVector::from("A", &[1.0, 2.0, 3.0]);
+        let e2 = FeatureVector::from("B", &[4.0, 5.0, 6.0]);
+        assert!(validate_uniform_length(&[e1, e2], &[]).is_ok());
+    }
+
+    #[test]
+    fn test_validate_uniform_length_cross_ok() {
+        let e1 = FeatureVector::from("A", &[1.0, 2.0]);
+        let e2 = FeatureVector::from("B", &[3.0, 4.0]);
+        let e3 = FeatureVector::from("C", &[5.0, 6.0]);
+        assert!(validate_uniform_length(&[e1, e2], &[e3]).is_ok());
+    }
+
+    #[test]
+    fn test_validate_uniform_length_mismatch_within_set1() {
+        let e1 = FeatureVector::from("A", &[1.0, 2.0, 3.0]);
+        let e2 = FeatureVector::from("B", &[4.0, 5.0]);
+        let result = validate_uniform_length(&[e1, e2], &[]);
+        assert!(result.is_err());
+        let msg = format!("{}", result.unwrap_err());
+        assert!(msg.contains("vector length mismatch"), "got: {}", msg);
+        assert!(msg.contains("B"), "expected name in msg: {}", msg);
+    }
+
+    #[test]
+    fn test_validate_uniform_length_mismatch_between_sets() {
+        let e1 = FeatureVector::from("A", &[1.0, 2.0]);
+        let e2 = FeatureVector::from("B", &[3.0, 4.0]);
+        let e3 = FeatureVector::from("C", &[5.0, 6.0, 7.0]);
+        let result = validate_uniform_length(&[e1, e2], &[e3]);
+        assert!(result.is_err());
+        let msg = format!("{}", result.unwrap_err());
+        assert!(msg.contains("vector length mismatch"), "got: {}", msg);
+        assert!(msg.contains("C"), "expected name in msg: {}", msg);
+    }
+
+    #[test]
+    fn test_validate_uniform_length_empty_ok() {
+        assert!(validate_uniform_length(&[], &[]).is_ok());
     }
 }

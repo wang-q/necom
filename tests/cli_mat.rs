@@ -1150,3 +1150,234 @@ fn command_mat_compare_method_all_mixed_with_unknown_still_errors() {
         stderr
     );
 }
+
+// ============================================================================
+// to-pair non-finite value handling (Issue 1)
+// ============================================================================
+
+#[test]
+fn command_mat_to_pair_emits_na_for_non_finite() {
+    // PHYLIP matrix with NaN and Inf off-diagonal values. The to-pair output
+    // must emit "NA" for non-finite values to keep the TSV parseable by
+    // downstream tools, matching `mat compare`'s convention.
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "3").unwrap();
+    writeln!(tmp, "A 0.0 NaN inf").unwrap();
+    writeln!(tmp, "B NaN 0.0 0.5").unwrap();
+    writeln!(tmp, "C inf 0.5 0.0").unwrap();
+    tmp.flush().unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["mat", "to-pair", tmp.path().to_str().unwrap()])
+        .run();
+
+    assert!(
+        stdout.contains("A\tB\tNA"),
+        "expected 'A\\tB\\tNA' for NaN entry, got: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("A\tC\tNA"),
+        "expected 'A\\tC\\tNA' for inf entry, got: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("B\tC\t0.5"),
+        "expected 'B\\tC\\t0.5' for finite entry, got: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("A\tA\t0\n"),
+        "expected 'A\\tA\\t0' for diagonal, got: {}",
+        stdout
+    );
+    // No raw "NaN" or "inf" strings should leak into the output.
+    assert!(
+        !stdout.contains("NaN"),
+        "unexpected raw 'NaN' in output: {}",
+        stdout
+    );
+    assert!(
+        !stdout.contains("inf"),
+        "unexpected raw 'inf' in output: {}",
+        stdout
+    );
+}
+
+// ============================================================================
+// from-vector length mismatch does not truncate outfile (Issue 2)
+// ============================================================================
+
+#[test]
+fn command_mat_from_vector_length_mismatch_does_not_truncate_outfile() {
+    // Length mismatch must be detected before the writer is opened so an
+    // existing outfile is not truncated. Previously the writer was spawned
+    // first, and length-mismatch errors during parallel scoring left a
+    // truncated/partial outfile.
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "A\t1\t2\t3").unwrap();
+    writeln!(tmp, "B\t1\t2").unwrap(); // different column count
+    let path = tmp.path().to_str().unwrap().to_string();
+
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, stderr) =
+        run_with_outfile(&["mat", "from-vector", &path, "--mode", "euclid"], out_path);
+    assert!(!success, "expected failure for length mismatch");
+    assert!(
+        stderr.contains("vector length mismatch"),
+        "expected 'vector length mismatch' in stderr, got: {}",
+        stderr
+    );
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+// ============================================================================
+// transform --max-val / --scale / --offset warnings (Issue 3)
+// ============================================================================
+
+#[test]
+fn command_mat_transform_warns_max_val_with_non_inv_linear_op() {
+    // --max-val is only used by --op inv-linear; warn when explicitly
+    // provided with a different op.
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            "tests/mat/IBPA.phy",
+            "--op",
+            "log",
+            "--max-val",
+            "2.0",
+        ])
+        .run();
+
+    assert!(
+        stderr.contains("--max-val is ignored with --op log"),
+        "expected --max-val warning in stderr, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_mat_transform_warns_scale_with_non_linear_op() {
+    // --scale is only used by --op linear; warn when explicitly provided
+    // with a different op.
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            "tests/mat/IBPA.phy",
+            "--op",
+            "sqrt",
+            "--scale",
+            "2.0",
+        ])
+        .run();
+
+    assert!(
+        stderr.contains("--scale is ignored with --op sqrt"),
+        "expected --scale warning in stderr, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_mat_transform_warns_offset_with_non_linear_op() {
+    // --offset is only used by --op linear; warn when explicitly provided
+    // with a different op.
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            "tests/mat/IBPA.phy",
+            "--op",
+            "exp",
+            "--offset",
+            "1.0",
+        ])
+        .run();
+
+    assert!(
+        stderr.contains("--offset is ignored with --op exp"),
+        "expected --offset warning in stderr, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_mat_transform_no_warning_when_params_match_op() {
+    // When --max-val is used with --op inv-linear, no warning should be
+    // emitted (the param is used). Similarly for --scale/--offset with
+    // --op linear.
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            "tests/mat/IBPA.phy",
+            "--op",
+            "inv-linear",
+            "--max-val",
+            "2.0",
+        ])
+        .run();
+
+    assert!(
+        !stderr.contains("--max-val is ignored"),
+        "unexpected --max-val warning with inv-linear op: {}",
+        stderr
+    );
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            "tests/mat/IBPA.phy",
+            "--op",
+            "linear",
+            "--scale",
+            "2.0",
+            "--offset",
+            "1.0",
+        ])
+        .run();
+
+    assert!(
+        !stderr.contains("--scale is ignored"),
+        "unexpected --scale warning with linear op: {}",
+        stderr
+    );
+    assert!(
+        !stderr.contains("--offset is ignored"),
+        "unexpected --offset warning with linear op: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_mat_transform_no_warning_for_default_max_val_scale_offset() {
+    // Default --max-val / --scale / --offset values should NOT trigger
+    // warnings with non-matching ops.
+    let (_, stderr) = NecomCmd::new()
+        .args(&["mat", "transform", "tests/mat/IBPA.phy", "--op", "log"])
+        .run();
+
+    assert!(
+        !stderr.contains("--max-val is ignored"),
+        "unexpected --max-val warning without explicit flag: {}",
+        stderr
+    );
+    assert!(
+        !stderr.contains("--scale is ignored"),
+        "unexpected --scale warning without explicit flag: {}",
+        stderr
+    );
+    assert!(
+        !stderr.contains("--offset is ignored"),
+        "unexpected --offset warning without explicit flag: {}",
+        stderr
+    );
+}

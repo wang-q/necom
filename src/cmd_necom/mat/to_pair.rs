@@ -28,11 +28,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = necom::writer(outfile)
         .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
-    // Output pairwise distances (lower triangle including diagonal)
+    // Output pairwise distances (lower triangle including diagonal).
+    // Non-finite values (NaN/Inf) are emitted as "NA" to keep the TSV
+    // parseable by downstream tools, matching `mat compare`'s convention.
     for i in 0..matrix.size() {
         for j in 0..=i {
             let distance = matrix.get(i, j);
-            writeln!(writer, "{}\t{}\t{}", names[j], names[i], distance)?;
+            if distance.is_finite() {
+                writeln!(writer, "{}\t{}\t{}", names[j], names[i], distance)?;
+            } else {
+                writeln!(writer, "{}\t{}\tNA", names[j], names[i])?;
+            }
         }
     }
 

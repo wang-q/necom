@@ -61,6 +61,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             necom::libs::feature::load_feature_vectors(&paths[0], is_bin)
         })?;
 
+    // Validate vector lengths before opening the writer so length-mismatch
+    // failures do not truncate an existing outfile. All vectors across both
+    // sets must share the same dimensionality for `vector_score` to succeed.
+    necom::libs::feature::validate_uniform_length(&entries1, &entries2)?;
+
     let (sender, writer_thread, pool) =
         necom::libs::par::spawn_writer_and_pool(outfile, opt_parallel)?;
 
