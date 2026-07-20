@@ -33,10 +33,20 @@ pub struct TreeDistance {
 }
 
 impl TreeDistance {
-    /// Construct a `TreeDistance` from a `Tree`, pre-building the name→id map
-    /// for O(1) lookups in subsequent `get_distance` calls.
+    /// Construct a `TreeDistance` from a `Tree`, pre-building the leaf name→id
+    /// map for O(1) lookups in subsequent `get_distance` calls.
+    ///
+    /// Only leaf names are mapped; internal node names are ignored so that
+    /// partition samples are always resolved against leaves.
     pub fn new(tree: Tree) -> Self {
-        let name_map: HashMap<String, usize> = tree.get_name_id().into_iter().collect();
+        let name_map: HashMap<String, usize> = tree
+            .get_leaves()
+            .into_iter()
+            .filter_map(|id| {
+                tree.get_node(id)
+                    .and_then(|n| n.name.as_ref().map(|name| (name.clone(), id)))
+            })
+            .collect();
         Self { tree, name_map }
     }
 }

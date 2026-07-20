@@ -45,7 +45,7 @@ Assign support values to internal nodes of a target tree based on replicate tree
 
 ## Branch Length Handling
 
-`necom eval compare` treats non-finite branch lengths (`NaN`, positive/negative infinity), negative values, and zero values as `0.0` during computation. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.
+`necom eval compare` normalizes non-finite branch lengths (`NaN`, positive/negative infinity) and negative values to `0.0` during computation; zero values are left as `0.0`. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.
 
 ---
 

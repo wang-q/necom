@@ -86,7 +86,9 @@ fn parse_pair_format(lines: &[String]) -> anyhow::Result<LabelMap> {
             next_id
         });
 
-        partition.insert(item.to_string(), label_id);
+        if partition.insert(item.to_string(), label_id).is_some() {
+            anyhow::bail!("duplicate sample in pair format: {}", item);
+        }
     }
     Ok(partition)
 }
@@ -99,7 +101,9 @@ fn parse_cluster_format(lines: &[String]) -> anyhow::Result<LabelMap> {
         let parts: Vec<&str> = line.split_whitespace().collect();
         cluster_id += 1;
         for item in parts {
-            partition.insert(item.to_string(), cluster_id);
+            if partition.insert(item.to_string(), cluster_id).is_some() {
+                anyhow::bail!("duplicate sample in cluster format: {}", item);
+            }
         }
     }
     Ok(partition)
@@ -168,7 +172,13 @@ pub fn load_batch_partitions<P: AsRef<Path>>(
                 group_next_ids[idx]
             });
 
-        partitions[idx].insert(sample_id, cluster_id);
+        if partitions[idx].insert(sample_id, cluster_id).is_some() {
+            anyhow::bail!(
+                "duplicate sample in long format group '{}': {}",
+                parts[0],
+                parts[2]
+            );
+        }
     }
 
     let result = groups.into_iter().zip(partitions).collect();
@@ -342,5 +352,56 @@ mod tests {
         assert!(!partition.contains_key("C"));
         assert_eq!(partition.get("A"), Some(&1));
         assert_eq!(partition.get("B"), Some(&1));
+    }
+
+    #[test]
+    fn test_load_partition_cluster_duplicate_rejected() -> anyhow::Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        writeln!(file, "A B")?;
+        writeln!(file, "B C")?;
+
+        let result = load_partition(file.path(), PartitionFormat::Cluster);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("duplicate sample"),
+            "unexpected error: {}",
+            err
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_partition_pair_duplicate_rejected() -> anyhow::Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        writeln!(file, "1\tA")?;
+        writeln!(file, "2\tA")?;
+
+        let result = load_partition(file.path(), PartitionFormat::Pair);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("duplicate sample"),
+            "unexpected error: {}",
+            err
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_batch_partitions_duplicate_rejected() -> anyhow::Result<()> {
+        let mut file = tempfile::NamedTempFile::new()?;
+        writeln!(file, "g\t1\tA")?;
+        writeln!(file, "g\t2\tA")?;
+
+        let result = load_batch_partitions(file.path());
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("duplicate sample"),
+            "unexpected error: {}",
+            err
+        );
+        Ok(())
     }
 }

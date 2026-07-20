@@ -685,3 +685,22 @@ fn test_silhouette_score_with_singleton_cluster() {
         score
     );
 }
+
+#[test]
+fn test_tree_distance_ignores_internal_node_names() {
+    // Tree where an internal node shares a name with a leaf. TreeDistance must
+    // resolve partition samples against leaves, not internal nodes.
+    // Topology: root -> g( named 'X' ) -> A(2.0), B(4.0); plus a separate leaf X(1.0).
+    // Newick: ((A:2.0,B:4.0)X:2.0,X:1.0);
+    // Leaf X is at distance 1.0 from root; internal node X is at distance 2.0 from root.
+    // Partition samples are leaves A, B, X. Distance A-X (leaf) = 2.0 + 1.0 = 3.0.
+    let tree = Tree::from_newick("((A:2.0,B:4.0)X:2.0,X:1.0);").unwrap();
+    let td = TreeDistance::new(tree);
+
+    // A to leaf X: path A -> g -> root -> X = 2.0 + 2.0 + 1.0 = 5.0.
+    assert_eq!(td.get_distance("A", "X"), 5.0);
+    // A to B: 2.0 + 4.0 = 6.0.
+    assert_eq!(td.get_distance("A", "B"), 6.0);
+    // Internal node name alone should not resolve.
+    assert!(td.get_distance("A", "g").is_nan());
+}

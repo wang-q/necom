@@ -238,6 +238,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     // are excluded from evaluation rather than treated as a
                     // mismatch.
                     p1.retain(|k, _| truth.contains_key(k));
+                    // After filtering, the group may have become empty. Catch
+                    // this explicitly so the user gets a clear message instead
+                    // of a generic "sample sets do not match" error.
+                    ensure_non_empty(
+                        &p1,
+                        &format!("group {} after --no-singletons filtering", group),
+                    )?;
                 }
                 ensure_partitions_align(&p1, truth)?;
             }
