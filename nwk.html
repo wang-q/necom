@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b3240ac6.js";
+            window.path_to_searchindex_js = "searchindex-3d7ace9c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -274,7 +274,8 @@
 <h3 id="length-detection-and-distance-threshold"><a class="header" href="#length-detection-and-distance-threshold">Length detection and distance threshold</a></h3>
 <ul>
 <li><code>stat</code> counts an edge as “with length” only when its branch length is a positive finite value. Missing, zero, and non-finite lengths are reported as “without length”.</li>
-<li><code>distance</code> uses the sum of branch lengths only when its absolute value exceeds <code>1e-9</code>; otherwise it falls back to the topological edge count. This avoids treating near-zero floating-point values as meaningful distances.</li>
+<li><code>distance</code> in <code>root</code>, <code>parent</code>, <code>pairwise</code>, and <code>lca</code> modes uses the sum of branch lengths only when its absolute value exceeds <code>1e-9</code>; otherwise it falls back to the topological edge count. This avoids treating near-zero floating-point values as meaningful distances.</li>
+<li><code>distance --mode phylip</code> uses a tree-wide decision: if any edge in the tree carries a positive finite length, the full matrix is computed from branch lengths; otherwise it falls back to topological edge counts for all pairs.</li>
 </ul>
 <hr>
 <h2 id="planned-subcommands"><a class="header" href="#planned-subcommands">Planned Subcommands</a></h2>

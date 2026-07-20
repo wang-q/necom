@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b3240ac6.js";
+            window.path_to_searchindex_js = "searchindex-3d7ace9c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -326,7 +326,7 @@
 <ul>
 <li>Merges are emitted in the order they are performed by the linkage algorithm (merge-order output). The internal node IDs increase with the merge sequence, matching the convention used by R <code>hclust</code> and SciPy <code>linkage</code>.</li>
 <li>Internal node height is half the merge distance (<code>height = distance / 2</code>), and branch length from child to parent is <code>parent_height - child_height</code>.</li>
-<li>Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.</li>
+<li>For reducible methods (<code>single</code>/<code>complete</code>/<code>average</code>/<code>weighted</code>/<code>ward</code>), the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node. <code>centroid</code>/<code>median</code> may violate this property due to non-monotonic merge heights (inversions), even after negative branch lengths are clamped to zero.</li>
 <li>Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).</li>
 <li>Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of <code>necom cut simple --height &lt;H&gt;</code>.</li>
 </ul>
@@ -336,7 +336,7 @@
 <h3 id="notes"><a class="header" href="#notes">Notes</a></h3>
 <ul>
 <li><code>clust hier</code> only accepts <strong>distance matrices</strong> (smaller values mean higher similarity). Similarity matrices must be converted first, e.g., with <code>necom mat transform</code>.</li>
-<li><code>ward</code> updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.</li>
+<li><code>ward</code>, <code>centroid</code>, and <code>median</code> updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.</li>
 <li><code>ward</code> theoretically assumes Euclidean or near-Euclidean distances; on general biological distances the statistical interpretation of “minimum variance” is weaker.</li>
 <li><code>centroid</code> and <code>median</code> linkage may produce non-monotonic merge heights (inversions); this is an algorithmic characteristic of these methods.</li>
 <li>For reducible methods (<code>single</code>, <code>complete</code>, <code>average</code>, <code>weighted</code>, <code>ward</code>), the default NN-chain implementation produces the same dendrogram as the primitive $O(N^3)$ algorithm, but the concrete merge order may differ. Consequently, the Newick string may have a different internal node ordering than <code>clust upgma</code> for the same method, even though the underlying clustering is equivalent.</li>

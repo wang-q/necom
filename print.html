@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b3240ac6.js";
+            window.path_to_searchindex_js = "searchindex-3d7ace9c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -407,7 +407,7 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <ul>
 <li>Merges are emitted in the order they are performed by the linkage algorithm (merge-order output). The internal node IDs increase with the merge sequence, matching the convention used by R <code>hclust</code> and SciPy <code>linkage</code>.</li>
 <li>Internal node height is half the merge distance (<code>height = distance / 2</code>), and branch length from child to parent is <code>parent_height - child_height</code>.</li>
-<li>Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.</li>
+<li>For reducible methods (<code>single</code>/<code>complete</code>/<code>average</code>/<code>weighted</code>/<code>ward</code>), the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node. <code>centroid</code>/<code>median</code> may violate this property due to non-monotonic merge heights (inversions), even after negative branch lengths are clamped to zero.</li>
 <li>Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).</li>
 <li>Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of <code>necom cut simple --height &lt;H&gt;</code>.</li>
 </ul>
@@ -417,7 +417,7 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <h3 id="notes"><a class="header" href="#notes">Notes</a></h3>
 <ul>
 <li><code>clust hier</code> only accepts <strong>distance matrices</strong> (smaller values mean higher similarity). Similarity matrices must be converted first, e.g., with <code>necom mat transform</code>.</li>
-<li><code>ward</code> updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.</li>
+<li><code>ward</code>, <code>centroid</code>, and <code>median</code> updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.</li>
 <li><code>ward</code> theoretically assumes Euclidean or near-Euclidean distances; on general biological distances the statistical interpretation of “minimum variance” is weaker.</li>
 <li><code>centroid</code> and <code>median</code> linkage may produce non-monotonic merge heights (inversions); this is an algorithmic characteristic of these methods.</li>
 <li>For reducible methods (<code>single</code>, <code>complete</code>, <code>average</code>, <code>weighted</code>, <code>ward</code>), the default NN-chain implementation produces the same dendrogram as the primitive $O(N^3)$ algorithm, but the concrete merge order may differ. Consequently, the Newick string may have a different internal node ordering than <code>clust upgma</code> for the same method, even though the underlying clustering is equivalent.</li>
@@ -703,7 +703,7 @@ Implements basic cuts by cluster count and height, with logic consistent with <c
 <li><strong>Complexity</strong>: $O(N)$.</li>
 <li><strong>Use case</strong>: When overall evolutionary rates are uneven, find “natural” cluster boundaries.</li>
 </ul>
-<h3 id="11-dynamic-tree-cut-necom-cut-dynamic-implemented"><a class="header" href="#11-dynamic-tree-cut-necom-cut-dynamic-implemented">11. Dynamic Tree Cut (<code>necom cut dynamic</code>) [Implemented]</a></h3>
+<h3 id="11-dynamic-tree-cut-necom-cut-dynamic"><a class="header" href="#11-dynamic-tree-cut-necom-cut-dynamic">11. Dynamic Tree Cut (<code>necom cut dynamic</code>)</a></h3>
 <ul>
 <li><strong>Definition</strong>: Based on the <code>cutreeDynamicTree</code> algorithm in the R package <code>dynamicTreeCut</code> (<code>dynamicTreeCut/R/cutreeDynamic.R</code>).</li>
 <li><strong>Principle</strong>: Top-down recursive algorithm.
@@ -728,7 +728,7 @@ Implements basic cuts by cluster count and height, with logic consistent with <c
 </ul>
 </li>
 </ul>
-<h3 id="12-hybrid-dynamic-cut-necom-cut-hybrid-implemented"><a class="header" href="#12-hybrid-dynamic-cut-necom-cut-hybrid-implemented">12. Hybrid Dynamic Cut (<code>necom cut hybrid</code>) [Implemented]</a></h3>
+<h3 id="12-hybrid-dynamic-cut-necom-cut-hybrid"><a class="header" href="#12-hybrid-dynamic-cut-necom-cut-hybrid">12. Hybrid Dynamic Cut (<code>necom cut hybrid</code>)</a></h3>
 <ul>
 <li><strong>Definition</strong>: Based on the <code>cutreeHybrid</code> algorithm in the R package <code>dynamicTreeCut</code>.</li>
 <li><strong>Principle</strong>: Two-phase bottom-up algorithm.
@@ -1288,7 +1288,8 @@ neighbor &lt; input.infile
 <h3 id="length-detection-and-distance-threshold"><a class="header" href="#length-detection-and-distance-threshold">Length detection and distance threshold</a></h3>
 <ul>
 <li><code>stat</code> counts an edge as “with length” only when its branch length is a positive finite value. Missing, zero, and non-finite lengths are reported as “without length”.</li>
-<li><code>distance</code> uses the sum of branch lengths only when its absolute value exceeds <code>1e-9</code>; otherwise it falls back to the topological edge count. This avoids treating near-zero floating-point values as meaningful distances.</li>
+<li><code>distance</code> in <code>root</code>, <code>parent</code>, <code>pairwise</code>, and <code>lca</code> modes uses the sum of branch lengths only when its absolute value exceeds <code>1e-9</code>; otherwise it falls back to the topological edge count. This avoids treating near-zero floating-point values as meaningful distances.</li>
+<li><code>distance --mode phylip</code> uses a tree-wide decision: if any edge in the tree carries a positive finite length, the full matrix is computed from branch lengths; otherwise it falls back to topological edge counts for all pairs.</li>
 </ul>
 <hr>
 <h2 id="planned-subcommands"><a class="header" href="#planned-subcommands">Planned Subcommands</a></h2>
