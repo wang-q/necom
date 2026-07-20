@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3fd5c070.js";
+            window.path_to_searchindex_js = "searchindex-13d610d6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-49c214f6.js"></script>
+        <script src="toc-57acacb7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -444,8 +444,8 @@ necom pl condense --taxon tests/pipeline/strains.taxon.tsv \
 <p>Partition evaluation has moved to <a href="#necom-eval"><code>necom eval partition</code></a>. See <a href="#necom-eval"><code>docs/eval.md</code></a> for the overview and <a href="#necom-eval-partition"><code>docs/eval-partition.md</code></a> for detailed metric definitions.</p>
 <h2 id="planned"><a class="header" href="#planned">Planned</a></h2>
 <p>GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Algorithms considered but not adopted (K-Means, Spectral, OPTICS, BIRCH, etc.) are documented in <a href="../notes/design/clust-impl.html"><code>notes/design/clust-impl.md</code></a>.</p>
-<h3 id="bootstrap-support-for-hierarchical-clustering-planned"><a class="header" href="#bootstrap-support-for-hierarchical-clustering-planned">Bootstrap Support for Hierarchical Clustering [Planned]</a></h3>
-<p><code>necom clust boot</code> will compute multiscale-bootstrap BP/AU/SI support values (pvclust-style) for each internal node of a hierarchical clustering tree, quantifying the stability of clusters under feature resampling. Design details are in <a href="../notes/design/clust-boot.html"><code>notes/design/clust-boot.md</code></a>.</p>
+<h3 id="bootstrap-support-for-hierarchical-clustering-moved-to-necom-eval"><a class="header" href="#bootstrap-support-for-hierarchical-clustering-moved-to-necom-eval">Bootstrap Support for Hierarchical Clustering [Moved to <code>necom eval</code>]</a></h3>
+<p><code>necom eval boot</code> will compute multiscale-bootstrap BP/AU/SI support values (pvclust-style) for each internal node of a hierarchical clustering tree, quantifying the stability of clusters under feature resampling. Design details are in <a href="../notes/design/eval-boot.html"><code>notes/design/eval-boot.md</code></a>.</p>
 <h3 id="gmm-gaussian-mixture-models-planned"><a class="header" href="#gmm-gaussian-mixture-models-planned">GMM (Gaussian Mixture Models) [Planned]</a></h3>
 <p>Motivation for introducing GMM:</p>
 <ul>
@@ -1298,6 +1298,110 @@ neighbor &lt; input.infile
 <li>Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level command <code>necom eval</code>. <code>nwk compare</code> and <code>nwk support</code> have been migrated to <code>necom eval compare</code> and <code>necom eval replicate</code>; see <a href="#necom-eval"><code>docs/eval.md</code></a>. The <code>eval tree</code> subcommand remains in design — see <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a>.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="latex-forest-output"><a class="header" href="#latex-forest-output">LaTeX Forest Output</a></h1>
+<p><code>necom nwk to-forest</code> and <code>necom nwk to-tex</code> convert Newick trees into LaTeX code using the <a href="https://ctan.org/pkg/forest">Forest</a> package. This is useful for producing publication-quality phylogenetic trees directly from the command line.</p>
+<ul>
+<li><code>to-forest</code> emits raw Forest code that can be embedded into an existing LaTeX document.</li>
+<li><code>to-tex</code> generates a complete <code>.tex</code> document by merging the Forest code with a built-in template, ready for compilation with <code>xelatex</code> or <code>tectonic</code>.</li>
+</ul>
+<hr>
+<h2 id="core-commands"><a class="header" href="#core-commands">Core Commands</a></h2>
+<h3 id="necom-nwk-to-forest"><a class="header" href="#necom-nwk-to-forest"><code>necom nwk to-forest</code></a></h3>
+<p>Generates raw LaTeX Forest code.</p>
+<pre><code class="language-bash">necom nwk to-forest tree.nwk
+</code></pre>
+<p>Use <code>--bl</code> to draw a phylogram with branch lengths instead of a cladogram:</p>
+<pre><code class="language-bash">necom nwk to-forest tree.nwk --bl
+</code></pre>
+<h3 id="necom-nwk-to-tex"><a class="header" href="#necom-nwk-to-tex"><code>necom nwk to-tex</code></a></h3>
+<p>Generates a complete LaTeX document.</p>
+<pre><code class="language-bash">necom nwk to-tex tree.nwk -o tree.tex
+</code></pre>
+<p>Compile the output:</p>
+<pre><code class="language-bash">tectonic tree.tex
+# or
+latexmk -xelatex tree.tex
+</code></pre>
+<p>Use <code>--forest</code> to pass through an existing Forest code file instead of a Newick tree:</p>
+<pre><code class="language-bash">necom nwk to-tex forest.tex --forest -o document.tex
+</code></pre>
+<hr>
+<h2 id="style-system"><a class="header" href="#style-system">Style System</a></h2>
+<p>Styles are attached to nodes as NHX annotations. The template defines four core visual attributes:</p>
+<h3 id="dot"><a class="header" href="#dot"><code>dot</code></a></h3>
+<p>Draws a filled circle at the node.</p>
+<pre><code class="language-text">[&amp;&amp;NHX:dot=red]
+</code></pre>
+<p>When no color is given, <code>dot</code> is automatically applied to named internal nodes.</p>
+<h3 id="bar"><a class="header" href="#bar"><code>bar</code></a></h3>
+<p>Draws a short perpendicular bar on the edge between the node and its parent. Useful for marking events or character-state changes.</p>
+<pre><code class="language-text">[&amp;&amp;NHX:bar=blue]
+</code></pre>
+<h3 id="rec"><a class="header" href="#rec"><code>rec</code></a></h3>
+<p>Draws a background rectangle behind the entire clade rooted at the node.</p>
+<pre><code class="language-text">[&amp;&amp;NHX:rec=LemonChiffon]
+</code></pre>
+<p>This is often combined with the soft palette defined in the template.</p>
+<h3 id="tri"><a class="header" href="#tri"><code>tri</code></a></h3>
+<p>Draws a triangle to the right of the node, commonly used for collapsed clades or to emphasize a leaf.</p>
+<pre><code class="language-text">[&amp;&amp;NHX:tri=green]
+</code></pre>
+<hr>
+<h2 id="colors-and-global-settings"><a class="header" href="#colors-and-global-settings">Colors and Global Settings</a></h2>
+<p>The built-in template provides a soft, muted palette (for example <code>ChampagnePink</code>, <code>TeaRose</code>, and <code>Celadon</code>). By default:</p>
+<ul>
+<li><code>tier=word</code> is enabled, aligning all leaf nodes at the same level (cladogram style).</li>
+<li>Branch lines are gray (1 pt).</li>
+<li>Nodes are drawn as small black circles (2 pt).</li>
+<li>A sans-serif font is used.</li>
+</ul>
+<p>Font behavior:</p>
+<ul>
+<li>By default, the template uses <code>Noto Sans</code>, which is widely available.</li>
+<li>Use <code>--no-default-style</code> to keep the template’s original <code>Fira Sans</code> / <code>Source Han Sans SC</code> setup instead of injecting the default <code>Noto Sans</code> configuration.</li>
+</ul>
+<hr>
+<h2 id="advanced-features"><a class="header" href="#advanced-features">Advanced Features</a></h2>
+<h3 id="phylogram-mode---bl"><a class="header" href="#phylogram-mode---bl">Phylogram Mode (<code>--bl</code>)</a></h3>
+<p>When the input tree contains branch lengths, <code>--bl</code> produces a phylogram with a automatically computed scale bar. The scale values (e.g., <code>0.01</code>, <code>0.05</code>, <code>1.0</code>) are chosen based on the tree height and rendered in the lower-right corner.</p>
+<h3 id="forest-pass-through---forest"><a class="header" href="#forest-pass-through---forest">Forest Pass-Through (<code>--forest</code>)</a></h3>
+<p><code>to-tex --forest</code> allows an externally generated Forest code file to be wrapped in the template. This is useful when the Forest code has been produced by <code>to-forest</code> and then manually adjusted.</p>
+<h3 id="special-character-handling"><a class="header" href="#special-character-handling">Special Character Handling</a></h3>
+<p>LaTeX special characters and Newick conventions are normalized automatically:</p>
+<ul>
+<li>Underscores (<code>_</code>) in node names are replaced with spaces.</li>
+<li>LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) in node names, labels, comments, and visualization attributes are escaped.</li>
+</ul>
+<p>This ensures that the generated Forest code compiles without manual cleanup.</p>
+<hr>
+<h2 id="workflow-example"><a class="header" href="#workflow-example">Workflow Example</a></h2>
+<ol>
+<li>
+<p>Annotate the tree with visualization attributes:</p>
+<pre><code class="language-bash">necom nwk comment input.nwk --lca A,B --rec TeaRose --label Group1 &gt; annotated.nwk
+</code></pre>
+</li>
+<li>
+<p>Generate the LaTeX document:</p>
+<pre><code class="language-bash">necom nwk to-tex annotated.nwk -o output.tex
+</code></pre>
+</li>
+<li>
+<p>Compile:</p>
+<pre><code class="language-bash">tectonic output.tex
+</code></pre>
+</li>
+</ol>
+<hr>
+<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<p>Compiling <code>to-tex</code> output requires a LaTeX installation that includes:</p>
+<ul>
+<li><code>fontspec</code></li>
+<li><code>xeCJK</code> (for East Asian characters)</li>
+<li><code>forest</code></li>
+</ul>
+<p><a href="https://tectonic-typesetting.github.io/">Tectonic</a> is the recommended compiler, but <code>latexmk -xelatex</code> also works.</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="necom-eval"><a class="header" href="#necom-eval">necom eval</a></h1>
 <p><code>necom eval</code> provides evaluation metrics for clustering partitions and phylogenetic trees. It is the unified entry point for assessing result quality, support, and consistency.</p>
 <h2 id="subcommands-1"><a class="header" href="#subcommands-1">Subcommands</a></h2>
@@ -1348,6 +1452,8 @@ neighbor &lt; input.infile
 <li><strong>Phylo</strong>: Local RF to reference tree, Monophyly Check, ConflictScore.</li>
 <li><strong>Fit</strong>: Cophenetic Correlation against an original distance matrix.</li>
 </ul>
+<h3 id="boot-not-implemented"><a class="header" href="#boot-not-implemented">boot (Not Implemented)</a></h3>
+<p>Multiscale bootstrap (pvclust-style) support values for hierarchical clustering. Takes an observation matrix, resamples features at multiple scales, rebuilds the hierarchical tree each time, and fits BP/AU/SI values for every internal node. Design details are in <a href="../notes/design/eval-boot.html"><code>notes/design/eval-boot.md</code></a>.</p>
 <h3 id="quartet-future-candidate-not-designed"><a class="header" href="#quartet-future-candidate-not-designed">quartet (Future Candidate, Not Designed)</a></h3>
 <p>Quartet-based consistency or support values for branches. <strong>Not yet designed; the namespace is not reserved.</strong> Boundary: if the goal is to <em>infer</em> a new tree from quartets, it belongs to <code>nwk</code>; if the goal is to <em>assess</em> branch support of a given tree, it belongs to <code>eval</code>.</p>
 <hr>

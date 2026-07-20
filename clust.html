@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3fd5c070.js";
+            window.path_to_searchindex_js = "searchindex-13d610d6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-49c214f6.js"></script>
+        <script src="toc-57acacb7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -363,8 +363,8 @@
 <p>Partition evaluation has moved to <a href="eval.html"><code>necom eval partition</code></a>. See <a href="eval.html"><code>docs/eval.md</code></a> for the overview and <a href="eval-partition.html"><code>docs/eval-partition.md</code></a> for detailed metric definitions.</p>
 <h2 id="planned"><a class="header" href="#planned">Planned</a></h2>
 <p>GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Algorithms considered but not adopted (K-Means, Spectral, OPTICS, BIRCH, etc.) are documented in <a href="../notes/design/clust-impl.html"><code>notes/design/clust-impl.md</code></a>.</p>
-<h3 id="bootstrap-support-for-hierarchical-clustering-planned"><a class="header" href="#bootstrap-support-for-hierarchical-clustering-planned">Bootstrap Support for Hierarchical Clustering [Planned]</a></h3>
-<p><code>necom clust boot</code> will compute multiscale-bootstrap BP/AU/SI support values (pvclust-style) for each internal node of a hierarchical clustering tree, quantifying the stability of clusters under feature resampling. Design details are in <a href="../notes/design/clust-boot.html"><code>notes/design/clust-boot.md</code></a>.</p>
+<h3 id="bootstrap-support-for-hierarchical-clustering-moved-to-necom-eval"><a class="header" href="#bootstrap-support-for-hierarchical-clustering-moved-to-necom-eval">Bootstrap Support for Hierarchical Clustering [Moved to <code>necom eval</code>]</a></h3>
+<p><code>necom eval boot</code> will compute multiscale-bootstrap BP/AU/SI support values (pvclust-style) for each internal node of a hierarchical clustering tree, quantifying the stability of clusters under feature resampling. Design details are in <a href="../notes/design/eval-boot.html"><code>notes/design/eval-boot.md</code></a>.</p>
 <h3 id="gmm-gaussian-mixture-models-planned"><a class="header" href="#gmm-gaussian-mixture-models-planned">GMM (Gaussian Mixture Models) [Planned]</a></h3>
 <p>Motivation for introducing GMM:</p>
 <ul>

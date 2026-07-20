@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3fd5c070.js";
+            window.path_to_searchindex_js = "searchindex-13d610d6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-49c214f6.js"></script>
+        <script src="toc-57acacb7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -230,6 +230,8 @@
 <li><strong>Phylo</strong>: Local RF to reference tree, Monophyly Check, ConflictScore.</li>
 <li><strong>Fit</strong>: Cophenetic Correlation against an original distance matrix.</li>
 </ul>
+<h3 id="boot-not-implemented"><a class="header" href="#boot-not-implemented">boot (Not Implemented)</a></h3>
+<p>Multiscale bootstrap (pvclust-style) support values for hierarchical clustering. Takes an observation matrix, resamples features at multiple scales, rebuilds the hierarchical tree each time, and fits BP/AU/SI values for every internal node. Design details are in <a href="../notes/design/eval-boot.html"><code>notes/design/eval-boot.md</code></a>.</p>
 <h3 id="quartet-future-candidate-not-designed"><a class="header" href="#quartet-future-candidate-not-designed">quartet (Future Candidate, Not Designed)</a></h3>
 <p>Quartet-based consistency or support values for branches. <strong>Not yet designed; the namespace is not reserved.</strong> Boundary: if the goal is to <em>infer</em> a new tree from quartets, it belongs to <code>nwk</code>; if the goal is to <em>assess</em> branch support of a given tree, it belongs to <code>eval</code>.</p>
 <hr>
@@ -296,7 +298,7 @@
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="nwk.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="nwk-tex.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -310,7 +312,7 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="nwk.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="nwk-tex.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
