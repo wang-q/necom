@@ -54,7 +54,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // When no name-based filter is given, include all selected nodes (not only
     // named ones) so that internal/unnamed nodes can be reported too.
     let ids_pos = super::common::match_positions(&tree, args)?;
-    let ids_name = super::common::match_names(&tree, args)?;
+    let ids_name = super::common::match_names(&tree, args, true)?;
     let has_name_filter = args.try_contains_id("node").unwrap_or(false)
         || args.try_contains_id("name_list").unwrap_or(false)
         || args.try_contains_id("regex").unwrap_or(false);

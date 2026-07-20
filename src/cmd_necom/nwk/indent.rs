@@ -36,8 +36,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let text = if compact {
         ""
     } else {
-        args.get_one::<String>("text")
-            .ok_or_else(|| anyhow::anyhow!("missing required argument: text"))?
+        // --text has a default value, so it is always present.
+        args.get_one::<String>("text").unwrap()
     };
 
     let infile = args

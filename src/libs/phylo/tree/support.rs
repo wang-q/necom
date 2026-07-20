@@ -101,7 +101,10 @@ pub fn annotate_support(
         if !node.is_leaf() && (override_root || !is_root) {
             let count = counts.get(&bs).copied().unwrap_or(0);
             let label = if as_percent {
-                match (count * 100).checked_div(total_reps) {
+                match count
+                    .checked_mul(100)
+                    .and_then(|x| x.checked_div(total_reps))
+                {
                     Some(v) => format!("{}", v),
                     None => "0".to_string(),
                 }
@@ -182,6 +185,27 @@ mod tests {
             annotated.get_node(root).unwrap().name.as_deref(),
             Some("Root")
         );
+    }
+
+    #[test]
+    fn annotate_support_percent_no_panic_on_zero_total() {
+        // total_reps == 0 would divide by zero; the function should return 0
+        // rather than panic.
+        let target = Tree::from_newick("((A,B),(C,D));").unwrap();
+        let replicate = Tree::from_newick("((A,B),(C,D));").unwrap();
+        let leaf_map = build_leaf_map(&replicate).unwrap();
+        let counts = count_clades(&[replicate], &leaf_map).unwrap();
+
+        let mut annotated = target;
+        annotate_support(&mut annotated, &leaf_map, &counts, 0, true, false).unwrap();
+
+        let internal_names: Vec<_> = annotated
+            .nodes
+            .iter()
+            .filter(|n| !n.is_leaf() && n.parent.is_some())
+            .filter_map(|n| n.name.clone())
+            .collect();
+        assert_eq!(internal_names, vec!["0", "0"]);
     }
 
     #[test]

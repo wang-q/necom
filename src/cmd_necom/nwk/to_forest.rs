@@ -25,7 +25,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .get_one::<String>("infile")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: infile"))?;
 
-    let tree = Tree::from_file(infile)?
+    let trees = Tree::from_file(infile)?;
+    if trees.len() > 1 {
+        log::warn!(
+            "file contains {} trees, only the first will be processed",
+            trees.len()
+        );
+    }
+    let tree = trees
         .into_iter()
         .next()
         .ok_or_else(|| anyhow::anyhow!("no trees found in {}", infile))?;

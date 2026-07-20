@@ -430,6 +430,50 @@ fn command_to_tex_no_default_style() {
 }
 
 #[test]
+fn command_to_forest_color_latex_escaped() {
+    // Color values containing LaTeX special characters must be escaped.
+    let newick = "(A[&&NHX:color=#FF0000],B)Root;";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "to-forest", "stdin"])
+        .stdin(newick)
+        .run();
+
+    assert!(
+        stdout.contains(r"\#"),
+        "expected escaped # in forest color: {}",
+        stdout
+    );
+    assert!(
+        !stdout.contains("color={#FF0000}"),
+        "unescaped # in forest color: {}",
+        stdout
+    );
+}
+
+#[test]
+fn command_to_dot_escapes_newline() {
+    // Real newline characters in labels must be escaped for DOT.
+    let newick = "('A\nB',C)Root;";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "to-dot", "stdin"])
+        .stdin(newick)
+        .run();
+
+    // The DOT label should contain the two-character escape sequence \n,
+    // not an actual newline.
+    assert!(
+        stdout.contains("label=\"A\\nB\""),
+        "expected escaped newline in DOT label: {}",
+        stdout
+    );
+    assert!(
+        !stdout.contains("label=\"A\nB\""),
+        "real newline in DOT label: {}",
+        stdout
+    );
+}
+
+#[test]
 fn command_to_tex_bl_tiny_branch_lengths() {
     let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "to-tex", "stdin", "--bl"])

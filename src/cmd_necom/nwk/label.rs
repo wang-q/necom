@@ -103,7 +103,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let ids_pos = super::common::match_positions(tree, args)?;
 
         // All IDs matching names
-        let ids_name = super::common::match_names(tree, args)?;
+        let ids_name = super::common::match_names(tree, args, true)?;
 
         let ids: BTreeSet<usize> = ids_pos.intersection(&ids_name).cloned().collect();
 

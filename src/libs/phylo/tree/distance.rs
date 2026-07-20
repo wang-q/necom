@@ -6,6 +6,21 @@ use anyhow::{anyhow, Result};
 use std::collections::BTreeMap;
 use std::io::Write;
 
+/// Format a distance value for Phylip output.
+///
+/// Normal values are printed with 6 fixed decimal places to match the relaxed
+/// Phylip convention. Values too small for 6 decimals are printed in
+/// scientific notation so they are not silently rounded to zero.
+fn format_phylip_distance(dist: f64) -> String {
+    if dist == 0.0 {
+        "0.000000".to_string()
+    } else if dist.abs() < 0.5e-6 {
+        format!("{:e}", dist)
+    } else {
+        format!("{:.6}", dist)
+    }
+}
+
 /// Write distance from each node (in `id_of`) to the root.
 pub fn dist_root<W: Write>(
     tree: &Tree,
@@ -95,6 +110,13 @@ pub fn dist_phylip<W: Write>(
     let names: Vec<&String> = id_of.keys().collect();
     let n = names.len();
 
+    // Decide matrix units once for the whole tree: use branch lengths if the
+    // tree has any positive finite edge, otherwise fall back to edge counts.
+    let use_lengths = tree
+        .nodes
+        .iter()
+        .any(|n| !n.deleted && n.finite_length() > 0.0);
+
     // Phylip header
     writer.write_fmt(format_args!("    {}\n", n))?;
 
@@ -113,12 +135,17 @@ pub fn dist_phylip<W: Write>(
             let dist = if i == j {
                 0.0
             } else {
-                tree.node_distance(*v1, *v2)?
+                let (weighted, topo) = tree.get_distance(*v1, *v2)?;
+                if use_lengths {
+                    weighted
+                } else {
+                    topo as f64
+                }
             };
             // Normalize -0.0 to 0.0 so Phylip matrices never print "-0.000000".
             let dist = if dist == 0.0 { 0.0 } else { dist };
 
-            writer.write_fmt(format_args!(" {:.6}", dist))?;
+            writer.write_fmt(format_args!(" {}", format_phylip_distance(dist)))?;
         }
         writer.write_all(b"\n")?;
     }

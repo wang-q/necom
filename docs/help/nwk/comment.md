@@ -36,7 +36,7 @@ Notes:
     * `ElectricBlue` (142,236,245)
     * `Aquamarine` (152,245,225)
     * `Celadon` (185,251,192)
-* `--remove <REGEX>` scans all nodes and removes parts of comments matching the regex.
+* `--remove <REGEX>` scans all nodes and removes whole property entries whose serialized `key=value` (or bare `key`) matches the regex.
 
 Examples:
 

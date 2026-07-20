@@ -173,6 +173,19 @@ fn command_prune_keep_internal_node_by_name() {
 }
 
 #[test]
+fn command_prune_no_selector_keeps_tree() {
+    // Without any selector, prune should leave the tree unchanged rather than
+    // defaulting to all named nodes.
+    let input = "(((Homo,Pan),Gorilla),Pongo);";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "prune", "stdin"])
+        .stdin(input)
+        .run();
+
+    assert_eq!(stdout.trim(), input);
+}
+
+#[test]
 fn command_prune() {
     let (stdout, _) = NecomCmd::new()
         .args(&[

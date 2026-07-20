@@ -140,7 +140,17 @@ fn quote_label(label: &str) -> String {
         .chars()
         .any(|c| is_newick_reserved(c) || c == '\'' || c == '"' || c.is_whitespace());
     if needs_quote {
-        format!("'{}'", label.replace('\'', "''"))
+        let mut out = String::with_capacity(label.len() + 2);
+        out.push('\'');
+        for c in label.chars() {
+            if c == '\'' {
+                out.push_str("''");
+            } else {
+                out.push(c);
+            }
+        }
+        out.push('\'');
+        out
     } else {
         label.to_string()
     }
@@ -156,6 +166,7 @@ pub fn escape_nhx_value(value: &str) -> String {
     for c in value.chars() {
         match c {
             '\\' => out.push_str("\\\\"),
+            '[' => out.push_str("\\["),
             ']' => out.push_str("\\]"),
             ':' => out.push_str("\\:"),
             '=' => out.push_str("\\="),
@@ -296,6 +307,29 @@ mod tests {
         assert_eq!(
             root.get_property("comment").map(|s| s.as_str()),
             Some("a:b=c;d,e")
+        );
+    }
+
+    #[test]
+    fn test_to_newick_property_value_escapes_open_bracket() {
+        // Open square brackets inside NHX values must be escaped so they are
+        // not interpreted as the start of a nested comment on re-parsing.
+        let mut tree = Tree::new();
+        let n0 = tree.add_node();
+        let _ = tree.set_root(n0);
+        tree.get_node_mut(n0).unwrap().set_name("A");
+        tree.get_node_mut(n0)
+            .unwrap()
+            .add_property("comment", "a[b");
+
+        let output = to_newick(&tree);
+        assert!(output.contains("A[&&NHX:comment=a\\[b];"));
+
+        let parsed = Tree::from_newick(&output).unwrap();
+        let root = parsed.get_node(parsed.get_root().unwrap()).unwrap();
+        assert_eq!(
+            root.get_property("comment").map(|s| s.as_str()),
+            Some("a[b")
         );
     }
 

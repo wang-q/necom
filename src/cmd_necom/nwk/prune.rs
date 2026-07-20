@@ -31,7 +31,18 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let trees = Tree::from_file(infile)?;
 
     for mut tree in trees {
-        let target_ids = super::common::match_names(&tree, args)?;
+        let target_ids = super::common::match_names(&tree, args, false)?;
+
+        if !args.try_contains_id("node").unwrap_or(false)
+            && !args.try_contains_id("name_list").unwrap_or(false)
+            && !args.try_contains_id("regex").unwrap_or(false)
+        {
+            // No selector given: pruning is destructive, so keep the tree
+            // unchanged rather than defaulting to all named nodes.
+            log::warn!("no --node/--name-list/--regex provided; leaving tree unchanged");
+            writer.write_fmt(format_args!("{}\n", tree.to_newick()))?;
+            continue;
+        }
 
         let to_remove: Vec<_> = if args.get_flag("invert") {
             if target_ids.is_empty() {

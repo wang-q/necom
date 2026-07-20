@@ -158,6 +158,31 @@ fn command_subtree_regex() {
 }
 
 #[test]
+fn command_subtree_no_selector_no_output() {
+    // Without any name-based selector, subtree should produce no output rather
+    // than defaulting to the whole tree.
+    let input = "((A,B),(C,D));";
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "subtree", "stdin"])
+        .stdin(input)
+        .run();
+
+    assert!(stdout.trim().is_empty());
+}
+
+#[test]
+fn command_subtree_monophyly_requires_two_leaves() {
+    // -M requires at least two selected terminal (leaf) nodes, not just any
+    // two nodes that form a clade.
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "subtree", "stdin", "-n", "X", "-n", "A", "-M"])
+        .stdin("((A,B)X,(C,D)Y);")
+        .run();
+
+    assert!(stdout.trim().is_empty());
+}
+
+#[test]
 fn command_subtree_default() {
     let (stdout, _) = NecomCmd::new()
         .args(&[

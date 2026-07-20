@@ -220,11 +220,7 @@ pub fn sort_by_list(tree: &mut Tree, order_list: &[String]) {
             node.children.sort_by(|a, b| {
                 let pos_a = node_pos.get(a).unwrap_or(&max_pos);
                 let pos_b = node_pos.get(b).unwrap_or(&max_pos);
-                if pos_a == pos_b {
-                    a.cmp(b)
-                } else {
-                    pos_a.cmp(pos_b)
-                }
+                pos_a.cmp(pos_b)
             });
         }
     }
@@ -547,6 +543,18 @@ mod tests {
         let mut tree = Tree::from_newick(newick).unwrap();
         sort_by_list(&mut tree, &["C".to_string(), "B".to_string()]);
         assert_eq!(tree.to_newick(), "((C,E),(B,A));");
+    }
+
+    #[test]
+    fn test_sort_by_list_preserves_order_for_ties() {
+        // When two children have the same position in the list (or are both
+        // unlisted), stable sorting should preserve their original order.
+        let newick = "((Z,Y),(X,W));";
+        let mut tree = Tree::from_newick(newick).unwrap();
+        sort_by_list(&mut tree, &["A".to_string(), "B".to_string()]);
+        // All leaves are unlisted, so their relative order within each clade
+        // should be unchanged.
+        assert_eq!(tree.to_newick(), "((Z,Y),(X,W));");
     }
 
     #[test]

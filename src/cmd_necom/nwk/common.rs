@@ -85,7 +85,7 @@ fn flag(args: &ArgMatches, id: &str) -> bool {
     args.try_contains_id(id).unwrap_or(false) && args.get_flag(id)
 }
 
-/// Warn once for each duplicate name that is being matched by name.
+/// Warn when a duplicate name is being matched by name.
 pub(crate) fn warn_duplicate_name(duplicates: &HashSet<String>, name: &str) {
     if duplicates.contains(name) {
         log::warn!(
@@ -152,18 +152,22 @@ fn collect_name_selection(
 }
 
 /// Returns IDs of named nodes matching the name selection rules from CLI args.
+///
+/// When `default_to_all` is `true` and no name-based selector is provided,
+/// all named nodes are returned. When `false`, an empty set is returned,
+/// leaving the caller to decide what to do when nothing is selected.
 pub(crate) fn match_names(
     tree: &Tree,
     args: &ArgMatches,
+    default_to_all: bool,
 ) -> anyhow::Result<BTreeSet<NodeId>> {
     let mut ids = collect_name_selection(tree, args, "node", "name_list", "regex")?;
 
-    // Default is printing all named nodes
-    let is_all = !(args.try_contains_id("node").unwrap_or(false)
+    let has_selector = args.try_contains_id("node").unwrap_or(false)
         || args.try_contains_id("name_list").unwrap_or(false)
-        || args.try_contains_id("regex").unwrap_or(false));
+        || args.try_contains_id("regex").unwrap_or(false);
 
-    if is_all {
+    if !has_selector && default_to_all {
         ids = tree.get_name_id().values().cloned().collect();
     }
 

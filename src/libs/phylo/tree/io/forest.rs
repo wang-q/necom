@@ -120,7 +120,7 @@ fn to_forest_node_props(
 
     if let Some(props) = node.properties.as_ref() {
         if let Some(v) = props.get("color") {
-            color = Some(v.replace('_', " "));
+            color = Some(display_text(v));
         }
         if let Some(v) = props.get("label") {
             label = Some(display_text(v));

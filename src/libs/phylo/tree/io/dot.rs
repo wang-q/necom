@@ -5,7 +5,18 @@ use std::fmt::Write as _;
 
 /// Escape a string for safe use inside a DOT double-quoted label.
 fn escape_dot_label(s: &str) -> String {
-    s.replace('\\', "\\\\").replace('"', "\\\"")
+    let mut out = String::with_capacity(s.len() + 4);
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            _ => out.push(c),
+        }
+    }
+    out
 }
 
 /// Serialize the tree to a Graphviz DOT string.
@@ -106,6 +117,12 @@ mod tests {
         assert_eq!(escape_dot_label("A\"B"), "A\\\"B");
         assert_eq!(escape_dot_label("A\\\"B"), "A\\\\\\\"B");
         assert_eq!(escape_dot_label("plain"), "plain");
+
+        // Real whitespace characters must be escaped so the label stays on one
+        // line inside the DOT file.
+        assert_eq!(escape_dot_label("A\nB"), "A\\nB");
+        assert_eq!(escape_dot_label("A\rB"), "A\\rB");
+        assert_eq!(escape_dot_label("A\tB"), "A\\tB");
     }
 
     #[test]

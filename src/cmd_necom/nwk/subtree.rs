@@ -56,9 +56,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     for tree in &mut trees {
         // IDs matching names
-        let ids = super::common::match_names(tree, args)?;
+        let ids = super::common::match_names(tree, args, false)?;
 
         if ids.is_empty() {
+            // No name-based selector was provided; per the help docs, generate
+            // no output rather than defaulting to all named nodes.
             continue;
         }
 
@@ -66,9 +68,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let ids_vec: Vec<usize> = ids.iter().cloned().collect();
         let mut sub_root_id = tree.get_lca(&ids_vec)?;
 
-        // Monophyly check: selected nodes must form a clade.
-        if is_monophyly && !tree.is_clade(&ids_vec) {
-            continue;
+        // Monophyly check: selected nodes must form a clade with at least two
+        // terminal (leaf) nodes, matching the documented behavior.
+        if is_monophyly {
+            if !tree.is_clade(&ids_vec) {
+                continue;
+            }
+            let leaf_count = ids_vec
+                .iter()
+                .filter(|&&id| tree.get_node(id).map(|n| n.is_leaf()).unwrap_or(false))
+                .count();
+            if leaf_count < 2 {
+                continue;
+            }
         }
 
         // Apply context

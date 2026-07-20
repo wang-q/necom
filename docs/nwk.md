@@ -64,7 +64,7 @@ Batch replace node names or append annotations from a TSV file. Use `--mode` to 
 
 ### reroot
 
-Reroot the tree. The default is midpoint rooting; use `-n` for outgroup rooting.
+Reroot the tree. The default is midpoint rooting; use `-n` to specify the ingroup, rerooting on the edge leading to the LCA of the specified nodes.
 
 ### subtree
 

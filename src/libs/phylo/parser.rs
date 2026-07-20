@@ -310,6 +310,7 @@ fn unescape_nhx_value(value: &str) -> String {
         if c == '\\' {
             if let Some(&next) = chars.peek() {
                 if next == '\\'
+                    || next == '['
                     || next == ']'
                     || next == ':'
                     || next == '='
