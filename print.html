@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3d7ace9c.js";
+            window.path_to_searchindex_js = "searchindex-9d5b9e02.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -204,7 +204,7 @@ subcommands.</li>
 <li><strong>Robust</strong>: Rust implementation with a zero-panic policy for malformed inputs.</li>
 </ul>
 <h2 id="install"><a class="header" href="#install">Install</a></h2>
-<p>Current release: 0.3.0</p>
+<p>Current release: 0.4.0</p>
 <p><code>necom</code> uses unstable Rust features (notably <code>portable_simd</code>), so a <strong>nightly</strong> toolchain is required. The exact nightly is pinned by <code>rust-toolchain.toml</code> (<code>nightly-2026-01-26</code>); install it once, then use plain <code>cargo</code>:</p>
 <pre><code class="language-bash">rustup toolchain install nightly-2026-01-26
 cargo install --path . --force
@@ -3449,6 +3449,7 @@ GeneB	1.1	0.6	3.1
 <p>Notes:</p>
 <ul>
 <li>Support values are written as internal node labels.</li>
+<li>All leaves must be named; trees with unnamed leaves are rejected (unnamed leaves would corrupt clade bitsets and produce misleading support values).</li>
 <li>All trees must share the same set of leaves; replicate trees are checked against the first replicate and target trees are checked against the replicate set.</li>
 <li>The root node is not annotated; any existing root label is preserved.</li>
 <li><code>--percent</code> / <code>-p</code>: output support values as integer percentages (0–100), truncated toward zero.</li>
