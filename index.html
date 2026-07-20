@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7c711f57.js";
+            window.path_to_searchindex_js = "searchindex-a2c4d197.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -225,14 +225,9 @@ output and composable subcommands.</li>
 </ul>
 <h2 id="install"><a class="header" href="#install">Install</a></h2>
 <p>Current release: 0.4.0</p>
-<p><code>necom</code> uses unstable Rust features (notably <code>portable_simd</code>), so a <strong>nightly</strong> toolchain is
-required. The exact nightly is pinned by <code>rust-toolchain.toml</code> (<code>nightly-2026-01-26</code>); install it
-once, then use plain <code>cargo</code>:</p>
-<pre><code class="language-bash">rustup toolchain install nightly-2026-01-26
-cargo install --path . --force
-</code></pre>
-<h2 id="test"><a class="header" href="#test">Test</a></h2>
-<pre><code class="language-bash">cargo test
+<p><code>necom</code> requires the Rust nightly toolchain (pinned by <code>rust-toolchain.toml</code> for <code>portable_simd</code>),
+auto-installed by <code>cargo</code> on first use:</p>
+<pre><code class="language-bash">cargo install --path . --force
 </code></pre>
 <h2 id="quick-start"><a class="header" href="#quick-start">Quick start</a></h2>
 <p>After installation, the <code>necom</code> binary is available in your <code>PATH</code>:</p>
