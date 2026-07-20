@@ -43,7 +43,7 @@ fn test_tree_distance() {
     tree.get_node_mut(b).unwrap().length = Some(4.0);
     tree.get_node_mut(g).unwrap().length = Some(2.0);
 
-    let td = TreeDistance::new(tree);
+    let td = TreeDistance::new(tree).unwrap();
 
     // Patristic distance A-B = 2 + 4 = 6.
     assert_eq!(td.get_distance("A", "B"), 6.0);
@@ -72,7 +72,7 @@ fn test_tree_distance_cladogram() {
     //
     // Path A -> AB -> root -> C crosses 3 edges, so distance is 3.0.
     let tree = Tree::from_newick("((A:0.0,B:0.0):0.0,C:0.0);").unwrap();
-    let td = TreeDistance::new(tree);
+    let td = TreeDistance::new(tree).unwrap();
 
     assert_eq!(td.get_distance("A", "C"), 3.0);
     assert_eq!(td.get_distance("A", "B"), 2.0);
@@ -167,7 +167,7 @@ fn test_davies_bouldin_score_simple() {
     data.insert("C".to_string(), vec![5.0, 0.0]);
     data.insert("D".to_string(), vec![5.0, 1.0]);
 
-    let coords = Coordinates { data, dim: 2 };
+    let coords = Coordinates::new(data).unwrap();
 
     let score = davies_bouldin_score(&p, &coords);
     assert!((score - 0.2).abs() < 1e-6, "Score was {}", score);
@@ -302,7 +302,7 @@ fn test_internal_indices_simple() {
     data.insert("C".to_string(), vec![5.0, 0.0]);
     data.insert("D".to_string(), vec![6.0, 0.0]);
 
-    let coords = Coordinates { data, dim: 2 };
+    let coords = Coordinates::new(data).unwrap();
 
     // Construct Distance Matrix for C-index
     let names = vec![
@@ -464,7 +464,7 @@ fn test_calinski_harabasz_all_points_identical() {
     data.insert("B".to_string(), vec![1.0, 1.0]);
     data.insert("C".to_string(), vec![1.0, 1.0]);
 
-    let coords = Coordinates { data, dim: 2 };
+    let coords = Coordinates::new(data).unwrap();
 
     let score = calinski_harabasz_score(&p, &coords);
     assert_eq!(score, 0.0);
@@ -486,7 +486,7 @@ fn test_calinski_harabasz_zero_wgss_distinct_clusters() {
     data.insert("B1".to_string(), vec![5.0, 0.0]);
     data.insert("B2".to_string(), vec![5.0, 0.0]);
 
-    let coords = Coordinates { data, dim: 2 };
+    let coords = Coordinates::new(data).unwrap();
 
     let score = calinski_harabasz_score(&p, &coords);
     assert!(score.is_infinite(), "Expected +Infinity, got {}", score);
@@ -497,9 +497,9 @@ fn test_coordinates_from_path_normal() {
     let content = "A\t1.0\t2.0\t3.0\nB\t4.0\t5.0\t6.0\nC\t7.0\t8.0\t9.0\n";
     let path = write_temp_file(content, ".tsv");
     let coords = Coordinates::from_path(&path).unwrap();
-    assert_eq!(coords.dim, 3);
-    assert_eq!(coords.data.len(), 3);
-    assert_eq!(coords.data.get("A").unwrap(), &vec![1.0, 2.0, 3.0]);
+    assert_eq!(coords.dim(), 3);
+    assert_eq!(coords.data().len(), 3);
+    assert_eq!(coords.data().get("A").unwrap(), &vec![1.0, 2.0, 3.0]);
     let _ = std::fs::remove_file(&path);
 }
 
@@ -511,8 +511,8 @@ fn test_coordinates_from_path_leading_comment() {
     let content = "# this is a comment\nA\t1.0\t2.0\t3.0\nB\t4.0\t5.0\t6.0\n";
     let path = write_temp_file(content, ".tsv");
     let coords = Coordinates::from_path(&path).unwrap();
-    assert_eq!(coords.dim, 3);
-    assert_eq!(coords.data.len(), 2);
+    assert_eq!(coords.dim(), 3);
+    assert_eq!(coords.data().len(), 2);
     let _ = std::fs::remove_file(&path);
 }
 
@@ -521,8 +521,8 @@ fn test_coordinates_from_path_leading_blank_line() {
     let content = "\n\nA\t1.0\t2.0\nB\t3.0\t4.0\n";
     let path = write_temp_file(content, ".tsv");
     let coords = Coordinates::from_path(&path).unwrap();
-    assert_eq!(coords.dim, 2);
-    assert_eq!(coords.data.len(), 2);
+    assert_eq!(coords.dim(), 2);
+    assert_eq!(coords.data().len(), 2);
     let _ = std::fs::remove_file(&path);
 }
 
@@ -689,7 +689,7 @@ fn test_coord_metrics_missing_sample_return_nan() {
     data.insert("C".to_string(), vec![5.0, 0.0]);
     // E is intentionally missing.
 
-    let coords = Coordinates { data, dim: 2 };
+    let coords = Coordinates::new(data).unwrap();
 
     assert!(davies_bouldin_score(&p, &coords).is_nan());
     assert!(calinski_harabasz_score(&p, &coords).is_nan());
@@ -735,6 +735,56 @@ fn test_silhouette_score_with_singleton_cluster() {
 }
 
 #[test]
+fn test_tau_score_mixed_distance_ties() {
+    // Regression test for a tie-handling bug in tau_score: pairs tied in
+    // distance (X) must not be counted as concordant or discordant, even when
+    // they differ in cluster membership (Y).
+    //
+    // Partition: {A, B}, {C}, {D}
+    // Pairs (dist, is_diff):
+    //   A-B  1  same
+    //   A-C  1  diff
+    //   A-D  2  diff
+    //   B-C  2  diff
+    //   B-D  3  diff
+    //   C-D  3  diff
+    //
+    // Only cross-block comparisons with the single SAME pair (A-B) contribute
+    // concordant pairs: A-D, B-C, B-D, C-D -> n_c = 4.
+    // n_d = 0, n1 = 3 (three distance-tie blocks of size 2),
+    // n2 = 10 (1 same pair + 5 diff pairs).
+    // tau-b = 4 / sqrt((15 - 3) * (15 - 10)) = 4 / sqrt(60).
+    let mut p = LabelMap::new();
+    p.insert("A".to_string(), 1);
+    p.insert("B".to_string(), 1);
+    p.insert("C".to_string(), 2);
+    p.insert("D".to_string(), 3);
+
+    let names = vec![
+        "A".to_string(),
+        "B".to_string(),
+        "C".to_string(),
+        "D".to_string(),
+    ];
+    let mut dist_mat = NamedMatrix::new(names).unwrap();
+    dist_mat.set_by_name("A", "B", 1.0).unwrap();
+    dist_mat.set_by_name("A", "C", 1.0).unwrap();
+    dist_mat.set_by_name("B", "C", 2.0).unwrap();
+    dist_mat.set_by_name("A", "D", 2.0).unwrap();
+    dist_mat.set_by_name("B", "D", 3.0).unwrap();
+    dist_mat.set_by_name("C", "D", 3.0).unwrap();
+
+    let tau = tau_score(&p, &dist_mat);
+    let expected = 4.0 / 60f64.sqrt();
+    assert!(
+        (tau - expected).abs() < 1e-9,
+        "Tau was {}, expected {}",
+        tau,
+        expected
+    );
+}
+
+#[test]
 fn test_tree_distance_ignores_internal_node_names() {
     // Tree where an internal node shares a name with a leaf. TreeDistance must
     // resolve partition samples against leaves, not internal nodes.
@@ -743,7 +793,7 @@ fn test_tree_distance_ignores_internal_node_names() {
     // Leaf X is at distance 1.0 from root; internal node X is at distance 2.0 from root.
     // Partition samples are leaves A, B, X. Distance A-X (leaf) = 2.0 + 1.0 = 3.0.
     let tree = Tree::from_newick("((A:2.0,B:4.0)X:2.0,X:1.0);").unwrap();
-    let td = TreeDistance::new(tree);
+    let td = TreeDistance::new(tree).unwrap();
 
     // A to leaf X: path A -> g -> root -> X = 2.0 + 2.0 + 1.0 = 5.0.
     assert_eq!(td.get_distance("A", "X"), 5.0);

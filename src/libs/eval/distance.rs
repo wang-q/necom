@@ -38,16 +38,21 @@ impl TreeDistance {
     ///
     /// Only leaf names are mapped; internal node names are ignored so that
     /// partition samples are always resolved against leaves.
-    pub fn new(tree: Tree) -> Self {
-        let name_map: HashMap<String, usize> = tree
-            .get_leaves()
-            .into_iter()
-            .filter_map(|id| {
-                tree.get_node(id)
-                    .and_then(|n| n.name.as_ref().map(|name| (name.clone(), id)))
-            })
-            .collect();
-        Self { tree, name_map }
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the tree contains duplicate leaf names, because
+    /// they cannot be unambiguously resolved to a single leaf node.
+    pub fn new(tree: Tree) -> anyhow::Result<Self> {
+        let mut name_map: HashMap<String, usize> = HashMap::new();
+        for id in tree.get_leaves() {
+            if let Some(name) = tree.get_node(id).and_then(|n| n.name.as_ref()) {
+                if name_map.insert(name.clone(), id).is_some() {
+                    anyhow::bail!("duplicate leaf name: {}", name);
+                }
+            }
+        }
+        Ok(Self { tree, name_map })
     }
 }
 
@@ -398,25 +403,25 @@ pub fn tau_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> f64 {
             j += 1;
         }
 
-        // Process block i..j
+        // Process block i..j as a unit: pairs inside the block are tied in X,
+        // so they must not contribute to concordant/discordant counts. Only
+        // cross-block comparisons (current block vs strictly smaller previous
+        // distances) are valid.
         let mut block_same = 0;
         let mut block_diff = 0;
 
         for p in pairs.iter().take(j).skip(i) {
             if p.is_diff {
-                // This pair is DIFF.
-                // Compared to previous SAME pairs (which have strictly smaller distance):
-                // Concordant: Previous Same < Current Diff
-                s_plus += cum_same as f64;
                 block_diff += 1;
             } else {
-                // This pair is SAME.
-                // Compared to previous DIFF pairs (which have strictly smaller distance):
-                // Discordant: Previous Diff < Current Same
-                s_minus += cum_diff as f64;
                 block_same += 1;
             }
         }
+
+        // Concordant: each DIFF pair in this block vs each previous SAME pair.
+        s_plus += block_diff as f64 * cum_same as f64;
+        // Discordant: each SAME pair in this block vs each previous DIFF pair.
+        s_minus += block_same as f64 * cum_diff as f64;
 
         cum_same += block_same;
         cum_diff += block_diff;

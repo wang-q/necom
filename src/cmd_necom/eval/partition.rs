@@ -20,7 +20,7 @@ fn ensure_coords_cover_partition(
 ) -> anyhow::Result<()> {
     let missing: Vec<&str> = partition
         .keys()
-        .filter(|k| !coords.data.contains_key(*k))
+        .filter(|k| !coords.contains(k))
         .map(|k| k.as_str())
         .collect();
     if !missing.is_empty() {
@@ -70,7 +70,12 @@ fn ensure_non_empty(partition: &LabelMap, context: &str) -> anyhow::Result<()> {
 ///
 /// External metrics require the two partitions to be comparable; silently
 /// intersecting keys can hide mismatched inputs and produce misleading scores.
-fn ensure_partitions_align(p1: &LabelMap, p2: &LabelMap) -> anyhow::Result<()> {
+/// `p1_context` is used in error messages (e.g. "p1" or a batch group id).
+fn ensure_partitions_align(
+    p1: &LabelMap,
+    p2: &LabelMap,
+    p1_context: &str,
+) -> anyhow::Result<()> {
     let only_in_p1: Vec<&str> = p1
         .keys()
         .filter(|k| !p2.contains_key(*k))
@@ -83,9 +88,11 @@ fn ensure_partitions_align(p1: &LabelMap, p2: &LabelMap) -> anyhow::Result<()> {
         .collect();
     if !only_in_p1.is_empty() || !only_in_p2.is_empty() {
         anyhow::bail!(
-            "partition sample sets do not match ({} only in p1, {} only in --other): p1 {:?}, --other {:?}",
+            "partition sample sets do not match ({} only in {}, {} only in --other): {} {:?}, --other {:?}",
             only_in_p1.len(),
+            p1_context,
             only_in_p2.len(),
+            p1_context,
             only_in_p1.iter().take(5).copied().collect::<Vec<_>>(),
             only_in_p2.iter().take(5).copied().collect::<Vec<_>>()
         );
@@ -128,6 +135,29 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     };
 
     let remove_singletons_flag = args.get_flag("no_singletons");
+
+    // `--no-singletons` only affects the reference partition (`--other`).
+    // Reject it in other contexts so users are not misled into thinking it
+    // filters the input partition or distance-source samples.
+    if remove_singletons_flag && args.get_one::<String>("other").is_none() {
+        anyhow::bail!("--no-singletons requires --other/--truth");
+    }
+
+    // Only one input stream may be stdin at a time; otherwise the second read
+    // sees EOF and produces a confusing "empty file" error.
+    let stdin_count = [
+        Some(p1_path.as_str()),
+        args.get_one::<String>("other").map(|s| s.as_str()),
+        args.get_one::<String>("matrix").map(|s| s.as_str()),
+        args.get_one::<String>("tree").map(|s| s.as_str()),
+        args.get_one::<String>("coords").map(|s| s.as_str()),
+    ]
+    .iter()
+    .filter(|&&p| p == Some("stdin"))
+    .count();
+    if stdin_count > 1 {
+        anyhow::bail!("only one input file may be \"stdin\" per invocation");
+    }
 
     // Enforce mutual exclusion of evaluation targets. This applies uniformly
     // to both single and batch modes, so that users get an explicit error
@@ -206,7 +236,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 for (_, p1) in &batches {
                     ensure_names_cover_partition(p1, &tree_names, "--tree")?;
                 }
-                Some(Box::new(TreeDistance::new(tree)))
+                Some(Box::new(TreeDistance::new(tree)?))
             } else {
                 None
             };
@@ -248,7 +278,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                         &format!("group {} after --no-singletons filtering", group),
                     )?;
                 }
-                ensure_partitions_align(&p1, truth)?;
+                ensure_partitions_align(&p1, truth, &group)?;
             }
             processed_batches.push((group, p1));
         }
@@ -300,7 +330,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         if remove_singletons_flag {
             p1_for_eval.retain(|k, _| p2.contains_key(k));
         }
-        ensure_partitions_align(&p1_for_eval, &p2)?;
+        ensure_partitions_align(&p1_for_eval, &p2, "p1")?;
         run_single(&p1_for_eval, EvalTarget::External(&p2), &mut writer)?;
     } else if let Some(matrix_path) = args.get_one::<String>("matrix") {
         let matrix = NamedMatrix::from_relaxed_phylip(matrix_path)?;
@@ -318,7 +348,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let tree_names: HashSet<String> =
             tree.get_leaf_names().into_iter().flatten().collect();
         ensure_names_cover_partition(&p1, &tree_names, "--tree")?;
-        let dist = TreeDistance::new(tree);
+        let dist = TreeDistance::new(tree)?;
         run_single(&p1, EvalTarget::Matrix(&dist), &mut writer)?;
     } else if let Some(coords_path) = args.get_one::<String>("coords") {
         let coords = Coordinates::from_path(coords_path)?;

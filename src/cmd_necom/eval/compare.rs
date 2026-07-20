@@ -13,8 +13,9 @@ pub fn make_subcommand() -> Command {
         ))
         .arg(
             Arg::new("compare_file")
+                .index(2)
                 .num_args(1)
-                .help("Second input filename (optional)"),
+                .help("Second input filename (or stdin)"),
         )
         .arg(
             Arg::new("include_trivial")
@@ -46,10 +47,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let infile = args
         .get_one::<String>("infile")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: infile"))?;
+    let compare_file = args.get_one::<String>("compare_file");
+    if infile == "stdin" && compare_file.map(|s| s == "stdin").unwrap_or(false) {
+        anyhow::bail!("only one input file may be \"stdin\" per invocation");
+    }
     let trees1 = load_trees(infile)?;
 
     // 2. Load second file (if provided) or self-compare against trees1
-    let compare_file = args.get_one::<String>("compare_file");
     let trees2_owned: Vec<Tree> = if let Some(f2) = compare_file {
         load_trees(f2)?
     } else {

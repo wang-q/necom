@@ -24,7 +24,7 @@ Notes:
 * Empty partitions are rejected (single mode and each batch group must contain at least one sample).
 * Only one evaluation target may be provided per run: `--other` / `--truth`, `--matrix`, `--tree`, or `--coords`. Providing more than one is an error.
 * Batch Evaluation (Long Format): evaluates multiple partitions (e.g., from parameter scan). The input file must be in long format (`Group\tClusterID\tSampleID`).
-* Non-finite metric values (`NaN` or `+Infinity`) are emitted as `NA` to keep the TSV parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly compact and well-separated, or Xie-Beni when two centroids coincide.
+* Non-finite metric values (`NaN`, `+Infinity`, or `-Infinity`) are emitted as `NA` to keep the TSV parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly compact and well-separated, or Xie-Beni when two centroids coincide.
 * `--other` / `--truth`: second partition for external evaluation (synonyms).
 * `--no-singletons`: exclude singleton clusters from `--other` before external evaluation.
 * `--input-format`: supports `pair` (default), `cluster`, or `long` (required for batch mode).

@@ -4,11 +4,6 @@ use necom::libs::phylo::tree::{support, Tree};
 use std::collections::BTreeSet;
 use std::io::{Read, Write};
 
-/// Collect the set of named leaf labels in `tree`.
-fn leaf_name_set(tree: &Tree) -> BTreeSet<String> {
-    tree.get_leaf_names().into_iter().flatten().collect()
-}
-
 /// Load trees from `infile`, bailing with a clear message when the input is
 /// empty or contains no parseable trees.
 fn load_trees(infile: &str) -> anyhow::Result<Vec<Tree>> {
@@ -62,6 +57,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let replicates_file = args
         .get_one::<String>("replicates")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: replicates"))?;
+    if target_file == "stdin" && replicates_file == "stdin" {
+        anyhow::bail!("only one input file may be \"stdin\" per invocation");
+    }
     let percent = args.get_flag("percent");
     let override_root = args.get_flag("override_root");
 
@@ -83,9 +81,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .with_context(|| "build_leaf_map failed")?;
 
     // 3.5 Validate that all replicate trees share the same leaf set.
-    let first_replicate_leaves = leaf_name_set(&replicates[0]);
+    let first_replicate_leaves: BTreeSet<String> = leaf_map.keys().cloned().collect();
     for (i, rep) in replicates.iter().enumerate().skip(1) {
-        let rep_leaves = leaf_name_set(rep);
+        let rep_leaf_map = support::build_leaf_map(rep).with_context(|| {
+            format!("replicate tree {} has invalid leaf names", i + 1)
+        })?;
+        let rep_leaves: BTreeSet<String> = rep_leaf_map.keys().cloned().collect();
         if rep_leaves != first_replicate_leaves {
             let only_rep: Vec<_> =
                 rep_leaves.difference(&first_replicate_leaves).collect();
@@ -103,7 +104,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // 3.6 Validate that every target tree shares the same leaf set as the replicates.
     let replicate_leaves = first_replicate_leaves;
     for (i, target) in targets.iter().enumerate() {
-        let target_leaves = leaf_name_set(target);
+        let target_leaf_map = support::build_leaf_map(target)
+            .with_context(|| format!("target tree {} has invalid leaf names", i + 1))?;
+        let target_leaves: BTreeSet<String> = target_leaf_map.keys().cloned().collect();
         if target_leaves != replicate_leaves {
             let only_target: Vec<_> =
                 target_leaves.difference(&replicate_leaves).collect();
