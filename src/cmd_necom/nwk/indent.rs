@@ -28,10 +28,6 @@ pub fn make_subcommand() -> Command {
 
 /// Execute the indent command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
     let compact = args.get_flag("compact");
     let text = if compact {
         ""
@@ -44,6 +40,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .get_one::<String>("infile")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: infile"))?;
     let trees = Tree::from_file(infile)?;
+
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     for tree in trees {
         let out_string = tree.to_newick_with_format(text);

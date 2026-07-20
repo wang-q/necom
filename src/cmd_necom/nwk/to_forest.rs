@@ -16,9 +16,6 @@ pub fn make_subcommand() -> Command {
 
 /// Execute the to-forest command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
     let is_bl = args.get_flag("bl");
 
     let infile = args
@@ -41,6 +38,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let out_string = to_forest(&tree, height)
         .map_err(|e| anyhow::anyhow!("to_forest failed: {}", e))?;
+
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     writer.write_fmt(format_args!("{}\n", out_string))?;
 

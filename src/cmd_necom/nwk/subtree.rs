@@ -37,10 +37,6 @@ pub fn make_subcommand() -> Command {
 
 /// Execute the subtree command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
     let is_monophyly = args.get_flag("monophyly");
     let condense_name = args.get_one::<String>("condense");
     let is_condense = condense_name.is_some();
@@ -53,6 +49,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if trees.is_empty() {
         return Ok(());
     }
+
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     for tree in &mut trees {
         // IDs matching names

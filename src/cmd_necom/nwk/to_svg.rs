@@ -32,10 +32,6 @@ pub fn make_subcommand() -> Command {
 
 /// Execute the to-svg command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
     let width: f64 = *args
         .get_one::<f64>("width")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: width"))?;
@@ -71,6 +67,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let height = super::common::display_height(&tree, has_bl);
 
     let out_string = necom::libs::phylo::tree::io::to_svg(&tree, height, vskip, width);
+
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     writer.write_all(out_string.as_ref())?;
 

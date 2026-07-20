@@ -36,9 +36,6 @@ pub fn make_subcommand() -> Command {
 /// `--no-default-style` is given, the `%STYLE_*` region is replaced with a
 /// `Noto Sans` font setup; otherwise the template's original font setup is kept.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
     let is_bl = args.get_flag("bl");
     let no_default_style = args.get_flag("no_default_style");
 
@@ -135,6 +132,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     template.replace_range(style_begin..style_after_end, &style_replacement);
+
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     writer.write_all(template.as_ref())?;
 

@@ -36,9 +36,6 @@ pub fn make_subcommand() -> Command {
 
 /// Execute the reroot command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
     let process_support = args.get_flag("support_as_labels");
     let deroot = args.get_flag("deroot");
     let lax = args.get_flag("lax");
@@ -59,6 +56,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .into_iter()
         .next()
         .ok_or_else(|| anyhow::anyhow!("no trees found in {}", infile))?;
+
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     if deroot {
         tree.deroot()

@@ -55,10 +55,6 @@ pub fn make_subcommand() -> Command {
 
 /// Execute the order command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
     let opt_nd = match args.get_one::<Id>("number-of-descendants") {
         None => "",
         Some(x) => x.as_str(),
@@ -86,6 +82,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Default behavior: if no specific sort order is requested, use alphanumeric
     let default_an =
         names.is_empty() && opt_an.is_empty() && opt_nd.is_empty() && !is_deladderize;
+
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     for tree in &mut trees {
         if !names.is_empty() {

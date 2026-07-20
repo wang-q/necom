@@ -25,10 +25,6 @@ pub fn make_subcommand() -> Command {
 
 /// Execute the distance command.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
     let infile = args
         .get_one::<String>("infile")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: infile"))?;
@@ -103,6 +99,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         };
         id_of.insert(label, id);
     }
+
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     match mode.as_str() {
         "root" => distance::dist_root(&tree, &id_of, &mut writer)?,
