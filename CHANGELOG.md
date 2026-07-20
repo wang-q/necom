@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.4.0 - 2026-07-20
+
 ### Breaking Changes
 
 *   Promoted `necom clust cut` to a top-level `necom cut` command with five

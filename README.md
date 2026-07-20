@@ -29,7 +29,7 @@ between clusters, matrix entries, and tree nodes.
 
 ## Install
 
-Current release: 0.3.0
+Current release: 0.4.0
 
 `necom` uses unstable Rust features (notably `portable_simd`), so a **nightly** toolchain is required. The exact nightly is pinned by `rust-toolchain.toml` (`nightly-2026-01-26`); install it once, then use plain `cargo`:
 
