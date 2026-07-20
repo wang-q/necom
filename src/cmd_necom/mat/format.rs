@@ -20,12 +20,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_mode = args
         .get_one::<String>("mat_format")
         .context("missing required argument: mat_format")?;
+
+    // Load the matrix before opening the writer so input-loading failures do
+    // not truncate an existing outfile.
+    let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
+    let fmt = necom::libs::pairmat::MatrixFormat::from_mode(opt_mode)?;
+
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer = necom::writer(outfile)
         .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
-    let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
-    let fmt = necom::libs::pairmat::MatrixFormat::from_mode(opt_mode)?;
 
     necom::libs::pairmat::write_phylip_matrix(&matrix, fmt, None, &mut writer)?;
 

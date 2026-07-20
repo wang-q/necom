@@ -86,11 +86,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_missing = *args
         .get_one::<f32>("missing")
         .context("missing required argument: missing")?;
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
-    // Load and Transform
+    // Load and Transform the matrix before opening the writer so input-loading
+    // (and transform) failures do not truncate an existing outfile.
     let matrix = if format == "pair" {
         necom::libs::pairmat::NamedMatrix::from_pair_scores(
             infile,
@@ -125,6 +123,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let matrix = necom::libs::pairmat::transform_matrix(
         &matrix, op, max_val, scale, offset, normalize,
     )?;
+
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     necom::libs::pairmat::write_phylip_matrix(
         &matrix,

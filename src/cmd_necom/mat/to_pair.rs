@@ -18,13 +18,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let infile = args
         .get_one::<String>("infile")
         .context("missing required argument: infile")?;
+
+    // Load the matrix before opening the writer so input-loading failures do
+    // not truncate an existing outfile.
+    let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
+    let names = matrix.get_names();
+
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer = necom::writer(outfile)
         .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
-    // Load matrix from PHYLIP format
-    let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
-    let names = matrix.get_names();
 
     // Output pairwise distances (lower triangle including diagonal)
     for i in 0..matrix.size() {

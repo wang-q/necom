@@ -37,33 +37,43 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let method = args
         .get_one::<String>("mat_method")
         .context("missing required argument: mat_method")?;
-    let methods = if method == "all" {
-        VALID_METHODS.join(",")
-    } else {
-        method.clone()
-    };
 
+    // Tokenize the comma-separated list, tolerating surrounding whitespace
+    // and empty tokens (e.g. "pearson,,cosine").
+    let tokens: Vec<&str> = method
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .collect();
+
+    // Validate each token; "all" expands to every supported method in
+    // canonical order, regardless of where it appears in the list. Other
+    // tokens must be in VALID_METHODS.
     let mut requested_methods: Vec<&str> = Vec::new();
-    for m in methods.split(',').map(str::trim) {
-        if m.is_empty() {
+    let mut expand_all = false;
+    for m in &tokens {
+        if *m == "all" {
+            expand_all = true;
             continue;
         }
-        if !VALID_METHODS.contains(&m) {
+        if !VALID_METHODS.contains(m) {
             anyhow::bail!("unknown method: {}", m);
         }
-        if !requested_methods.contains(&m) {
+        if !requested_methods.contains(m) {
             requested_methods.push(m);
         }
+    }
+    if expand_all {
+        // "all" expands to every supported method in canonical order, replacing
+        // any explicitly-listed methods to avoid duplicates.
+        requested_methods = VALID_METHODS.to_vec();
     }
     if requested_methods.is_empty() {
         anyhow::bail!("at least one comparison method required");
     }
 
-    let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
-    // Load matrices
+    // Load matrices first so input-loading failures do not truncate an
+    // existing outfile when `-o` points to a real file.
     let matrix1 = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(matrix1_file)?;
     let matrix2 = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(matrix2_file)?;
 
@@ -79,6 +89,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         necom::libs::pairmat::extract_common_lower_triangle(&matrix1, &matrix2)?;
 
     log::info!("Common sequences: {}", common_names.len());
+
+    let outfile = crate::cmd_necom::args::get_outfile(args);
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     // Write header
     writer.write_all(b"Method\tScore\n")?;

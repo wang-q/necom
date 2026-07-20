@@ -53,14 +53,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let infiles = crate::cmd_necom::args::collect_infiles(args);
     let outfile = crate::cmd_necom::args::get_outfile(args);
 
-    let (sender, writer_thread, pool) =
-        necom::libs::par::spawn_writer_and_pool(outfile, opt_parallel)?;
-
+    // Load feature vectors before spawning the writer thread + rayon pool so
+    // input-loading failures do not truncate an existing outfile.
     let (entries1, entries2) =
         necom::libs::par::load_two_sets(&infiles, false, |paths| {
             // is_list=false guarantees paths has exactly one element
             necom::libs::feature::load_feature_vectors(&paths[0], is_bin)
         })?;
+
+    let (sender, writer_thread, pool) =
+        necom::libs::par::spawn_writer_and_pool(outfile, opt_parallel)?;
 
     let errors: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
     let errors_clone = errors.clone();

@@ -822,3 +822,331 @@ fn command_mat_format_numeric_header_mismatch_error() {
         stderr
     );
 }
+
+// ============================================================================
+// Writer non-truncation regression tests
+// ============================================================================
+//
+// Each mat subcommand must open its writer only after all input loading and
+// validation has succeeded. If the writer were opened first, an input-loading
+// failure would truncate an existing outfile (because `File::create` is used),
+// surprising the user. The following tests pre-populate an outfile with
+// sentinel content, then run each subcommand with a bad input pointing at
+// that outfile, and verify that the command failed AND the outfile still
+// contains the sentinel content (was not truncated).
+
+/// Run `necom` with the given subcommand args plus `--outfile <out_path>` and
+/// return `(success, stdout, stderr)`.
+fn run_with_outfile(args: &[&str], out_path: &str) -> (bool, String, String) {
+    let mut cmd = assert_cmd::Command::cargo_bin("necom").unwrap();
+    cmd.args(args);
+    cmd.arg("--outfile").arg(out_path);
+    let output = cmd.output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    (output.status.success(), stdout, stderr)
+}
+
+/// Pre-create a named temp file with sentinel content for non-truncation tests.
+fn sentinel_outfile(content: &str) -> tempfile::NamedTempFile {
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    tmp.write_all(content.as_bytes()).unwrap();
+    tmp
+}
+
+#[test]
+fn command_mat_to_phylip_bad_infile_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &["mat", "to-phylip", "/nonexistent/path/to/pairs.tsv"],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent input");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_mat_format_bad_infile_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &["mat", "format", "/nonexistent/path/to/matrix.phy"],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent input");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_mat_subset_bad_matrix_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &[
+            "mat",
+            "subset",
+            "/nonexistent/path/to/matrix.phy",
+            "tests/mat/IBPA.list",
+        ],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent matrix");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_mat_subset_bad_list_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &[
+            "mat",
+            "subset",
+            "tests/mat/IBPA.phy",
+            "/nonexistent/path/to/names.txt",
+        ],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent list file");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_mat_to_pair_bad_infile_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &["mat", "to-pair", "/nonexistent/path/to/matrix.phy"],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent input");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_mat_transform_bad_phylip_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &["mat", "transform", "/nonexistent/path/to/matrix.phy"],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent input");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_mat_transform_bad_pair_does_not_truncate_outfile() {
+    // Exercises the --input-format pair branch (uses from_pair_scores).
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &[
+            "mat",
+            "transform",
+            "/nonexistent/path/to/pairs.tsv",
+            "--input-format",
+            "pair",
+        ],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent pair input");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_mat_compare_bad_second_matrix_does_not_truncate_outfile() {
+    // matrix1 is valid; matrix2 is nonexistent. The writer must NOT be opened
+    // before matrix2 fails to load.
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &[
+            "mat",
+            "compare",
+            "tests/mat/IBPA.phy",
+            "/nonexistent/path/to/other.phy",
+            "--method",
+            "pearson",
+        ],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent matrix2");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_mat_compare_no_common_names_does_not_truncate_outfile() {
+    // Even when both matrices load successfully, a degenerate case (no common
+    // names) bails before the writer is opened.
+    use std::io::Write;
+    let mut m1 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(m1, "2").unwrap();
+    writeln!(m1, "A 0.0 0.1").unwrap();
+    writeln!(m1, "B 0.1 0.0").unwrap();
+    m1.flush().unwrap();
+
+    let mut m2 = tempfile::NamedTempFile::new().unwrap();
+    writeln!(m2, "2").unwrap();
+    writeln!(m2, "C 0.0 0.2").unwrap();
+    writeln!(m2, "D 0.2 0.0").unwrap();
+    m2.flush().unwrap();
+
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &[
+            "mat",
+            "compare",
+            m1.path().to_str().unwrap(),
+            m2.path().to_str().unwrap(),
+            "--method",
+            "pearson",
+        ],
+        out_path,
+    );
+    assert!(!success, "expected failure for no common names");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_mat_from_vector_bad_infile_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &[
+            "mat",
+            "from-vector",
+            "/nonexistent/path/to/vectors.tsv",
+            "--mode",
+            "euclid",
+        ],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent input");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+// ============================================================================
+// --method all mixed with explicit methods
+// ============================================================================
+
+#[test]
+fn command_mat_compare_method_all_then_pearson() {
+    // "all,pearson" must expand to all 6 methods in canonical order without
+    // erroring. Previously the code only special-cased exact "all" and would
+    // emit "unknown method: all" when "all" appeared in a comma-separated list.
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            "tests/mat/IBPA.phy",
+            "tests/mat/IBPA.71.phy",
+            "--method",
+            "all,pearson",
+        ])
+        .run();
+
+    // Canonical order: pearson, spearman, mae, cosine, jaccard, euclid
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(
+        lines.len(),
+        7,
+        "expected 6 methods + header, got: {}",
+        stdout
+    );
+    assert_eq!(lines[0], "Method\tScore");
+    assert!(lines[1].starts_with("pearson\t"));
+    assert!(lines[2].starts_with("spearman\t"));
+    assert!(lines[3].starts_with("mae\t"));
+    assert!(lines[4].starts_with("cosine\t"));
+    assert!(lines[5].starts_with("jaccard\t"));
+    assert!(lines[6].starts_with("euclid\t"));
+}
+
+#[test]
+fn command_mat_compare_method_pearson_then_all() {
+    // Reverse order: "pearson,all" must also expand to all 6 methods in
+    // canonical order without duplicates.
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            "tests/mat/IBPA.phy",
+            "tests/mat/IBPA.71.phy",
+            "--method",
+            "pearson,all",
+        ])
+        .run();
+
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(
+        lines.len(),
+        7,
+        "expected 6 methods + header, got: {}",
+        stdout
+    );
+    assert_eq!(lines[0], "Method\tScore");
+    assert!(lines[1].starts_with("pearson\t"));
+    assert!(lines[2].starts_with("spearman\t"));
+    assert!(lines[3].starts_with("mae\t"));
+    assert!(lines[4].starts_with("cosine\t"));
+    assert!(lines[5].starts_with("jaccard\t"));
+    assert!(lines[6].starts_with("euclid\t"));
+}
+
+#[test]
+fn command_mat_compare_method_all_with_whitespace() {
+    // Whitespace around "all" token must be tolerated, mirroring the
+    // established tolerance for whitespace around other method tokens.
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            "tests/mat/IBPA.phy",
+            "tests/mat/IBPA.71.phy",
+            "--method",
+            "all, pearson",
+        ])
+        .run();
+
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(lines.len(), 7);
+    assert_eq!(lines[0], "Method\tScore");
+    assert!(lines[1].starts_with("pearson\t"));
+    assert!(lines[6].starts_with("euclid\t"));
+}
+
+#[test]
+fn command_mat_compare_method_all_mixed_with_unknown_still_errors() {
+    // Mixing "all" with an unknown method must still bail with an "unknown
+    // method" error — "all" does not silently swallow invalid tokens.
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "compare",
+            "tests/mat/IBPA.phy",
+            "tests/mat/IBPA.71.phy",
+            "--method",
+            "all,bogus",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("unknown method: bogus"),
+        "expected 'unknown method: bogus' in stderr, got: {}",
+        stderr
+    );
+}

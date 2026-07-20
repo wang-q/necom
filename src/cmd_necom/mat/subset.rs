@@ -20,14 +20,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let list_file = args
         .get_one::<String>("name_list")
         .context("missing required argument: name_list")?;
+
+    // Load the name list and matrix before opening the writer so input-loading
+    // failures do not truncate an existing outfile.
+    let wanted_names = necom::libs::io::read_names::<Vec<String>>(list_file)?;
+    let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
+
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer = necom::writer(outfile)
         .with_context(|| format!("Failed to open writer for {}", outfile))?;
-
-    let wanted_names = necom::libs::io::read_names::<Vec<String>>(list_file)?;
-
-    // Load and process matrix
-    let matrix = necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(infile)?;
 
     let missing = necom::libs::pairmat::write_subset(
         &matrix,
