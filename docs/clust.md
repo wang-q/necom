@@ -134,7 +134,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - Outputs Newick dendrogram:
   - Merges are emitted in the order they are performed by the linkage algorithm (merge-order output). The internal node IDs increase with the merge sequence, matching the convention used by R `hclust` and SciPy `linkage`.
   - Internal node height is half the merge distance (`height = distance / 2`), and branch length from child to parent is `parent_height - child_height`.
-  - Therefore the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node.
+  - For reducible methods (`single`/`complete`/`average`/`weighted`/`ward`), the output is ultrametric-like: all leaves under the same internal node have equal total distance to that node. `centroid`/`median` may violate this property due to non-monotonic merge heights (inversions), even after negative branch lengths are clamped to zero.
   - Branch lengths express merge heights (linkage cost or SSE increment with appropriate unit handling).
   - Strict ultrametricity is not guaranteed (unless the data satisfy the corresponding conditions), but the output satisfies the requirements of `necom cut simple --height <H>`.
 - Numeric format: branch lengths are emitted with Rust's default float formatting. For a fixed-width, six-decimal view consistent with `necom nwk distance`, post-process the tree or use `necom nwk distance` on the resulting branch lengths.
@@ -142,7 +142,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 ### Notes
 
 - `clust hier` only accepts **distance matrices** (smaller values mean higher similarity). Similarity matrices must be converted first, e.g., with `necom mat transform`.
-- `ward` updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.
+- `ward`, `centroid`, and `median` updates use squared distances internally; output branch lengths are expressed in the original distance units, so you do not need to square the input.
 - `ward` theoretically assumes Euclidean or near-Euclidean distances; on general biological distances the statistical interpretation of "minimum variance" is weaker.
 - `centroid` and `median` linkage may produce non-monotonic merge heights (inversions); this is an algorithmic characteristic of these methods.
 - For reducible methods (`single`, `complete`, `average`, `weighted`, `ward`), the default NN-chain implementation produces the same dendrogram as the primitive $O(N^3)$ algorithm, but the concrete merge order may differ. Consequently, the Newick string may have a different internal node ordering than `clust upgma` for the same method, even though the underlying clustering is equivalent.

@@ -282,6 +282,18 @@ pub fn to_tree(steps: &[Step], names: &[String]) -> anyhow::Result<Tree> {
         return Ok(tree);
     }
 
+    // Guard against malformed input: each step creates a new cluster id
+    // `n + step_idx`, which must stay within the `0..2n` range allocated below.
+    // More than `n` steps would index out of bounds and panic.
+    if steps.len() > n {
+        anyhow::bail!(
+            "number of linkage steps ({}) exceeds the maximum ({}) for {} names",
+            steps.len(),
+            n,
+            n
+        );
+    }
+
     // Cluster IDs are dense 0..2n-1: leaves are 0..n-1, internal nodes are
     // n..2n-2 (one per merge step). Use Vec for O(1) direct indexing instead
     // of HashMap, avoiding hashing overhead and entry metadata.
@@ -955,6 +967,43 @@ mod tests {
         let names = vec!["A".to_string(), "B".to_string()];
         let result = to_tree(&steps, &names);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_to_tree_too_many_steps() {
+        // For n=2 names, at most n=2 steps fit in the `2n` index range.
+        // Passing 3 steps would index `cluster_to_node[n + 2] = [4]` out of
+        // bounds (len 4) and panic without the guard.
+        let steps = vec![
+            Step {
+                cluster1: 0,
+                cluster2: 1,
+                distance: 1.0,
+                size: 2,
+            },
+            Step {
+                cluster1: 2,
+                cluster2: 0,
+                distance: 2.0,
+                size: 3,
+            },
+            Step {
+                cluster1: 3,
+                cluster2: 0,
+                distance: 3.0,
+                size: 4,
+            },
+        ];
+        let names = vec!["A".to_string(), "B".to_string()];
+        let result = to_tree(&steps, &names);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("exceeds the maximum"),
+            "expected error about too many steps"
+        );
     }
 
     #[test]

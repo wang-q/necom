@@ -287,7 +287,7 @@ pub fn mcl_prune_arg() -> Arg {
         .num_args(1)
         .default_value("1e-5")
         .value_parser(clap::value_parser!(f64))
-        .help("Pruning threshold. Matrix entries smaller than this will be set to zero.")
+        .help("Pruning threshold. Matrix entries smaller than or equal to this will be set to zero.")
 }
 
 /// `--runs` argument for randomized clustering (default: 10).
