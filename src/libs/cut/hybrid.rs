@@ -13,8 +13,8 @@ pub struct HybridOptions {
     pub dist_matrix: NamedMatrix,
     /// Maximum joining height for initial tree cut (optional).
     pub cut_height: Option<f64>,
-    /// Deep split aggressiveness (0..4, default 1).
-    pub deep_split: usize,
+    /// Deep split flag (default: false).
+    pub deep_split: bool,
     /// Maximum core scatter threshold (relative, 0..1).
     pub max_core_scatter: Option<f64>,
     /// Minimum gap threshold (relative, 0..1).
@@ -76,18 +76,14 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
         .unwrap_or(0.99 * (max_height - ref_height) + ref_height);
 
     // 2. Calculate Absolute Thresholds
-    let deep_split = options.deep_split.clamp(0, 4);
-    let def_mcs = [0.64, 0.73, 0.82, 0.91, 0.95];
-    let def_mg = [
-        (1.0 - def_mcs[0]) * 0.75,
-        (1.0 - def_mcs[1]) * 0.75,
-        (1.0 - def_mcs[2]) * 0.75,
-        (1.0 - def_mcs[3]) * 0.75,
-        (1.0 - def_mcs[4]) * 0.75,
-    ];
+    // deep_split is a boolean flag: false = default thresholds, true = more
+    // aggressive thresholds. Only the first two WGCNA presets are exposed.
+    let deep_split_idx = if options.deep_split { 1 } else { 0 };
+    let def_mcs = [0.64, 0.73];
+    let def_mg = [(1.0 - def_mcs[0]) * 0.75, (1.0 - def_mcs[1]) * 0.75];
 
-    let rel_max_scatter = options.max_core_scatter.unwrap_or(def_mcs[deep_split]);
-    let rel_min_gap = options.min_gap.unwrap_or(def_mg[deep_split]);
+    let rel_max_scatter = options.max_core_scatter.unwrap_or(def_mcs[deep_split_idx]);
+    let rel_min_gap = options.min_gap.unwrap_or(def_mg[deep_split_idx]);
 
     let abs_max_scatter = ref_height + rel_max_scatter * (cut_height - ref_height);
     let abs_min_gap = rel_min_gap * (cut_height - ref_height);

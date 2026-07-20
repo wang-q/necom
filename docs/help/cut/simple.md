@@ -12,7 +12,7 @@ Output:
 
 Notes:
 
-* Exactly one method option must be provided: `--k`, `--height`, `--root-dist`, `--max-clade`, `--avg-clade`, `--med-clade`, `--sum-branch`, `--leaf-dist-max`, `--leaf-dist-min`, `--leaf-dist-avg`, `--max-edge`, `--inconsistent`.
+* Exactly one method option must be provided: `--k`, `--height`, `--root-dist`, `--max-clade`, `--avg-clade`, `--med-clade`, `--sum-branch`, `--leaf-dist-max`, `--leaf-dist-min`, `--leaf-dist-avg`, `--max-edge` (`--single-linkage`), `--inconsistent`.
 * `--k` must be a positive integer.
 * `--deep` controls the depth used by the `inconsistent` method (default: `2`).
 * `--rep` selects the cluster representative: `root` (default), `first`, or `medoid`.

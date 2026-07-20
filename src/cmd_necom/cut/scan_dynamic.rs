@@ -24,6 +24,9 @@ pub fn execute(args: &ArgMatches) -> Result<()> {
 
     let range_str = args.get_one::<String>("range").unwrap();
     let (start, end, step) = cut::scan::parse_scan_range_usize(range_str)?;
+    if start == 0 {
+        anyhow::bail!("--range start must be at least 1 for dynamic-tree min cluster size scanning");
+    }
 
     let deep_split = args.get_flag("deep_split");
     let max_tree_height = args.get_one::<f64>("max_tree_height").copied();

@@ -62,6 +62,23 @@ pub fn build_dispatch(
     max_pam_dist: Option<f64>,
     matrix: Option<NamedMatrix>,
 ) -> Result<CutDispatch> {
+    if let Some(h) = max_tree_height {
+        if !h.is_finite() || h < 0.0 {
+            anyhow::bail!(
+                "max-tree-height must be a non-negative finite number, got {}",
+                h
+            );
+        }
+    }
+    if let Some(d) = max_pam_dist {
+        if !d.is_finite() || d < 0.0 {
+            anyhow::bail!(
+                "max-pam-dist must be a non-negative finite number, got {}",
+                d
+            );
+        }
+    }
+
     if let Some(min_module_size) = dynamic_tree {
         if min_module_size == 0 {
             anyhow::bail!("dynamic-tree min cluster size must be greater than 0");
@@ -83,7 +100,7 @@ pub fn build_dispatch(
             min_cluster_size,
             dist_matrix,
             cut_height: max_tree_height,
-            deep_split: if deep_split { 1 } else { 0 },
+            deep_split,
             max_core_scatter: None,
             min_gap: None,
             pam_stage: true,
@@ -334,5 +351,68 @@ mod tests {
             "got: {}",
             msg
         );
+    }
+
+    #[test]
+    fn test_build_dispatch_rejects_invalid_max_tree_height() {
+        let tree = tiny_tree();
+        for bad in [f64::NAN, f64::NEG_INFINITY, f64::INFINITY, -1.0] {
+            let result = build_dispatch(
+                &tree,
+                None,
+                0.0,
+                2,
+                Some(2),
+                None,
+                Some(bad),
+                false,
+                false,
+                None,
+                None,
+            );
+            assert!(
+                result.is_err(),
+                "expected error for max_tree_height {}",
+                bad
+            );
+            let msg = result.err().unwrap().to_string();
+            assert!(
+                msg.contains("max-tree-height must be a non-negative finite number"),
+                "got: {}",
+                msg
+            );
+        }
+    }
+
+    #[test]
+    fn test_build_dispatch_rejects_invalid_max_pam_dist() {
+        let tree = tiny_tree();
+        let matrix = NamedMatrix::new_from_values(
+            vec!["A".to_string(), "B".to_string(), "C".to_string()],
+            vec![0.2, 1.0, 1.0],
+        )
+        .expect("valid matrix");
+        for bad in [f64::NAN, f64::NEG_INFINITY, f64::INFINITY, -0.5] {
+            let result = build_dispatch(
+                &tree,
+                None,
+                0.0,
+                2,
+                None,
+                Some(2),
+                None,
+                false,
+                false,
+                Some(bad),
+                Some(matrix.clone()),
+            );
+            assert!(result.is_err(), "expected error for max_pam_dist {}", bad);
+            let msg = result.err().unwrap().to_string();
+            assert!(
+                msg.contains("max-pam-dist must be a non-negative finite number"),
+                "got: {}",
+                msg
+            );
+        }
     }
 }

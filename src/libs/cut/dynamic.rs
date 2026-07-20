@@ -22,7 +22,7 @@ impl Default for DynamicTreeOptions {
     fn default() -> Self {
         Self {
             min_module_size: 50,
-            deep_split: true,
+            deep_split: false,
             max_tree_height: None,
         }
     }

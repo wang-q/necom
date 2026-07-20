@@ -104,6 +104,26 @@ fn test_scan_dynamic_negative_range_rejected() {
 }
 
 #[test]
+fn test_scan_dynamic_zero_start_rejected() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "scan-dynamic",
+            "tests/newick/abcde.nwk",
+            "--range",
+            "0,2,1",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.to_lowercase().contains("start")
+            && stderr.to_lowercase().contains("at least 1"),
+        "Expected start>=1 error, got: {}",
+        stderr
+    );
+}
+
+#[test]
 fn test_scan_dynamic_missing_range() {
     let (_, stderr) = NecomCmd::new()
         .args(&["cut", "scan-dynamic", "tests/newick/abcde.nwk"])

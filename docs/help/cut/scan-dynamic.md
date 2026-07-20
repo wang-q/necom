@@ -13,6 +13,7 @@ Notes:
 
 * The `--range` option is required and must be `start,end,step` with comma separators and no spaces.
 * All three range values must be non-negative integers and the step must be positive.
+* `start` must be at least `1` because the min cluster size must be greater than `0`.
 * `--deep-split` enables more aggressive splitting (default: off).
 * `--max-tree-height` sets the maximum joining height; if omitted, 99% of the tree height is used.
 * `--support <S>` treats edges with support `< S` as effectively infinite length.

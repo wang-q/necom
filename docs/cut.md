@@ -38,7 +38,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 
 ## Supported Modes and Algorithms
 
-`necom cut` provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below. All static methods are invoked through `necom cut simple --<METHOD> <T>`.
+`necom cut` provides a rich set of cutting algorithms, ranging from simple threshold cuts to complex biologically constrained clustering. Detailed definitions and complexity analyses are given below. All static methods are invoked through `necom cut simple <infile> --<METHOD> <T>`.
 
 ### 1. Cut by Cluster Count (`--k`)
 

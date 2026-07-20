@@ -11,10 +11,11 @@ Output:
 
 Notes:
 
-* Exactly one method flag must be provided: `--k`, `--height`, `--root-dist`, `--max-clade`, `--avg-clade`, `--med-clade`, `--sum-branch`, `--leaf-dist-max`, `--leaf-dist-min`, `--leaf-dist-avg`, `--max-edge`, `--inconsistent`.
+* Exactly one method flag must be provided: `--k`, `--height`, `--root-dist`, `--max-clade`, `--avg-clade`, `--med-clade`, `--sum-branch`, `--leaf-dist-max`, `--leaf-dist-min`, `--leaf-dist-avg`, `--max-edge` (`--single-linkage`), `--inconsistent`.
 * `--range` is required and must be `start,end,step` with comma separators and no spaces.
 * `--k --range` requires integer values and the start must be at least `1`.
 * `--deep` controls the depth for the `inconsistent` method (default: `2`).
+* Distance/height thresholds must be non-negative finite numbers.
 * `--support <S>` treats edges with support `< S` as effectively infinite length.
 * The `--format` and `--rep` options are not available in scan mode.
 
