@@ -8,10 +8,11 @@ use std::fmt::Write as _;
 /// Sort and format flat clustering results (indices into `names`).
 ///
 /// Members within each cluster are sorted alphabetically by name; clusters
-/// are sorted by size (descending) then by first member name. `rep_fn`
-/// selects the representative index for each cluster. For "pair" format,
-/// returning `None` skips that cluster. For "cluster" format, the
-/// representative is placed in the first column if one is returned.
+/// are sorted by size (descending) then by first member name. Empty clusters
+/// are silently dropped. `rep_fn` selects the representative index for each
+/// cluster. For "pair" format, returning `None` skips that cluster. For
+/// "cluster" format, the representative is placed in the first column if one
+/// is returned.
 pub fn format_flat_clusters<F>(
     clusters: &mut Vec<Vec<usize>>,
     names: &[String],
@@ -25,6 +26,9 @@ where
     for c in clusters.iter_mut() {
         c.sort_by_key(|&idx| &names[idx]);
     }
+    // Drop empty clusters so the size/name tie-breaker below never indexes
+    // into an empty slice.
+    clusters.retain(|c| !c.is_empty());
     // Sort clusters: size desc, then first member name.
     clusters.sort_by(|a, b| match b.len().cmp(&a.len()) {
         std::cmp::Ordering::Equal => names[a[0]].cmp(&names[b[0]]),
@@ -175,5 +179,26 @@ mod tests {
         .unwrap();
         // Only the second cluster is emitted; first is skipped.
         assert_eq!(out, "C\tC\nC\tD\n");
+    }
+
+    #[test]
+    fn test_format_flat_clusters_ignores_empty_clusters() {
+        // Empty clusters must be dropped rather than causing a panic when the
+        // size/name tie-breaker indexes into an empty slice.
+        let mut clusters = vec![vec![], vec![2, 0], vec![], vec![1, 3]];
+        let names = vec![
+            "A".to_string(),
+            "B".to_string(),
+            "C".to_string(),
+            "D".to_string(),
+        ];
+
+        let out =
+            format_flat_clusters(&mut clusters, &names, "cluster", |_| None).unwrap();
+
+        // After dropping empties and sorting: [A,C] (A first) then [B,D] (B first).
+        assert_eq!(out, "A\tC\nB\tD\n");
+        // The input vector should have been modified in place.
+        assert_eq!(clusters.len(), 2);
     }
 }
