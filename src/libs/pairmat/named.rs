@@ -209,9 +209,9 @@ impl NamedMatrix {
     ///
     /// Constructs the underlying `CondensedMatrix` directly instead of going through
     /// an intermediate `ScoringMatrix`, reducing peak memory for large inputs.
-    /// Parsed entries are stored as numeric indices rather than strings, and duplicate
-    /// detection uses a dense `Vec<bool>` instead of a hash set, so dense inputs only
-    /// pay for the matrix itself plus one byte per pair during construction.
+    /// Parsed entries are stored as numeric indices rather than strings, and off-diagonal
+    /// duplicate detection uses a dense `Vec<bool>` instead of a hash set, so dense inputs
+    /// only pay for the matrix itself plus one byte per pair during construction.
     pub fn from_pair_scores(
         infile: &str,
         same: f32,

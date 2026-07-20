@@ -524,6 +524,33 @@ fn test_write_subset_precision() {
 }
 
 #[test]
+fn test_write_subset_deduplicates_names() {
+    let names = vec!["A".to_string(), "B".to_string(), "C".to_string()];
+    let mut m = NamedMatrix::new(names).unwrap();
+    m.set(0, 1, 0.5);
+    m.set(0, 2, 0.6);
+    m.set(1, 2, 0.7);
+
+    // Duplicate names should be kept once (first occurrence) and not produce
+    // duplicate rows/columns in the output.
+    let mut buf = Vec::new();
+    super::output::write_subset(
+        &m,
+        &[
+            "A".to_string(),
+            "B".to_string(),
+            "A".to_string(),
+            "B".to_string(),
+        ],
+        Some(6),
+        &mut buf,
+    )
+    .unwrap();
+    let output = String::from_utf8(buf).unwrap();
+    assert_eq!(output, "2\nA\t0.000000\t0.500000\nB\t0.500000\t0.000000\n");
+}
+
+#[test]
 fn test_write_phylip_strict_name_truncation_bytes() {
     let names = vec!["αβγδεζηθικλ".to_string(), "B".to_string()];
     let mut m = NamedMatrix::new(names).unwrap();

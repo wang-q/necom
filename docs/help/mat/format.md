@@ -22,7 +22,7 @@ Output:
     * Standard PHYLIP format.
     * Names truncated to 10 characters.
     * Names left-aligned with space padding.
-    * Distances in fixed-width format (6 decimal places).
+    * Distances formatted to 6 decimal places, space-separated.
     * Space-separated values.
     * Use this for compatibility with the original PHYLIP toolkit.
 

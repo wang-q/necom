@@ -99,8 +99,13 @@ pub fn write_subset<W: Write>(
     let all_names = m.get_names();
     let mut indices = Vec::new();
     let mut missing = Vec::new();
+    let mut seen = HashSet::new();
 
     for name in names {
+        if !seen.insert(name.as_str()) {
+            log::warn!("duplicate name in subset list: {}", name);
+            continue;
+        }
         match m.get_index(name) {
             Some(idx) => indices.push(idx),
             None => missing.push(name.clone()),
