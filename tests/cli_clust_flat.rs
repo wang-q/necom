@@ -880,3 +880,126 @@ fn command_clust_mcl_inflation_inf() {
         stderr
     );
 }
+
+// ============================================================================
+// Writer non-truncation regression tests
+// ============================================================================
+//
+// Each clust subcommand must open its writer only after all input loading and
+// validation has succeeded. If the writer were opened first, an input-loading
+// failure would truncate an existing outfile (because `File::create` is used),
+// surprising the user. The following tests pre-populate an outfile with
+// sentinel content, then run each subcommand with a bad input pointing at
+// that outfile, and verify that the command failed AND the outfile still
+// contains the sentinel content (was not truncated).
+
+/// Run `necom` with the given subcommand args plus `--outfile <out_path>` and
+/// return `(success, stdout, stderr)`.
+fn run_with_outfile(args: &[&str], out_path: &str) -> (bool, String, String) {
+    let mut cmd = assert_cmd::Command::cargo_bin("necom").unwrap();
+    cmd.args(args);
+    cmd.arg("--outfile").arg(out_path);
+    let output = cmd.output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    (output.status.success(), stdout, stderr)
+}
+
+/// Pre-create a named temp file with sentinel content for non-truncation tests.
+fn sentinel_outfile(content: &str) -> tempfile::NamedTempFile {
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    tmp.write_all(content.as_bytes()).unwrap();
+    tmp
+}
+
+#[test]
+fn command_clust_cc_bad_infile_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) =
+        run_with_outfile(&["clust", "cc", "/nonexistent/path/to/pairs.tsv"], out_path);
+    assert!(!success, "expected failure for nonexistent input");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_clust_dbscan_bad_infile_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &[
+            "clust",
+            "dbscan",
+            "/nonexistent/path/to/pairs.tsv",
+            "--eps",
+            "0.05",
+            "--min-points",
+            "2",
+        ],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent input");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_clust_kmedoids_bad_infile_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &[
+            "clust",
+            "k-medoids",
+            "/nonexistent/path/to/pairs.tsv",
+            "-k",
+            "2",
+            "--seed",
+            "42",
+        ],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent input");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_clust_kmedoids_k_too_large_does_not_truncate_outfile() {
+    // Input loads fine but k > n validation must bail before the writer is
+    // opened, so the outfile is not truncated.
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\n").unwrap();
+
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &["clust", "k-medoids", input.to_str().unwrap(), "-k", "10"],
+        out_path,
+    );
+    assert!(!success, "expected failure for k > n");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}
+
+#[test]
+fn command_clust_mcl_bad_infile_does_not_truncate_outfile() {
+    let existing = sentinel_outfile("preserve me");
+    let out_path = existing.path().to_str().unwrap();
+    let (success, _, _) = run_with_outfile(
+        &[
+            "clust",
+            "mcl",
+            "/nonexistent/path/to/similarities.tsv",
+            "--inflation",
+            "2.0",
+        ],
+        out_path,
+    );
+    assert!(!success, "expected failure for nonexistent input");
+    let preserved = std::fs::read_to_string(out_path).unwrap();
+    assert_eq!(preserved, "preserve me");
+}

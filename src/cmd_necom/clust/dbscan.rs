@@ -48,10 +48,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     let outfile = crate::cmd_necom::args::get_outfile(args);
-    let mut writer = necom::writer(outfile)
-        .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
-    // 2. Load Matrix
+    // 2. Load Matrix (before opening writer so input failures do not
+    //    truncate the output file).
     let matrix = necom::libs::pairmat::NamedMatrix::from_pair_scores(
         infile,
         opt_same,
@@ -80,6 +79,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             |c| necom::libs::clust::medoid::find_medoid(&matrix, c, false),
         )?
     };
+
+    let mut writer = necom::writer(outfile)
+        .with_context(|| format!("Failed to open writer for {}", outfile))?;
     writer.write_all(out.as_bytes())?;
 
     writer.flush()?;
