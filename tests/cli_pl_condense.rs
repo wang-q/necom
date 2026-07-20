@@ -186,3 +186,39 @@ fn command_pl_condense_help() {
     assert!(stdout.contains("--taxon"));
     assert!(stdout.contains("--rank"));
 }
+
+#[test]
+fn command_pl_condense_stdin() {
+    // Regression test: stdin input must be buffered internally so that both
+    // Tree::from_file (for leaf names) and the `nwk indent` subprocess can read
+    // the tree. Previously stdin was consumed twice, producing empty/wrong output.
+    let newick_content = fs::read_to_string("tests/pipeline/minhash.reroot.newick")
+        .expect("Failed to read test newick file");
+
+    let mut cmd = Command::cargo_bin("necom").unwrap();
+    cmd.arg("pl")
+        .arg("condense")
+        .arg("--taxon")
+        .arg("tests/pipeline/strains.taxon.tsv")
+        .arg("stdin")
+        .write_stdin(newick_content);
+
+    let output = cmd.output().expect("Failed to execute command");
+    assert!(
+        output.status.success(),
+        "Command failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // Condensation should produce labels containing "||".
+    assert!(
+        stdout.contains("||"),
+        "No condensed labels found in stdin output"
+    );
+    // Output should be a valid Newick tree.
+    assert!(
+        stdout.starts_with('(') || stdout.starts_with("Sa_cer"),
+        "Output is not a valid Newick tree"
+    );
+}

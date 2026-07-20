@@ -4,7 +4,7 @@ use cmd_lib::{run_cmd, run_fun};
 use necom::libs::phylo::tree::Tree;
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
-use std::io::Write;
+use std::io::{Read, Write};
 
 /// Build the clap subcommand for condense.
 pub fn make_subcommand() -> Command {
@@ -60,14 +60,34 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     run_cmd!(info "==> Absolute paths")?;
     let infile = args.get_one::<String>("infile").unwrap();
-    let abs_infile = if infile == "stdin" {
-        "stdin".to_string()
+    // Resolve the input path before entering tempdir (CWD changes on enter).
+    // For stdin, defer handling until after entering tempdir so the content can
+    // be buffered to a file and read multiple times by subprocesses.
+    let abs_infile_opt = if infile == "stdin" {
+        None
     } else {
-        ctx.abs_path(infile)?
+        Some(ctx.abs_path(infile)?)
     };
     let abs_taxon = ctx.abs_path(taxon_file)?;
 
     let _cwd_guard = ctx.enter()?;
+
+    // For stdin: read once into tempdir/input.nwk so both Tree::from_file and
+    // the `nwk indent` subprocess can read it. stdin cannot be rewound.
+    let abs_infile = match abs_infile_opt {
+        Some(p) => p,
+        None => {
+            let input_path = ctx.tempdir.path().join("input.nwk");
+            let mut reader = necom::reader("stdin")?;
+            let mut content = String::new();
+            reader
+                .read_to_string(&mut content)
+                .with_context(|| "Failed to read from stdin")?;
+            fs::write(&input_path, &content)
+                .with_context(|| "Failed to write stdin content to input.nwk")?;
+            necom::libs::io::path_to_str(&input_path)?.to_string()
+        }
+    };
 
     // Read tree leaf names for filtering
     let trees = Tree::from_file(&abs_infile)?;
@@ -188,10 +208,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Results
     run_cmd!(info "==> Results")?;
-    fs::copy(
-        necom::libs::io::path_to_str(&ctx.tempdir.path().join(&cur_tree))?,
-        "result.nwk",
-    )?;
 
     let mut writer = necom::writer("condensed.tsv")
         .with_context(|| "Failed to open writer for condensed.tsv")?;
@@ -202,23 +218,21 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Restore original CWD before writing outputs to relative paths (e.g.
     // --map's condensed.tsv, or a relative -o outfile). Intermediate files
-    // (result.nwk, condensed.tsv in tempdir) are accessed via absolute paths
+    // (temp trees, condensed.tsv in tempdir) are accessed via absolute paths
     // from here on.
     drop(_cwd_guard);
 
-    // Done
+    // Done: copy directly from the final temp tree (cur_tree) to the outfile.
+    let final_tree_path = ctx.tempdir.path().join(&cur_tree);
     if outfile == "stdout" {
-        let result_content = fs::read_to_string(ctx.tempdir.path().join("result.nwk"))
-            .with_context(|| "Failed to read from result.nwk")?;
+        let result_content = fs::read_to_string(&final_tree_path)
+            .with_context(|| "Failed to read from final tree")?;
         let stdout = std::io::stdout();
         let mut out = stdout.lock();
         write!(out, "{}", result_content)?;
         out.flush()?;
     } else {
-        fs::copy(
-            necom::libs::io::path_to_str(&ctx.tempdir.path().join("result.nwk"))?,
-            outfile,
-        )?;
+        fs::copy(necom::libs::io::path_to_str(&final_tree_path)?, outfile)?;
     }
 
     if args.get_flag("map") {
