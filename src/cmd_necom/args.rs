@@ -351,7 +351,8 @@ pub fn support_arg() -> Arg {
         .value_parser(clap::value_parser!(f64))
         .help(
             "Branch support threshold (edges with support < S will be treated as infinite length). \
-             Internal node names that cannot be parsed as numbers are treated as support = 100.0.",
+             Internal node names that cannot be parsed as numbers are treated as support = 100.0. \
+             S must be a non-negative finite number.",
         )
 }
 

@@ -88,13 +88,17 @@ pub fn run_scan(
     no_pam_dendro: bool,
     max_pam_dist: Option<f64>,
 ) -> anyhow::Result<()> {
+    // Validate the scan range before writing any output headers. Previously
+    // the headers were written first, which left truncated header-only output
+    // files on disk when `compute_n_steps` rejected an oversized range.
+    let n_steps = compute_n_steps(params.start, params.end, params.step)?;
+
     writer.write_all(b"Group\tClusterID\tSampleID\n")?;
 
     if let Some(w) = stats_writer.as_deref_mut() {
         w.write_all(b"Group\tClusters\tSingletons\tNon-Singletons\tMaxSize\n")?;
     }
 
-    let n_steps = compute_n_steps(params.start, params.end, params.step)?;
     let mut values: Vec<f64> = Vec::with_capacity((n_steps + 2) as usize);
     for i in 0..=n_steps {
         values.push(params.start + (i as f64) * params.step);
@@ -383,6 +387,45 @@ mod tests {
             msg.contains("method name required"),
             "unexpected error message: {}",
             msg
+        );
+    }
+
+    /// Regression: `run_scan` must validate the scan range *before* writing
+    /// the output header. Previously, an oversized range (rejected by
+    /// `compute_n_steps`) would still leave a header-only file on disk for
+    /// the caller's writer. The fix moves `compute_n_steps` ahead of any
+    /// `write_all` calls so that on validation failure no bytes are written.
+    #[test]
+    fn test_run_scan_oversized_range_writes_no_header() {
+        let tree =
+            crate::libs::phylo::tree::Tree::from_newick("((A:0.1,B:0.1):0.1,C:0.2);")
+                .expect("valid newick");
+        let mut output = Vec::new();
+        let mut stats: Option<Box<dyn std::io::Write>> = None;
+        // Range too large: (1e308 - 0.0) / 1e-10 > i64::MAX.
+        let params = ScanParams {
+            start: 0.0,
+            end: 1e308,
+            step: 1e-10,
+            method_name: Some("height"),
+            dynamic_tree: false,
+        };
+        let result = run_scan(
+            &tree,
+            &mut output,
+            &mut stats,
+            params,
+            2,
+            None,
+            false,
+            false,
+            None,
+        );
+        assert!(result.is_err(), "expected error for oversized range");
+        assert!(
+            output.is_empty(),
+            "no header should be written on validation failure, got: {:?}",
+            String::from_utf8_lossy(&output)
         );
     }
 }

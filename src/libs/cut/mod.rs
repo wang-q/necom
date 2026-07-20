@@ -251,10 +251,17 @@ const SUPPORT_FILTER_SENTINEL: f64 = 1e20;
 /// `balance::compute_avg_clade_distances`, `query::get_height`, etc. — maps
 /// non-finite lengths to `0.0`, which would silently disable the filter for
 /// `avg-clade`/`inconsistent`/`dynamic`/`hybrid` cut methods.
-pub fn apply_support_filter(tree: &mut Tree, threshold: f64) {
+pub fn apply_support_filter(tree: &mut Tree, threshold: f64) -> Result<()> {
+    if !threshold.is_finite() || threshold < 0.0 {
+        anyhow::bail!(
+            "--support must be a non-negative finite number, got {}",
+            threshold
+        );
+    }
+
     let root = match tree.get_root() {
         Some(r) => r,
-        None => return,
+        None => return Ok(()),
     };
 
     // First pass: collect internal node IDs whose support is below the threshold.
@@ -293,6 +300,8 @@ pub fn apply_support_filter(tree: &mut Tree, threshold: f64) {
             node.length = Some(SUPPORT_FILTER_SENTINEL);
         }
     }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -436,7 +445,7 @@ mod tests {
         let root_id = tree.get_root().expect("tree has root");
         assert!(tree.get_node(root_id).unwrap().length.is_none());
 
-        apply_support_filter(&mut tree, 60.0);
+        apply_support_filter(&mut tree, 60.0).expect("valid threshold");
 
         let root = tree.get_node(root_id).unwrap();
         assert!(
@@ -456,7 +465,7 @@ mod tests {
         let nwk = "((A:0.1,B:0.1):0.1,(C:0.1,D:0.1)50:0.1);";
         let mut tree = Tree::from_newick(nwk).expect("valid newick");
 
-        apply_support_filter(&mut tree, 60.0);
+        apply_support_filter(&mut tree, 60.0).expect("valid threshold");
 
         // Find the (C,D) internal node via its support-as-name label "50".
         let node_id = tree
@@ -468,5 +477,39 @@ mod tests {
             Some(SUPPORT_FILTER_SENTINEL),
             "expected (C,D) node length to be masked to sentinel"
         );
+    }
+
+    /// `apply_support_filter` must reject NaN, negative, and infinite
+    /// thresholds. Without this validation, `--support NaN` silently disabled
+    /// the filter (no `support < threshold` comparisons succeed) and
+    /// `--support -1` masked every internal node including those at full
+    /// support.
+    #[test]
+    fn test_apply_support_filter_rejects_invalid_threshold() {
+        let mut tree = tiny_tree();
+        for bad in [f64::NAN, -1.0, f64::NEG_INFINITY, f64::INFINITY] {
+            let result = apply_support_filter(&mut tree, bad);
+            assert!(result.is_err(), "expected error for threshold {}", bad);
+            let msg = result.err().unwrap().to_string();
+            assert!(
+                msg.contains("--support must be a non-negative finite number"),
+                "got: {}",
+                msg
+            );
+        }
+    }
+
+    /// `apply_support_filter` must accept boundary values 0.0 and large finite
+    /// values. `0.0` masks every internal node whose support is < 0 (none,
+    /// since the default is 100.0); a large value masks all sub-full-support
+    /// nodes.
+    #[test]
+    fn test_apply_support_filter_accepts_zero_threshold() {
+        let mut tree = tiny_tree();
+        apply_support_filter(&mut tree, 0.0).expect("0.0 is valid");
+        // Threshold 0.0 means support < 0 is masked — no internal node has
+        // negative support, so no node should be masked. Just verify the call
+        // succeeds without altering the tree topology.
+        assert!(tree.get_root().is_some());
     }
 }

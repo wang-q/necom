@@ -693,6 +693,29 @@ fn test_cut_support_avg_clade() {
 }
 
 #[test]
+fn test_cut_support_invalid_threshold_rejected() {
+    // Regression: `--support` must reject NaN, negative, and infinite values.
+    // Previously, NaN silently disabled the filter (no `support < NaN`
+    // comparison succeeds), and negative values masked every internal node.
+    let nwk_file = "tests/newick/abcde.nwk";
+
+    // Use `--support=X` form because `-1` / `-inf` would be parsed as flags.
+    for bad in ["NaN", "-1", "inf", "-inf"] {
+        let support_arg = format!("--support={}", bad);
+        let (_stdout, stderr) = NecomCmd::new()
+            .args(&["cut", "simple", nwk_file, "--k", "2", &support_arg])
+            .run_fail();
+
+        assert!(
+            stderr.to_lowercase().contains("non-negative finite number"),
+            "Expected '--support must be a non-negative finite number' for {}, got: {}",
+            bad,
+            stderr
+        );
+    }
+}
+
+#[test]
 fn test_cut_simple_missing_method() {
     let (_, stderr) = NecomCmd::new()
         .args(&["cut", "simple", "tests/newick/abcde.nwk"])
@@ -766,5 +789,44 @@ fn test_cut_overview_help() {
             && stderr.contains("scan-dynamic"),
         "Expected cut subcommand overview, got: {}",
         stderr
+    );
+}
+
+#[test]
+fn test_cut_scan_simple_oversized_range_no_stats_header() {
+    // Regression: `run_scan` must validate the scan range *before* writing
+    // any headers. Previously, an oversized range (rejected by
+    // `compute_n_steps`) left a header-only `--stats-out` file on disk.
+    // After the fix, the stats file is created (truncated by `File::create`)
+    // but contains no header bytes when validation fails.
+    use std::io::Write;
+
+    let mut stats_file = Builder::new().suffix(".tsv").tempfile().unwrap();
+    let stats_path = stats_file.path().to_str().unwrap().to_string();
+    // Pre-populate with a marker so we can detect whether the header was
+    // written (rather than relying on file existence alone).
+    writeln!(stats_file, "MARKER_LINE").unwrap();
+    stats_file.as_file().sync_all().unwrap();
+    drop(stats_file);
+
+    // Range too large: (1e308 - 0.0) / 1e-10 > i64::MAX.
+    let (_stdout, _stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "scan-simple",
+            "tests/newick/abcde.nwk",
+            "--height",
+            "--range",
+            "0,1e308,1e-10",
+            "--stats-out",
+            &stats_path,
+        ])
+        .run_fail();
+
+    let contents = fs::read_to_string(&stats_path).expect("stats file readable");
+    assert!(
+        !contents.contains("Group\tClusters\tSingletons"),
+        "stats file must not contain header on validation failure, got: {}",
+        contents
     );
 }

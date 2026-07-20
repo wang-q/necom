@@ -53,7 +53,7 @@ pub fn load_tree(args: &ArgMatches) -> Result<Tree> {
     }
 
     if let Some(&support_threshold) = args.get_one::<f64>("support") {
-        cut::apply_support_filter(&mut trees[0], support_threshold);
+        cut::apply_support_filter(&mut trees[0], support_threshold)?;
     }
 
     trees
