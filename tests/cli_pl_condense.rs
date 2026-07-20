@@ -222,3 +222,39 @@ fn command_pl_condense_stdin() {
         "Output is not a valid Newick tree"
     );
 }
+
+#[test]
+fn command_pl_condense_no_map_does_not_write_condensed_tsv() {
+    // Regression test: without --map, condensed.tsv must NOT be written to CWD.
+    // Run from a tempdir so any stray condensed.tsv is contained and observable.
+    let dir = tempdir().unwrap();
+    let output_path = dir.path().join("condensed.nwk");
+
+    let manifest = env!("CARGO_MANIFEST_DIR");
+    let taxon = format!("{}/tests/pipeline/strains.taxon.tsv", manifest);
+    let tree = format!("{}/tests/pipeline/minhash.reroot.newick", manifest);
+
+    let mut cmd = Command::cargo_bin("necom").unwrap();
+    cmd.arg("pl")
+        .arg("condense")
+        .arg("--taxon")
+        .arg(&taxon)
+        .arg("-o")
+        .arg(&output_path)
+        .arg(&tree)
+        .current_dir(dir.path());
+    cmd.assert().success();
+
+    // outfile should exist and contain condensed labels.
+    assert!(output_path.exists());
+    let content = fs::read_to_string(&output_path).unwrap();
+    assert!(content.contains("||"), "No condensed labels found");
+
+    // condensed.tsv must NOT exist in CWD when --map is not set.
+    let map_path = dir.path().join("condensed.tsv");
+    assert!(
+        !map_path.exists(),
+        "condensed.tsv should not be written without --map, but found at {:?}",
+        map_path
+    );
+}

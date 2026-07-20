@@ -65,9 +65,7 @@ pub fn read_names<C: FromIterator<String>>(file: &str) -> anyhow::Result<C> {
 ///
 /// Duplicate keys keep the first occurrence and warn. Lines with fewer than
 /// two columns are skipped with a warning.
-pub fn read_replace_tsv_overwrite(
-    file: &str,
-) -> anyhow::Result<BTreeMap<String, Vec<String>>> {
+pub fn read_replace_tsv(file: &str) -> anyhow::Result<BTreeMap<String, Vec<String>>> {
     let mut map = BTreeMap::new();
     for line in read_lines(file)? {
         let line = line?;
@@ -161,7 +159,7 @@ fn clean_path(path: &Path) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::read_names;
+    use super::{read_names, read_replace_tsv};
     use std::io::Write;
 
     #[test]
@@ -175,5 +173,47 @@ mod tests {
 
         let names: Vec<String> = read_names(tmp.path().to_str().unwrap()).unwrap();
         assert_eq!(names, vec!["A", "B", "C"]);
+    }
+
+    #[test]
+    fn test_read_replace_tsv_basic() {
+        let mut tmp = tempfile::NamedTempFile::new().unwrap();
+        writeln!(tmp, "A\tX").unwrap();
+        writeln!(tmp, "B\tY\tZ").unwrap();
+        tmp.flush().unwrap();
+
+        let map = read_replace_tsv(tmp.path().to_str().unwrap()).unwrap();
+        assert_eq!(map.get("A").unwrap(), &vec!["X".to_string()]);
+        assert_eq!(
+            map.get("B").unwrap(),
+            &vec!["Y".to_string(), "Z".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_read_replace_tsv_duplicate_key_keeps_first() {
+        let mut tmp = tempfile::NamedTempFile::new().unwrap();
+        writeln!(tmp, "A\tfirst").unwrap();
+        writeln!(tmp, "A\tsecond").unwrap();
+        tmp.flush().unwrap();
+
+        let map = read_replace_tsv(tmp.path().to_str().unwrap()).unwrap();
+        // First occurrence wins; "second" is discarded with a warning.
+        assert_eq!(map.get("A").unwrap(), &vec!["first".to_string()]);
+        assert_eq!(map.len(), 1);
+    }
+
+    #[test]
+    fn test_read_replace_tsv_skips_short_lines() {
+        let mut tmp = tempfile::NamedTempFile::new().unwrap();
+        writeln!(tmp, "A\tX").unwrap();
+        writeln!(tmp, "lonely").unwrap();
+        writeln!(tmp, "B\tY").unwrap();
+        tmp.flush().unwrap();
+
+        let map = read_replace_tsv(tmp.path().to_str().unwrap()).unwrap();
+        // Line with <2 columns is skipped.
+        assert!(!map.contains_key("lonely"));
+        assert_eq!(map.len(), 2);
     }
 }

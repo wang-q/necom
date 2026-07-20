@@ -385,10 +385,16 @@ pub fn spearman_correlation(a: &[f32], b: &[f32]) -> f32 {
 
 /// Computes the mean absolute error between two vectors.
 ///
+/// Returns `NaN` if `a` is empty, matching the convention of
+/// [`pearson_correlation`] and [`spearman_correlation`].
+///
 /// # Contract
 /// Caller must ensure `a.len() == b.len()`; otherwise the result is silently
 /// incorrect (`zip` truncates and the divisor uses `a.len()`).
 pub fn mean_absolute_error(a: &[f32], b: &[f32]) -> f32 {
+    if a.is_empty() {
+        return f32::NAN;
+    }
     a.iter()
         .zip(b.iter())
         .map(|(a, b)| (a - b).abs())
@@ -502,5 +508,21 @@ mod tests {
         // euclidean distance of identical vectors is 0
         let result = vector_score(&a, &b, "euclid", false, false).unwrap();
         assert_eq!(result, 0.0);
+    }
+
+    #[test]
+    fn test_mean_absolute_error_basic() {
+        let a = [1.0, 2.0, 3.0];
+        let b = [1.0, 4.0, 3.0];
+        // |1-1| + |2-4| + |3-3| = 0 + 2 + 0 = 2; 2/3
+        let mae = mean_absolute_error(&a, &b);
+        assert!((mae - 2.0 / 3.0).abs() < 1e-6, "got: {}", mae);
+    }
+
+    #[test]
+    fn test_mean_absolute_error_empty_returns_nan() {
+        let a: [f32; 0] = [];
+        let b: [f32; 0] = [];
+        assert!(mean_absolute_error(&a, &b).is_nan());
     }
 }

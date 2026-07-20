@@ -209,12 +209,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Results
     run_cmd!(info "==> Results")?;
 
-    let mut writer = necom::writer("condensed.tsv")
-        .with_context(|| "Failed to open writer for condensed.tsv")?;
-    for line in condensed.iter() {
-        writeln!(writer, "{}", line)?;
+    // Only persist condensed.tsv to tempdir when --map is requested; otherwise
+    // the file is unused and writing it is pure I/O waste.
+    if args.get_flag("map") {
+        let mut writer = necom::writer("condensed.tsv")
+            .with_context(|| "Failed to open writer for condensed.tsv")?;
+        for line in condensed.iter() {
+            writeln!(writer, "{}", line)?;
+        }
+        writer.flush()?;
     }
-    writer.flush()?;
 
     // Restore original CWD before writing outputs to relative paths (e.g.
     // --map's condensed.tsv, or a relative -o outfile). Intermediate files

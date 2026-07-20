@@ -122,7 +122,7 @@ pub fn par_run_pairs<E, F>(
             let mut lines = String::with_capacity(1024);
             for (i, e2) in entries2.iter().enumerate() {
                 pair_fn(e1, e2, &mut lines);
-                if i % 1000 == 0 && !lines.is_empty() {
+                if i > 0 && i % 1000 == 0 && !lines.is_empty() {
                     if let Err(e) = sender.send(std::mem::take(&mut lines)) {
                         log::error!("writer channel closed: {}", e);
                         break;

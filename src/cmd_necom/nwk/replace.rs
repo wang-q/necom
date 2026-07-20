@@ -42,7 +42,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let rfile = args
         .get_one::<String>("replace_tsv")
         .ok_or_else(|| anyhow::anyhow!("missing required argument: replace_tsv"))?;
-    let replace_map = necom::libs::io::read_replace_tsv_overwrite(rfile)?;
+    let replace_map = necom::libs::io::read_replace_tsv(rfile)?;
 
     let mut trees = Tree::from_file(infile)?;
 
