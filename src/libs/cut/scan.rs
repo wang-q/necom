@@ -113,7 +113,9 @@ pub fn run_scan(
         } else {
             // Standard method sweep. `method_name` is guaranteed to be Some
             // because the caller validates that a non-dynamic method is present.
-            let name = params.method_name.expect("method name required for scan");
+            let name = params.method_name.ok_or_else(|| {
+                anyhow::anyhow!("method name required for non-dynamic scan")
+            })?;
             cut::build_dispatch(
                 tree,
                 Some(name),
@@ -345,5 +347,42 @@ mod tests {
         assert!(groups.contains("height=0"));
         assert!(groups.contains("height=0.1"));
         assert!(groups.contains("height=0.2"));
+    }
+
+    /// Regression: `run_scan` must return an error (not panic) when
+    /// `dynamic_tree == false` and `method_name == None`. Previously this path
+    /// called `.expect()` which would crash the process.
+    #[test]
+    fn test_run_scan_missing_method_name_returns_error() {
+        let tree =
+            crate::libs::phylo::tree::Tree::from_newick("((A:0.1,B:0.1):0.1,C:0.2);")
+                .expect("valid newick");
+        let mut output = Vec::new();
+        let mut stats: Option<Box<dyn std::io::Write>> = None;
+        let params = ScanParams {
+            start: 0.0,
+            end: 0.1,
+            step: 0.1,
+            method_name: None,
+            dynamic_tree: false,
+        };
+        let result = run_scan(
+            &tree,
+            &mut output,
+            &mut stats,
+            params,
+            2,
+            None,
+            false,
+            false,
+            None,
+        );
+        assert!(result.is_err(), "expected error, got {:?}", result);
+        let msg = result.err().unwrap().to_string();
+        assert!(
+            msg.contains("method name required"),
+            "unexpected error message: {}",
+            msg
+        );
     }
 }

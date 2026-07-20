@@ -259,9 +259,15 @@ pub fn apply_support_filter(tree: &mut Tree, threshold: f64) {
 
     // First pass: collect internal node IDs whose support is below the threshold.
     // A tree traversal is used instead of `0..tree.len()` so the function does not
-    // rely on node IDs being contiguous.
+    // rely on node IDs being contiguous. The root is skipped because it has no
+    // parent edge to mask — masking its `length` field would be a meaningless no-op.
     let mut to_mask = Vec::new();
-    let mut stack = vec![root];
+    let mut stack = Vec::new();
+    if let Some(node) = tree.get_node(root) {
+        for &child in &node.children {
+            stack.push(child);
+        }
+    }
     while let Some(id) = stack.pop() {
         if let Some(node) = tree.get_node(id) {
             if !node.children.is_empty() {
@@ -414,5 +420,53 @@ mod tests {
                 msg
             );
         }
+    }
+
+    /// Regression: `apply_support_filter` must skip the root node — the root
+    /// has no parent edge, so masking its `length` field is a meaningless
+    /// no-op. Previously the root was checked and its `length` could be set
+    /// to the sentinel value when its name parsed as a sub-threshold support.
+    #[test]
+    fn test_apply_support_filter_skips_root() {
+        // Root carries a sub-threshold support value in its name (50 < 60).
+        // Before the fix, `apply_support_filter` would set root.length to the
+        // sentinel; after the fix, root.length must remain None.
+        let nwk = "((A:0.1,B:0.1):0.1,C:0.2)50;";
+        let mut tree = Tree::from_newick(nwk).expect("valid newick");
+        let root_id = tree.get_root().expect("tree has root");
+        assert!(tree.get_node(root_id).unwrap().length.is_none());
+
+        apply_support_filter(&mut tree, 60.0);
+
+        let root = tree.get_node(root_id).unwrap();
+        assert!(
+            root.length.is_none(),
+            "root length must remain None after support filter, got {:?}",
+            root.length
+        );
+    }
+
+    /// `apply_support_filter` must still mask low-support internal (non-root)
+    /// nodes. This guards against the previous fix over-correcting and
+    /// skipping all nodes.
+    #[test]
+    fn test_apply_support_filter_masks_low_support_internal() {
+        // Internal node (C,D) carries support 50; with threshold 60, its
+        // length must be masked to the sentinel value.
+        let nwk = "((A:0.1,B:0.1):0.1,(C:0.1,D:0.1)50:0.1);";
+        let mut tree = Tree::from_newick(nwk).expect("valid newick");
+
+        apply_support_filter(&mut tree, 60.0);
+
+        // Find the (C,D) internal node via its support-as-name label "50".
+        let node_id = tree
+            .get_node_by_name("50")
+            .expect("(C,D) node should exist");
+        let node = tree.get_node(node_id).unwrap();
+        assert_eq!(
+            node.length,
+            Some(SUPPORT_FILTER_SENTINEL),
+            "expected (C,D) node length to be masked to sentinel"
+        );
     }
 }

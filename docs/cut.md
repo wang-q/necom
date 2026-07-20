@@ -143,7 +143,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
 - **Complexity**: $O(N)$.
 - **Use case**: When overall evolutionary rates are uneven, find "natural" cluster boundaries.
 
-### 11. Dynamic Tree Cut (`necom cut dynamic`) [Implemented]
+### 11. Dynamic Tree Cut (`necom cut dynamic`)
 
 - **Definition**: Based on the `cutreeDynamicTree` algorithm in the R package `dynamicTreeCut` (`dynamicTreeCut/R/cutreeDynamic.R`).
 - **Principle**: Top-down recursive algorithm.
@@ -159,7 +159,7 @@ In practice, we often already have a tree (phylogenetic or hierarchical clusteri
   - Only tree structure is available; fast, automated cutting is desired.
   - Suitable for nested structures with small clusters inside large clusters.
 
-### 12. Hybrid Dynamic Cut (`necom cut hybrid`) [Implemented]
+### 12. Hybrid Dynamic Cut (`necom cut hybrid`)
 
 - **Definition**: Based on the `cutreeHybrid` algorithm in the R package `dynamicTreeCut`.
 - **Principle**: Two-phase bottom-up algorithm.
