@@ -57,7 +57,7 @@ impl NamedMatrix {
         })
     }
 
-    /// Create with numeric names ("0", "1", ...).
+    /// Create a matrix with numeric names ("0", "1", ..., "size-1").
     pub fn with_ids(size: usize) -> Self {
         let matrix = CondensedMatrix::new(size);
         let mut names_map = IndexMap::with_capacity(size);

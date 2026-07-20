@@ -41,7 +41,7 @@ The `PHYLIP` distance matrix format is a common format in phylogenetic analysis.
 
 **Strict PHYLIP (`strict` mode output)**:
 - Follows the original `PHYLIP` standard.
-- Sequence names: strictly truncated to 10 characters, left-aligned and space-padded.
+- Sequence names: strictly truncated to 10 bytes, left-aligned and space-padded.
 - Numeric format: space-separated, usually kept to 6 decimal places.
 
 Variants:

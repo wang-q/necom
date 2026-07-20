@@ -20,7 +20,7 @@ Output:
     * Useful for saving disk space.
 * `strict`:
     * Standard PHYLIP format.
-    * Names truncated to 10 characters.
+    * Names truncated to 10 bytes.
     * Names left-aligned with space padding.
     * Distances formatted to 6 decimal places, space-separated.
     * Space-separated values.
@@ -28,7 +28,7 @@ Output:
 
 Notes:
 
-* `strict` mode truncates names to 10 characters and formats distances to 6 decimal places, which can cause name collisions and precision loss.
+* `strict` mode truncates names to 10 bytes and formats distances to 6 decimal places, which can cause name collisions and precision loss.
 * `full` and `lower` preserve original names without truncation.
 * `full` and `lower` preserve distance values as-is; `strict` may round them to 6 decimal places.
 

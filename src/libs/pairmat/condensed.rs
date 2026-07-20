@@ -64,7 +64,7 @@ impl CondensedMatrix {
         &self.data
     }
 
-    /// Get the underlying data vector as mutable slice.
+    /// Get the underlying data vector as a mutable slice.
     pub fn data_mut(&mut self) -> &mut [f32] {
         &mut self.data
     }
