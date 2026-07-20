@@ -47,9 +47,13 @@ where
     ///
     /// # Errors
     ///
-    /// Returns an error if `eps` is non-positive or `min_points` is zero.
+    /// Returns an error if `eps` is non-positive or NaN, or `min_points` is zero.
     pub fn new(eps: T, min_points: usize) -> anyhow::Result<Self> {
-        if eps <= T::default() {
+        // `partial_cmp` returns `None` when either operand is NaN, so checking
+        // for `Some(Greater)` rejects non-positive values *and* NaN. Using
+        // `eps <= T::default()` alone would let NaN through (`NaN <= 0.0` is
+        // false under `PartialOrd`).
+        if eps.partial_cmp(&T::default()) != Some(std::cmp::Ordering::Greater) {
             anyhow::bail!("eps must be a positive number");
         }
         if min_points == 0 {
@@ -380,5 +384,37 @@ mod tests {
         assert_eq!(clusters.len(), 2);
         assert_eq!(clusters[0], vec![0, 1]);
         assert_eq!(clusters[1], vec![2, 3]);
+    }
+
+    #[test]
+    fn test_new_rejects_nan_eps() {
+        // `NaN <= 0.0` is false under PartialOrd, so the old `eps <= T::default()`
+        // check let NaN through. The `!(eps > T::default())` form rejects NaN
+        // because `NaN > 0.0` is also false.
+        let err = Dbscan::new(f32::NAN, 2).unwrap_err();
+        assert!(
+            err.to_string().contains("eps"),
+            "error should mention eps, got: {}",
+            err
+        );
+    }
+
+    #[test]
+    fn test_new_rejects_zero_and_negative_eps() {
+        let err = Dbscan::new(0.0_f32, 2).unwrap_err();
+        assert!(err.to_string().contains("eps"));
+
+        let err = Dbscan::new(-1.0_f32, 2).unwrap_err();
+        assert!(err.to_string().contains("eps"));
+    }
+
+    #[test]
+    fn test_new_rejects_zero_min_points() {
+        let err = Dbscan::new(1.0_f32, 0).unwrap_err();
+        assert!(
+            err.to_string().contains("min_points"),
+            "error should mention min_points, got: {}",
+            err
+        );
     }
 }
