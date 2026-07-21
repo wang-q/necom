@@ -1399,10 +1399,10 @@ mod tests {
             (Method::Single, sqrt2),         // min(d02, d12) = sqrt(2)
             (Method::Complete, sqrt8),       // max(d02, d12) = sqrt(8)
             (Method::Average, 2.121_320_2),  // (d02 + d12) / 2 = (sqrt8 + sqrt2) / 2
-            (Method::Weighted, 2.121_320_2), // (h1 + h2) / 2 = (sqrt2 + sqrt2) / 2... wait
+            (Method::Weighted, 2.121_320_2), // 0.5 * (d02 + d12) = 0.5 * (sqrt8 + sqrt2)
             (Method::Centroid, 2.121_320_2), // distance between centroids
-            (Method::Median, 2.121_320_2),   // median of pair distances
-            (Method::Ward, 2.449_489_8),     // sqrt( (n1*n2/(n1+n2)) * ||c1-c2||^2 )
+            (Method::Median, 2.121_320_2), // sqrt(0.5*d02^2 + 0.5*d12^2 - 0.25*d01^2) = sqrt(4.5)
+            (Method::Ward, 2.449_489_8), // sqrt((2*d02^2 + 2*d12^2 - d01^2) / 3) = sqrt(6)
         ];
 
         for (method, expected_step1_dist) in cases {
