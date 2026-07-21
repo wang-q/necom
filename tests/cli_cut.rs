@@ -830,3 +830,68 @@ fn test_cut_scan_simple_oversized_range_no_stats_header() {
         contents
     );
 }
+
+#[test]
+fn test_cut_scan_simple_negative_threshold_no_stats_header() {
+    // Regression: the range itself parses, but the height threshold is
+    // rejected by `build_method`. Header must not be written before that
+    // validation runs.
+    use std::io::Write;
+
+    let mut stats_file = Builder::new().suffix(".tsv").tempfile().unwrap();
+    let stats_path = stats_file.path().to_str().unwrap().to_string();
+    writeln!(stats_file, "MARKER_LINE").unwrap();
+    stats_file.as_file().sync_all().unwrap();
+    drop(stats_file);
+
+    let (_stdout, _stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "scan-simple",
+            "tests/newick/abcde.nwk",
+            "--height",
+            "--range=-1,1,1",
+            "--stats-out",
+            &stats_path,
+        ])
+        .run_fail();
+
+    let contents = fs::read_to_string(&stats_path).expect("stats file readable");
+    assert!(
+        !contents.contains("Group\tClusters\tSingletons"),
+        "stats file must not contain header on validation failure, got: {}",
+        contents
+    );
+}
+
+#[test]
+fn test_cut_scan_dynamic_invalid_max_tree_height_no_stats_header() {
+    // Regression: `--max-tree-height` is validated inside the first dispatch
+    // construction. Header must not be written before that validation runs.
+    use std::io::Write;
+
+    let mut stats_file = Builder::new().suffix(".tsv").tempfile().unwrap();
+    let stats_path = stats_file.path().to_str().unwrap().to_string();
+    writeln!(stats_file, "MARKER_LINE").unwrap();
+    stats_file.as_file().sync_all().unwrap();
+    drop(stats_file);
+
+    let (_stdout, _stderr) = NecomCmd::new()
+        .args(&[
+            "cut",
+            "scan-dynamic",
+            "tests/newick/abcde.nwk",
+            "--range=1,2,1",
+            "--max-tree-height=-1",
+            "--stats-out",
+            &stats_path,
+        ])
+        .run_fail();
+
+    let contents = fs::read_to_string(&stats_path).expect("stats file readable");
+    assert!(
+        !contents.contains("Group\tClusters\tSingletons"),
+        "stats file must not contain header on validation failure, got: {}",
+        contents
+    );
+}

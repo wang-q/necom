@@ -88,16 +88,11 @@ pub fn run_scan(
     no_pam_dendro: bool,
     max_pam_dist: Option<f64>,
 ) -> anyhow::Result<()> {
-    // Validate the scan range before writing any output headers. Previously
-    // the headers were written first, which left truncated header-only output
-    // files on disk when `compute_n_steps` rejected an oversized range.
+    // Validate the scan range before writing any output headers. Headers are
+    // deferred until the first dispatch succeeds so that method-level
+    // validation failures (e.g. a negative height threshold or an invalid
+    // `--max-tree-height`) do not leave a header-only output file.
     let n_steps = compute_n_steps(params.start, params.end, params.step)?;
-
-    writer.write_all(b"Group\tClusterID\tSampleID\n")?;
-
-    if let Some(w) = stats_writer.as_deref_mut() {
-        w.write_all(b"Group\tClusters\tSingletons\tNon-Singletons\tMaxSize\n")?;
-    }
 
     let mut values: Vec<f64> = Vec::with_capacity((n_steps + 2) as usize);
     for i in 0..=n_steps {
@@ -110,6 +105,8 @@ pub fn run_scan(
             values.push(params.end);
         }
     }
+
+    let mut header_written = false;
 
     for val in values {
         let dispatch = if params.dynamic_tree {
@@ -141,6 +138,14 @@ pub fn run_scan(
         // not leak into the Group label.
         let group_label = format!("{}={}", method_name, format_scan_value(val));
 
+        if !header_written {
+            writer.write_all(b"Group\tClusterID\tSampleID\n")?;
+            if let Some(w) = stats_writer.as_deref_mut() {
+                w.write_all(b"Group\tClusters\tSingletons\tNon-Singletons\tMaxSize\n")?;
+            }
+            header_written = true;
+        }
+
         if let Some(w) = stats_writer.as_deref_mut() {
             let (n_clusters, n_single, n_non_single, max_size) = partition.get_stats();
             w.write_fmt(format_args!(
@@ -153,7 +158,9 @@ pub fn run_scan(
         writer.write_all(rows.as_bytes())?;
     }
 
-    writer.flush()?;
+    if header_written {
+        writer.flush()?;
+    }
     Ok(())
 }
 
@@ -425,6 +432,94 @@ mod tests {
         assert!(
             output.is_empty(),
             "no header should be written on validation failure, got: {:?}",
+            String::from_utf8_lossy(&output)
+        );
+    }
+
+    /// Regression: method-level validation must run before any header is
+    /// written. A negative height threshold is rejected by `build_method`,
+    /// but the range itself parses successfully; deferring the header until
+    /// the first successful dispatch prevents a header-only stats file.
+    #[test]
+    fn test_run_scan_rejects_negative_height_before_header() {
+        let tree =
+            crate::libs::phylo::tree::Tree::from_newick("((A:0.1,B:0.1):0.1,C:0.2);")
+                .expect("valid newick");
+        let mut output = Vec::new();
+        let mut stats: Option<Box<dyn std::io::Write>> = None;
+        let params = ScanParams {
+            start: -1.0,
+            end: 1.0,
+            step: 1.0,
+            method_name: Some("height"),
+            dynamic_tree: false,
+        };
+        let result = run_scan(
+            &tree,
+            &mut output,
+            &mut stats,
+            params,
+            2,
+            None,
+            false,
+            false,
+            None,
+        );
+        assert!(result.is_err(), "expected error for negative height");
+        let msg = result.err().unwrap().to_string();
+        assert!(
+            msg.contains("non-negative finite number"),
+            "unexpected error message: {}",
+            msg
+        );
+        assert!(
+            output.is_empty(),
+            "no header should be written when first dispatch fails, got: {:?}",
+            String::from_utf8_lossy(&output)
+        );
+    }
+
+    /// Regression: dynamic-tree scan must validate `--max-tree-height` before
+    /// writing headers. Deferring the header until the first successful
+    /// dispatch keeps the stats file empty when validation fails.
+    #[test]
+    fn test_run_scan_dynamic_rejects_invalid_max_tree_height_before_header() {
+        let tree =
+            crate::libs::phylo::tree::Tree::from_newick("((A:0.1,B:0.1):0.1,C:0.2);")
+                .expect("valid newick");
+        let mut output = Vec::new();
+        let mut stats: Option<Box<dyn std::io::Write>> = None;
+        let params = ScanParams {
+            start: 1.0,
+            end: 2.0,
+            step: 1.0,
+            method_name: None,
+            dynamic_tree: true,
+        };
+        let result = run_scan(
+            &tree,
+            &mut output,
+            &mut stats,
+            params,
+            2,
+            Some(-1.0),
+            false,
+            false,
+            None,
+        );
+        assert!(
+            result.is_err(),
+            "expected error for invalid max-tree-height"
+        );
+        let msg = result.err().unwrap().to_string();
+        assert!(
+            msg.contains("non-negative finite number"),
+            "unexpected error message: {}",
+            msg
+        );
+        assert!(
+            output.is_empty(),
+            "no header should be written when first dispatch fails, got: {:?}",
             String::from_utf8_lossy(&output)
         );
     }
