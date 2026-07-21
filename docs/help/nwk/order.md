@@ -19,6 +19,7 @@ Notes:
 * `--olo-format` controls the format of the `--olo` matrix: `phylip` (default) or `pair`.
 * Entries in `--name-list` that are not found among the leaf names cause the command to fail with an error listing the missing names.
 * The `--olo` matrix must cover every leaf in the tree; missing leaves cause an error. Non-finite distances are also rejected.
+* `--olo` expects the original data-space distance matrix, not the tree's own path distances. Optimizing against tree-derived distances would mostly reproduce the current topology, defeating the purpose of leaf reordering.
 
 Examples:
 
