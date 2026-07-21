@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c229d19f.js";
+            window.path_to_searchindex_js = "searchindex-01f7349a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -181,7 +181,8 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="necom-nwk"><a class="header" href="#necom-nwk">necom nwk</a></h1>
-<p><code>necom nwk</code> provides a complete set of tools for processing <strong>Newick</strong>-format phylogenetic trees, covering information extraction, structural manipulation, and visualization.</p>
+<p><code>necom nwk</code> provides a complete set of tools for processing <strong>Newick</strong>-format phylogenetic trees,
+covering information extraction, structural manipulation, and visualization.</p>
 <h2 id="subcommands"><a class="header" href="#subcommands">Subcommands</a></h2>
 <p>Subcommands are grouped into three categories:</p>
 <ul>
@@ -217,7 +218,8 @@
 <hr>
 <h2 id="information-commands"><a class="header" href="#information-commands">Information Commands</a></h2>
 <h3 id="distance"><a class="header" href="#distance">distance</a></h3>
-<p>Compute distances between nodes or generate a distance matrix. Use <code>--mode</code> to select root, parent, pairwise, lca, or phylip output.</p>
+<p>Compute distances between nodes or generate a distance matrix. Use <code>--mode</code> to select root, parent,
+pairwise, lca, or phylip output.</p>
 <h3 id="label"><a class="header" href="#label">label</a></h3>
 <p>Extract labels (names) from the tree.</p>
 <h3 id="stat"><a class="header" href="#stat">stat</a></h3>
@@ -231,11 +233,14 @@
 <h3 id="rename"><a class="header" href="#rename">rename</a></h3>
 <p>Rename specified nodes.</p>
 <h3 id="replace"><a class="header" href="#replace">replace</a></h3>
-<p>Batch replace node names or append annotations from a TSV file. Use <code>--mode</code> to choose label, taxid, species, or asis replacement.</p>
+<p>Batch replace node names or append annotations from a TSV file. Use <code>--mode</code> to choose label, taxid,
+species, or asis replacement.</p>
 <h3 id="reroot"><a class="header" href="#reroot">reroot</a></h3>
-<p>Reroot the tree. The default is midpoint rooting; use <code>-n</code> to specify the ingroup, rerooting on the edge leading to the LCA of the specified nodes.</p>
+<p>Reroot the tree. The default is midpoint rooting; use <code>-n</code> to specify the ingroup, rerooting on the
+edge leading to the LCA of the specified nodes.</p>
 <h3 id="subtree"><a class="header" href="#subtree">subtree</a></h3>
-<p>Extract the subtree rooted at the LCA of selected nodes, or condense it into a single node with <code>--condense</code>.</p>
+<p>Extract the subtree rooted at the LCA of selected nodes, or condense it into a single node with
+<code>--condense</code>.</p>
 <h3 id="topo"><a class="header" href="#topo">topo</a></h3>
 <p>Modify tree topology and properties, such as removing branch lengths or labels.</p>
 <hr>
@@ -255,34 +260,56 @@
 <hr>
 <h2 id="label-handling"><a class="header" href="#label-handling">Label Handling</a></h2>
 <ul>
-<li>Unquoted labels are trimmed: leading and trailing whitespace is removed. Internal whitespace is preserved only when the label is quoted with single or double quotes.</li>
-<li>Labels containing Newick reserved characters (<code>( ) : ; , [ ]</code>) or whitespace must be quoted to round-trip correctly.</li>
-<li>Single quotes inside single-quoted labels are escaped by doubling (<code>''</code>), and double quotes inside double-quoted labels are escaped by doubling (<code>""</code>).</li>
-<li>Name-based selection filters (<code>-n</code>, <code>-l</code>, <code>-x</code>, <code>--lca</code>) generally log a warning and continue when a requested name is not found, rather than abort. This applies to commands such as <code>rename</code>, <code>subtree</code>, <code>comment</code>, and <code>prune</code>.</li>
-<li><code>order --name-list</code> is an exception: entries in the name list that are not found among the leaf names cause the command to fail with an error listing the missing names.</li>
-<li><code>reroot</code> is also an exception: if none of the names specified with <code>--node</code> are found, it reports an error and exits, because there is no valid target for rerooting.</li>
+<li>Unquoted labels are trimmed: leading and trailing whitespace is removed. Internal whitespace is
+preserved only when the label is quoted with single or double quotes.</li>
+<li>Labels containing Newick reserved characters (<code>( ) : ; , [ ]</code>) or whitespace must be quoted to
+round-trip correctly.</li>
+<li>Single quotes inside single-quoted labels are escaped by doubling (<code>''</code>), and double quotes
+inside double-quoted labels are escaped by doubling (<code>""</code>).</li>
+<li>Name-based selection filters (<code>-n</code>, <code>-l</code>, <code>-x</code>, <code>--lca</code>) generally log a warning and continue
+when a requested name is not found, rather than abort. This applies to commands such as <code>rename</code>,
+<code>subtree</code>, <code>comment</code>, and <code>prune</code>.</li>
+<li><code>order --name-list</code> is an exception: entries in the name list that are not found among the leaf
+names cause the command to fail with an error listing the missing names.</li>
+<li><code>reroot</code> is also an exception: if none of the names specified with <code>--node</code> are found, it reports
+an error and exits, because there is no valid target for rerooting.</li>
 </ul>
 <hr>
 <h2 id="branch-length-handling"><a class="header" href="#branch-length-handling">Branch Length Handling</a></h2>
-<p><code>necom nwk</code> treats non-finite branch lengths (<code>NaN</code>, positive/negative infinity), negative values, and zero values as <code>0.0</code> during computation and visualization. On input, such values are normalized to <code>None</code> (no length annotation); on output, <code>None</code> and zero (<code>0.0</code>) lengths are omitted so that cladograms remain unannotated. This applies to:</p>
+<p><code>necom nwk</code> treats non-finite branch lengths (<code>NaN</code>, positive/negative infinity), negative values,
+and zero values as <code>0.0</code> during computation and visualization. On input, such values are normalized
+to <code>None</code> (no length annotation); on output, <code>None</code> and zero (<code>0.0</code>) lengths are omitted so that
+cladograms remain unannotated. This applies to:</p>
 <ul>
 <li>Statistics (<code>stat</code>) and distance calculations (<code>distance</code>).</li>
 <li>Tree operations such as <code>reroot</code>, collapse, and insert_parent.</li>
 <li>Visualization (<code>to-svg</code>, <code>to-dot</code>, <code>to-forest</code>, <code>to-tex</code>).</li>
 </ul>
-<p>This normalization prevents invalid values from polluting sums, maxima, or distance computations. Note that input files themselves are not modified; normalization occurs only during internal computation. If strict branch-length validation is needed, clean the data in the input first.</p>
+<p>This normalization prevents invalid values from polluting sums, maxima, or distance computations.
+Note that input files themselves are not modified; normalization occurs only during internal
+computation. If strict branch-length validation is needed, clean the data in the input first.</p>
 <h3 id="length-detection-and-distance-threshold"><a class="header" href="#length-detection-and-distance-threshold">Length detection and distance threshold</a></h3>
 <ul>
-<li><code>stat</code> counts an edge as “with length” only when its branch length is a positive finite value. Missing, zero, and non-finite lengths are reported as “without length”.</li>
-<li><code>distance</code> in <code>root</code>, <code>parent</code>, <code>pairwise</code>, and <code>lca</code> modes uses the sum of branch lengths only when its absolute value exceeds <code>1e-9</code>; otherwise it falls back to the topological edge count. This avoids treating near-zero floating-point values as meaningful distances.</li>
-<li><code>distance --mode phylip</code> uses a tree-wide decision: if any edge in the tree carries a positive finite length, the full matrix is computed from branch lengths; otherwise it falls back to topological edge counts for all pairs.</li>
+<li><code>stat</code> counts an edge as “with length” only when its branch length is a positive finite value.
+Missing, zero, and non-finite lengths are reported as “without length”.</li>
+<li><code>distance</code> in <code>root</code>, <code>parent</code>, <code>pairwise</code>, and <code>lca</code> modes uses the sum of branch lengths only
+when its absolute value exceeds <code>1e-9</code>; otherwise it falls back to the topological edge count.
+This avoids treating near-zero floating-point values as meaningful distances.</li>
+<li><code>distance --mode phylip</code> uses a tree-wide decision: if any edge in the tree carries a positive
+finite length, the full matrix is computed from branch lengths; otherwise it falls back to
+topological edge counts for all pairs.</li>
 </ul>
 <hr>
 <h2 id="planned-subcommands"><a class="header" href="#planned-subcommands">Planned Subcommands</a></h2>
 <ul>
-<li><code>condense</code>: Tree condensation functionality is currently provided by <code>necom nwk subtree --condense</code>; no standalone <code>condense</code> subcommand is planned at this time.</li>
-<li><code>match</code>, <code>ed</code>, <code>gen</code>, <code>duration</code>: Mapped from <code>newick_utils</code> but not yet implemented in <code>necom nwk</code>; no concrete plan at this time.</li>
-<li>Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level command <code>necom eval</code>. <code>nwk compare</code> and <code>nwk support</code> have been migrated to <code>necom eval compare</code> and <code>necom eval replicate</code>; see <a href="eval.html"><code>docs/eval.md</code></a>. The <code>eval tree</code> subcommand remains in design — see <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a>.</li>
+<li><code>condense</code>: Tree condensation functionality is currently provided by
+<code>necom nwk subtree --condense</code>; no standalone <code>condense</code> subcommand is planned at this time.</li>
+<li><code>match</code>, <code>ed</code>, <code>gen</code>, <code>duration</code>: Mapped from <code>newick_utils</code> but not yet implemented in
+<code>necom nwk</code>; no concrete plan at this time.</li>
+<li>Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level
+command <code>necom eval</code>. <code>nwk compare</code> and <code>nwk support</code> have been migrated to <code>necom eval compare</code>
+and <code>necom eval replicate</code>; see <a href="eval.html"><code>docs/eval.md</code></a>. The <code>eval tree</code> subcommand remains in
+design — see <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a>.</li>
 </ul>
 
                     </main>

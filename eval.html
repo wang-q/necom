@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c229d19f.js";
+            window.path_to_searchindex_js = "searchindex-01f7349a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -181,13 +181,20 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="necom-eval"><a class="header" href="#necom-eval">necom eval</a></h1>
-<p><code>necom eval</code> provides evaluation metrics for clustering partitions and phylogenetic trees. It is the unified entry point for assessing result quality, support, and consistency.</p>
+<p><code>necom eval</code> provides evaluation metrics for clustering partitions and phylogenetic trees. It is
+the unified entry point for assessing result quality, support, and consistency.</p>
 <h2 id="design-principles"><a class="header" href="#design-principles">Design Principles</a></h2>
 <ul>
-<li><strong>Unified entry point</strong>: All evaluation capabilities live under <code>necom eval</code>, making them easier to discover.</li>
-<li><strong>Evaluation only</strong>: <code>eval</code> measures existing results; it does not generate clusters, infer trees, or convert formats.</li>
-<li><strong>Strict validation</strong>: External evaluation requires matching sample sets; internal evaluation requires every partition sample to be present in the supplied matrix, tree, or coordinate file. This prevents silent sample dropping and misleading <code>NaN</code> metrics.</li>
-<li><strong>Shared implementation</strong>: Metrics are implemented once in <code>libs/eval</code> and reused across commands (e.g., <code>silhouette_score</code> is used by both <code>eval partition --matrix/--tree</code> and the planned <code>eval tree</code>).</li>
+<li><strong>Unified entry point</strong>: All evaluation capabilities live under <code>necom eval</code>, making them easier
+to discover.</li>
+<li><strong>Evaluation only</strong>: <code>eval</code> measures existing results; it does not generate clusters, infer trees,
+or convert formats.</li>
+<li><strong>Strict validation</strong>: External evaluation requires matching sample sets; internal evaluation
+requires every partition sample to be present in the supplied matrix, tree, or coordinate file.
+This prevents silent sample dropping and misleading <code>NaN</code> metrics.</li>
+<li><strong>Shared implementation</strong>: Metrics are implemented once in <code>libs/eval</code> and reused across
+commands (e.g., <code>silhouette_score</code> is used by both <code>eval partition --matrix/--tree</code> and the
+planned <code>eval tree</code>).</li>
 </ul>
 <h2 id="subcommands"><a class="header" href="#subcommands">Subcommands</a></h2>
 <p>Subcommands are grouped by evaluation target:</p>
@@ -211,38 +218,62 @@
 <hr>
 <h2 id="tree-comparison"><a class="header" href="#tree-comparison">Tree Comparison</a></h2>
 <h3 id="compare"><a class="header" href="#compare">compare</a></h3>
-<p>Compare trees using Robinson-Foulds (RF) distance and its variants. Supports pairwise comparison within a single file and cross-comparison between two files.</p>
+<p>Compare trees using Robinson-Foulds (RF) distance and its variants. Supports pairwise comparison
+within a single file and cross-comparison between two files.</p>
 <hr>
 <h2 id="partition-evaluation"><a class="header" href="#partition-evaluation">Partition Evaluation</a></h2>
 <h3 id="partition"><a class="header" href="#partition">partition</a></h3>
-<p>Evaluate clustering partition quality. Supports external comparison to a reference partition (ARI, AMI, V-Measure, FMI, NMI, Jaccard, etc.) and internal evaluation using a distance matrix, tree, or coordinate matrix (Silhouette, Dunn, Davies-Bouldin, Calinski-Harabasz, etc.). Batch mode evaluates multiple partitions from parameter scans.</p>
-<p>Input validation is strict: empty partitions are rejected, external evaluation requires matching sample sets, and internal evaluation requires every partition sample to be present in the supplied matrix, tree, or coordinate file. These checks prevent silent sample dropping and misleading <code>NaN</code> metrics.</p>
-<p>See <a href="eval-partition.html"><code>docs/eval-partition.md</code></a> for detailed metric definitions and the selection guide.</p>
+<p>Evaluate clustering partition quality. Supports external comparison to a reference partition (ARI,
+AMI, V-Measure, FMI, NMI, Jaccard, etc.) and internal evaluation using a distance matrix, tree, or
+coordinate matrix (Silhouette, Dunn, Davies-Bouldin, Calinski-Harabasz, etc.). Batch mode evaluates
+multiple partitions from parameter scans.</p>
+<p>Input validation is strict: empty partitions are rejected, external evaluation requires matching
+sample sets, and internal evaluation requires every partition sample to be present in the supplied
+matrix, tree, or coordinate file. These checks prevent silent sample dropping and misleading <code>NaN</code>
+metrics.</p>
+<p>See <a href="eval-partition.html"><code>docs/eval-partition.md</code></a> for detailed metric definitions and the selection
+guide.</p>
 <hr>
 <h2 id="branch-support"><a class="header" href="#branch-support">Branch Support</a></h2>
 <h3 id="replicate"><a class="header" href="#replicate">replicate</a></h3>
-<p>Assign support values to internal nodes of a target tree based on replicate trees (e.g., from bootstrap or jackknife resampling). Outputs the annotated tree (Newick). All trees must share the same leaf set.</p>
+<p>Assign support values to internal nodes of a target tree based on replicate trees (e.g., from
+bootstrap or jackknife resampling). Outputs the annotated tree (Newick). All trees must share the
+same leaf set.</p>
 <hr>
 <h2 id="branch-length-handling"><a class="header" href="#branch-length-handling">Branch Length Handling</a></h2>
-<p><code>necom eval compare</code> normalizes non-finite branch lengths (<code>NaN</code>, positive/negative infinity) and negative values to <code>0.0</code> during computation; zero values are left as <code>0.0</code>. This normalization prevents invalid values from polluting WRF and KF distance computations. Input files themselves are not modified.</p>
+<p><code>necom eval compare</code> normalizes non-finite branch lengths (<code>NaN</code>, positive/negative infinity) and
+negative values to <code>0.0</code> during computation; zero values are left as <code>0.0</code>. This normalization
+prevents invalid values from polluting WRF and KF distance computations. Input files themselves are
+not modified.</p>
 <hr>
 <h2 id="planned-subcommands"><a class="header" href="#planned-subcommands">Planned Subcommands</a></h2>
-<p>The following subcommands are <strong>not yet implemented</strong>. Their CLI surface is not yet finalized; the descriptions below reflect the current design direction, not commitments. See <a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a> for design status.</p>
+<p>The following subcommands are <strong>not yet implemented</strong>. Their CLI surface is not yet
+finalized; the descriptions below reflect the current design direction, not commitments. See
+<a href="../notes/design/eval-planned.html"><code>notes/design/eval-planned.md</code></a> for design status.</p>
 <h3 id="tree-not-implemented"><a class="header" href="#tree-not-implemented">tree (Not Implemented)</a></h3>
-<p>Multi-dimensional evaluation of a single phylogenetic tree. The tree is the positional primary input; a partition (<code>--part</code>), reference tree (<code>--ref</code>), trait map (<code>--traits</code>), or original distance matrix (<code>--dist</code>) may be supplied as auxiliary context.</p>
+<p>Multi-dimensional evaluation of a single phylogenetic tree. The tree is the positional primary
+input; a partition (<code>--part</code>), reference tree (<code>--ref</code>), trait map (<code>--traits</code>), or original
+distance matrix (<code>--dist</code>) may be supplied as auxiliary context.</p>
 <p>Four evaluation dimensions:</p>
 <ul>
-<li><strong>Geometry</strong>: Silhouette, Diameter, AvgDist, MinInterDist. Branches on whether the partition corresponds to tree clades — O(N) for clade groups (e.g., <code>necom cut</code> output), O(N²) for arbitrary partitions (e.g., dbscan/mcl output).</li>
-<li><strong>Trait</strong>: Purity, Entropy, DominantTrait — consistency with external labels (taxonomy, geography, phenotype).</li>
+<li><strong>Geometry</strong>: Silhouette, Diameter, AvgDist, MinInterDist. Branches on whether the partition
+corresponds to tree clades — O(N) for clade groups (e.g., <code>necom cut</code> output), O(N²) for
+arbitrary partitions (e.g., dbscan/mcl output).</li>
+<li><strong>Trait</strong>: Purity, Entropy, DominantTrait — consistency with external labels (taxonomy, geography,
+phenotype).</li>
 <li><strong>Phylo</strong>: Local RF to reference tree, Monophyly Check, ConflictScore.</li>
 <li><strong>Fit</strong>: Cophenetic Correlation against an original distance matrix.</li>
 </ul>
 <p>Input and output details:</p>
 <ul>
 <li><strong>Tree</strong>: Newick (positional argument).</li>
-<li><strong>Partition (<code>--part</code>)</strong>: optional grouping in <code>cluster</code> or <code>pair</code> format. If omitted, the whole tree is evaluated or a partition is generated via <code>--cut</code>.</li>
-<li><strong>Trait map (<code>--traits</code>)</strong>: TSV with <code>LeafName &lt;tab&gt; Trait1,Trait2...</code>, used for purity/entropy calculations.</li>
-<li><strong>Reference tree (<code>--ref</code>)</strong>: Newick species tree for Local RF and monophyly checks. Gene trees typically sample only a subset of taxa, so leaf-set intersection pruning is required before comparison.</li>
+<li><strong>Partition (<code>--part</code>)</strong>: optional grouping in <code>cluster</code> or <code>pair</code> format. If omitted, the whole
+tree is evaluated or a partition is generated via <code>--cut</code>.</li>
+<li><strong>Trait map (<code>--traits</code>)</strong>: TSV with <code>LeafName &lt;tab&gt; Trait1,Trait2...</code>, used for purity/entropy
+calculations.</li>
+<li><strong>Reference tree (<code>--ref</code>)</strong>: Newick species tree for Local RF and monophyly checks. Gene trees
+typically sample only a subset of taxa, so leaf-set intersection pruning is required before
+comparison.</li>
 <li><strong>Original matrix (<code>--dist</code>)</strong>: PHYLIP square matrix or pair TSV for Cophenetic correlation.</li>
 <li><strong>Output</strong>: TSV with column groups:
 <ul>
@@ -253,23 +284,34 @@
 <li><code>Fit</code>: CopheneticCorrelation.</li>
 </ul>
 </li>
-<li><strong><code>--metrics</code></strong>: controls which column groups are emitted (e.g., <code>--metrics basic,geom</code> or <code>--metrics cophenet</code>), avoiding unnecessary computation.</li>
+<li><strong><code>--metrics</code></strong>: controls which column groups are emitted (e.g., <code>--metrics basic,geom</code> or
+<code>--metrics cophenet</code>), avoiding unnecessary computation.</li>
 </ul>
 <p>Performance notes:</p>
 <ul>
 <li>For clade-aligned partitions, geometry metrics are O(N); for arbitrary partitions they are O(N²).</li>
 <li>Cophenetic correlation is inherently O(N²) because it must compare every leaf pair.</li>
-<li>For large trees, Silhouette supports <code>--samples</code> to estimate geometry metrics without full O(N²) computation.</li>
+<li>For large trees, Silhouette supports <code>--samples</code> to estimate geometry metrics without full O(N²)
+computation.</li>
 </ul>
 <h3 id="boot-not-implemented"><a class="header" href="#boot-not-implemented">boot (Not Implemented)</a></h3>
-<p>Multiscale bootstrap (pvclust-style) support values for hierarchical clustering. Takes an observation matrix, resamples features at multiple scales, rebuilds the hierarchical tree each time, and fits BP/AU/SI values for every internal node. Design details are in <a href="../notes/design/eval-boot.html"><code>notes/design/eval-boot.md</code></a>.</p>
+<p>Multiscale bootstrap (pvclust-style) support values for hierarchical clustering. Takes
+an observation matrix, resamples features at multiple scales, rebuilds the hierarchical
+tree each time, and fits BP/AU/SI values for every internal node. Design details are in
+<a href="../notes/design/eval-boot.html"><code>notes/design/eval-boot.md</code></a>.</p>
 <h3 id="quartet-future-candidate-not-designed"><a class="header" href="#quartet-future-candidate-not-designed">quartet (Future Candidate, Not Designed)</a></h3>
-<p>Quartet-based consistency or support values for branches. <strong>Not yet designed; the namespace is not reserved.</strong> Boundary: if the goal is to <em>infer</em> a new tree from quartets, it belongs to <code>nwk</code>; if the goal is to <em>assess</em> branch support of a given tree, it belongs to <code>eval</code>.</p>
+<p>Quartet-based consistency or support values for branches.
+<strong>Not yet designed; the namespace is not reserved.</strong> Boundary: if the goal is to <em>infer</em> a new tree
+from quartets, it belongs to <code>nwk</code>; if the goal is to <em>assess</em> branch support of a given tree, it
+belongs to <code>eval</code>.</p>
 <hr>
 <h2 id="overlapping-features-and-boundaries"><a class="header" href="#overlapping-features-and-boundaries">Overlapping Features and Boundaries</a></h2>
-<p>Several planned and existing subcommands address superficially similar questions. This section clarifies the boundaries to help choose the right command.</p>
+<p>Several planned and existing subcommands address superficially similar questions. This section
+clarifies the boundaries to help choose the right command.</p>
 <h3 id="eval-tree-vs-eval-partition---tree"><a class="header" href="#eval-tree-vs-eval-partition---tree"><code>eval tree</code> vs <code>eval partition --tree</code></a></h3>
-<p>Both can compute Silhouette from tree distances — in fact <code>eval tree</code> reuses the same <code>silhouette_score</code> implementation as <code>eval partition</code> via the <code>TreeDistance</code> adapter. The difference is the <strong>primary subject</strong> and the <strong>scope of metrics</strong>:</p>
+<p>Both can compute Silhouette from tree distances — in fact <code>eval tree</code> reuses the same
+<code>silhouette_score</code> implementation as <code>eval partition</code> via the <code>TreeDistance</code> adapter. The
+difference is the <strong>primary subject</strong> and the <strong>scope of metrics</strong>:</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -290,33 +332,51 @@
 </tbody>
 </table>
 </div>
-<p><strong>Rule of thumb</strong>: If the question is “how good is this clustering?”, use <code>eval partition</code>. If the question is “how good is this tree, possibly in the context of some grouping?”, use <code>eval tree</code>.</p>
+<p><strong>Rule of thumb</strong>: If the question is “how good is this clustering?”, use <code>eval partition</code>. If the
+question is “how good is this tree, possibly in the context of some grouping?”, use <code>eval tree</code>.</p>
 <h3 id="eval-tree---ref-vs-eval-compare"><a class="header" href="#eval-tree---ref-vs-eval-compare"><code>eval tree --ref</code> vs <code>eval compare</code></a></h3>
 <p>Both compute Robinson-Foulds distances, but at different scopes and for different purposes:</p>
 <ul>
-<li><code>eval compare</code>: <strong>Global</strong> tree-to-tree topology comparison. Takes two trees (or two sets of trees), computes RF/WRF/KF on the full leaf sets. No grouping concept. Supports batch cross-comparison between files.</li>
-<li><code>eval tree --ref</code>: <strong>Local</strong> comparison in the context of a partition. The reference tree (typically a species tree) provides biological ground truth. Computes Local RF (cluster subtree vs reference subset) and Monophyly Check (do cluster members form a clade on the reference?). Requires leaf-set intersection pruning as a prerequisite, because gene trees usually sample only a subset of the species tree’s taxa.</li>
+<li><code>eval compare</code>: <strong>Global</strong> tree-to-tree topology comparison. Takes two trees (or two sets of trees)
+, computes RF/WRF/KF on the full leaf sets. No grouping concept. Supports batch cross-comparison
+between files.</li>
+<li><code>eval tree --ref</code>: <strong>Local</strong> comparison in the context of a partition. The reference
+tree (typically a species tree) provides biological ground truth. Computes Local RF (cluster
+subtree vs reference subset) and Monophyly Check (do cluster members form a clade on the
+reference?). Requires leaf-set intersection pruning as a prerequisite, because gene trees usually
+sample only a subset of the species tree’s taxa.</li>
 </ul>
-<p><strong>Rule of thumb</strong>: If comparing two trees as a whole, use <code>eval compare</code>. If assessing whether a gene tree’s clusters are consistent with a species tree, use <code>eval tree --ref</code>.</p>
+<p><strong>Rule of thumb</strong>: If comparing two trees as a whole, use <code>eval compare</code>. If assessing whether a
+gene tree’s clusters are consistent with a species tree, use <code>eval tree --ref</code>.</p>
 <h3 id="eval-quartet-future-vs-eval-compare"><a class="header" href="#eval-quartet-future-vs-eval-compare"><code>eval quartet</code> (future) vs <code>eval compare</code></a></h3>
 <ul>
-<li><code>eval compare</code>: Topology-based (split-set symmetric difference). Pure structural comparison of whole trees.</li>
-<li><code>eval quartet</code> (future): Quartet-based, can incorporate sequence alignment. Assesses branch-level support rather than overall distance.</li>
+<li><code>eval compare</code>: Topology-based (split-set symmetric difference). Pure structural comparison of
+whole trees.</li>
+<li><code>eval quartet</code> (future): Quartet-based, can incorporate sequence alignment. Assesses branch-level
+support rather than overall distance.</li>
 </ul>
-<p><strong>Rule of thumb</strong>: <code>eval compare</code> answers “how different are these two trees?”; <code>eval quartet</code> answers “how well-supported is each branch of this tree?”.</p>
+<p><strong>Rule of thumb</strong>: <code>eval compare</code> answers “how different are these two trees?”; <code>eval quartet</code>
+answers “how well-supported is each branch of this tree?”.</p>
 <h3 id="eval-replicate-vs-eval-compare"><a class="header" href="#eval-replicate-vs-eval-compare"><code>eval replicate</code> vs <code>eval compare</code></a></h3>
 <ul>
-<li><code>eval compare</code>: Pairwise comparison of given trees. Outputs TSV with RF/WRF/KF distances — a <strong>global</strong> tree-to-tree difference measure.</li>
-<li><code>eval replicate</code>: Assigns <strong>branch-level</strong> support values to a target tree from replicate trees. Outputs the annotated tree (Newick), not a distance table.</li>
+<li><code>eval compare</code>: Pairwise comparison of given trees. Outputs TSV with RF/WRF/KF distances — a
+<strong>global</strong> tree-to-tree difference measure.</li>
+<li><code>eval replicate</code>: Assigns <strong>branch-level</strong> support values to a target tree from replicate trees.
+Outputs the annotated tree (Newick), not a distance table.</li>
 </ul>
-<p><strong>Rule of thumb</strong>: <code>eval compare</code> measures whole-tree topological difference; <code>eval replicate</code> measures per-branch support from replicates.</p>
+<p><strong>Rule of thumb</strong>: <code>eval compare</code> measures whole-tree topological difference; <code>eval replicate</code>
+measures per-branch support from replicates.</p>
 <h3 id="parameter-naming---part-vs---tree"><a class="header" href="#parameter-naming---part-vs---tree">Parameter naming: <code>--part</code> vs <code>--tree</code></a></h3>
-<p>The same option names appear under different subcommands with <strong>reversed roles</strong>, reflecting the primary-subject difference. This is intentional but can be confusing:</p>
+<p>The same option names appear under different subcommands with <strong>reversed roles</strong>, reflecting the
+primary-subject difference. This is intentional but can be confusing:</p>
 <ul>
-<li><code>eval tree --part &lt;FILE&gt;</code>: the tree is the positional primary; <code>--part</code> supplies an optional grouping to evaluate on the tree.</li>
-<li><code>eval partition --tree &lt;FILE&gt;</code>: the partition is the positional primary; <code>--tree</code> supplies an optional distance source for internal metrics.</li>
+<li><code>eval tree --part &lt;FILE&gt;</code>: the tree is the positional primary; <code>--part</code> supplies an optional
+grouping to evaluate on the tree.</li>
+<li><code>eval partition --tree &lt;FILE&gt;</code>: the partition is the positional primary; <code>--tree</code> supplies an
+optional distance source for internal metrics.</li>
 </ul>
-<p>The option always refers to the <em>auxiliary</em> input. When in doubt, identify which input is the positional argument — that is the subject of the evaluation.</p>
+<p>The option always refers to the <em>auxiliary</em> input. When in doubt, identify which input is the
+positional argument — that is the subject of the evaluation.</p>
 <hr>
 <h2 id="history"><a class="header" href="#history">History</a></h2>
 <ul>

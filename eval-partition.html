@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c229d19f.js";
+            window.path_to_searchindex_js = "searchindex-01f7349a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -181,68 +181,89 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="necom-eval-partition"><a class="header" href="#necom-eval-partition">necom eval partition</a></h1>
-<p>This document describes the design philosophy, metrics, and selection guidance for <code>necom eval partition</code>. For command-line options and usage examples, see <a href="help/eval/partition.html"><code>docs/help/eval/partition.md</code></a>.</p>
+<p>This document describes the design philosophy, metrics, and selection guidance
+for <code>necom eval partition</code>. For command-line options and usage examples, see
+<a href="help/eval/partition.html"><code>docs/help/eval/partition.md</code></a>.</p>
 <h2 id="design-philosophy"><a class="header" href="#design-philosophy">Design Philosophy</a></h2>
-<p><code>necom</code> adopts a <strong>componentized</strong> design philosophy, separating cluster <strong>generation</strong> from <strong>evaluation</strong>. This differs from the integrated design of the Python package <code>clusteval</code>:</p>
+<p><code>necom</code> adopts a <strong>componentized</strong> design philosophy, separating cluster <strong>generation</strong> from
+<strong>evaluation</strong>. This differs from the integrated design of the Python package <code>clusteval</code>:</p>
 <ul>
-<li>
-<p><strong>Python <code>clusteval</code></strong>: The <code>fit()</code> method internally performs Grid Search (trying different $k$ or $\epsilon$), computes internal metrics (e.g., Silhouette), and returns the optimal result.</p>
-</li>
-<li>
-<p><strong><code>necom</code> workflow</strong>:</p>
+<li><strong>Python <code>clusteval</code></strong>: The <code>fit()</code> method internally performs Grid Search (trying different $k$
+or $\epsilon$), computes internal metrics (e.g., Silhouette), and returns the optimal result.</li>
+<li><strong><code>necom</code> workflow</strong>:
 <ol>
-<li><strong>Generate</strong>: Use <code>necom cut scan-simple</code> to generate a series of candidate partitions (<code>necom clust dbscan</code>’s <code>--scan</code> is not yet implemented).</li>
-<li><strong>Evaluate</strong>: Use <code>necom eval partition</code> to compute evaluation metrics for these candidates in batch.</li>
-<li><strong>Decide</strong>: The user selects the optimal parameters based on metrics (e.g., Silhouette peak, Elbow point).</li>
+<li><strong>Generate</strong>: Use <code>necom cut scan-simple</code> to generate a series of candidate
+partitions (<code>necom clust dbscan</code>’s <code>--scan</code> is not yet implemented).</li>
+<li><strong>Evaluate</strong>: Use <code>necom eval partition</code> to compute evaluation metrics for these candidates
+in batch.</li>
+<li><strong>Decide</strong>: The user selects the optimal parameters based on metrics (e.g., Silhouette peak,
+Elbow point).</li>
 </ol>
 </li>
-<li>
-<p><strong>Complementary</strong>:</p>
+<li><strong>Complementary</strong>:
 <ul>
-<li><code>necom eval tree</code> [planned]: Focuses on consistency between tree structure and grouping (geometry/evolution).</li>
-<li><code>necom eval partition</code>: Focuses on the statistical validity of partitions, supporting external (two-group comparison) and internal (single group + matrix/coordinates/tree) evaluation.</li>
+<li><code>necom eval tree</code> [planned]: Focuses on consistency between tree structure and
+grouping (geometry/evolution).</li>
+<li><code>necom eval partition</code>: Focuses on the statistical validity of partitions, supporting external
+(two-group comparison) and internal (single group + matrix/coordinates/tree) evaluation.</li>
 </ul>
 </li>
-<li>
-<p><strong>Scenarios</strong>:</p>
+<li><strong>Scenarios</strong>:
 <ul>
-<li><strong>Algorithm comparison</strong>: Compare result differences between MCL and K-Medoids on the same dataset.</li>
-<li><strong>Benchmarking</strong>: Compare clustering results against known standard classifications (Ground Truth) to compute accuracy.</li>
-<li><strong>Parameter tuning</strong>: Compare stability of clustering results under different parameters (e.g., <code>eps</code> or <code>inflation</code>).</li>
+<li><strong>Algorithm comparison</strong>: Compare result differences between MCL and K-Medoids on the same
+dataset.</li>
+<li><strong>Benchmarking</strong>: Compare clustering results against known standard classifications (Ground
+Truth) to compute accuracy.</li>
+<li><strong>Parameter tuning</strong>: Compare stability of clustering results under different
+parameters (e.g., <code>eps</code> or <code>inflation</code>).</li>
 </ul>
 </li>
 </ul>
-<p>This design allows evaluation tools to exist independently of clustering algorithms, supporting clustering results from any source.</p>
+<p>This design allows evaluation tools to exist independently of clustering algorithms, supporting
+clustering results from any source.</p>
 <h2 id="input-validation"><a class="header" href="#input-validation">Input Validation</a></h2>
 <p><code>necom eval partition</code> validates inputs before computing metrics to avoid silent failures:</p>
 <ul>
 <li><strong>Empty partitions</strong>: A single partition or any batch group with no samples is rejected.</li>
-<li><strong>External evaluation</strong> (<code>--other</code> / <code>--truth</code>): The two partitions must contain exactly the same sample set. The command errors out rather than intersecting keys silently.</li>
-<li><strong>Internal evaluation</strong> (<code>--matrix</code>, <code>--tree</code>, <code>--coords</code>): Every sample in the partition must be present in the distance source. Missing samples produce a clear error instead of <code>NaN</code> metrics.</li>
-<li><strong><code>--no-singletons</code></strong>: Singleton clusters are removed from the reference partition first; samples that become unreferenced are excluded from evaluation, and the remaining sample sets are still required to match.</li>
+<li><strong>External evaluation</strong> (<code>--other</code> / <code>--truth</code>): The two partitions must contain exactly the same
+sample set. The command errors out rather than intersecting keys silently.</li>
+<li><strong>Internal evaluation</strong> (<code>--matrix</code>, <code>--tree</code>, <code>--coords</code>): Every sample in the partition must be
+present in the distance source. Missing samples produce a clear error instead of <code>NaN</code> metrics.</li>
+<li><strong><code>--no-singletons</code></strong>: Singleton clusters are removed from the reference partition first; samples
+that become unreferenced are excluded from evaluation, and the remaining sample sets are still
+required to match.</li>
 </ul>
 <h2 id="output-format"><a class="header" href="#output-format">Output Format</a></h2>
 <p><code>necom eval partition</code> writes a TSV with a header row followed by one result row.</p>
 <ul>
-<li><strong>External evaluation</strong>: one row of pair-based metrics (<code>ari</code>, <code>ami</code>, <code>homogeneity</code>, <code>completeness</code>, <code>v_measure</code>, <code>fmi</code>, <code>nmi</code>, <code>mi</code>, <code>ri</code>, <code>jaccard</code>, <code>precision</code>, <code>recall</code>).</li>
-<li><strong>Distance-based internal evaluation</strong>: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>, <code>davies_bouldin</code>.</li>
-<li><strong>Coordinate-based internal evaluation</strong>: <code>davies_bouldin</code>, <code>calinski_harabasz</code>, <code>pbm</code>, <code>ball_hall</code>, <code>xie_beni</code>, <code>wemmert_gancarski</code>.</li>
-<li><strong>Batch mode</strong> (<code>--input-format long</code>): one row per <code>Group</code>, with the <code>Group</code> column preserved as the first column.</li>
-<li>Non-finite metric values (<code>NaN</code>, <code>+Infinity</code>, or <code>-Infinity</code>) are emitted as <code>NA</code> to keep the TSV parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly compact and well-separated, or Xie-Beni when two centroids coincide.</li>
+<li><strong>External evaluation</strong>: one row of pair-based metrics (<code>ari</code>, <code>ami</code>, <code>homogeneity</code>,
+<code>completeness</code>, <code>v_measure</code>, <code>fmi</code>, <code>nmi</code>, <code>mi</code>, <code>ri</code>, <code>jaccard</code>, <code>precision</code>, <code>recall</code>).</li>
+<li><strong>Distance-based internal evaluation</strong>: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>,
+<code>davies_bouldin</code>.</li>
+<li><strong>Coordinate-based internal evaluation</strong>: <code>davies_bouldin</code>, <code>calinski_harabasz</code>, <code>pbm</code>,
+<code>ball_hall</code>, <code>xie_beni</code>, <code>wemmert_gancarski</code>.</li>
+<li><strong>Batch mode</strong> (<code>--input-format long</code>): one row per <code>Group</code>, with the <code>Group</code> column preserved as
+the first column.</li>
+<li>Non-finite metric values (<code>NaN</code>, <code>+Infinity</code>, or <code>-Infinity</code>) are emitted as <code>NA</code> to keep the TSV
+parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly
+compact and well-separated, or Xie-Beni when two centroids coincide.</li>
 </ul>
 <h2 id="core-metrics"><a class="header" href="#core-metrics">Core Metrics</a></h2>
-<p>Clustering evaluation metrics usually fall into two categories: <strong>external validity</strong> (requires Ground Truth or a reference partition) and <strong>internal validity</strong> (depends only on the geometry/statistics of the data).</p>
+<p>Clustering evaluation metrics usually fall into two categories: <strong>external validity</strong> (requires
+Ground Truth or a reference partition) and <strong>internal validity</strong>(depends only on the
+geometry/statistics of the data).</p>
 <h3 id="1-external-validity"><a class="header" href="#1-external-validity">1. External Validity</a></h3>
 <p><em>Used to compare consistency between two clustering results, or to evaluate how well a result matches the true classification.</em></p>
 <h4 id="11-pair-based"><a class="header" href="#11-pair-based">1.1 Pair-Based</a></h4>
 <p><em>Focuses on whether sample pairs remain in the same/different groups across two partitions.</em></p>
 <ul>
-<li>
-<p><strong>ARI (Adjusted Rand Index)</strong></p>
+<li><strong>ARI (Adjusted Rand Index)</strong>
 <ul>
 <li><strong>Definition</strong>: Rand Index corrected for chance.</li>
-<li><strong>Principle</strong>: Counts sample pairs that are in the same or different groups in both partitions, and subtracts the expected value under random assignment.</li>
-<li><strong>Range</strong>: <code>[-1, 1]</code>. 1 means perfect agreement, 0 means random level, negative values mean worse than random.</li>
+<li><strong>Principle</strong>: Counts sample pairs that are in the same or different groups in both
+partitions, and subtracts the expected value under random assignment.</li>
+<li><strong>Range</strong>: <code>[-1, 1]</code>. 1 means perfect agreement, 0 means random level, negative values mean
+worse than random.</li>
 <li><strong>Advantages</strong>:
 <ul>
 <li><strong>Interpretable</strong>: 0 is the random baseline, intuitive.</li>
@@ -253,38 +274,40 @@
 <li><strong>Applicable</strong>: General scenarios with imbalanced cluster sizes and many clusters.</li>
 </ul>
 </li>
-<li>
-<p><strong>RI (Rand Index)</strong></p>
+<li><strong>RI (Rand Index)</strong>
 <ul>
 <li><strong>Definition</strong>: Proportion of correctly classified sample pairs.</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>.</li>
-<li><strong>Disadvantages</strong>: Not corrected for chance. As the number of clusters increases, the RI of random partitions also approaches 1, reducing discriminative power. Generally <strong>not recommended</strong> for standalone use.</li>
+<li><strong>Disadvantages</strong>: Not corrected for chance. As the number of clusters increases, the
+RI of random partitions also approaches 1, reducing discriminative power. Generally
+<strong>not recommended</strong> for standalone use.</li>
 </ul>
 </li>
-<li>
-<p><strong>Jaccard Index (Pair-wise)</strong></p>
+<li><strong>Jaccard Index (Pair-wise)</strong>
 <ul>
-<li><strong>Definition</strong>: Among all sample pairs considered in the same group by either partition (TP + FP + FN), the proportion considered in the same group by both partitions (TP).</li>
+<li><strong>Definition</strong>: Among all sample pairs considered in the same group by either partition (TP +
+FP + FN), the proportion considered in the same group by both partitions (TP).</li>
 <li><strong>Formula</strong>: $J = \frac{TP}{TP + FP + FN}$.</li>
-<li><strong>Meaning</strong>: The Jaccard similarity between set $S_1$ (same-group pairs in P1) and set $S_2$ (same-group pairs in P2).</li>
+<li><strong>Meaning</strong>: The Jaccard similarity between set $S_1$ (same-group pairs in P1) and set
+$S_2$ (same-group pairs in P2).</li>
 </ul>
 </li>
-<li>
-<p><strong>Precision (Pair-wise)</strong></p>
+<li><strong>Precision (Pair-wise)</strong>
 <ul>
-<li><strong>Definition</strong>: Among all sample pairs considered in the same group by the predicted partition (P1), the proportion also considered in the same group by the true partition (P2).</li>
+<li><strong>Definition</strong>: Among all sample pairs considered in the same group by the predicted
+partition (P1), the proportion also considered in the same group by the true partition (P2).</li>
 <li><strong>Formula</strong>: $P = \frac{TP}{TP + FP}$.</li>
 </ul>
 </li>
-<li>
-<p><strong>Recall (Pair-wise)</strong></p>
+<li><strong>Recall (Pair-wise)</strong>
 <ul>
-<li><strong>Definition</strong>: Among all sample pairs considered in the same group by the true partition (P2), the proportion also considered in the same group by the predicted partition (P1).</li>
+<li><strong>Definition</strong>: Among all sample pairs considered in the same group by the true
+partition (P2), the proportion also considered in the same group by the predicted
+partition (P1).</li>
 <li><strong>Formula</strong>: $R = \frac{TP}{TP + FN}$.</li>
 </ul>
 </li>
-<li>
-<p><strong>FMI (Fowlkes-Mallows Index)</strong></p>
+<li><strong>FMI (Fowlkes-Mallows Index)</strong>
 <ul>
 <li><strong>Definition</strong>: Geometric mean of Precision and Recall.</li>
 <li><strong>Principle</strong>: $FMI = \sqrt{\frac{TP}{TP+FP} \times \frac{TP}{TP+FN}}$.</li>
@@ -296,12 +319,13 @@
 <h4 id="12-information-theoretic"><a class="header" href="#12-information-theoretic">1.2 Information-Theoretic</a></h4>
 <p><em>Focuses on the amount of information (entropy) shared between two partitions.</em></p>
 <ul>
-<li>
-<p><strong>AMI (Adjusted Mutual Information)</strong></p>
+<li><strong>AMI (Adjusted Mutual Information)</strong>
 <ul>
 <li><strong>Definition</strong>: Mutual Information corrected for chance.</li>
-<li><strong>Principle</strong>: Computes shared information between two partitions based on entropy, and subtracts the random expectation.</li>
-<li><strong>Range</strong>: <code>[-1, 1]</code> (typically <code>[0, 1]</code>). 1 means perfect agreement, 0 means random, negative values mean worse than random (e.g., anti-correlated partitions).</li>
+<li><strong>Principle</strong>: Computes shared information between two partitions based on entropy, and
+subtracts the random expectation.</li>
+<li><strong>Range</strong>: <code>[-1, 1]</code> (typically <code>[0, 1]</code>). 1 means perfect agreement, 0 means random,
+negative values mean worse than random (e.g., anti-correlated partitions).</li>
 <li><strong>Advantages</strong>:
 <ul>
 <li>More robust when the number of clusters is very large (even close to the sample size).</li>
@@ -311,50 +335,55 @@
 <li><strong>Applicable</strong>: Small samples, many clusters (Large K) scenarios.</li>
 </ul>
 </li>
-<li>
-<p><strong>NMI (Normalized Mutual Information)</strong></p>
+<li><strong>NMI (Normalized Mutual Information)</strong>
 <ul>
 <li><strong>Definition</strong>: Normalized Mutual Information.</li>
-<li><strong>Principle</strong>: $NMI = \frac{MI(U, V)}{\sqrt{H(U) \cdot H(V)}}$ (geometric mean) or $\frac{2 \cdot MI}{H(U) + H(V)}$ (arithmetic mean). <code>necom</code> uses the geometric mean.</li>
+<li><strong>Principle</strong>: $NMI = \frac{MI(U, V)}{\sqrt{H(U) \cdot H(V)}}$ (geometric mean) or $\frac{2
+\cdot MI}{H(U) + H(V)}$ (arithmetic mean). <code>necom</code> uses the geometric mean.</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>.</li>
 <li><strong>Disadvantages</strong>: Not corrected for chance.</li>
 <li><strong>Applicable</strong>: Scenarios with balanced cluster size distributions.</li>
-<li><strong>Implementation note</strong>: Because NMI is a ratio of MI to the geometric mean of the two entropies, the choice of logarithm base cancels out. The value is therefore independent of whether natural logs or base-2 logs are used.</li>
+<li><strong>Implementation note</strong>: Because NMI is a ratio of MI to the geometric mean of the two
+entropies, the choice of logarithm base cancels out. The value is therefore independent of
+whether natural logs or base-2 logs are used.</li>
 </ul>
 </li>
-<li>
-<p><strong>MI (Mutual Information)</strong></p>
+<li><strong>MI (Mutual Information)</strong>
 <ul>
 <li><strong>Definition</strong>: Mutual information between two partitions.</li>
-<li><strong>Principle</strong>: $MI(U, V) = \sum \sum P(u,v) \log \frac{P(u,v)}{P(u)P(v)}$.</li>
+<li><strong>Principle</strong>: $MI(U, V) = \sum \sum P(u,v) \log \frac{P(u,v)}{P(u) P(v)}$.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>.</li>
-<li><strong>Disadvantages</strong>: Difficult to interpret directly; strongly affected by partition entropy. Usually used as an intermediate step for AMI/NMI.</li>
-<li><strong>Implementation note</strong>: The implementation uses natural logarithms (matching scikit-learn), so the raw MI value (in nats) equals the base-2 value (in bits) multiplied by <code>ln(2)</code> (≈ 0.693). Normalized metrics (NMI, AMI, V-Measure) are unaffected because they are ratios.</li>
+<li><strong>Disadvantages</strong>: Difficult to interpret directly; strongly affected by partition entropy.
+Usually used as an intermediate step for AMI/NMI.</li>
+<li><strong>Implementation note</strong>: The implementation uses natural logarithms (matching scikit-learn),
+so the raw MI value (in nats) equals the base-2 value (in bits) multiplied by <code>ln(2)</code> (≈
+0.693). Normalized metrics (NMI, AMI, V-Measure) are unaffected because they are ratios.</li>
 </ul>
 </li>
-<li>
-<p><strong>Homogeneity</strong></p>
+<li><strong>Homogeneity</strong>
 <ul>
-<li><strong>Definition</strong>: Does each cluster contain only members of a single class? (Similar to Precision, requiring clusters to be “pure.”)</li>
+<li><strong>Definition</strong>: Does each cluster contain only members of a single class? (Similar to
+Precision, requiring clusters to be “pure.”)</li>
 <li><strong>Principle</strong>: Based on conditional entropy $H(C|K)$. If $H(C|K)=0$, Homogeneity is 1.</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>.</li>
 </ul>
 </li>
-<li>
-<p><strong>Completeness</strong></p>
+<li><strong>Completeness</strong>
 <ul>
-<li><strong>Definition</strong>: Are all members of a class assigned to the same cluster? (Similar to Recall, requiring clusters to be “complete.”)</li>
+<li><strong>Definition</strong>: Are all members of a class assigned to the same cluster? (Similar to Recall,
+requiring clusters to be “complete.”)</li>
 <li><strong>Principle</strong>: Based on conditional entropy $H(K|C)$. If $H(K|C)=0$, Completeness is 1.</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>.</li>
 </ul>
 </li>
-<li>
-<p><strong>V-Measure</strong></p>
+<li><strong>V-Measure</strong>
 <ul>
 <li><strong>Definition</strong>: Harmonic mean of Homogeneity and Completeness.</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>.</li>
-<li><strong>Disadvantages</strong>: Not corrected for chance. With small samples or many clusters, scores tend to be high.</li>
-<li><strong>Applicable</strong>: When you need to analyze the source of clustering error (over-fragmentation vs. over-mixing).</li>
+<li><strong>Disadvantages</strong>: Not corrected for chance. With small samples or many clusters, scores tend
+to be high.</li>
+<li><strong>Applicable</strong>: When you need to analyze the source of clustering error (over-fragmentation
+vs. over-mixing).</li>
 </ul>
 </li>
 </ul>
@@ -363,10 +392,11 @@
 <h4 id="21-distance-based"><a class="header" href="#21-distance-based">2.1 Distance-Based</a></h4>
 <p><em>Requires a distance matrix (<code>--matrix</code>) or a phylogenetic tree (<code>--tree</code>).</em></p>
 <ul>
-<li>
-<p><strong>Silhouette Coefficient</strong></p>
+<li><strong>Silhouette Coefficient</strong>
 <ul>
-<li><strong>Principle</strong>: For each sample $i$, compute its average distance to samples in the same cluster $a(i)$ and its average distance to the nearest other cluster $b(i)$. $s(i) = (b - a) / \max(a, b)$.</li>
+<li><strong>Principle</strong>: For each sample $i$, compute its average distance to samples in the same
+cluster $a(i)$ and its average distance to the nearest other cluster $b(i)$. $s(i) = (b - a)
+/ \max(a, b)$.</li>
 <li><strong>Range</strong>: <code>[-1, 1]</code>.
 <ul>
 <li>Near 1: sample is well clustered (close to same cluster, far from others).</li>
@@ -375,103 +405,114 @@
 </ul>
 </li>
 <li><strong>Advantages</strong>: Intuitive; balances cohesion and separation.</li>
-<li><strong>Disadvantages</strong>: High computational complexity ($O(N^2)$); requires optimization for large-scale data.</li>
+<li><strong>Disadvantages</strong>: High computational complexity ($O(N^2)$); requires optimization for
+large-scale data.</li>
 </ul>
 </li>
-<li>
-<p><strong>Dunn Index</strong></p>
+<li><strong>Dunn Index</strong>
 <ul>
-<li><strong>Principle</strong>: Ratio of the minimum between-cluster distance to the maximum within-cluster diameter.</li>
+<li><strong>Principle</strong>: Ratio of the minimum between-cluster distance to the maximum within-cluster
+diameter.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Larger is better</strong>.</li>
 <li><strong>Advantages</strong>: Simple and intuitive.</li>
 <li><strong>Disadvantages</strong>: Extremely sensitive to noise (because it relies on min/max).</li>
 </ul>
 </li>
-<li>
-<p><strong>C-Index</strong></p>
+<li><strong>C-Index</strong>
 <ul>
-<li><strong>Principle</strong>: Compares the sum of within-cluster distances with the sum of the smallest $N_W$ distances in the entire dataset ($N_W$ is the number of within-cluster pairs).</li>
+<li><strong>Principle</strong>: Compares the sum of within-cluster distances with the sum of the smallest
+$N_W$ distances in the entire dataset ($N_W$ is the number of within-cluster pairs).</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>. <strong>Smaller is better</strong>.</li>
-<li><strong>Disadvantages</strong>: High computational complexity ($O(N^2 \log N)$), requiring sorting of all pairwise distances.</li>
+<li><strong>Disadvantages</strong>: High computational complexity ($O(N^2 \log N)$), requiring sorting of all
+pairwise distances.</li>
 </ul>
 </li>
-<li>
-<p><strong>Hubert’s Gamma</strong></p>
+<li><strong>Hubert’s Gamma</strong>
 <ul>
-<li><strong>Principle</strong>: Correlation between the distance matrix and a binary clustering matrix (0 = same cluster, 1 = different clusters).</li>
-<li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong> (Y=1 means different clusters; larger Gamma means between-cluster distances exceed within-cluster distances more strongly).</li>
+<li><strong>Principle</strong>: Correlation between the distance matrix and a binary clustering matrix (0 =
+same cluster, 1 = different clusters).</li>
+<li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong> (Y=1 means different clusters; larger Gamma means
+between-cluster distances exceed within-cluster distances more strongly).</li>
 </ul>
 </li>
-<li>
-<p><strong>Kendall’s Tau</strong></p>
+<li><strong>Kendall’s Tau</strong>
 <ul>
-<li><strong>Principle</strong>: Rank correlation coefficient between the distance matrix and the clustering matrix.</li>
+<li><strong>Principle</strong>: Rank correlation coefficient between the distance matrix and the clustering
+matrix.</li>
 <li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong>.</li>
 </ul>
 </li>
-<li>
-<p><strong>Davies-Bouldin Index (DBI)</strong></p>
+<li><strong>Davies-Bouldin Index (DBI)</strong>
 <ul>
-<li><strong>Principle</strong>: Same idea as the coordinate version, but uses <strong>medoids</strong> (cluster members with the smallest average intra-cluster distance) as cluster representatives because coordinates are not available. <code>scatter_i</code> is the average distance from cluster members to the medoid, and inter-cluster distance is the distance between medoids.</li>
+<li><strong>Principle</strong>: Same idea as the coordinate version, but uses <strong>medoids</strong> (cluster members
+with the smallest average intra-cluster distance) as cluster representatives because
+coordinates are not available. <code>scatter_i</code> is the average distance from cluster members to
+the medoid, and inter-cluster distance is the distance between medoids.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
-<li><strong>Boundary cases</strong>: If two medoids coincide and at least one cluster has non-zero scatter, the similarity is undefined; a large finite proxy is used so the TSV remains parseable.</li>
+<li><strong>Boundary cases</strong>: If two medoids coincide and at least one cluster has non-zero scatter,
+the similarity is undefined; a large finite proxy is used so the TSV remains parseable.</li>
 </ul>
 </li>
 </ul>
 <h4 id="22-coordinate-based"><a class="header" href="#22-coordinate-based">2.2 Coordinate-Based</a></h4>
 <p><em>Requires a coordinate matrix (<code>--coords</code>). Suitable for Euclidean-space data.</em></p>
 <ul>
-<li>
-<p><strong>Davies-Bouldin Index (DBI)</strong></p>
+<li><strong>Davies-Bouldin Index (DBI)</strong>
 <ul>
-<li><strong>Principle</strong>: Computes the “similarity” of each cluster pair (within-cluster dispersion sum / centroid distance), then takes the mean of each cluster’s worst (largest) similarity.</li>
+<li><strong>Principle</strong>: Computes the “similarity” of each cluster pair (within-cluster dispersion sum
+/ centroid distance), then takes the mean of each cluster’s worst (largest) similarity.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
-<li><strong>Boundary cases</strong>: If two cluster centroids coincide and at least one has non-zero scatter, the similarity is undefined (infinite). The implementation substitutes a large finite proxy (<code>1e10</code>) so the TSV remains parseable.</li>
+<li><strong>Boundary cases</strong>: If two cluster centroids coincide and at least one has non-zero scatter,
+the similarity is undefined (infinite). The implementation substitutes a large finite
+proxy (<code>1e10</code>) so the TSV remains parseable.</li>
 <li><strong>Advantages</strong>: Faster than Silhouette.</li>
 <li><strong>Applicable</strong>: Evaluating centroid-based clustering algorithms.</li>
 </ul>
 </li>
-<li>
-<p><strong>Calinski-Harabasz Index (CH)</strong></p>
+<li><strong>Calinski-Harabasz Index (CH)</strong>
 <ul>
 <li><strong>Principle</strong>: Ratio of between-cluster dispersion (BGSS) to within-cluster dispersion (WGSS).</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Larger is better</strong>.</li>
 <li><strong>Advantages</strong>: Fast to compute.</li>
 <li><strong>Boundary cases</strong>:
 <ul>
-<li>If every point is identical (WGSS == 0 and BGSS == 0), the input is degenerate and the score is <code>0.0</code>.</li>
-<li>If clusters are perfectly compact and well-separated (WGSS == 0 but BGSS &gt; 0), the score is infinite and is reported as <code>NA</code> to keep the TSV parseable.</li>
+<li>If every point is identical (WGSS == 0 and BGSS == 0), the input is degenerate and the
+score is <code>0.0</code>.</li>
+<li>If clusters are perfectly compact and well-separated (WGSS == 0 but BGSS &gt; 0), the score
+is infinite and is reported as <code>NA</code> to keep the TSV parseable.</li>
 </ul>
 </li>
 </ul>
 </li>
-<li>
-<p><strong>PBM Index</strong></p>
+<li><strong>PBM Index</strong>
 <ul>
-<li><strong>Principle</strong>: Composite index based on total dispersion, within-cluster dispersion, and maximum centroid distance.</li>
+<li><strong>Principle</strong>: Composite index based on total dispersion, within-cluster dispersion, and
+maximum centroid distance.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Larger is better</strong>.</li>
-<li><strong>Boundary cases</strong>: If within-cluster dispersion is zero while total dispersion is positive (perfectly compact clusters), the score is infinite and is reported as <code>NA</code> to keep the TSV parseable.</li>
+<li><strong>Boundary cases</strong>: If within-cluster dispersion is zero while total dispersion is
+positive (perfectly compact clusters), the score is infinite and is reported as <code>NA</code> to keep
+the TSV parseable.</li>
 </ul>
 </li>
-<li>
-<p><strong>Ball-Hall Index</strong></p>
+<li><strong>Ball-Hall Index</strong>
 <ul>
 <li><strong>Principle</strong>: Mean of average within-cluster dispersions.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong> (more compact).</li>
 </ul>
 </li>
-<li>
-<p><strong>Xie-Beni Index</strong></p>
+<li><strong>Xie-Beni Index</strong>
 <ul>
-<li><strong>Principle</strong>: Ratio of within-cluster compactness to between-cluster separation (minimum centroid distance).</li>
+<li><strong>Principle</strong>: Ratio of within-cluster compactness to between-cluster separation (minimum
+centroid distance).</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
-<li><strong>Boundary cases</strong>: If the closest pair of cluster centroids coincide, separation is zero and the score is infinite; it is reported as <code>NA</code> to keep the TSV parseable.</li>
+<li><strong>Boundary cases</strong>: If the closest pair of cluster centroids coincide, separation is zero and
+the score is infinite; it is reported as <code>NA</code> to keep the TSV parseable.</li>
 </ul>
 </li>
-<li>
-<p><strong>Wemmert-Gancarski Index</strong></p>
+<li><strong>Wemmert-Gancarski Index</strong>
 <ul>
-<li><strong>Principle</strong>: Compactness index based on relative distances (distance to own centroid / distance to nearest other centroid).</li>
+<li><strong>Principle</strong>: Compactness index based on relative distances (distance to own centroid /
+distance to nearest other centroid).</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>. <strong>Larger is better</strong>.</li>
 </ul>
 </li>
@@ -496,8 +537,10 @@
 </div>
 <h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
 <ul>
-<li><a href="clust.html"><code>necom clust</code></a> for command overview, supported algorithms, and partition/matrix/coordinate format conventions.</li>
-<li><a href="help/eval/partition.html"><code>docs/help/eval/partition.md</code></a> for the command-line help text, including available options and usage examples.</li>
+<li><a href="clust.html"><code>necom clust</code></a> for command overview, supported algorithms, and
+partition/matrix/coordinate format conventions.</li>
+<li><a href="help/eval/partition.html"><code>docs/help/eval/partition.md</code></a> for the command-line help text, including
+available options and usage examples.</li>
 </ul>
 
                     </main>
