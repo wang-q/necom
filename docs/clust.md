@@ -10,6 +10,26 @@ Commands are divided into two categories by input data type (consistent with `ne
 
 Flat partitions can also be derived from an existing tree using the separate `necom cut` command (see [`docs/cut.md`](cut.md)).
 
+## Input and Output Conventions
+
+### Input by command type
+
+* **Tree-building commands** (`hier`, `nj`, `upgma`): accept a PHYLIP distance matrix (strict or relaxed). Smaller values mean higher similarity.
+* **Flat clustering commands**:
+    * `mcl` and `cc`: accept pairwise **similarities** in TSV format (`name1\tname2\tscore`); higher is better.
+    * `dbscan` and `k-medoids`: accept pairwise **distances** in TSV format (`name1\tname2\tdist`); lower is better.
+
+Similarity matrices must be converted to distances before `dbscan` or `k-medoids`, e.g., with `necom mat transform`.
+
+### Output formats
+
+Most flat-clustering commands support `--format`:
+
+* `cluster` (default): one cluster per line, first element is the representative, remaining elements are members. Noise points in DBSCAN are emitted as single-member clusters.
+* `pair`: one `representative\tmember` pair per line.
+
+Tree-building commands always output a Newick tree.
+
 ## Algorithm List
 
 ### MCL (Markov Cluster Algorithm)
@@ -58,6 +78,7 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 - **Output**: `cluster` (one cluster per line, first element is the representative) or `pair` (representative–member pairs). Noise points are emitted as single-member clusters.
 - **Defaults**: `--eps 0.05`, `--min-points 4`.
 - **Note on `--min-points`**: By default (`--same 0.0`), the neighborhood count includes the point itself because self-distance is 0 and is always <= `eps`. If `--same` is set to a value greater than `eps`, the point is not counted as its own neighbor and may fail to become a core point.
+- **Representative selection**: By default (`--rep medoid`), the representative of each cluster is its medoid (the point with the smallest average distance to other cluster members). Use `--rep first` to use the first-discovered point instead. Noise points are emitted as single-member clusters where the representative is the point itself.
 - **Unimplemented options**: Parameter scanning and scoring such as `--scan`, `--opt-eps`, `--min-pct` are not yet implemented; planning details are in [`notes/design/dbscan-planned.md`](../notes/design/dbscan-planned.md). They may be provided later as subcommands of `necom clust dbscan` or standalone scripts.
 
 ### UPGMA
@@ -163,9 +184,54 @@ Flat partitions can also be derived from an existing tree using the separate `ne
 
 Partition evaluation has moved to [`necom eval partition`](eval.md). See [`docs/eval.md`](eval.md) for the overview and [`docs/eval-partition.md`](eval-partition.md) for detailed metric definitions.
 
+## Implementation Status
+
+| Command | Algorithm | Status | Notes |
+|---|---|---|---|
+| `mcl` | Markov Cluster Algorithm | Available | Flow simulation on graphs; uses pairwise similarities. |
+| `cc` | Connected Components | Available | Fast graph connectivity; ignores edge weights. |
+| `k-medoids` | K-Medoids | Available | Medoids are real samples; supports distance matrices. |
+| `dbscan` | DBSCAN | Available | Density-based; outputs representative–member pairs. |
+| `upgma` | UPGMA | Available | Rooted, ultrametric tree; assumes molecular clock. |
+| `nj` | Neighbor-Joining | Available | Rooted at midpoint of final edge; no molecular-clock assumption. |
+| `hier` | Hierarchical clustering | Available | 7 linkage methods; NN-chain optimization for reducible methods. |
+| `gmm` | Gaussian Mixture Models | Planned | Soft clustering with BIC model selection. |
+| `hdbscan` | HDBSCAN | Planned | Density-based hierarchical clustering without global `eps`. |
+| *TBD* | Louvain / Leiden | Planned | Modularity-based community detection for large networks. |
+
+## Algorithm Selection Guide
+
+Choosing the right clustering command depends on the input data and the biological or analytical question.
+
+* **Need a tree from a distance matrix?**
+    * `necom clust upgma` — when the data are expected to be ultrametric (molecular clock).
+    * `necom clust nj` — for general additive distances without a molecular-clock assumption.
+    * `necom clust hier --method ward` — for statistical hierarchical clustering with flexible linkage criteria.
+* **Need flat groups from pairwise similarities?**
+    * `necom clust mcl` — biological networks and protein families.
+    * `necom clust cc` — fast deduplication when connectivity alone matters.
+* **Need flat groups from pairwise distances?**
+    * `necom clust k-medoids` — when centers must be actual samples or the metric is non-Euclidean.
+    * `necom clust dbscan` — for non-convex shapes, uneven densities, or outlier detection.
+* **Have feature vectors?**
+    * Use `necom eval partition --coords` (via `necom eval`) for geometry-based validation, or wait for the planned `necom clust gmm` command.
+
+## Why Some Common Algorithms Are Not Provided
+
+The following classic algorithms are intentionally not included in `necom clust`. They have clear limitations for the biological sequence and network scales this project targets, and a better alternative already exists or is planned.
+
+* **K-Means**: Assumes spherical, equal-variance clusters and centroids that are not real samples. Use `necom clust k-medoids` instead.
+* **Bisecting K-Means**: Inherits K-Means limitations and favors divisive splitting. Use `necom clust hier` or `necom clust upgma` for bottom-up trees.
+* **Affinity Propagation**: $O(N^2)$ cost makes it impractical for >10k sequences. Use `necom clust k-medoids` for small representative sets, or `necom clust dbscan` / `necom clust mcl` for automatic cluster counts.
+* **Spectral Clustering**: Building the Laplacian and eigendecomposition is expensive ($O(N^3)$). Use `necom clust mcl` on biological networks for similar results with better scalability.
+* **Mean Shift**: High complexity and sensitive bandwidth selection. Use `necom clust dbscan` or the planned `necom clust gmm`.
+* **OPTICS**: Its core idea is better automated by HDBSCAN. Use the planned `necom clust hdbscan`.
+* **Biclustering**: Designed for gene-expression matrix sub-blocks, not sample grouping. Use specialized tools such as WGCNA when needed.
+* **BIRCH**: Relies on Euclidean statistics and restricts cluster shapes. Use external vector tools for large-scale vectors, or `necom clust mcl` for large networks.
+
 ## Planned
 
-GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Algorithms considered but not adopted (K-Means, Spectral, OPTICS, BIRCH, etc.) are documented in [`notes/design/clust-impl.md`](../notes/design/clust-impl.md).
+GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Detailed implementation analysis and algorithms considered but not adopted are documented in [`notes/design/clust-impl.md`](../notes/design/clust-impl.md).
 
 ### Bootstrap Support for Hierarchical Clustering [Moved to `necom eval`]
 

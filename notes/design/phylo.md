@@ -6,9 +6,11 @@
 >
 > **未实现且无具体计划**：`nwk condense`（由 `subtree --condense` 提供，不计划独立子命令）；`match`/`ed`/`gen`/`duration`（来自 `newick_utils` 映射，见 §3）；`colless_yule`/`colless_pda`/`sackin_yule`/`sackin_pda` 标准化统计指标；`inorder` 遍历（仅适用二叉树，`necom` 支持多叉树故未实现）。
 >
-> **规划中**：`generate_random_tree`（Yule/Coalescent 模型，主要用于模拟研究，优先级较低）。终端可读树形展示可直接使用 `necom nwk indent`。
+> **规划中**：`generate_random_tree`（Yule/Coalescent 模型，主要用于模拟研究，优先级较低），详见 [nwk-planned.md](nwk-planned.md)。终端可读树形展示可直接使用 `necom nwk indent`。
 >
-> **关联文档**：[eval-planned.md](eval-planned.md)（`necom eval` 命令的未来工作计划，其中 `eval tree` 子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
+> **关联文档**：
+> - [eval-planned.md](eval-planned.md)（`necom eval` 命令的未来工作计划，其中 `eval tree` 子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
+> - [nwk-planned.md](nwk-planned.md)（`necom nwk` 尚未实现的 OLO 与随机树生成等工作计划）。
 
 ## 1. 架构设计
 
@@ -311,7 +313,9 @@ graph LR
 *   **可视化**:
     *   `print_entity()` (或类似): 不计划实现；终端可读树形展示可直接使用 `necom nwk indent`。
 *   **树生成**:
-    *   `generate_random_tree()` (Yule/Coalescent 模型): 主要用于模拟研究。优先级较低。
+    *   `generate_random_tree()` (Yule/Coalescent 模型): 主要用于模拟研究。优先级较低。详见 [nwk-planned.md](nwk-planned.md)。
+*   **树排序增强**:
+    *   `Optimal Leaf Ordering` (OLO): 基于距离矩阵动态规划优化叶子顺序，计划加入 `necom nwk order`。详见 [nwk-planned.md](nwk-planned.md)。
 
 ---
 
