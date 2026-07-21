@@ -36,22 +36,6 @@
 
 问自己："资深工程师会觉得这过于复杂吗？" 如果是，简化。
 
-### 分层原则
-
-**复杂逻辑放 `libs/`，`cmd_necom/` 保持薄壳。**
-
-- `src/libs/` 是复杂逻辑、算法、格式 I/O、共享工具的归宿。
-- `src/cmd_necom/` 仅负责：CLI 参数解析、参数转换、调用 `libs`、输出格式化。
-- 单命令专用的复杂逻辑也放 `libs/`，即使当前只有一个消费者。
-- 命令文件中内联的算法/业务逻辑应回迁 `libs/`。
-
-判断标准：涉及算法、数据结构、复杂流程控制的代码属 `libs/`；只是 `clap` 参数 → 调用 → 打印的代码属 `cmd_necom/`。
-
-反例：在 `cmd_necom/foo.rs` 里实现距离计算函数 → 应迁到 `libs/`。
-正例：`cmd_necom/foo.rs` 只做 `let args = parse(matches); let result = libs::foo::run(args); println!("{result}")`。
-
-> 注："三次相似代码"原则（同一模式出现三次后再抽象）针对的是重复代码的抽象提取，与本节的代码分层无关。
-
 ### 精准修改
 
 **只改必须改的。只清理自己造成的混乱。**
@@ -101,6 +85,23 @@
 - 不要用 `unsafe`，除非有充分理由且用户同意
 - 不要写反向兼容的 shim（rename `_vars`、re-export 旧类型等）
 
+### 分层原则
+
+**复杂逻辑放 `libs/`，`cmd_necom/` 保持薄壳。**
+
+- `src/libs/` 是复杂逻辑、算法、格式 I/O、共享工具的归宿。
+- `src/cmd_necom/` 仅负责：CLI 参数解析、参数转换、调用 `libs`、输出格式化。
+- 单命令专用的复杂逻辑也放 `libs/`，即使当前只有一个消费者。
+- 命令文件中内联的算法/业务逻辑应回迁 `libs/`。
+- CLI 参数构建器（`clap::Arg` 定义）出现两次即应提取到 `src/cmd_necom/args.rs`，以保证跨子命令的选项名称、短标志、帮助文本、默认值一致。
+
+判断标准：涉及算法、数据结构、复杂流程控制的代码属 `libs/`；只是 `clap` 参数 → 调用 → 打印的代码属 `cmd_necom/`。
+
+反例：在 `cmd_necom/foo.rs` 里实现距离计算函数 → 应迁到 `libs/`。
+正例：`cmd_necom/foo.rs` 只做 `let args = parse(matches); let result = libs::foo::run(args); println!("{result}")`。
+
+> 注："三次相似代码"原则（同一模式出现三次后再抽象）针对的是重复代码的抽象提取，与本节的代码分层无关。
+
 ## 项目概览
 
 **当前状态**: 活跃开发中 | **主要语言**: Rust
@@ -114,8 +115,6 @@
 - `necom mat` — 距离矩阵处理
 - `necom nwk` — Newick 树操作与可视化
 - `necom pl condense` — 基于分类学的树压缩流程
-
-其他命令（`fa`、`fas`、`fq`、`gff`、`axt`、`chain`、`lav`、`maf`、`ms`、`net`、`paf`、`plot`、`psl`、`twobit`、`dist` 以及 `pl` 的其余子命令）均已被移除。
 
 ## 构建命令
 
