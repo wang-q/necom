@@ -363,6 +363,71 @@ fn test_from_relaxed_phylip_asymmetric() {
 }
 
 #[test]
+fn test_from_relaxed_phylip_asymmetric_nan() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full 2x2: lower triangle has 0.5, upper triangle has NaN.
+    // Before the fix, `(NaN - 0.5).abs() > 1e-6` evaluated to `false`
+    // (NaN comparisons are always false), so the asymmetry was silently missed.
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A 0.0 nan").unwrap();
+    writeln!(tmp, "B 0.5 0.0").unwrap();
+
+    let result = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap());
+    assert!(
+        result.is_err(),
+        "asymmetric PHYLIP matrix (NaN vs finite) should return an error"
+    );
+    let msg = format!("{}", result.unwrap_err());
+    assert!(msg.contains("asymmetric"));
+}
+
+#[test]
+fn test_from_relaxed_phylip_symmetric_nan() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full 2x2: both sides are NaN — this is symmetric and should be accepted.
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A 0.0 nan").unwrap();
+    writeln!(tmp, "B nan 0.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    assert!(matrix.get_by_name("A", "B").unwrap().is_nan());
+}
+
+#[test]
+fn test_from_pair_scores_duplicate_nan_no_warn() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Duplicate pair (A,B) both with NaN: NaN == NaN via total_cmp, so no
+    // "conflicting" warning should be emitted. Last value (NaN) is used.
+    writeln!(tmp, "A\tB\tnan").unwrap();
+    writeln!(tmp, "A\tB\tnan").unwrap();
+
+    let matrix =
+        NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
+    assert!(matrix.get_by_name("A", "B").unwrap().is_nan());
+}
+
+#[test]
+fn test_from_pair_scores_duplicate_nan_vs_finite_warns() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Duplicate pair (A,B): first NaN, then 0.5 — these are genuinely
+    // different, so the last value (0.5) is used.
+    writeln!(tmp, "A\tB\tnan").unwrap();
+    writeln!(tmp, "A\tB\t0.5").unwrap();
+
+    let matrix =
+        NamedMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, 1.0).unwrap();
+    assert_eq!(matrix.get_by_name("A", "B"), Some(0.5));
+}
+
+#[test]
 fn test_from_relaxed_phylip_lower_no_diag() {
     use std::io::Write;
 
@@ -835,6 +900,22 @@ fn test_scoring_matrix_from_pair_scores_empty_name() {
             .unwrap();
     assert_eq!(names, vec!["A".to_string(), "C".to_string()]);
     assert_eq!(matrix.get(0, 1), 0.3);
+}
+
+#[test]
+fn test_scoring_matrix_from_pair_scores_duplicate_nan_no_warn() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Duplicate pair (A,B) both with NaN: NaN == NaN via total_cmp, so no
+    // spurious "conflicting" warning. Last value (NaN) is used.
+    writeln!(tmp, "A\tB\tnan").unwrap();
+    writeln!(tmp, "A\tB\tnan").unwrap();
+
+    let (matrix, _names) =
+        ScoringMatrix::from_pair_scores(tmp.path().to_str().unwrap(), 0.0, -1.0)
+            .unwrap();
+    assert!(matrix.get(0, 1).is_nan());
 }
 
 #[test]

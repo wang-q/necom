@@ -262,7 +262,9 @@ impl ScoringMatrix<f32> {
             let (i, j) = if i1 <= i2 { (i1, i2) } else { (i2, i1) };
             let key = condensed_index_with_diag(i, j);
             if let Some(&existing) = matrix.data.get(&key) {
-                if existing != score {
+                // Use total_cmp so NaN == NaN is treated as equal (no spurious
+                // conflict warning), while NaN vs finite still warns.
+                if existing.total_cmp(&score) != std::cmp::Ordering::Equal {
                     let name1 = names.get_index(i).expect("valid pair index");
                     let name2 = names.get_index(j).expect("valid pair index");
                     log::warn!(

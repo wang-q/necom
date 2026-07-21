@@ -277,7 +277,9 @@ impl NamedMatrix {
             if i1 == i2 {
                 if !seen_self_pairs.insert(i1) {
                     let existing = diags[i1];
-                    if existing != score {
+                    // Use total_cmp so NaN == NaN is treated as equal (no spurious
+                    // conflict warning), while NaN vs finite still warns.
+                    if existing.total_cmp(&score) != std::cmp::Ordering::Equal {
                         let name = names.get_index(i1).expect("valid self-pair index");
                         log::warn!(
                             "conflicting pairwise entry for ({}, {}): existing {} vs new {}; using last value",
@@ -295,7 +297,7 @@ impl NamedMatrix {
             let idx = get_condensed_index(size, row, col);
             if seen_pairs[idx] {
                 let existing = matrix.get(row, col);
-                if existing != score {
+                if existing.total_cmp(&score) != std::cmp::Ordering::Equal {
                     let name1 = names.get_index(row).expect("valid pair index");
                     let name2 = names.get_index(col).expect("valid pair index");
                     log::warn!(
@@ -462,13 +464,18 @@ impl NamedMatrix {
         }
 
         // Validate symmetry for full matrices.
+        // NaN requires special handling: `(NaN - x).abs() > 1e-6` evaluates to
+        // `false` (NaN comparisons are always false), so a one-sided NaN would
+        // silently pass the check. An explicit NaN-mismatch test catches this.
         if layout == Layout::Full {
             for (i, (name, values)) in rows.iter().enumerate() {
                 for (j, &value) in
                     values.iter().enumerate().skip(i + 1).take(size - i - 1)
                 {
                     let expected = matrix.get(i, j);
-                    if (value - expected).abs() > 1e-6 {
+                    if value.is_nan() != expected.is_nan()
+                        || (value - expected).abs() > 1e-6
+                    {
                         anyhow::bail!(
                             "asymmetric PHYLIP matrix at ('{}', '{}'): {} vs {}",
                             name,
