@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a2c4d197.js";
+            window.path_to_searchindex_js = "searchindex-37696ab6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -225,7 +225,7 @@
 <p><code>necom eval partition</code> writes a TSV with a header row followed by one result row.</p>
 <ul>
 <li><strong>External evaluation</strong>: one row of pair-based metrics (<code>ari</code>, <code>ami</code>, <code>homogeneity</code>, <code>completeness</code>, <code>v_measure</code>, <code>fmi</code>, <code>nmi</code>, <code>mi</code>, <code>ri</code>, <code>jaccard</code>, <code>precision</code>, <code>recall</code>).</li>
-<li><strong>Distance-based internal evaluation</strong>: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>.</li>
+<li><strong>Distance-based internal evaluation</strong>: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>, <code>davies_bouldin</code>.</li>
 <li><strong>Coordinate-based internal evaluation</strong>: <code>davies_bouldin</code>, <code>calinski_harabasz</code>, <code>pbm</code>, <code>ball_hall</code>, <code>xie_beni</code>, <code>wemmert_gancarski</code>.</li>
 <li><strong>Batch mode</strong> (<code>--input-format long</code>): one row per <code>Group</code>, with the <code>Group</code> column preserved as the first column.</li>
 <li>Non-finite metric values (<code>NaN</code>, <code>+Infinity</code>, or <code>-Infinity</code>) are emitted as <code>NA</code> to keep the TSV parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly compact and well-separated, or Xie-Beni when two centroids coincide.</li>
@@ -407,6 +407,14 @@
 <ul>
 <li><strong>Principle</strong>: Rank correlation coefficient between the distance matrix and the clustering matrix.</li>
 <li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong>.</li>
+</ul>
+</li>
+<li>
+<p><strong>Davies-Bouldin Index (DBI)</strong></p>
+<ul>
+<li><strong>Principle</strong>: Same idea as the coordinate version, but uses <strong>medoids</strong> (cluster members with the smallest average intra-cluster distance) as cluster representatives because coordinates are not available. <code>scatter_i</code> is the average distance from cluster members to the medoid, and inter-cluster distance is the distance between medoids.</li>
+<li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If two medoids coincide and at least one cluster has non-zero scatter, the similarity is undefined; a large finite proxy is used so the TSV remains parseable.</li>
 </ul>
 </li>
 </ul>

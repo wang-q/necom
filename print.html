@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a2c4d197.js";
+            window.path_to_searchindex_js = "searchindex-37696ab6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -299,9 +299,28 @@ via <code>necom &lt;command&gt; &lt;subcommand&gt; --help</code>. The rendered m
 <p>Commands are divided into two categories by input data type (consistent with <code>necom clust --help</code>):</p>
 <ol>
 <li><strong>Tree</strong>: Build phylogenetic or hierarchical structures from a distance matrix (<code>hier</code>, <code>nj</code>, <code>upgma</code>).</li>
-<li><strong>Flat</strong>: Generate groups directly from pairwise relations, distances, or similarities (<code>cc</code>, <code>dbscan</code>, <code>k-medoids</code>, <code>mcl</code>).</li>
+<li><strong>Flat</strong>: Generate groups directly from pairwise relations, distances, or similarities (<code>cc</code>, <code>dbscan</code>, <code>k-medoids</code>, <code>mcl</code>). DBSCAN parameter scanning is available as <code>scan-dbscan</code>.</li>
 </ol>
 <p>Flat partitions can also be derived from an existing tree using the separate <code>necom cut</code> command (see <a href="#necom-cut"><code>docs/cut.md</code></a>).</p>
+<h2 id="input-and-output-conventions"><a class="header" href="#input-and-output-conventions">Input and Output Conventions</a></h2>
+<h3 id="input-by-command-type"><a class="header" href="#input-by-command-type">Input by command type</a></h3>
+<ul>
+<li><strong>Tree-building commands</strong> (<code>hier</code>, <code>nj</code>, <code>upgma</code>): accept a PHYLIP distance matrix (strict or relaxed). Smaller values mean higher similarity.</li>
+<li><strong>Flat clustering commands</strong>:
+<ul>
+<li><code>mcl</code> and <code>cc</code>: accept pairwise <strong>similarities</strong> in TSV format (<code>name1\tname2\tscore</code>); higher is better.</li>
+<li><code>dbscan</code> and <code>k-medoids</code>: accept pairwise <strong>distances</strong> in TSV format (<code>name1\tname2\tdist</code>); lower is better.</li>
+</ul>
+</li>
+</ul>
+<p>Similarity matrices must be converted to distances before <code>dbscan</code> or <code>k-medoids</code>, e.g., with <code>necom mat transform</code>.</p>
+<h3 id="output-formats"><a class="header" href="#output-formats">Output formats</a></h3>
+<p>Most flat-clustering commands support <code>--format</code>:</p>
+<ul>
+<li><code>cluster</code> (default): one cluster per line, first element is the representative, remaining elements are members. Noise points in DBSCAN are emitted as single-member clusters.</li>
+<li><code>pair</code>: one <code>representative\tmember</code> pair per line.</li>
+</ul>
+<p>Tree-building commands always output a Newick tree.</p>
 <h2 id="algorithm-list"><a class="header" href="#algorithm-list">Algorithm List</a></h2>
 <h3 id="mcl-markov-cluster-algorithm"><a class="header" href="#mcl-markov-cluster-algorithm">MCL (Markov Cluster Algorithm)</a></h3>
 <ul>
@@ -349,7 +368,40 @@ via <code>necom &lt;command&gt; &lt;subcommand&gt; --help</code>. The rendered m
 <li><strong>Output</strong>: <code>cluster</code> (one cluster per line, first element is the representative) or <code>pair</code> (representative–member pairs). Noise points are emitted as single-member clusters.</li>
 <li><strong>Defaults</strong>: <code>--eps 0.05</code>, <code>--min-points 4</code>.</li>
 <li><strong>Note on <code>--min-points</code></strong>: By default (<code>--same 0.0</code>), the neighborhood count includes the point itself because self-distance is 0 and is always &lt;= <code>eps</code>. If <code>--same</code> is set to a value greater than <code>eps</code>, the point is not counted as its own neighbor and may fail to become a core point.</li>
-<li><strong>Unimplemented options</strong>: Parameter scanning and scoring such as <code>--scan</code>, <code>--opt-eps</code>, <code>--min-pct</code> are not yet implemented; planning details are in <a href="../notes/design/dbscan-planned.html"><code>notes/design/dbscan-planned.md</code></a>. They may be provided later as subcommands of <code>necom clust dbscan</code> or standalone scripts.</li>
+<li><strong>Representative selection</strong>: By default (<code>--rep medoid</code>), the representative of each cluster is its medoid (the point with the smallest average distance to other cluster members). Use <code>--rep first</code> to use the first-discovered point instead. Noise points are emitted as single-member clusters where the representative is the point itself.</li>
+<li><strong><code>--min-pct</code></strong>: Alternative to <code>--min-points</code>; specify <code>min_points</code> as a fraction of the total number of samples. The effective value is <code>ceil(P * n_samples)</code>, range <code>(0, 1]</code>. Mutually exclusive with <code>--min-points</code>.</li>
+<li><strong>Parameter scanning</strong>: To scan <code>eps</code> and compare internal metrics, use <code>necom clust scan-dbscan</code> (see below).</li>
+</ul>
+<h3 id="dbscan-scan-scan-dbscan"><a class="header" href="#dbscan-scan-scan-dbscan">DBSCAN Scan (<code>scan-dbscan</code>)</a></h3>
+<ul>
+<li><strong>Principle</strong>: Run DBSCAN repeatedly over a range of <code>eps</code> values while keeping <code>min_points</code> fixed. For each <code>eps</code>, report the number of clusters, the number of noise points, and two internal validity indices (Silhouette and Davies-Bouldin). Optionally, select the best <code>eps</code> according to a criterion and output the corresponding partition.</li>
+<li><strong>Command</strong>: <code>necom clust scan-dbscan</code></li>
+<li><strong>Characteristics</strong>: Parameter exploration for DBSCAN without ground truth.</li>
+<li><strong>Use cases</strong>: Choose an appropriate <code>eps</code> when the distance scale of the data is unknown.</li>
+<li><strong>Input</strong>: Pairwise distances <code>.tsv</code> (lower is better).</li>
+<li><strong>Output</strong>:
+<ul>
+<li>Without <code>--opt-eps</code>: a TSV table with columns <code>Epsilon</code>, <code>Clusters</code>, <code>Noise</code>, <code>Silhouette</code>, <code>DBIndex</code>.</li>
+<li>With <code>--opt-eps</code>: a clustering partition in <code>cluster</code> or <code>pair</code> format, using the same conventions as <code>necom clust dbscan</code>.</li>
+</ul>
+</li>
+<li><strong>Required</strong>: <code>--scan &lt;start,end,step&gt;</code>.</li>
+<li><strong>Options</strong>:
+<ul>
+<li><code>--min-points &lt;N&gt;</code> or <code>--min-pct &lt;P&gt;</code>: same semantics as <code>necom clust dbscan</code>.</li>
+<li><code>--opt-eps {silhouette|max-clusters|min-noise}</code>: select the best <code>eps</code> and output its partition.
+<ul>
+<li><code>silhouette</code>: maximize Silhouette score.</li>
+<li><code>max-clusters</code>: maximize the number of non-noise clusters.</li>
+<li><code>min-noise</code>: minimize the number of noise points.</li>
+<li>Ties are resolved by choosing the smaller <code>eps</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Metrics</strong>: Silhouette and Davies-Bouldin use the distance-matrix definitions described in <a href="#necom-eval-partition"><code>docs/eval-partition.md</code></a>. Noise points are treated as singleton clusters when computing metrics.</li>
+<li><strong>Performance</strong>: Scanning costs <code>steps × O(N²)</code>; reduce the range or step count for large matrices.</li>
+<li><strong>Note</strong>: The explicit <code>end</code> value of <code>--scan</code> is always included, even if the step size does not divide the interval evenly.</li>
 </ul>
 <h3 id="upgma"><a class="header" href="#upgma">UPGMA</a></h3>
 <ul>
@@ -474,8 +526,68 @@ via <code>necom &lt;command&gt; &lt;subcommand&gt; --help</code>. The rendered m
 </ul>
 <h2 id="evaluation"><a class="header" href="#evaluation">Evaluation</a></h2>
 <p>Partition evaluation has moved to <a href="#necom-eval"><code>necom eval partition</code></a>. See <a href="#necom-eval"><code>docs/eval.md</code></a> for the overview and <a href="#necom-eval-partition"><code>docs/eval-partition.md</code></a> for detailed metric definitions.</p>
+<h2 id="implementation-status"><a class="header" href="#implementation-status">Implementation Status</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Command</th><th>Algorithm</th><th>Status</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mcl</code></td><td>Markov Cluster Algorithm</td><td>Available</td><td>Flow simulation on graphs; uses pairwise similarities.</td></tr>
+<tr><td><code>cc</code></td><td>Connected Components</td><td>Available</td><td>Fast graph connectivity; ignores edge weights.</td></tr>
+<tr><td><code>k-medoids</code></td><td>K-Medoids</td><td>Available</td><td>Medoids are real samples; supports distance matrices.</td></tr>
+<tr><td><code>dbscan</code></td><td>DBSCAN</td><td>Available</td><td>Density-based; outputs representative–member pairs.</td></tr>
+<tr><td><code>upgma</code></td><td>UPGMA</td><td>Available</td><td>Rooted, ultrametric tree; assumes molecular clock.</td></tr>
+<tr><td><code>nj</code></td><td>Neighbor-Joining</td><td>Available</td><td>Rooted at midpoint of final edge; no molecular-clock assumption.</td></tr>
+<tr><td><code>hier</code></td><td>Hierarchical clustering</td><td>Available</td><td>7 linkage methods; NN-chain optimization for reducible methods.</td></tr>
+<tr><td><code>gmm</code></td><td>Gaussian Mixture Models</td><td>Planned</td><td>Soft clustering with BIC model selection.</td></tr>
+<tr><td><code>hdbscan</code></td><td>HDBSCAN</td><td>Planned</td><td>Density-based hierarchical clustering without global <code>eps</code>.</td></tr>
+<tr><td><em>TBD</em></td><td>Louvain / Leiden</td><td>Planned</td><td>Modularity-based community detection for large networks.</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="algorithm-selection-guide"><a class="header" href="#algorithm-selection-guide">Algorithm Selection Guide</a></h2>
+<p>Choosing the right clustering command depends on the input data and the biological or analytical question.</p>
+<ul>
+<li><strong>Need a tree from a distance matrix?</strong>
+<ul>
+<li><code>necom clust upgma</code> — when the data are expected to be ultrametric (molecular clock).</li>
+<li><code>necom clust nj</code> — for general additive distances without a molecular-clock assumption.</li>
+<li><code>necom clust hier --method ward</code> — for statistical hierarchical clustering with flexible linkage criteria.</li>
+</ul>
+</li>
+<li><strong>Need flat groups from pairwise similarities?</strong>
+<ul>
+<li><code>necom clust mcl</code> — biological networks and protein families.</li>
+<li><code>necom clust cc</code> — fast deduplication when connectivity alone matters.</li>
+</ul>
+</li>
+<li><strong>Need flat groups from pairwise distances?</strong>
+<ul>
+<li><code>necom clust k-medoids</code> — when centers must be actual samples or the metric is non-Euclidean.</li>
+<li><code>necom clust dbscan</code> — for non-convex shapes, uneven densities, or outlier detection.</li>
+</ul>
+</li>
+<li><strong>Have feature vectors?</strong>
+<ul>
+<li>Use <code>necom eval partition --coords</code> (via <code>necom eval</code>) for geometry-based validation, or wait for the planned <code>necom clust gmm</code> command.</li>
+</ul>
+</li>
+</ul>
+<h2 id="why-some-common-algorithms-are-not-provided"><a class="header" href="#why-some-common-algorithms-are-not-provided">Why Some Common Algorithms Are Not Provided</a></h2>
+<p>The following classic algorithms are intentionally not included in <code>necom clust</code>. They have clear limitations for the biological sequence and network scales this project targets, and a better alternative already exists or is planned.</p>
+<ul>
+<li><strong>K-Means</strong>: Assumes spherical, equal-variance clusters and centroids that are not real samples. Use <code>necom clust k-medoids</code> instead.</li>
+<li><strong>Bisecting K-Means</strong>: Inherits K-Means limitations and favors divisive splitting. Use <code>necom clust hier</code> or <code>necom clust upgma</code> for bottom-up trees.</li>
+<li><strong>Affinity Propagation</strong>: $O(N^2)$ cost makes it impractical for &gt;10k sequences. Use <code>necom clust k-medoids</code> for small representative sets, or <code>necom clust dbscan</code> / <code>necom clust mcl</code> for automatic cluster counts.</li>
+<li><strong>Spectral Clustering</strong>: Building the Laplacian and eigendecomposition is expensive ($O(N^3)$). Use <code>necom clust mcl</code> on biological networks for similar results with better scalability.</li>
+<li><strong>Mean Shift</strong>: High complexity and sensitive bandwidth selection. Use <code>necom clust dbscan</code> or the planned <code>necom clust gmm</code>.</li>
+<li><strong>OPTICS</strong>: Its core idea is better automated by HDBSCAN. Use the planned <code>necom clust hdbscan</code>.</li>
+<li><strong>Biclustering</strong>: Designed for gene-expression matrix sub-blocks, not sample grouping. Use specialized tools such as WGCNA when needed.</li>
+<li><strong>BIRCH</strong>: Relies on Euclidean statistics and restricts cluster shapes. Use external vector tools for large-scale vectors, or <code>necom clust mcl</code> for large networks.</li>
+</ul>
 <h2 id="planned"><a class="header" href="#planned">Planned</a></h2>
-<p>GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Algorithms considered but not adopted (K-Means, Spectral, OPTICS, BIRCH, etc.) are documented in <a href="../notes/design/clust-impl.html"><code>notes/design/clust-impl.md</code></a>.</p>
+<p>GMM, HDBSCAN, Louvain/Leiden and other algorithms are on the roadmap. Detailed implementation analysis and algorithms considered but not adopted are documented in <a href="../notes/design/clust-impl.html"><code>notes/design/clust-impl.md</code></a>.</p>
 <h3 id="bootstrap-support-for-hierarchical-clustering-moved-to-necom-eval"><a class="header" href="#bootstrap-support-for-hierarchical-clustering-moved-to-necom-eval">Bootstrap Support for Hierarchical Clustering [Moved to <code>necom eval</code>]</a></h3>
 <p><code>necom eval boot</code> will compute multiscale-bootstrap BP/AU/SI support values (pvclust-style) for each internal node of a hierarchical clustering tree, quantifying the stability of clusters under feature resampling. Design details are in <a href="../notes/design/eval-boot.html"><code>notes/design/eval-boot.md</code></a>.</p>
 <h3 id="gmm-gaussian-mixture-models-planned"><a class="header" href="#gmm-gaussian-mixture-models-planned">GMM (Gaussian Mixture Models) [Planned]</a></h3>
@@ -1437,6 +1549,13 @@ latexmk -xelatex tree.tex
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="necom-eval"><a class="header" href="#necom-eval">necom eval</a></h1>
 <p><code>necom eval</code> provides evaluation metrics for clustering partitions and phylogenetic trees. It is the unified entry point for assessing result quality, support, and consistency.</p>
+<h2 id="design-principles"><a class="header" href="#design-principles">Design Principles</a></h2>
+<ul>
+<li><strong>Unified entry point</strong>: All evaluation capabilities live under <code>necom eval</code>, making them easier to discover.</li>
+<li><strong>Evaluation only</strong>: <code>eval</code> measures existing results; it does not generate clusters, infer trees, or convert formats.</li>
+<li><strong>Strict validation</strong>: External evaluation requires matching sample sets; internal evaluation requires every partition sample to be present in the supplied matrix, tree, or coordinate file. This prevents silent sample dropping and misleading <code>NaN</code> metrics.</li>
+<li><strong>Shared implementation</strong>: Metrics are implemented once in <code>libs/eval</code> and reused across commands (e.g., <code>silhouette_score</code> is used by both <code>eval partition --matrix/--tree</code> and the planned <code>eval tree</code>).</li>
+</ul>
 <h2 id="subcommands-1"><a class="header" href="#subcommands-1">Subcommands</a></h2>
 <p>Subcommands are grouped by evaluation target:</p>
 <ul>
@@ -1484,6 +1603,30 @@ latexmk -xelatex tree.tex
 <li><strong>Trait</strong>: Purity, Entropy, DominantTrait — consistency with external labels (taxonomy, geography, phenotype).</li>
 <li><strong>Phylo</strong>: Local RF to reference tree, Monophyly Check, ConflictScore.</li>
 <li><strong>Fit</strong>: Cophenetic Correlation against an original distance matrix.</li>
+</ul>
+<p>Input and output details:</p>
+<ul>
+<li><strong>Tree</strong>: Newick (positional argument).</li>
+<li><strong>Partition (<code>--part</code>)</strong>: optional grouping in <code>cluster</code> or <code>pair</code> format. If omitted, the whole tree is evaluated or a partition is generated via <code>--cut</code>.</li>
+<li><strong>Trait map (<code>--traits</code>)</strong>: TSV with <code>LeafName &lt;tab&gt; Trait1,Trait2...</code>, used for purity/entropy calculations.</li>
+<li><strong>Reference tree (<code>--ref</code>)</strong>: Newick species tree for Local RF and monophyly checks. Gene trees typically sample only a subset of taxa, so leaf-set intersection pruning is required before comparison.</li>
+<li><strong>Original matrix (<code>--dist</code>)</strong>: PHYLIP square matrix or pair TSV for Cophenetic correlation.</li>
+<li><strong>Output</strong>: TSV with column groups:
+<ul>
+<li><code>Basic</code>: Size, Diameter, AvgDist.</li>
+<li><code>Geom</code>: Silhouette, Separation.</li>
+<li><code>Trait</code>: Purity, Entropy, DominantTrait.</li>
+<li><code>Phylo</code>: RF-Distance (to reference), ConflictScore.</li>
+<li><code>Fit</code>: CopheneticCorrelation.</li>
+</ul>
+</li>
+<li><strong><code>--metrics</code></strong>: controls which column groups are emitted (e.g., <code>--metrics basic,geom</code> or <code>--metrics cophenet</code>), avoiding unnecessary computation.</li>
+</ul>
+<p>Performance notes:</p>
+<ul>
+<li>For clade-aligned partitions, geometry metrics are O(N); for arbitrary partitions they are O(N²).</li>
+<li>Cophenetic correlation is inherently O(N²) because it must compare every leaf pair.</li>
+<li>For large trees, Silhouette supports <code>--samples</code> to estimate geometry metrics without full O(N²) computation.</li>
 </ul>
 <h3 id="boot-not-implemented"><a class="header" href="#boot-not-implemented">boot (Not Implemented)</a></h3>
 <p>Multiscale bootstrap (pvclust-style) support values for hierarchical clustering. Takes an observation matrix, resamples features at multiple scales, rebuilds the hierarchical tree each time, and fits BP/AU/SI values for every internal node. Design details are in <a href="../notes/design/eval-boot.html"><code>notes/design/eval-boot.md</code></a>.</p>
@@ -1594,7 +1737,7 @@ latexmk -xelatex tree.tex
 <p><code>necom eval partition</code> writes a TSV with a header row followed by one result row.</p>
 <ul>
 <li><strong>External evaluation</strong>: one row of pair-based metrics (<code>ari</code>, <code>ami</code>, <code>homogeneity</code>, <code>completeness</code>, <code>v_measure</code>, <code>fmi</code>, <code>nmi</code>, <code>mi</code>, <code>ri</code>, <code>jaccard</code>, <code>precision</code>, <code>recall</code>).</li>
-<li><strong>Distance-based internal evaluation</strong>: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>.</li>
+<li><strong>Distance-based internal evaluation</strong>: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>, <code>davies_bouldin</code>.</li>
 <li><strong>Coordinate-based internal evaluation</strong>: <code>davies_bouldin</code>, <code>calinski_harabasz</code>, <code>pbm</code>, <code>ball_hall</code>, <code>xie_beni</code>, <code>wemmert_gancarski</code>.</li>
 <li><strong>Batch mode</strong> (<code>--input-format long</code>): one row per <code>Group</code>, with the <code>Group</code> column preserved as the first column.</li>
 <li>Non-finite metric values (<code>NaN</code>, <code>+Infinity</code>, or <code>-Infinity</code>) are emitted as <code>NA</code> to keep the TSV parseable. This occurs in degenerate cases such as Calinski-Harabasz when clusters are perfectly compact and well-separated, or Xie-Beni when two centroids coincide.</li>
@@ -1776,6 +1919,14 @@ latexmk -xelatex tree.tex
 <ul>
 <li><strong>Principle</strong>: Rank correlation coefficient between the distance matrix and the clustering matrix.</li>
 <li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong>.</li>
+</ul>
+</li>
+<li>
+<p><strong>Davies-Bouldin Index (DBI)</strong></p>
+<ul>
+<li><strong>Principle</strong>: Same idea as the coordinate version, but uses <strong>medoids</strong> (cluster members with the smallest average intra-cluster distance) as cluster representatives because coordinates are not available. <code>scatter_i</code> is the average distance from cluster members to the medoid, and inter-cluster distance is the distance between medoids.</li>
+<li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If two medoids coincide and at least one cluster has non-zero scatter, the similarity is undefined; a large finite proxy is used so the TSV remains parseable.</li>
 </ul>
 </li>
 </ul>
@@ -2171,7 +2322,7 @@ GeneB	1.1	0.6	3.1
 <li>Subcommand groups:
 <ul>
 <li>Tree: <code>hier</code>, <code>nj</code>, <code>upgma</code></li>
-<li>Flat: <code>cc</code>, <code>dbscan</code>, <code>k-medoids</code>, <code>mcl</code></li>
+<li>Flat: <code>cc</code>, <code>dbscan</code>, <code>k-medoids</code>, <code>mcl</code>, <code>scan-dbscan</code></li>
 </ul>
 </li>
 <li>Run <code>necom clust &lt;subcommand&gt; --help</code> for algorithm-specific options.</li>
@@ -2225,6 +2376,7 @@ GeneB	1.1	0.6	3.1
 <li>The input must contain distances, not similarities.</li>
 <li><code>--eps &lt;V&gt;</code>: neighborhood radius (default: <code>0.05</code>).</li>
 <li><code>--min-points &lt;N&gt;</code>: minimum number of points (including the point itself) to form a dense region (default: <code>4</code>).</li>
+<li><code>--min-pct &lt;P&gt;</code>: alternative to <code>--min-points</code>; specify the minimum as a fraction of the total number of samples (range <code>(0, 1]</code>). The effective value is <code>ceil(P * n_samples)</code>. Mutually exclusive with <code>--min-points</code>.</li>
 <li><code>--same &lt;V&gt;</code>: default score of identical element pairs (default: <code>0.0</code>).</li>
 <li><code>--missing &lt;V&gt;</code>: default score of missing pairs (default: <code>1.0</code>).</li>
 <li>The representative point is selected by <code>--rep</code>:
@@ -2236,6 +2388,7 @@ GeneB	1.1	0.6	3.1
 <li>In <code>cluster</code> format, the representative is placed first; in <code>pair</code> format, it is the first column.</li>
 <li>Noise points (points not assigned to any density cluster) are emitted as single-member clusters. In <code>pair</code> format this appears as <code>Name &lt;tab&gt; Name</code>.</li>
 <li>The neighborhood count used by <code>--min-points</code> includes the point itself when <code>--same</code> is 0.0 (default), because self-distance is then 0 and is always &lt;= eps. Setting <code>--same</code> to a value greater than <code>eps</code> excludes the point from its own neighborhood.</li>
+<li>To scan <code>eps</code> values and compare internal metrics, use <code>necom clust scan-dbscan</code>.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -2246,6 +2399,10 @@ GeneB	1.1	0.6	3.1
 <li>
 <p>Set epsilon and min-points (min-points default: 4; here set to 5)
 <code>necom clust dbscan pairs.tsv --eps 0.05 --min-points 5</code></p>
+</li>
+<li>
+<p>Use –min-pct instead of –min-points
+<code>necom clust dbscan pairs.tsv --min-pct 0.1</code></p>
 </li>
 <li>
 <p>Output as pairs
@@ -2975,9 +3132,13 @@ GeneB	1.1	0.6	3.1
 <li><code>--alphanumeric</code> / <code>--alphanumeric-rev</code>: by alphanumeric order of labels, or in reverse order.</li>
 <li><code>--num-descendants</code> / <code>--num-descendants-rev</code>: by number of descendants (ladderize), or in reverse order.</li>
 <li><code>--deladderize</code> (alias <code>--dl</code>): alternate sort direction at each level.</li>
+<li><code>--olo &lt;MATRIX&gt;</code>: optimal leaf ordering using a distance matrix. This option cannot be combined with other sort orders.</li>
 </ul>
 </li>
+<li><code>--olo-format</code> controls the format of the <code>--olo</code> matrix: <code>phylip</code> (default) or <code>pair</code>.</li>
 <li>Entries in <code>--name-list</code> that are not found among the leaf names cause the command to fail with an error listing the missing names.</li>
+<li>The <code>--olo</code> matrix must cover every leaf in the tree; missing leaves cause an error. Non-finite distances are also rejected.</li>
+<li><code>--olo</code> expects the original data-space distance matrix, not the tree’s own path distances. Optimizing against tree-derived distances would mostly reproduce the current topology, defeating the purpose of leaf reordering.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -3000,6 +3161,14 @@ GeneB	1.1	0.6	3.1
 <li>
 <p>De-ladderize
 <code>necom nwk order tree.nwk --deladderize</code></p>
+</li>
+<li>
+<p>Optimal leaf ordering with a PHYLIP distance matrix
+<code>necom nwk order tree.nwk --olo distances.phy</code></p>
+</li>
+<li>
+<p>Optimal leaf ordering with a pairwise TSV matrix
+<code>necom nwk order tree.nwk --olo pairs.tsv --olo-format pair</code></p>
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -3434,7 +3603,7 @@ GeneB	1.1	0.6	3.1
 <ul>
 <li>TSV with a header row.</li>
 <li>External evaluation: one row of pair-based metrics (<code>ari</code>, <code>ami</code>, <code>homogeneity</code>, <code>completeness</code>, <code>v_measure</code>, <code>fmi</code>, <code>nmi</code>, <code>mi</code>, <code>ri</code>, <code>jaccard</code>, <code>precision</code>, <code>recall</code>).</li>
-<li>Distance-based internal evaluation: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>.</li>
+<li>Distance-based internal evaluation: <code>silhouette</code>, <code>dunn</code>, <code>c_index</code>, <code>gamma</code>, <code>tau</code>, <code>davies_bouldin</code>.</li>
 <li>Coordinate-based internal evaluation: <code>davies_bouldin</code>, <code>calinski_harabasz</code>, <code>pbm</code>, <code>ball_hall</code>, <code>xie_beni</code>, <code>wemmert_gancarski</code>.</li>
 <li>Batch mode (<code>--input-format long</code>): one row per <code>Group</code>, with <code>Group</code> as the first column.</li>
 </ul>

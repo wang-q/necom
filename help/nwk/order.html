@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-a2c4d197.js";
+            window.path_to_searchindex_js = "../../searchindex-37696ab6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-57acacb7.js"></script>
@@ -197,9 +197,13 @@
 <li><code>--alphanumeric</code> / <code>--alphanumeric-rev</code>: by alphanumeric order of labels, or in reverse order.</li>
 <li><code>--num-descendants</code> / <code>--num-descendants-rev</code>: by number of descendants (ladderize), or in reverse order.</li>
 <li><code>--deladderize</code> (alias <code>--dl</code>): alternate sort direction at each level.</li>
+<li><code>--olo &lt;MATRIX&gt;</code>: optimal leaf ordering using a distance matrix. This option cannot be combined with other sort orders.</li>
 </ul>
 </li>
+<li><code>--olo-format</code> controls the format of the <code>--olo</code> matrix: <code>phylip</code> (default) or <code>pair</code>.</li>
 <li>Entries in <code>--name-list</code> that are not found among the leaf names cause the command to fail with an error listing the missing names.</li>
+<li>The <code>--olo</code> matrix must cover every leaf in the tree; missing leaves cause an error. Non-finite distances are also rejected.</li>
+<li><code>--olo</code> expects the original data-space distance matrix, not the tree’s own path distances. Optimizing against tree-derived distances would mostly reproduce the current topology, defeating the purpose of leaf reordering.</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -222,6 +226,14 @@
 <li>
 <p>De-ladderize
 <code>necom nwk order tree.nwk --deladderize</code></p>
+</li>
+<li>
+<p>Optimal leaf ordering with a PHYLIP distance matrix
+<code>necom nwk order tree.nwk --olo distances.phy</code></p>
+</li>
+<li>
+<p>Optimal leaf ordering with a pairwise TSV matrix
+<code>necom nwk order tree.nwk --olo pairs.tsv --olo-format pair</code></p>
 </li>
 </ol>
 
