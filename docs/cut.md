@@ -79,7 +79,7 @@ below. All static methods are invoked through `necom cut simple <infile> --<METH
 ### 3. Cut by Root Distance (`--root-dist`)
 
 - **Definition**: Cut all edges whose path length from the root exceeds $D$.
-    - For the root node $r_C$ of any resulting cluster $C$, $dist(root, r_C) \le D$.
+    - For the root node $r_C$ of any resulting cluster $C$ formed by a cut, $dist(root, r_C) > D$.
     - Once a path's cumulative length exceeds $D$, that path is cut and no longer extends downward.
 - **Complexity**: $O(N)$. Only one pre-order traversal is needed.
 - **Use case**: Phylogenetic analysis defining clades that diverged a certain time after the common

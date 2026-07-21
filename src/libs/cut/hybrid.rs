@@ -335,8 +335,6 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
         // Identify unassigned nodes (Cluster 0).
         // If respect_small_clusters is true, we first try to assign small clusters as blocks
         // before handling individual objects.
-
-        // If respect_small_clusters is true, we first try to assign small_clusters as blocks
         if options.respect_small_clusters {
             for members in &small_clusters {
                 if members.is_empty() {
@@ -362,10 +360,8 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
                         let mut valid = true;
                         if options.pam_respects_dendro {
                             if let Some(&medoid_node) = medoid_node_ids.get(&cid) {
-                                // Check LCA for all members? Or just one?
-                                // R says "an object". For a cluster, maybe check representative?
-                                // Let's check the first member (approximation) or all.
-                                // Strict: All members must be compatible.
+                                // Check dendrogram constraint: all members must share
+                                // a common ancestor below the cut height with the medoid.
                                 for &m in members {
                                     if let Some(&m_node) = mat_idx_to_node.get(&m) {
                                         if let Ok(lca) =
