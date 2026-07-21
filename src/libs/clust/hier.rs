@@ -1268,7 +1268,7 @@ mod tests {
             (3, 4, 219.0, 2),
             (0, 7, 333.5, 3),
             (1, 6, 347.5, 3),
-            (8, 9, 680.77777778, 6),
+            (8, 9, 680.777_8, 6),
         ];
         assert_steps_match(&steps, &expected);
     }
@@ -1293,12 +1293,12 @@ mod tests {
     /// SciPy `hierarchy_test_data.X` — 6 points in 2D.
     fn scipy_x_coords() -> [[f32; 2]; 6] {
         [
-            [1.43054825, -7.5693489],
-            [6.95887839, 6.82293382],
-            [2.87137846, -9.68248579],
-            [7.87974764, -6.05485803],
-            [8.24018364, -6.09495602],
-            [7.39020262, 8.54004355],
+            [1.430_548_2, -7.569_349],
+            [6.958_878_5, 6.822_933_7],
+            [2.871_378_4, -9.682_486],
+            [7.879_748, -6.054_858],
+            [8.240_184, -6.094_956],
+            [7.390_202_5, 8.540_044],
         ]
     }
 
@@ -1328,13 +1328,13 @@ mod tests {
         let m = NamedMatrix::new_from_values(names, values).unwrap();
 
         let steps = linkage(&m, Method::Centroid).unwrap();
-        // [[3, 4, 0.36265956, 2], [1, 5, 1.77045373, 2], [0, 2, 2.55760419, 2], [6, 8, 6.43614494, 4], [7, 9, 15.17363237, 6]]
+        // [[3, 4, 0.36265956, 2], [1, 5, 1.770_453_7, 2], [0, 2, 2.557_604, 2], [6, 8, 6.436_145, 4], [7, 9, 15.173_633, 6]]
         let expected = [
             (3, 4, 0.36265956, 2),
-            (1, 5, 1.77045373, 2),
-            (0, 2, 2.55760419, 2),
-            (6, 8, 6.43614494, 4),
-            (7, 9, 15.17363237, 6),
+            (1, 5, 1.770_453_7, 2),
+            (0, 2, 2.557_604, 2),
+            (6, 8, 6.436_145, 4),
+            (7, 9, 15.173_633, 6),
         ];
         assert_steps_match(&steps, &expected);
     }
@@ -1349,13 +1349,13 @@ mod tests {
         let m = NamedMatrix::new_from_values(names, values).unwrap();
 
         let steps = linkage(&m, Method::Median).unwrap();
-        // [[3, 4, 0.36265956, 2], [1, 5, 1.77045373, 2], [0, 2, 2.55760419, 2], [6, 8, 6.43614494, 4], [7, 9, 15.17363237, 6]]
+        // [[3, 4, 0.36265956, 2], [1, 5, 1.770_453_7, 2], [0, 2, 2.557_604, 2], [6, 8, 6.436_145, 4], [7, 9, 15.173_633, 6]]
         let expected = [
             (3, 4, 0.36265956, 2),
-            (1, 5, 1.77045373, 2),
-            (0, 2, 2.55760419, 2),
-            (6, 8, 6.43614494, 4),
-            (7, 9, 15.17363237, 6),
+            (1, 5, 1.770_453_7, 2),
+            (0, 2, 2.557_604, 2),
+            (6, 8, 6.436_145, 4),
+            (7, 9, 15.173_633, 6),
         ];
         assert_steps_match(&steps, &expected);
     }
@@ -1370,13 +1370,13 @@ mod tests {
         let m = NamedMatrix::new_from_values(names, values).unwrap();
 
         let steps = linkage(&m, Method::Ward).unwrap();
-        // [[3, 4, 0.36265956, 2], [1, 5, 1.77045373, 2], [0, 2, 2.55760419, 2], [6, 8, 9.10208346, 4], [7, 9, 24.7784379, 6]]
+        // [[3, 4, 0.36265956, 2], [1, 5, 1.770_453_7, 2], [0, 2, 2.557_604, 2], [6, 8, 9.102_083, 4], [7, 9, 24.778_439, 6]]
         let expected = [
             (3, 4, 0.36265956, 2),
-            (1, 5, 1.77045373, 2),
-            (0, 2, 2.55760419, 2),
-            (6, 8, 9.10208346, 4),
-            (7, 9, 24.7784379, 6),
+            (1, 5, 1.770_453_7, 2),
+            (0, 2, 2.557_604, 2),
+            (6, 8, 9.102_083, 4),
+            (7, 9, 24.778_439, 6),
         ];
         assert_steps_match(&steps, &expected);
     }
@@ -1400,13 +1400,13 @@ mod tests {
         // Step 1 merges cluster {0,1} (id 3) with leaf 2; the merge distance
         // depends on the method.
         let cases: [(Method, f32); 7] = [
-            (Method::Single, sqrt2),        // min(d02, d12) = sqrt(2)
-            (Method::Complete, sqrt8),      // max(d02, d12) = sqrt(8)
-            (Method::Average, 2.12132034),  // (d02 + d12) / 2 = (sqrt8 + sqrt2) / 2
-            (Method::Weighted, 2.12132034), // (h1 + h2) / 2 = (sqrt2 + sqrt2) / 2... wait
-            (Method::Centroid, 2.12132034), // distance between centroids
-            (Method::Median, 2.12132034),   // median of pair distances
-            (Method::Ward, 2.44948974),     // sqrt( (n1*n2/(n1+n2)) * ||c1-c2||^2 )
+            (Method::Single, sqrt2),         // min(d02, d12) = sqrt(2)
+            (Method::Complete, sqrt8),       // max(d02, d12) = sqrt(8)
+            (Method::Average, 2.121_320_2),  // (d02 + d12) / 2 = (sqrt8 + sqrt2) / 2
+            (Method::Weighted, 2.121_320_2), // (h1 + h2) / 2 = (sqrt2 + sqrt2) / 2... wait
+            (Method::Centroid, 2.121_320_2), // distance between centroids
+            (Method::Median, 2.121_320_2),   // median of pair distances
+            (Method::Ward, 2.449_489_8),     // sqrt( (n1*n2/(n1+n2)) * ||c1-c2||^2 )
         ];
 
         for (method, expected_step1_dist) in cases {

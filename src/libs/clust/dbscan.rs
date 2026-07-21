@@ -50,9 +50,9 @@ where
     /// Returns an error if `eps` is non-positive or NaN, or `min_points` is zero.
     pub fn new(eps: T, min_points: usize) -> anyhow::Result<Self> {
         // `partial_cmp` returns `None` when either operand is NaN, so checking
-        // for `Some(Greater)` rejects non-positive values *and* NaN. Using
-        // `eps <= T::default()` alone would let NaN through (`NaN <= 0.0` is
-        // false under `PartialOrd`).
+        // for `Some(Greater)` rejects non-positive values *and* NaN. The
+        // equivalent `!(eps > T::default())` form would also reject NaN, but
+        // `partial_cmp` makes the comparison explicit.
         if eps.partial_cmp(&T::default()) != Some(std::cmp::Ordering::Greater) {
             anyhow::bail!("eps must be a positive number");
         }
