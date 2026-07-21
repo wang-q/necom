@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3e21a039.js";
+            window.path_to_searchindex_js = "searchindex-3a9195b1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -267,8 +267,8 @@ round-trip correctly.</li>
 <li>Single quotes inside single-quoted labels are escaped by doubling (<code>''</code>), and double quotes
 inside double-quoted labels are escaped by doubling (<code>""</code>).</li>
 <li>Name-based selection filters (<code>-n</code>, <code>-l</code>, <code>-x</code>, <code>--lca</code>) generally log a warning and continue
-when a requested name is not found, rather than abort. This applies to commands such as <code>rename</code>,
-<code>subtree</code>, <code>comment</code>, and <code>prune</code>.</li>
+when a requested name is not found, rather than abort. This applies to commands such as <code>distance</code>,
+<code>label</code>, <code>rename</code>, <code>subtree</code>, <code>comment</code>, and <code>prune</code>.</li>
 <li><code>order --name-list</code> is an exception: entries in the name list that are not found among the leaf
 names cause the command to fail with an error listing the missing names.</li>
 <li><code>reroot</code> is also an exception: if none of the names specified with <code>--node</code> are found, it reports
@@ -304,8 +304,9 @@ topological edge counts for all pairs.</li>
 <ul>
 <li><code>condense</code>: Tree condensation functionality is currently provided by
 <code>necom nwk subtree --condense</code>; no standalone <code>condense</code> subcommand is planned at this time.</li>
-<li><code>match</code>, <code>ed</code>, <code>gen</code>, <code>duration</code>: Mapped from <code>newick_utils</code> but not yet implemented in
-<code>necom nwk</code>; no concrete plan at this time.</li>
+<li><code>match</code>, <code>ed</code>, <code>duration</code>: Mapped from <code>newick_utils</code> but not yet implemented in
+<code>necom nwk</code>; no concrete plan at this time. <code>gen</code> (random tree generation) is decided
+not to be implemented — see <a href="../notes/design/nwk-planned.html"><code>notes/design/nwk-planned.md</code></a>.</li>
 <li>Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level
 command <code>necom eval</code>. <code>nwk compare</code> and <code>nwk support</code> have been migrated to <code>necom eval compare</code>
 and <code>necom eval replicate</code>; see <a href="eval.html"><code>docs/eval.md</code></a>. The <code>eval tree</code> subcommand remains in

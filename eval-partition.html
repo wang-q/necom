@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3e21a039.js";
+            window.path_to_searchindex_js = "searchindex-3a9195b1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -430,6 +430,9 @@ is reported as <code>NA</code>. If both are zero, the score is <code>0.0</code>.
 <li><strong>Principle</strong>: Compares the sum of within-cluster distances with the sum of the smallest
 $N_W$ distances in the entire dataset ($N_W$ is the number of within-cluster pairs).</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>. <strong>Smaller is better</strong>.</li>
+<li><strong>Boundary cases</strong>: Returns <code>0.0</code> when there are fewer than 2 samples, when there are no
+within-cluster pairs (all singletons), when all pairs are within-cluster (single cluster),
+or when all pairwise distances are equal (zero variance in the denominator).</li>
 <li><strong>Disadvantages</strong>: High computational complexity ($O(N^2 \log N)$), requiring sorting of all
 pairwise distances.</li>
 </ul>
@@ -440,6 +443,9 @@ pairwise distances.</li>
 same cluster, 1 = different clusters).</li>
 <li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong> (Y=1 means different clusters; larger Gamma means
 between-cluster distances exceed within-cluster distances more strongly).</li>
+<li><strong>Boundary cases</strong>: Returns <code>0.0</code> when there are fewer than 2 samples, or when the distance
+matrix or the clustering matrix has zero variance (degenerate cases such as all-equal
+distances or a single-cluster partition).</li>
 </ul>
 </li>
 <li><strong>Kendall’s Tau</strong>
@@ -447,6 +453,8 @@ between-cluster distances exceed within-cluster distances more strongly).</li>
 <li><strong>Principle</strong>: Rank correlation coefficient between the distance matrix and the clustering
 matrix.</li>
 <li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong>.</li>
+<li><strong>Boundary cases</strong>: Returns <code>0.0</code> when there are fewer than 2 samples, or when the
+denominator is zero (degenerate cases with no usable pair comparisons).</li>
 </ul>
 </li>
 <li><strong>Davies-Bouldin Index (DBI)</strong>

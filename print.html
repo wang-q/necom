@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3e21a039.js";
+            window.path_to_searchindex_js = "searchindex-3a9195b1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -1698,8 +1698,8 @@ round-trip correctly.</li>
 <li>Single quotes inside single-quoted labels are escaped by doubling (<code>''</code>), and double quotes
 inside double-quoted labels are escaped by doubling (<code>""</code>).</li>
 <li>Name-based selection filters (<code>-n</code>, <code>-l</code>, <code>-x</code>, <code>--lca</code>) generally log a warning and continue
-when a requested name is not found, rather than abort. This applies to commands such as <code>rename</code>,
-<code>subtree</code>, <code>comment</code>, and <code>prune</code>.</li>
+when a requested name is not found, rather than abort. This applies to commands such as <code>distance</code>,
+<code>label</code>, <code>rename</code>, <code>subtree</code>, <code>comment</code>, and <code>prune</code>.</li>
 <li><code>order --name-list</code> is an exception: entries in the name list that are not found among the leaf
 names cause the command to fail with an error listing the missing names.</li>
 <li><code>reroot</code> is also an exception: if none of the names specified with <code>--node</code> are found, it reports
@@ -1735,8 +1735,9 @@ topological edge counts for all pairs.</li>
 <ul>
 <li><code>condense</code>: Tree condensation functionality is currently provided by
 <code>necom nwk subtree --condense</code>; no standalone <code>condense</code> subcommand is planned at this time.</li>
-<li><code>match</code>, <code>ed</code>, <code>gen</code>, <code>duration</code>: Mapped from <code>newick_utils</code> but not yet implemented in
-<code>necom nwk</code>; no concrete plan at this time.</li>
+<li><code>match</code>, <code>ed</code>, <code>duration</code>: Mapped from <code>newick_utils</code> but not yet implemented in
+<code>necom nwk</code>; no concrete plan at this time. <code>gen</code> (random tree generation) is decided
+not to be implemented — see <a href="../notes/design/nwk-planned.html"><code>notes/design/nwk-planned.md</code></a>.</li>
 <li>Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level
 command <code>necom eval</code>. <code>nwk compare</code> and <code>nwk support</code> have been migrated to <code>necom eval compare</code>
 and <code>necom eval replicate</code>; see <a href="#necom-eval"><code>docs/eval.md</code></a>. The <code>eval tree</code> subcommand remains in
@@ -2312,6 +2313,9 @@ is reported as <code>NA</code>. If both are zero, the score is <code>0.0</code>.
 <li><strong>Principle</strong>: Compares the sum of within-cluster distances with the sum of the smallest
 $N_W$ distances in the entire dataset ($N_W$ is the number of within-cluster pairs).</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>. <strong>Smaller is better</strong>.</li>
+<li><strong>Boundary cases</strong>: Returns <code>0.0</code> when there are fewer than 2 samples, when there are no
+within-cluster pairs (all singletons), when all pairs are within-cluster (single cluster),
+or when all pairwise distances are equal (zero variance in the denominator).</li>
 <li><strong>Disadvantages</strong>: High computational complexity ($O(N^2 \log N)$), requiring sorting of all
 pairwise distances.</li>
 </ul>
@@ -2322,6 +2326,9 @@ pairwise distances.</li>
 same cluster, 1 = different clusters).</li>
 <li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong> (Y=1 means different clusters; larger Gamma means
 between-cluster distances exceed within-cluster distances more strongly).</li>
+<li><strong>Boundary cases</strong>: Returns <code>0.0</code> when there are fewer than 2 samples, or when the distance
+matrix or the clustering matrix has zero variance (degenerate cases such as all-equal
+distances or a single-cluster partition).</li>
 </ul>
 </li>
 <li><strong>Kendall’s Tau</strong>
@@ -2329,6 +2336,8 @@ between-cluster distances exceed within-cluster distances more strongly).</li>
 <li><strong>Principle</strong>: Rank correlation coefficient between the distance matrix and the clustering
 matrix.</li>
 <li><strong>Range</strong>: <code>[-1, 1]</code>. <strong>Larger is better</strong>.</li>
+<li><strong>Boundary cases</strong>: Returns <code>0.0</code> when there are fewer than 2 samples, or when the
+denominator is zero (degenerate cases with no usable pair comparisons).</li>
 </ul>
 </li>
 <li><strong>Davies-Bouldin Index (DBI)</strong>
@@ -3909,8 +3918,8 @@ Each step fully reorders the children of every internal node, so later steps ove
 <ul>
 <li>Automatically draws a phylogram if branch lengths are present; otherwise draws a cladogram.</li>
 <li>Underscores (<code>_</code>) in names are replaced with spaces.</li>
-<li>Default styles match the LaTeX Forest template (grey branches, black dots).</li>
-<li>A scale bar is drawn in phylogram mode.</li>
+<li>Default styles match the LaTeX Forest template: grey branch lines (1 pt), black node dots (2 pt), sans-serif font.</li>
+<li>A scale bar is drawn in phylogram mode, using a 1×/2×/5× dynamic tick algorithm.</li>
 <li><code>--width</code> / <code>-w</code>: SVG canvas width in pixels (default: <code>800</code>). Must be a positive finite number.</li>
 <li><code>--vskip</code> / <code>-v</code>: vertical spacing between leaf nodes in pixels (default: <code>20</code>). Must be a positive finite number.</li>
 </ul>
