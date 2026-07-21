@@ -2,19 +2,29 @@
 
 `necom nwk` 提供完整的 Newick 格式系统发育树处理功能，包括解析、操作、分析和可视化。
 
-> **实现状态注记**：截至 2026-07-20，`necom nwk` 主体命令体系（stat/distance/indent/comment/to-*/topo/label/reroot/prune/subtree/order/rename/replace）已实现；NHX 注释值对 Newick 结构字符（`:`、`=`、`;`、`,`、`]`、`\`）做完整转义以保证 round-trip；Forest/LaTeX 输出对 `dot`/`bar`/`rec`/`tri` 等可视化属性值也进行 LaTeX 特殊字符转义。
->
-> **未实现且无具体计划**：`nwk condense`（由 `subtree --condense` 提供，不计划独立子命令）；`match`/`ed`/`gen`/`duration`（来自 `newick_utils` 映射，见 §3）；`colless_yule`/`colless_pda`/`sackin_yule`/`sackin_pda` 标准化统计指标；`inorder` 遍历（仅适用二叉树，`necom` 支持多叉树故未实现）。
->
-> **规划中**：`generate_random_tree`（Yule/Coalescent 模型，主要用于模拟研究，优先级较低），详见 [nwk-planned.md](nwk-planned.md)。终端可读树形展示可直接使用 `necom nwk indent`。
->
+> **实现状态注记**：截至 2026-07-20，`necom nwk` 主体命令体系（stat/distance/indent/comment/to-*
+> /topo/label/reroot/prune/subtree/order/rename/replace）已实现；NHX 注释值对 Newick 结构字符（`:`、
+> `=`、`;`、`,`、`]`、`\`）做完整转义以保证 round-trip；Forest/LaTeX 输出对 `dot`/`bar`/`rec`/`tri`
+> 等可视化属性值也进行 LaTeX 特殊字符转义。
+
+> **未实现且无具体计划**：`nwk condense`（由 `subtree --condense` 提供，不计划独立子命令）；
+> `match`/`ed`/`gen`/`duration`（来自 `newick_utils` 映射，见 §3）；`colless_yule`/`colless_pda`/
+> `sackin_yule`/`sackin_pda` 标准化统计指标；`inorder` 遍历（仅适用二叉树，`necom`
+> 支持多叉树故未实现）。
+
+> **规划中**：`generate_random_tree`（Yule/Coalescent 模型，主要用于模拟研究，优先级较低），详见
+> [nwk-planned.md](nwk-planned.md)。终端可读树形展示可直接使用 `necom nwk indent`。
+
 > **关联文档**：
-> - [eval-planned.md](eval-planned.md)（`necom eval` 命令的未来工作计划，其中 `eval tree` 子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
+
+> - [eval-planned.md](eval-planned.md)（`necom eval` 命令的未来工作计划，其中 `eval tree`
+  子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
 > - [nwk-planned.md](nwk-planned.md)（`necom nwk` 尚未实现的 OLO 与随机树生成等工作计划）。
 
 ## 1. 架构设计
 
 ### 1.1 模块位置
+
 ```text
 src/libs/phylo/
 ├── mod.rs              # 模块导出
@@ -38,7 +48,7 @@ src/libs/phylo/
 
 ### 1.2 核心数据结构
 
-采用 **Arena (Vector-backed)** 模式：所有节点存储在 `Vec<Node>` 中，使用 `usize` 索引代替指针。
+采用**Arena (Vector-backed)**模式：所有节点存储在 `Vec<Node>` 中，使用 `usize` 索引代替指针。
 
 ```rust
 // src/libs/phylo/node.rs
@@ -65,16 +75,24 @@ pub struct Tree {
 
 ### 1.3 设计特点
 
-*   **Arena 内存布局**: 节点紧凑存储在 `Vec` 中，缓存局部性好。
-*   **索引引用**: 通过 `NodeId` (usize) 维护关系，避免 Rust 所有权问题。
-*   **邻接表**: 每个节点直接持有 `Vec<NodeId>` 子节点列表，遍历快速。
-*   **NHX 支持**: 注释解析为 `BTreeMap<String, String>`，原生支持 NHX 格式键值对。
-*   **注释限制**: 普通 `[...]` 注释支持嵌套方括号与 `\]` 转义；首个未转义且未嵌套的 `]` 结束注释。NHX 注释 `[&&NHX:...]` 仍按原语法解析。`Tree::from_newick_multi` 在解析多树输入时，同样使用此扫描规则跳过顶层垃圾注释。
-*   **分支长度规范化**: `Node::finite_length()` 将 `NaN`、正负无穷、负值与缺失长度统一视为 `0.0`；输出时 `0.0` 与缺失长度均被省略。`stat` 仅把正有限长度计为 "有长度" 边，`distance` 仅在分支长度之和绝对值超过 `1e-9` 时使用加权距离，否则回退到拓扑边数。`format_float` 对绝对值小于或等于 `0.5e-6` 的非零值回退到科学计数法，避免在 6 位小数下被静默舍入为零；其余值保留 6 位小数并去除末尾零。
-*   **确定性输出**: 使用 `BTreeMap` 而非 `HashMap`，保证序列化输出顺序固定。
-*   **按需计算**: 不缓存中间状态（深度、距离等），按需计算以保持轻量。
-    *   `Tree::len()` 每次遍历 `nodes` 统计非 `deleted` 节点，为 O(n)；频繁调用时需注意开销。
-*   **软删除与 Compact**: `remove_node` 等操作仅标记 `deleted=true`（软删除），物理回收由 `compact()` 完成。`algo::prune_nodes` 在清理拓扑后会自动调用 `compact()`，因此返回后所有外部持有的 `NodeId` 均失效。
+- **Arena 内存布局**: 节点紧凑存储在 `Vec` 中，缓存局部性好。
+- **索引引用**: 通过 `NodeId` (usize) 维护关系，避免 Rust 所有权问题。
+- **邻接表**: 每个节点直接持有 `Vec<NodeId>` 子节点列表，遍历快速。
+- **NHX 支持**: 注释解析为 `BTreeMap<String, String>`，原生支持 NHX 格式键值对。
+- **注释限制**: 普通 `[...]` 注释支持嵌套方括号与 `\]` 转义；首个未转义且未嵌套的 `]`
+  结束注释。NHX 注释 `[&&NHX:...]` 仍按原语法解析。`Tree::from_newick_multi` 在解析多树输入时，
+  同样使用此扫描规则跳过顶层垃圾注释。
+- **分支长度规范化**: `Node::finite_length()` 将 `NaN`、正负无穷、负值与缺失长度统一视为
+  `0.0`；输出时 `0.0` 与缺失长度均被省略。`stat` 仅把正有限长度计为 "有长度" 边，`distance`
+  仅在分支长度之和绝对值超过 `1e-9` 时使用加权距离，否则回退到拓扑边数。`format_float`
+  对绝对值小于或等于 `0.5e-6` 的非零值回退到科学计数法，避免在 6 位小数下被静默舍入为零；其余值保留
+  6 位小数并去除末尾零。
+- **确定性输出**: 使用 `BTreeMap` 而非 `HashMap`，保证序列化输出顺序固定。
+- **按需计算**: 不缓存中间状态（深度、距离等），按需计算以保持轻量。
+    - `Tree::len()` 每次遍历 `nodes` 统计非 `deleted` 节点，为 O(n)；频繁调用时需注意开销。
+- **软删除与 Compact**: `remove_node` 等操作仅标记 `deleted=true`（软删除），物理回收由 `compact()`
+  完成。`algo::prune_nodes` 在清理拓扑后会自动调用 `compact()`，因此返回后所有外部持有的 `NodeId`
+  均失效。
 
 ### 1.4 数据流与调用链
 
@@ -109,229 +127,228 @@ graph LR
 ```
 
 ---
-
 ## 2. 树比较核心概念
 
 在规划高级分析功能（如距离计算、拓扑比较）之前，有必要明确以下系统发育树比较的核心概念：
 
 ### 2.1 基础积木：划分
 
-**Splits** 是描述无根树拓扑结构的最基本单元。
-*   **定义**: 树上的每一条**内部边**（Edge）都将所有叶子节点（Taxa）划分成两个互不相交的集合 $\{A, B\}$。这种划分被称为一个 Split，通常记作 $A|B$。
-*   **性质**: 一棵树的拓扑结构可以**完全**由它所包含的所有 Splits 集合来定义。
-*   **实现**: 在计算机中通常使用 **BitSet** 高效存储。例如叶子为 $\{A,B,C,D\}$，则 Split $\{A,B\}|\{C,D\}$ 可表示为 `1100`。
+**Splits**是描述无根树拓扑结构的最基本单元。
+
+- **定义**: 树上的每一条**内部边**（Edge）都将所有叶子节点（Taxa）划分成两个互不相交的集合 ${A, B}
+  A|B$。
+- **性质**: 一棵树的拓扑结构可以**完全**由它所包含的所有 Splits 集合来定义。
+- **实现**: 在计算机中通常使用**BitSet**高效存储。例如叶子为 ${A,B,C,D}{A,B}|{C,D}$ 可表示为
+  `1100`。
 
 ### 2.2 Robinson-Foulds (RF) 距离
 
-**RF 距离** 是基于 Splits 的最经典距离度量。
-*   **计算公式**: $RF = |S_1 \setminus S_2| + |S_2 \setminus S_1|$。即两棵树中**不共享**的 Splits 总数（对称差）。
-*   **特点**: **极度敏感**（"全有或全无"指标），但**计算极快**（线性复杂度 $O(n)$）。
-*   **适用场景**: 快速检查树的完全一致性，或作为基础的差异度量。
+**RF 距离**是基于 Splits 的最经典距离度量。
+
+- **计算公式**: $RF = |S_1 \setminus S_2| + |S_2 \setminus S_1|$。即两棵树中**不共享**的 Splits 总数
+  （对称差）。
+- **特点**: **极度敏感**（"全有或全无"指标），但**计算极快**（线性复杂度 $O(n)$）。
+- **适用场景**: 快速检查树的完全一致性，或作为基础的差异度量。
 
 ### 2.3 Triplet Distance (三元组距离)
 
-**Triplet** 是**有根树 (Rooted Trees)** 的最小信息单元。
-*   **定义**: 任意三个叶子 $\{x, y, z\}$ 在有根树中的拓扑关系。例如 $((x,y),z)$ 表示 $x,y$ 更亲缘。
-*   **特点**: **仅限有根树**。比 RF 更**鲁棒**（High Resolution）。**tqDist** (Sand et al. 2014) 提供了针对一般多叉树 (General Trees) 的 $O(n \log n)$ 高效算法。
+**Triplet**是**有根树 (Rooted Trees)**的最小信息单元。
+
+- **定义**: 任意三个叶子 ${x, y, z}((x,y),z)$ 表示 $x,y$ 更亲缘。
+- **特点**: **仅限有根树**。比 RF 更**鲁棒**（High Resolution）。**tqDist** (Sand et al. 2014)
+  提供了针对一般多叉树 (General Trees) 的 $O(n \log n)$ 高效算法。
 
 ### 2.4 Quartet Distance (四元组距离)
 
-**Quartet** 是**无根树 (Unrooted Trees)** 的最小信息单元。
-*   **定义**: 任意四个叶子 $\{a, b, c, d\}$ 在无根树中的拓扑关系。四者只有三种可能的二分拓扑：$ab|cd$，$ac|bd$，$ad|bc$。
-*   **特点**: **最强鲁棒性**。目前公认衡量无根树相似度的最佳指标之一。但**计算复杂**（**tqDist** 算法实现了针对多叉树的 $O(d \cdot n \log n)$ 复杂度，解决了传统算法仅限二叉树或耗时 $O(n^2)$ 的问题）。
+**Quartet**是**无根树 (Unrooted Trees)**的最小信息单元。
+
+- **定义**: 任意四个叶子 ${a, b, c, d}ab|cd$，$ac|bd$，$ad|bc$。
+- **特点**: **最强鲁棒性**。目前公认衡量无根树相似度的最佳指标之一。但**计算复杂**（**tqDist**
+  算法实现了针对多叉树的 $O(d \cdot n \log n)$ 复杂度，解决了传统算法仅限二叉树或耗时 $O(n^2)$
+  的问题）。
 
 ### 2.5 Quartet Sampling (QS)
 
 **QS** (Pease et al. 2018) 是一种现代的**分支支持度评估**方法，用于替代或补充传统的 Bootstrap。
-*   **核心思想**: 传统 Bootstrap 只能给出"支持频率"，而 QS 利用 Quartet 的拓扑分布来区分**冲突 (Conflict)** 和 **信号缺失 (Lack of Signal)**。
-*   **指标体系**:
-    *   **QC (Quartet Concordance)**: 一致性 $[-1, 1]$。类似于 Bootstrap，越高越好。
-    *   **QD (Quartet Differential)**: 偏向性 $[0, 1]$。衡量两种错误拓扑是否均匀分布。若 QD 接近 0，暗示存在特定方向的系统性冲突（如渐渗）。
-    *   **QI (Quartet Informativeness)**: 信息量 $[0, 1]$。衡量有多少 Quartet 是有信息量的（非星状）。
-*   **优势**: 能够深入剖析低支持率的成因（是数据太乱还是数据太少）。
+
+- **核心思想**: 传统 Bootstrap 只能给出"支持频率"，而 QS 利用 Quartet 的拓扑分布来区分
+  **冲突 (Conflict)**和**信号缺失 (Lack of Signal)**。
+- **指标体系**:
+    - **QC (Quartet Concordance)**: 一致性 $[-1, 1]$。类似于 Bootstrap，越高越好。
+    - **QD (Quartet Differential)**: 偏向性 $[0, 1]$。衡量两种错误拓扑是否均匀分布。若 QD 接近 0，
+      暗示存在特定方向的系统性冲突（如渐渗）。
+    - **QI (Quartet Informativeness)**: 信息量 $[0, 1]$。衡量有多少 Quartet 是有信息量的（非星状）。
+- **优势**: 能够深入剖析低支持率的成因（是数据太乱还是数据太少）。
 
 ### 2.6 概念对比总结
 
-| 概念 | 适用对象 | 核心逻辑 | 敏感度 | 计算复杂度 | 比喻 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Splits** | 无根/有根 | **边** (Edge) 的存在性 | - | - | 树的骨架 |
-| **RF** | 无根/有根 | **数不同的边** | 极高 (脆弱) | 低 $O(n)$ | 严格考官：错一题扣大分 |
-| **Triplets**| **有根树** | **数不同的三人组** | 中等 (鲁棒) | 中 $O(n \log n)$ | 民主投票：看三人小组意见 |
-| **Quartets**| **无根树** | **数不同的四人组** | 中等 (鲁棒) | 高 $O(n \log n)$ | 民主投票：看四人小组意见 |
+| 概念         | 适用对象   | 核心逻辑               | 敏感度      | 计算复杂度       | 比喻                     |
+|:-------------|:-----------|:-----------------------|:------------|:-----------------|:-------------------------|
+| **Splits**   | 无根/有根  | **边** (Edge) 的存在性 | -           | -                | 树的骨架                 |
+| **RF**       | 无根/有根  | **数不同的边**         | 极高 (脆弱) | 低 $O(n)$        | 严格考官：错一题扣大分   |
+| **Triplets** | **有根树** | **数不同的三人组**     | 中等 (鲁棒) | 中 $O(n \log n)$ | 民主投票：看三人小组意见 |
+| **Quartets** | **无根树** | **数不同的四人组**     | 中等 (鲁棒) | 高 $O(n \log n)$ | 民主投票：看四人小组意见 |
 
 ---
-
 ## 3. CLI 功能映射（newick_utils → necom）
 
 以下列出 `newick_utils` 工具到 `necom nwk` 子命令的映射：
 
-*   **`nw_stats`** $\to$ **`necom nwk stat`**
-    *   **功能**: 树的统计信息 (节点数, 深度, 类型等)
-    *   **状态**: **已实现** (支持多树处理, TSV/KV 输出, 统计二叉分枝)
-
-*   **`nw_distance`** $\to$ **`necom nwk distance`**
-    *   **功能**: 计算节点间距离 / 树间距离
-    *   **状态**: **已实现** (支持 root, parent, pairwise, lca, phylip)
-
-*   **`nw_indent`** $\to$ **`necom nwk indent`**
-    *   **功能**: 格式化/缩进 Newick 树
-    *   **状态**: **已实现** (支持紧凑/缩进输出)
-
-*   **`necom eval compare`**（由 `nwk compare` 迁移）
-    *   **功能**: 比较树 (RF, WRF, KF 距离)
-    *   **状态**: **已实现** (支持单文件内两两比较, 双文件比较; 单文件仅含 1 棵树时以清晰错误信息退出 (bail))
-
-*   **`necom nwk comment`**
-    *   **功能**: 添加 NHX 注释 (color, dot, bar, rec, tri 等)
-    *   **状态**: **已实现** (支持按名称/LCA 选择节点, 移除注释)
-
-*   **`nw_display`** $\to$ **`necom nwk to-dot` / `to-forest` / `to-svg` / `to-tex`**
-    *   **功能**: 树的可视化 (Graphviz/LaTeX Forest/SVG)
-    *   **状态**: **已实现** (支持 Graphviz DOT, LaTeX Forest 代码及完整文档导出, SVG 矢量图)
-
-*   **`nw_topology`** $\to$ **`necom nwk topo`**
-    *   **功能**: 仅保留拓扑结构 (去除分支长度)
-    *   **状态**: **已实现** (支持 `--bl`, `--comment`, `-I`, `-L`)
-
-*   **`nw_labels`** $\to$ **`necom nwk label`**
-    *   **功能**: 提取所有标签 (叶子/内部节点)
-    *   **状态**: **已实现** (支持正则过滤, 内部/叶子筛选, 单行输出)
-
-*   **`nw_reroot`** $\to$ **`necom nwk reroot`**
-    *   **功能**: 重定根 (Outgroup, Midpoint)
-    *   **状态**: **已实现** (支持 Midpoint, Outgroup (LCA), Lax mode, Deroot)
-
-*   **`nw_prune`** $\to$ **`necom nwk prune`**
-    *   **功能**: 剪枝 (移除指定节点)
-    *   **状态**: **已实现** (支持正则/列表，自动清理，反选)
-
-*   **`nw_clade`** $\to$ **`necom nwk subtree`**
-    *   **功能**: 提取子树 (Clade)
-    *   **状态**: **已实现** (支持 context 扩展、单系群检查、正则匹配)
-
-*   **`nw_order`** $\to$ **`necom nwk order`**
-    *   **功能**: 节点排序 (Ladderize)
-    *   **状态**: **已实现** (支持 alphanumeric/descendants/list/deladderize)
-
-*   **`nw_rename`** $\to$ **`necom nwk rename` / `replace`**
-    *   **功能**: 重命名节点 (Map file/Rule)
-    *   **状态**: **已实现** (Split into `rename` & `replace`)
-
-*   **`nw_condense`** $\to$ **`necom nwk subtree --condense`**
-    *   **功能**: 压缩树 (合并短枝/多叉化)
-    *   **状态**: **仅通过 `subtree --condense` 提供；无计划实现独立 `condense` 子命令**
-
-*   **`nw_support`** $\to$ **`necom eval replicate`**（由 `nwk support` 迁移）
-    *   **功能**: 计算/显示支持率 (Bootstrap)
-    *   **状态**: **已实现** (支持 target + replicates 输入, `--percent` 输出整数百分比并截断至零)
-
-*   **`nw_match`** $\to$ **`necom nwk match`**
-    *   **功能**: 匹配两棵树的节点
-    *   **状态**: 未实现
-
-*   **`nw_ed`** $\to$ **`necom nwk ed`**
-    *   **功能**: 编辑距离 / 树操作脚本
-    *   **状态**: 未实现
-
-*   **`nw_gen`** $\to$ **`necom nwk gen`**
-    *   **功能**: 生成随机树
-    *   **状态**: 未实现
-
-*   **`nw_duration`** $\to$ **`necom nwk duration`**
-    *   **功能**: (通常指时间树相关)
-    *   **状态**: 未实现
+- **`nw_stats`** $\to$ **`necom nwk stat`**
+    - **功能**: 树的统计信息 (节点数, 深度, 类型等)
+    - **状态**: **已实现** (支持多树处理, TSV/KV 输出, 统计二叉分枝)
+- **`nw_distance`** $\to$ **`necom nwk distance`**
+    - **功能**: 计算节点间距离 / 树间距离
+    - **状态**: **已实现** (支持 root, parent, pairwise, lca, phylip)
+- **`nw_indent`** $\to$ **`necom nwk indent`**
+    - **功能**: 格式化/缩进 Newick 树
+    - **状态**: **已实现** (支持紧凑/缩进输出)
+- **`necom eval compare`**（由 `nwk compare` 迁移）
+    - **功能**: 比较树 (RF, WRF, KF 距离)
+    - **状态**: **已实现** (支持单文件内两两比较, 双文件比较; 单文件仅含 1
+      棵树时以清晰错误信息退出 (bail))
+- **`necom nwk comment`**
+    - **功能**: 添加 NHX 注释 (color, dot, bar, rec, tri 等)
+    - **状态**: **已实现** (支持按名称/LCA 选择节点, 移除注释)
+- **`nw_display`** $\to$ **`necom nwk to-dot` / `to-forest` / `to-svg` / `to-tex`**
+    - **功能**: 树的可视化 (Graphviz/LaTeX Forest/SVG)
+    - **状态**: **已实现** (支持 Graphviz DOT, LaTeX Forest 代码及完整文档导出, SVG 矢量图)
+- **`nw_topology`** $\to$ **`necom nwk topo`**
+    - **功能**: 仅保留拓扑结构 (去除分支长度)
+    - **状态**: **已实现** (支持 `--bl`, `--comment`, `-I`, `-L`)
+- **`nw_labels`** $\to$ **`necom nwk label`**
+    - **功能**: 提取所有标签 (叶子/内部节点)
+    - **状态**: **已实现** (支持正则过滤, 内部/叶子筛选, 单行输出)
+- **`nw_reroot`** $\to$ **`necom nwk reroot`**
+    - **功能**: 重定根 (Outgroup, Midpoint)
+    - **状态**: **已实现** (支持 Midpoint, Outgroup (LCA), Lax mode, Deroot)
+- **`nw_prune`** $\to$ **`necom nwk prune`**
+    - **功能**: 剪枝 (移除指定节点)
+    - **状态**: **已实现** (支持正则/列表，自动清理，反选)
+- **`nw_clade`** $\to$ **`necom nwk subtree`**
+    - **功能**: 提取子树 (Clade)
+    - **状态**: **已实现** (支持 context 扩展、单系群检查、正则匹配)
+- **`nw_order`** $\to$ **`necom nwk order`**
+    - **功能**: 节点排序 (Ladderize)
+    - **状态**: **已实现** (支持 alphanumeric/descendants/list/deladderize)
+- **`nw_rename`** $\to$ **`necom nwk rename` / `replace`**
+    - **功能**: 重命名节点 (Map file/Rule)
+    - **状态**: **已实现** (Split into `rename` & `replace`)
+- **`nw_condense`** $\to$ **`necom nwk subtree --condense`**
+    - **功能**: 压缩树 (合并短枝/多叉化)
+    - **状态**: **仅通过 `subtree --condense` 提供；无计划实现独立 `condense` 子命令**
+- **`nw_support`** $\to$ **`necom eval replicate`**（由 `nwk support` 迁移）
+    - **功能**: 计算/显示支持率 (Bootstrap)
+    - **状态**: **已实现** (支持 target + replicates 输入, `--percent` 输出整数百分比并截断至零)
+- **`nw_match`** $\to$ **`necom nwk match`**
+    - **功能**: 匹配两棵树的节点
+    - **状态**: 未实现
+- **`nw_ed`** $\to$ **`necom nwk ed`**
+    - **功能**: 编辑距离 / 树操作脚本
+    - **状态**: 未实现
+- **`nw_gen`** $\to$ **`necom nwk gen`**
+    - **功能**: 生成随机树
+    - **状态**: 未实现
+- **`nw_duration`** $\to$ **`necom nwk duration`**
+    - **功能**: (通常指时间树相关)
+    - **状态**: 未实现
 
 ---
-
 ## 4. API 参考（necom::phylo）
 
 以下列出 `necom::phylo` 库提供的公开 API。
 
 ### 已实现
 
-*   **树结构**:
-    *   `Tree::new()`: 创建空树。
-    *   `Tree::add_node()`, `Tree::add_child()`: 构建树结构。
-    *   `Tree::get_node()`, `Tree::get_root()`: 访问节点。
-    *   `Tree::len()`: 节点总数（每次 O(n) 统计非软删除节点）。
-*   **解析**:
-    *   `Tree::from_newick()`: 解析 Newick 字符串 (支持引号、注释、科学计数法)。
-    *   `Tree::from_file()`: 从文件读取并解析 Newick。
-*   **序列化**:
-    *   `to_newick()`: 紧凑格式输出 (Tree 方法)。
-    *   `to_newick_with_format()`: 支持缩进的格式化输出 (Tree 方法)。
-    *   `to_newick_subtree()`: 序列化指定子树 (自由函数，通过 `io::to_newick_subtree()` 调用)。
-    *   `to_dot()`: 输出 Graphviz DOT 格式 (Tree 方法)。
-    *   `to_svg()`: 输出 SVG 矢量图格式 (Tree 方法)。
-    *   `to_forest()`: 输出 LaTeX Forest 代码 (自由函数，通过 `io::to_forest()` 调用)。
-*   **遍历**:
-    *   `preorder`, `postorder`: 深度优先遍历，返回 `Vec<NodeId>`。
-    *   `levelorder`: 广度优先遍历，返回 `Vec<NodeId>`。
-*   **查询**:
-    *   `get_leaves()`: 获取所有叶子节点。
-    *   `get_path_from_root()`: 获取根到节点的路径。
-    *   `get_common_ancestor()` (LCA): 最近公共祖先。
-    *   `get_distance()`: 计算节点间距离 (加权/拓扑)。
-    *   `node_distance()`: 计算节点间距离；分支长度之和绝对值超过 `1e-9` 时使用加权距离，否则回退到拓扑边数。
-    *   `get_subtree()`: 获取子树节点集合。
-    *   `find_nodes()`, `get_node_by_name()`: 查找节点。
-    *   按名查找以第一次出现为准；存在重复节点名时，`get_node_by_name` 返回第一个匹配，`get_name_id`/`BTreeMap` likewise 记录第一个匹配的 ID。
-    *   `get_height()`: 计算节点高度 (到最远叶子的距离)。
-    *   `is_monophyletic()`: 判断是否为单系群（数学定义：空集返回 false，单个节点返回 true）。
-    *   `is_clade()`: 判断是否为演化支；要求至少两个节点且构成单系群。
-*   **修改**:
-    *   `reroot_at()`: 重新定根 (支持边长重分配)。
-    *   `prune_where()`: 剪枝 (删除匹配节点及其子孙)。
-    *   `algo::prune_nodes()`: 批量删除节点并清理后续产生的叶子内部节点与 degree-2 节点；返回前自动 `compact()`，外部 `NodeId` 失效。
-    *   `remove_node()`: 软删除单个节点。
-    *   `collapse_node()`: 压缩节点 (合并边长)。
-    *   `compact()`: 物理删除软删除节点并重构树；调用后所有外部持有的 `NodeId` 均失效。
+- **树结构**:
+    - `Tree::new()`: 创建空树。
+    - `Tree::add_node()`, `Tree::add_child()`: 构建树结构。
+    - `Tree::get_node()`, `Tree::get_root()`: 访问节点。
+    - `Tree::len()`: 节点总数（每次 O(n) 统计非软删除节点）。
+- **解析**:
+    - `Tree::from_newick()`: 解析 Newick 字符串 (支持引号、注释、科学计数法)。
+    - `Tree::from_file()`: 从文件读取并解析 Newick。
+- **序列化**:
+    - `to_newick()`: 紧凑格式输出 (Tree 方法)。
+    - `to_newick_with_format()`: 支持缩进的格式化输出 (Tree 方法)。
+    - `to_newick_subtree()`: 序列化指定子树 (自由函数，通过 `io::to_newick_subtree()` 调用)。
+    - `to_dot()`: 输出 Graphviz DOT 格式 (Tree 方法)。
+    - `to_svg()`: 输出 SVG 矢量图格式 (Tree 方法)。
+    - `to_forest()`: 输出 LaTeX Forest 代码 (自由函数，通过 `io::to_forest()` 调用)。
+- **遍历**:
+    - `preorder`, `postorder`: 深度优先遍历，返回 `Vec<NodeId>`。
+    - `levelorder`: 广度优先遍历，返回 `Vec<NodeId>`。
+- **查询**:
+    - `get_leaves()`: 获取所有叶子节点。
+    - `get_path_from_root()`: 获取根到节点的路径。
+    - `get_common_ancestor()` (LCA): 最近公共祖先。
+    - `get_distance()`: 计算节点间距离 (加权/拓扑)。
+    - `node_distance()`: 计算节点间距离；分支长度之和绝对值超过 `1e-9` 时使用加权距离，
+      否则回退到拓扑边数。
+    - `get_subtree()`: 获取子树节点集合。
+    - `find_nodes()`, `get_node_by_name()`: 查找节点。
+    - 按名查找以第一次出现为准；存在重复节点名时，`get_node_by_name` 返回第一个匹配，`get_name_id`/
+      `BTreeMap` likewise 记录第一个匹配的 ID。
+    - `get_height()`: 计算节点高度 (到最远叶子的距离)。
+    - `is_monophyletic()`: 判断是否为单系群（数学定义：空集返回 false，单个节点返回 true）。
+    - `is_clade()`: 判断是否为演化支；要求至少两个节点且构成单系群。
+- **修改**:
+    - `reroot_at()`: 重新定根 (支持边长重分配)。
+    - `prune_where()`: 剪枝 (删除匹配节点及其子孙)。
+    - `algo::prune_nodes()`: 批量删除节点并清理后续产生的叶子内部节点与 degree-2 节点；返回前自动
+      `compact()`，外部 `NodeId` 失效。
+    - `remove_node()`: 软删除单个节点。
+    - `collapse_node()`: 压缩节点 (合并边长)。
+    - `compact()`: 物理删除软删除节点并重构树；调用后所有外部持有的 `NodeId` 均失效。
 
 ### 统计与计算
 
-*   `is_binary()`: 检查是否为二叉树。
-*   `get_leaf_names()`: 获取所有叶子节点的名称列表。
-*   `get_splits()`: 获取树的二分 (Bipartitions/Splits) 集合，是计算 RF 距离的基础。
-*   `diameter()`: 树的直径 (最远叶子间距离)。
-*   `robinson_foulds()`: 计算两棵树的 Robinson-Foulds 距离 (拓扑差异)。
-*   `weighted_robinson_foulds()`: 加权 RF 距离。
-*   `kuhner_felsenstein()`: Kuhner-Felsenstein 距离。
-*   `cherries()` (自由函数，`balance.rs`/`stat.rs`): 计算 Cherry 数量。
-*   `colless()` (自由函数，`balance.rs`/`stat.rs`): Colless 平衡指数。
-*   `sackin()` (自由函数，`balance.rs`/`stat.rs`): Sackin 平衡指数。
+- `is_binary()`: 检查是否为二叉树。
+- `get_leaf_names()`: 获取所有叶子节点的名称列表。
+- `get_splits()`: 获取树的二分 (Bipartitions/Splits) 集合，是计算 RF 距离的基础。
+- `diameter()`: 树的直径 (最远叶子间距离)。
+- `robinson_foulds()`: 计算两棵树的 Robinson-Foulds 距离 (拓扑差异)。
+- `weighted_robinson_foulds()`: 加权 RF 距离。
+- `kuhner_felsenstein()`: Kuhner-Felsenstein 距离。
+- `cherries()` (自由函数，`balance.rs`/`stat.rs`): 计算 Cherry 数量。
+- `colless()` (自由函数，`balance.rs`/`stat.rs`): Colless 平衡指数。
+- `sackin()` (自由函数，`balance.rs`/`stat.rs`): Sackin 平衡指数。
 
 ### 未实现
 
-*   **统计指标标准化**:
-    *   `colless_yule()`, `colless_pda()`: Colless 指数的标准化版本。
-    *   `sackin_yule()`, `sackin_pda()`: Sackin 指数的标准化版本。
-*   **遍历**:
-    *   `inorder`: 中序遍历 (仅适用于二叉树，`necom` 支持多叉树故未直接实现)。
+- **统计指标标准化**:
+    - `colless_yule()`, `colless_pda()`: Colless 指数的标准化版本。
+    - `sackin_yule()`, `sackin_pda()`: Sackin 指数的标准化版本。
+- **遍历**:
+    - `inorder`: 中序遍历 (仅适用于二叉树，`necom` 支持多叉树故未直接实现)。
 
 ### 计划中
 
-*   **可视化**:
-    *   `print_entity()` (或类似): 不计划实现；终端可读树形展示可直接使用 `necom nwk indent`。
-*   **树生成**:
-    *   `generate_random_tree()` (Yule/Coalescent 模型): 主要用于模拟研究。优先级较低。详见 [nwk-planned.md](nwk-planned.md)。
-*   **树排序增强**:
-    *   `Optimal Leaf Ordering` (OLO): 基于距离矩阵动态规划优化叶子顺序，计划加入 `necom nwk order`。详见 [nwk-planned.md](nwk-planned.md)。
+- **可视化**:
+    - `print_entity()` (或类似): 不计划实现；终端可读树形展示可直接使用 `necom nwk indent`。
+- **树生成**:
+    - `generate_random_tree()` (Yule/Coalescent 模型): 主要用于模拟研究。优先级较低。详见
+      [nwk-planned.md](nwk-planned.md)。
+- **树排序增强**:
+    - `Optimal Leaf Ordering` (OLO): 基于距离矩阵动态规划优化叶子顺序，计划加入 `necom nwk order`。
+      详见 [nwk-planned.md](nwk-planned.md)。
 
 ---
-
 ## 5. 可视化详情
 
-`necom` 的可视化功能支持三种输出格式：SVG（浏览器直接查看）、LaTeX Forest（出版级质量）、Graphviz DOT（通用图形工具）。
+`necom` 的可视化功能支持三种输出格式：SVG（浏览器直接查看）、LaTeX Forest（出版级质量）、Graphviz
+DOT（通用图形工具）。
 
 ### 5.1 SVG 输出
 
-*   **`necom nwk to-svg`**: 生成 SVG 矢量图，无需外部依赖，浏览器直接打开。
+- **`necom nwk to-svg`**: 生成 SVG 矢量图，无需外部依赖，浏览器直接打开。
 
 **特点**：
-*   自动检测模式：有枝长时绘制 phylogram（含比例尺），无枝长时绘制 cladogram。
-*   默认样式与 LaTeX Forest 模板一致：灰色分支线 (1pt)、黑色节点圆点 (2pt)、无衬线字体。
-*   支持自定义宽度 (`-w`) 和叶节点间距 (`-v`)。
-*   Phylogram 模式下自动绘制比例尺（1×/2×/5× 动态刻度算法）。
+
+- 自动检测模式：有枝长时绘制 phylogram（含比例尺），无枝长时绘制 cladogram。
+- 默认样式与 LaTeX Forest 模板一致：灰色分支线 (1pt)、黑色节点圆点 (2pt)、无衬线字体。
+- 支持自定义宽度 (`-w`) 和叶节点间距 (`-v`)。
+- Phylogram 模式下自动绘制比例尺（1×/2×/5× 动态刻度算法）。
 
 ### 5.2 LaTeX Forest 输出
 
@@ -339,13 +356,12 @@ LaTeX Forest 输出的详细用法、样式系统与工作流见用户文档 [`d
 
 核心命令速查：
 
-*   **`necom nwk to-forest`**: 生成原始 Forest 代码，适合嵌入现有 LaTeX 文档。
-*   **`necom nwk to-tex`**: 生成完整 `.tex` 文档，可直接用 `tectonic` 编译。
+- **`necom nwk to-forest`**: 生成原始 Forest 代码，适合嵌入现有 LaTeX 文档。
+- **`necom nwk to-tex`**: 生成完整 `.tex` 文档，可直接用 `tectonic` 编译。
 
 样式通过 NHX 注释控制：`dot`（节点圆点）、`bar`（垂直短杠）、`rec`（背景矩形）、`tri`（三角形）。
 
 ---
-
 ## 6. 使用示例
 
 ### necom nwk stat
@@ -376,49 +392,46 @@ necom nwk indent data.nwk --compact
 ```
 
 ---
-
 ## 7. 附录：工作流参考
 
 ### Bootscan Workflow (`bootscan.sh`)
 
-`newick_utils` 源码中的 `bootscan.sh` 展示了一个结合多种生物信息学工具进行重组检测的完整流程。这为 `necom` 的 CLI 设计提供了实际应用场景参考。
+`newick_utils` 源码中的 `bootscan.sh` 展示了一个结合多种生物信息学工具进行重组检测的完整流程。这为
+`necom` 的 CLI 设计提供了实际应用场景参考。
 
 **流程步骤详解：**
 
-1.  **序列比对 (Alignment)**
-    *   **工具**: `mafft`
-    *   **操作**: 对输入的未比对序列文件（FASTA）进行多序列比对。
-    *   **命令**: `mafft --quiet "$INFILE" > "$MUSCLE_OUT"`
+1. **序列比对 (Alignment)**
+    - **工具**: `mafft`
+    - **操作**: 对输入的未比对序列文件（FASTA）进行多序列比对。
+    - **命令**: `mafft --quiet "$INFILE" > "$MUSCLE_OUT"`
+2. **切片 (Slicing)**
+    - **工具**: `infoalign`, `seqret` (EMBOSS 工具集)
+    - **操作**:
+        - 获取比对长度 (`infoalign`).
+        - 按指定步长 (`SLICE_STEP`) 和窗口大小 (`SLICE_WIDTH`) 遍历比对结果。
+        - 将每个窗口切片并转换为 PHYLIP 格式 (`seqret`).
+    - **目的**: 准备滑动窗口数据以构建局部树。
+3. **构建系统发育树 (Tree Building)**
+    - **工具**: `phyml`
+    - **操作**: 对每个 PHYLIP 切片文件构建最大似然树 (Maximum Likelihood Tree)。
+    - **参数**: `-b 0` (无 bootstrap，求速度), `-o n` (不优化拓扑/分支/率参数)。
+    - **输出**: 生成一系列无根树文件。
+4. **重定根 (Rerooting)**
+    - **工具**: `nw_reroot` (Newick Utilities)
+    - **操作**: 使用指定的外群 (`OUTGROUP`) 对每棵树进行定根。
+    - **命令**: `nw_reroot $unrooted_tree $OUTGROUP > ${unrooted_tree/.txt/.rr.nw}`
+    - **对应 necom**: `necom nwk reroot`
+5. **距离提取 (Distance Extraction)**
+    - **工具**: `nw_distance`, `nw_clade`, `nw_labels`
+    - **操作**:
+        - 计算参考序列 (`REFERENCE`) 到树中其他所有节点的距离 (`nw_distance -n`).
+        - 提取相关标签 (`nw_clade`, `nw_labels`).
+        - 生成包含 `(Position, Distance1, Distance2, ...)` 的表格数据。
+    - **对应 necom**: `necom nwk distance`, `necom nwk subtree`, `necom nwk label`
+6. **可视化 (Visualization)**
+    - **工具**: `gnuplot`
+    - **操作**: 将距离表格绘制成折线图。横轴为序列位置，纵轴为参考序列到其他序列的遗传距离。
+    - **原理**: 如果参考序列在某个区域与其他序列的距离显著变化（例如最近邻改变），
+      提示可能发生了重组事件。
 
-2.  **切片 (Slicing)**
-    *   **工具**: `infoalign`, `seqret` (EMBOSS 工具集)
-    *   **操作**:
-        *   获取比对长度 (`infoalign`).
-        *   按指定步长 (`SLICE_STEP`) 和窗口大小 (`SLICE_WIDTH`) 遍历比对结果。
-        *   将每个窗口切片并转换为 PHYLIP 格式 (`seqret`).
-    *   **目的**: 准备滑动窗口数据以构建局部树。
-
-3.  **构建系统发育树 (Tree Building)**
-    *   **工具**: `phyml`
-    *   **操作**: 对每个 PHYLIP 切片文件构建最大似然树 (Maximum Likelihood Tree)。
-    *   **参数**: `-b 0` (无 bootstrap，求速度), `-o n` (不优化拓扑/分支/率参数)。
-    *   **输出**: 生成一系列无根树文件。
-
-4.  **重定根 (Rerooting)**
-    *   **工具**: `nw_reroot` (Newick Utilities)
-    *   **操作**: 使用指定的外群 (`OUTGROUP`) 对每棵树进行定根。
-    *   **命令**: `nw_reroot $unrooted_tree $OUTGROUP > ${unrooted_tree/.txt/.rr.nw}`
-    *   **对应 necom**: `necom nwk reroot`
-
-5.  **距离提取 (Distance Extraction)**
-    *   **工具**: `nw_distance`, `nw_clade`, `nw_labels`
-    *   **操作**:
-        *   计算参考序列 (`REFERENCE`) 到树中其他所有节点的距离 (`nw_distance -n`).
-        *   提取相关标签 (`nw_clade`, `nw_labels`).
-        *   生成包含 `(Position, Distance1, Distance2, ...)` 的表格数据。
-    *   **对应 necom**: `necom nwk distance`, `necom nwk subtree`, `necom nwk label`
-
-6.  **可视化 (Visualization)**
-    *   **工具**: `gnuplot`
-    *   **操作**: 将距离表格绘制成折线图。横轴为序列位置，纵轴为参考序列到其他序列的遗传距离。
-    *   **原理**: 如果参考序列在某个区域与其他序列的距离显著变化（例如最近邻改变），提示可能发生了重组事件。
