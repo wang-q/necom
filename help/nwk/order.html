@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-37696ab6.js";
+            window.path_to_searchindex_js = "../../searchindex-c229d19f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-57acacb7.js"></script>
@@ -189,21 +189,31 @@
 <ul>
 <li>Visits every internal node and sorts its children according to the selected criterion; different modes use post-order or level-order traversals internally.</li>
 <li>When no sort criterion is specified, defaults to forward alphanumeric order (equivalent to <code>--alphanumeric</code>).</li>
-<li><code>--name-list</code> is processed before <code>--alphanumeric</code> and <code>--num-descendants</code>.</li>
-<li><code>--alphanumeric</code> and <code>--num-descendants</code> can be combined; sorting is first alphanumeric, then by number of descendants.</li>
+<li>Multiple sort options can be given in one command; they are applied in this order:
+<ol>
+<li><code>--name-list</code></li>
+<li><code>--alphanumeric</code> / <code>--alphanumeric-rev</code></li>
+<li><code>--num-descendants</code> / <code>--num-descendants-rev</code></li>
+<li><code>--deladderize</code>
+Each step fully reorders the children of every internal node, so later steps override earlier ones.</li>
+</ol>
+</li>
+<li><code>--olo</code> cannot be combined with other sort options because it computes a global optimal order from a distance matrix.</li>
+<li>To combine criteria as tie-breakers instead of sequential overrides, pipe multiple <code>nwk order</code> calls:
+<code>necom nwk order tree.nwk --num-descendants | necom nwk order stdin --alphanumeric</code></li>
 <li>Sort orders:
 <ul>
 <li><code>--name-list</code>: by a list of names in the file, one per line.</li>
 <li><code>--alphanumeric</code> / <code>--alphanumeric-rev</code>: by alphanumeric order of labels, or in reverse order.</li>
 <li><code>--num-descendants</code> / <code>--num-descendants-rev</code>: by number of descendants (ladderize), or in reverse order.</li>
 <li><code>--deladderize</code> (alias <code>--dl</code>): alternate sort direction at each level.</li>
-<li><code>--olo &lt;MATRIX&gt;</code>: optimal leaf ordering using a distance matrix. This option cannot be combined with other sort orders.</li>
+<li><code>--olo &lt;MATRIX&gt;</code>: optimal leaf ordering using a distance matrix.</li>
 </ul>
 </li>
 <li><code>--olo-format</code> controls the format of the <code>--olo</code> matrix: <code>phylip</code> (default) or <code>pair</code>.</li>
+<li><code>--olo</code> expects the original data-space distance matrix, not the tree’s own path distances. Optimizing against tree-derived distances would mostly reproduce the current topology, defeating the purpose of leaf reordering.</li>
 <li>Entries in <code>--name-list</code> that are not found among the leaf names cause the command to fail with an error listing the missing names.</li>
 <li>The <code>--olo</code> matrix must cover every leaf in the tree; missing leaves cause an error. Non-finite distances are also rejected.</li>
-<li><code>--olo</code> expects the original data-space distance matrix, not the tree’s own path distances. Optimizing against tree-derived distances would mostly reproduce the current topology, defeating the purpose of leaf reordering.</li>
 </ul>
 <p>Examples:</p>
 <ol>
