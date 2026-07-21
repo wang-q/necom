@@ -55,7 +55,7 @@ pub fn cutree_hybrid(tree: &Tree, options: HybridOptions) -> anyhow::Result<Part
         })
         .map(|(_, &h)| h)
         .collect();
-    merge_heights.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    merge_heights.sort_by(f64::total_cmp);
 
     if merge_heights.is_empty() {
         // Single node tree?
@@ -492,8 +492,7 @@ fn calculate_core_scatter(
         point_avg_dists.push((sum / (n - 1).max(1) as f64, i));
     }
 
-    point_avg_dists
-        .sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+    point_avg_dists.sort_by(|a, b| a.0.total_cmp(&b.0));
 
     let base_core_size = (min_cluster_size as f64 / 2.0 + 1.0) as usize;
     let eff_core_size = if base_core_size < n {

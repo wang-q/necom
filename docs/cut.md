@@ -87,7 +87,7 @@ below. All static methods are invoked through `necom cut simple <infile> --<METH
 
 ### 4. Cut by Maximum Within-Cluster Diameter (`--max-clade`)
 
-- **Definition**: Partition leaves into non-overlapping clusters ${C_1, C_2, ..., C_m}C_i$:
+- **Definition**: Partition leaves into non-overlapping clusters $C_1, C_2, \ldots, C_m$. For each $C_i$:
     1. **Monophyly**: Leaves in $C_i$ must form a clade in the original tree $T$.
     2. **Diameter constraint**: $\max_{u, v \in C_i} dist(u, v) \le T$.
     3. **Support constraint** (if `--support` is specified): The path between any two points in
@@ -178,8 +178,7 @@ below. All static methods are invoked through `necom cut simple <infile> --<METH
 ### 10. Cut by Inconsistency Coefficient (`--inconsistent`)
 
 - **Definition**: Cut based on the "inconsistency" of a node relative to its subtrees.
-    - For each non-leaf node $i$, compute its inconsistency coefficient $I_i$.
-    - , where $H$ is the set of all merge heights within $d$ levels (`--deep`) below node $i$.
+    - For each non-leaf node $i$, compute its inconsistency coefficient $I_i = \frac{h_i - \mu}{\sigma}$, where $H$ is the set of all merge heights within $d$ levels (`--deep`) below node $i$, $h_i$ is the height of node $i$, and $\mu$, $\sigma$ are the mean and standard deviation of $H$.
     - **SciPy reference**: `scipy.cluster.hierarchy.inconsistent`.
     - Traverse from the root downward for each node $i$:
         - Compute the maximum inconsistency coefficient $M_i$ in the subtree rooted at $i$.
