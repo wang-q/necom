@@ -128,7 +128,7 @@ pub fn find_representative(
             .min_by(|(_, (id1, _)), (_, (id2, _))| {
                 let d1 = root_dists.get(id1).copied().unwrap_or(f64::MAX);
                 let d2 = root_dists.get(id2).copied().unwrap_or(f64::MAX);
-                d1.partial_cmp(&d2).unwrap_or(std::cmp::Ordering::Equal)
+                d1.total_cmp(&d2)
             })
             .map(|(idx, _)| idx),
         RepMode::Medoid => {

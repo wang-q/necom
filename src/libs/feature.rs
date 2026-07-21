@@ -75,8 +75,13 @@ impl FeatureVector {
         let list: Vec<f32> = fields[1..]
             .iter()
             .map(|e| {
-                e.parse::<f32>()
-                    .map_err(|e| anyhow!("invalid float value: {}", e))
+                let v: f32 = e
+                    .parse()
+                    .map_err(|e| anyhow!("invalid float value: {}", e))?;
+                if !v.is_finite() {
+                    anyhow::bail!("non-finite float value: {} (NaN/Inf not allowed)", e);
+                }
+                Ok(v)
             })
             .collect::<anyhow::Result<_>>()?;
         Ok(Self::from(&name, &list))
@@ -191,6 +196,15 @@ mod tests {
     #[test]
     fn test_parse_invalid_float() {
         assert!(FeatureVector::parse("A\t1.0\tfoo\t3.0").is_err());
+    }
+
+    #[test]
+    fn test_parse_rejects_nan_inf() {
+        // f32::parse accepts "nan"/"inf"/"-inf"; reject them to prevent
+        // propagation into distance matrices and clustering metrics.
+        assert!(FeatureVector::parse("A\t1.0\tnan\t3.0").is_err());
+        assert!(FeatureVector::parse("A\t1.0\tinf\t3.0").is_err());
+        assert!(FeatureVector::parse("A\t1.0\t-inf\t3.0").is_err());
     }
 
     #[test]

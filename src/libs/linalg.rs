@@ -357,7 +357,7 @@ pub fn weighted_jaccard_similarity(a: &[f32], b: &[f32]) -> f32 {
 /// passed to Pearson correlation.
 fn assign_ranks(values: &[f32]) -> Vec<f32> {
     let mut indexed: Vec<_> = values.iter().enumerate().collect();
-    indexed.sort_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal));
+    indexed.sort_by(|a, b| a.1.total_cmp(b.1));
 
     let mut ranks = vec![0.0; values.len()];
     let mut i = 0;
@@ -485,6 +485,17 @@ mod tests {
         let a: [f32; 0] = [];
         let b: [f32; 0] = [];
         assert!(spearman_correlation(&a, &b).is_nan());
+    }
+
+    #[test]
+    fn test_spearman_with_nan_input() {
+        // NaN must be handled via total_cmp (consistent ordering) rather than
+        // partial_cmp().unwrap_or(Equal). The result is finite because ranks
+        // are derived from sorted positions, not from the NaN values themselves.
+        let a = [1.0, f32::NAN, 3.0, 4.0, 5.0];
+        let b = [5.0, 4.0, 3.0, 2.0, 1.0];
+        let rho = spearman_correlation(&a, &b);
+        assert!(rho.is_finite(), "expected finite result, got {}", rho);
     }
 
     #[test]
