@@ -232,3 +232,86 @@ fn command_order_deladderize_verify() {
 
     assert_eq!(stdout.trim(), expected);
 }
+
+#[test]
+fn command_order_olo_phylip() {
+    let expected = "(((B,C),A),D);";
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "order",
+            "tests/newick/olo_tree.nwk",
+            "--olo",
+            "tests/mat/olo_tree.phy",
+        ])
+        .run();
+
+    assert_eq!(stdout.trim(), expected);
+}
+
+#[test]
+fn command_order_olo_pair() {
+    let expected = "(((B,C),A),D);";
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "order",
+            "tests/newick/olo_tree.nwk",
+            "--olo",
+            "tests/mat/olo_tree.pair",
+            "--olo-format",
+            "pair",
+        ])
+        .run();
+
+    assert_eq!(stdout.trim(), expected);
+}
+
+#[test]
+fn command_order_olo_missing_leaf_errors() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "order",
+            "stdin",
+            "--olo",
+            "tests/mat/olo_tree.pair",
+            "--olo-format",
+            "pair",
+        ])
+        .stdin("(A,B,E);")
+        .run_fail();
+
+    assert!(
+        stderr.contains("distance matrix missing leaf"),
+        "expected missing-leaf error, got stderr: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("E"),
+        "expected missing leaf name in error, got stderr: {}",
+        stderr
+    );
+}
+
+#[test]
+fn command_order_olo_conflicts_with_other_sorts() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "order",
+            "tests/newick/olo_tree.nwk",
+            "--olo",
+            "tests/mat/olo_tree.phy",
+            "--alphanumeric",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("cannot be used with"),
+        "expected conflict error, got stderr: {}",
+        stderr
+    );
+}

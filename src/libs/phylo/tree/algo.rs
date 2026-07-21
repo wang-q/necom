@@ -1,4 +1,5 @@
 use super::Tree;
+use crate::libs::pairmat::NamedMatrix;
 use crate::libs::phylo::node::NodeId;
 use std::cmp::Reverse;
 use std::collections::{HashMap, HashSet};
@@ -272,6 +273,376 @@ pub fn deladderize(tree: &mut Tree) {
             queue.push_back((child, !descending));
         }
     }
+}
+
+/// Reorder leaves to minimize the sum of adjacent distances in the linear order.
+///
+/// Implements the optimal leaf ordering (OLO) algorithm of Bar-Joseph et al.
+/// (2001). The tree topology is preserved; only the order of children at each
+/// internal node is changed. Multifurcating trees are temporarily converted to
+/// binary trees by left-associative pairing, the OLO is computed on that binary
+/// tree, and the resulting leaf order is applied back to the original tree.
+///
+/// `dist` must be a symmetric distance matrix that covers every leaf in the
+/// tree. Non-finite distances cause an error.
+pub fn optimal_leaf_order(tree: &mut Tree, dist: &NamedMatrix) -> anyhow::Result<()> {
+    if tree.is_empty() {
+        return Ok(());
+    }
+
+    let Some(root) = tree.get_root() else {
+        return Ok(());
+    };
+
+    let leaf_ids = current_leaf_order(tree, root);
+    if leaf_ids.len() <= 1 {
+        return Ok(());
+    }
+
+    let mut leaf_names: Vec<String> = Vec::with_capacity(leaf_ids.len());
+    let mut seen_names: HashSet<String> = HashSet::new();
+    for id in &leaf_ids {
+        let name = tree
+            .get_node(*id)
+            .and_then(|n| n.name.clone())
+            .ok_or_else(|| anyhow::anyhow!("leaf node {} has no name", id))?;
+        if !seen_names.insert(name.clone()) {
+            anyhow::bail!("duplicate leaf name: {}", name);
+        }
+        leaf_names.push(name);
+    }
+
+    for name in &leaf_names {
+        if dist.get_index(name).is_none() {
+            anyhow::bail!("distance matrix missing leaf: {}", name);
+        }
+    }
+
+    let sorted_d = build_sorted_distance_matrix(&leaf_names, dist)?;
+    let (sorted_z, cluster_ranges) = build_binary_linkage(tree, root, &leaf_ids)?;
+    let must_swap = identify_swaps(&sorted_z, &sorted_d, &cluster_ranges);
+    let new_order = apply_swaps(&sorted_z, &must_swap, leaf_ids.len());
+
+    let ordered_names: Vec<String> =
+        new_order.iter().map(|&i| leaf_names[i].clone()).collect();
+    sort_by_list(tree, &ordered_names);
+
+    Ok(())
+}
+
+/// Return leaf IDs in their current left-to-right order.
+fn current_leaf_order(tree: &Tree, root: NodeId) -> Vec<NodeId> {
+    let mut order = Vec::new();
+    fn collect(tree: &Tree, id: NodeId, order: &mut Vec<NodeId>) {
+        let Some(node) = tree.get_node(id) else {
+            return;
+        };
+        if node.is_leaf() {
+            order.push(id);
+            return;
+        }
+        for &child in &node.children {
+            collect(tree, child, order);
+        }
+    }
+    collect(tree, root, &mut order);
+    order
+}
+
+/// Extract the distance matrix reordered to match the current leaf order.
+fn build_sorted_distance_matrix(
+    leaf_names: &[String],
+    dist: &NamedMatrix,
+) -> anyhow::Result<Vec<Vec<f32>>> {
+    let n = leaf_names.len();
+    let mut indices = Vec::with_capacity(n);
+    for name in leaf_names {
+        let idx = dist
+            .get_index(name)
+            .ok_or_else(|| anyhow::anyhow!("distance matrix missing leaf: {}", name))?;
+        indices.push(idx);
+    }
+
+    let mut sorted_d = vec![vec![0.0f32; n]; n];
+    for i in 0..n {
+        for j in 0..n {
+            let value = dist.get(indices[i], indices[j]);
+            if !value.is_finite() {
+                anyhow::bail!(
+                    "non-finite distance between '{}' and '{}'",
+                    leaf_names[i],
+                    leaf_names[j]
+                );
+            }
+            sorted_d[i][j] = value;
+        }
+    }
+    Ok(sorted_d)
+}
+
+/// A binary internal node used during OLO.
+#[derive(Debug)]
+struct BinaryNode {
+    left: usize,
+    right: usize,
+    size: usize,
+}
+
+/// Build a binary linkage representation of the tree.
+///
+/// Returns `sorted_z` (rows are `[left, right, size]`) and `cluster_ranges`
+/// (each row is `[start, end)` over the leaf indices). Internal node `i` in
+/// `sorted_z` has global index `n_leaves + i`.
+#[allow(clippy::type_complexity)]
+fn build_binary_linkage(
+    tree: &Tree,
+    root: NodeId,
+    leaf_ids: &[NodeId],
+) -> anyhow::Result<(Vec<[usize; 3]>, Vec<[usize; 2]>)> {
+    let n_leaves = leaf_ids.len();
+    let mut leaf_index: HashMap<NodeId, usize> = HashMap::with_capacity(n_leaves);
+    for (i, &id) in leaf_ids.iter().enumerate() {
+        leaf_index.insert(id, i);
+    }
+
+    let mut internals: Vec<BinaryNode> = Vec::with_capacity(n_leaves.saturating_sub(1));
+
+    fn build(
+        tree: &Tree,
+        id: NodeId,
+        leaf_index: &HashMap<NodeId, usize>,
+        internals: &mut Vec<BinaryNode>,
+    ) -> anyhow::Result<usize> {
+        let Some(node) = tree.get_node(id) else {
+            anyhow::bail!("node {} not found", id);
+        };
+
+        if node.is_leaf() {
+            return Ok(leaf_index[&id]);
+        }
+
+        if node.children.is_empty() {
+            anyhow::bail!("internal node {} has no children", id);
+        }
+
+        let mut child_roots: Vec<usize> = Vec::with_capacity(node.children.len());
+        for &child in &node.children {
+            child_roots.push(build(tree, child, leaf_index, internals)?);
+        }
+
+        // Combine children left-associatively, preserving their current order.
+        let mut current = child_roots[0];
+        let n_leaves = leaf_index.len();
+        for &next in &child_roots[1..] {
+            let current_size = if current < n_leaves {
+                1
+            } else {
+                internals[current - n_leaves].size
+            };
+            let next_size = if next < n_leaves {
+                1
+            } else {
+                internals[next - n_leaves].size
+            };
+            internals.push(BinaryNode {
+                left: current,
+                right: next,
+                size: current_size + next_size,
+            });
+            current = n_leaves + internals.len() - 1;
+        }
+        Ok(current)
+    }
+
+    build(tree, root, &leaf_index, &mut internals)?;
+
+    let n_clusters = n_leaves + internals.len();
+    let mut cluster_ranges: Vec<[usize; 2]> = vec![[0, 0]; n_clusters];
+    for (i, range) in cluster_ranges.iter_mut().enumerate().take(n_leaves) {
+        *range = [i, i + 1];
+    }
+
+    let mut sorted_z: Vec<[usize; 3]> = Vec::with_capacity(internals.len());
+    for (i, node) in internals.iter().enumerate() {
+        let global = n_leaves + i;
+        cluster_ranges[global] =
+            [cluster_ranges[node.left][0], cluster_ranges[node.right][1]];
+        sorted_z.push([node.left, node.right, node.size]);
+    }
+
+    Ok((sorted_z, cluster_ranges))
+}
+
+/// OLO dynamic programming: return whether each binary internal node must swap
+/// its children.
+fn identify_swaps(
+    sorted_z: &[[usize; 3]],
+    sorted_d: &[Vec<f32>],
+    cluster_ranges: &[[usize; 2]],
+) -> Vec<bool> {
+    let n_points = sorted_d.len();
+    if sorted_z.is_empty() {
+        return Vec::new();
+    }
+
+    let mut m = vec![vec![0.0f32; n_points]; n_points];
+    let mut swap_status = vec![vec![[0u8, 0u8]; n_points]; n_points];
+    let mut must_swap = vec![false; sorted_z.len()];
+
+    // SciPy uses 2^30 as a sufficiently large finite value.
+    const INF: f32 = 1_073_741_824.0;
+
+    for z in sorted_z.iter() {
+        let v_l = z[0];
+        let v_r = z[1];
+
+        let [v_l_min, v_l_max] = cluster_ranges[v_l];
+        let [v_r_min, v_r_max] = cluster_ranges[v_r];
+
+        let (u_clusters, m_clusters) = if v_l < n_points {
+            (vec![v_l], vec![v_l])
+        } else {
+            let left_z = &sorted_z[v_l - n_points];
+            (vec![left_z[0], left_z[1]], vec![left_z[1], left_z[0]])
+        };
+
+        let (w_clusters, k_clusters) = if v_r < n_points {
+            (vec![v_r], vec![v_r])
+        } else {
+            let right_z = &sorted_z[v_r - n_points];
+            (vec![right_z[1], right_z[0]], vec![right_z[0], right_z[1]])
+        };
+
+        for swap_l in 0..u_clusters.len() {
+            let u_min = cluster_ranges[u_clusters[swap_l]][0];
+            let u_max = cluster_ranges[u_clusters[swap_l]][1];
+            let m_min = cluster_ranges[m_clusters[swap_l]][0];
+            let m_max = cluster_ranges[m_clusters[swap_l]][1];
+
+            for swap_r in 0..w_clusters.len() {
+                let w_min = cluster_ranges[w_clusters[swap_r]][0];
+                let w_max = cluster_ranges[w_clusters[swap_r]][1];
+                let k_min = cluster_ranges[k_clusters[swap_r]][0];
+                let k_max = cluster_ranges[k_clusters[swap_r]][1];
+
+                let mut min_km_dist = INF;
+                for row in sorted_d.iter().take(m_max).skip(m_min) {
+                    for &val in row.iter().take(k_max).skip(k_min) {
+                        if val < min_km_dist {
+                            min_km_dist = val;
+                        }
+                    }
+                }
+
+                for u in u_min..u_max {
+                    let mut m_sorted: Vec<(usize, f32)> =
+                        (m_min..m_max).map(|mi| (mi, m[mi][u])).collect();
+                    m_sorted.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+
+                    for w in w_min..w_max {
+                        let mut k_sorted: Vec<(usize, f32)> =
+                            (k_min..k_max).map(|ki| (ki, m[ki][w])).collect();
+                        k_sorted.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+
+                        let mut cur_min_m = INF;
+
+                        for &(m_idx, m_u_m) in &m_sorted {
+                            let k0_val =
+                                k_sorted.first().map(|(_, v)| *v).unwrap_or(INF);
+                            if m_u_m + k0_val + min_km_dist >= cur_min_m {
+                                break;
+                            }
+                            for &(k_idx, m_w_k) in &k_sorted {
+                                if m_u_m + m_w_k + min_km_dist >= cur_min_m {
+                                    break;
+                                }
+                                let current_m = m_u_m + m_w_k + sorted_d[m_idx][k_idx];
+                                if current_m < cur_min_m {
+                                    cur_min_m = current_m;
+                                }
+                            }
+                        }
+
+                        m[u][w] = cur_min_m;
+                        m[w][u] = cur_min_m;
+                        swap_status[u][w] = [swap_l as u8, swap_r as u8];
+                        swap_status[w][u] = [swap_l as u8, swap_r as u8];
+                    }
+                }
+            }
+        }
+
+        let mut cur_min_m = INF;
+        let mut best_u = v_l_min;
+        let mut best_w = v_r_min;
+        for (u, row) in m.iter().enumerate().take(v_l_max).skip(v_l_min) {
+            for (w, &val) in row.iter().enumerate().take(v_r_max).skip(v_r_min) {
+                if val < cur_min_m {
+                    cur_min_m = val;
+                    best_u = u;
+                    best_w = w;
+                }
+            }
+        }
+
+        if v_l >= n_points {
+            must_swap[v_l - n_points] = swap_status[best_u][best_w][0] == 1;
+        }
+        if v_r >= n_points {
+            must_swap[v_r - n_points] = swap_status[best_u][best_w][1] == 1;
+        }
+    }
+
+    must_swap
+}
+
+/// Derive the new leaf order from the binary linkage and swap decisions.
+fn apply_swaps(
+    sorted_z: &[[usize; 3]],
+    must_swap: &[bool],
+    n_leaves: usize,
+) -> Vec<usize> {
+    if sorted_z.is_empty() {
+        return (0..n_leaves).collect();
+    }
+
+    let mut order = Vec::with_capacity(n_leaves);
+    collect_leaf_order(
+        sorted_z,
+        must_swap,
+        n_leaves,
+        n_leaves + sorted_z.len() - 1,
+        false,
+        &mut order,
+    );
+    order
+}
+
+fn collect_leaf_order(
+    sorted_z: &[[usize; 3]],
+    must_swap: &[bool],
+    n_leaves: usize,
+    node: usize,
+    parent_parity: bool,
+    order: &mut Vec<usize>,
+) {
+    if node < n_leaves {
+        order.push(node);
+        return;
+    }
+    let i = node - n_leaves;
+    let left = sorted_z[i][0];
+    let right = sorted_z[i][1];
+    let effective_swap = must_swap[i] ^ parent_parity;
+
+    let (first, second) = if effective_swap {
+        (right, left)
+    } else {
+        (left, right)
+    };
+
+    collect_leaf_order(sorted_z, must_swap, n_leaves, first, effective_swap, order);
+    collect_leaf_order(sorted_z, must_swap, n_leaves, second, effective_swap, order);
 }
 
 /// Compute the set of node IDs to keep when inverting a prune around `targets`.
@@ -688,5 +1059,66 @@ mod tests {
             .collect();
         prune_nodes(&mut tree, to_remove).unwrap();
         assert_eq!(tree.to_newick(), "A;");
+    }
+
+    #[test]
+    fn test_optimal_leaf_order_simple() {
+        // Tree: ((A,(B,C)),D). Distances favour keeping B-C and A-D adjacent.
+        let mut tree = Tree::from_newick("((A,(B,C)),D);").unwrap();
+        let names = vec![
+            "A".to_string(),
+            "B".to_string(),
+            "C".to_string(),
+            "D".to_string(),
+        ];
+        // Condensed upper-triangle order: AB, AC, AD, BC, BD, CD.
+        let values = vec![10.0, 10.0, 1.0, 1.0, 10.0, 10.0];
+        let dist = NamedMatrix::new_from_values(names, values).unwrap();
+
+        optimal_leaf_order(&mut tree, &dist).unwrap();
+        assert_eq!(tree.to_newick(), "(((B,C),A),D);");
+    }
+
+    #[test]
+    fn test_optimal_leaf_order_multifurcating() {
+        // Tree: (A,B,C,D). Distances favour A-D and B-C adjacency.
+        let mut tree = Tree::from_newick("(A,B,C,D);").unwrap();
+        let names = vec![
+            "A".to_string(),
+            "B".to_string(),
+            "C".to_string(),
+            "D".to_string(),
+        ];
+        // AB=10, AC=10, AD=1, BC=1, BD=10, CD=10.
+        let values = vec![10.0, 10.0, 1.0, 1.0, 10.0, 10.0];
+        let dist = NamedMatrix::new_from_values(names, values).unwrap();
+
+        optimal_leaf_order(&mut tree, &dist).unwrap();
+        // The left-associative binary conversion keeps B and C adjacent and
+        // places A next to D.
+        assert_eq!(tree.to_newick(), "(C,B,A,D);");
+    }
+
+    #[test]
+    fn test_optimal_leaf_order_missing_leaf_errors() {
+        let mut tree = Tree::from_newick("(A,B,C);").unwrap();
+        let names = vec!["A".to_string(), "B".to_string(), "D".to_string()];
+        let values = vec![1.0, 1.0, 1.0];
+        let dist = NamedMatrix::new_from_values(names, values).unwrap();
+
+        let err = optimal_leaf_order(&mut tree, &dist).unwrap_err();
+        assert!(err.to_string().contains("distance matrix missing leaf"));
+        assert!(err.to_string().contains("C"));
+    }
+
+    #[test]
+    fn test_optimal_leaf_order_non_finite_errors() {
+        let mut tree = Tree::from_newick("(A,B);").unwrap();
+        let names = vec!["A".to_string(), "B".to_string()];
+        let values = vec![f32::NAN];
+        let dist = NamedMatrix::new_from_values(names, values).unwrap();
+
+        let err = optimal_leaf_order(&mut tree, &dist).unwrap_err();
+        assert!(err.to_string().contains("non-finite distance"));
     }
 }

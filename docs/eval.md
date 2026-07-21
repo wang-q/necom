@@ -2,6 +2,13 @@
 
 `necom eval` provides evaluation metrics for clustering partitions and phylogenetic trees. It is the unified entry point for assessing result quality, support, and consistency.
 
+## Design Principles
+
+*   **Unified entry point**: All evaluation capabilities live under `necom eval`, making them easier to discover.
+*   **Evaluation only**: `eval` measures existing results; it does not generate clusters, infer trees, or convert formats.
+*   **Strict validation**: External evaluation requires matching sample sets; internal evaluation requires every partition sample to be present in the supplied matrix, tree, or coordinate file. This prevents silent sample dropping and misleading `NaN` metrics.
+*   **Shared implementation**: Metrics are implemented once in `libs/eval` and reused across commands (e.g., `silhouette_score` is used by both `eval partition --matrix/--tree` and the planned `eval tree`).
+
 ## Subcommands
 
 Subcommands are grouped by evaluation target:
@@ -63,6 +70,27 @@ Four evaluation dimensions:
 *   **Trait**: Purity, Entropy, DominantTrait — consistency with external labels (taxonomy, geography, phenotype).
 *   **Phylo**: Local RF to reference tree, Monophyly Check, ConflictScore.
 *   **Fit**: Cophenetic Correlation against an original distance matrix.
+
+Input and output details:
+
+*   **Tree**: Newick (positional argument).
+*   **Partition (`--part`)**: optional grouping in `cluster` or `pair` format. If omitted, the whole tree is evaluated or a partition is generated via `--cut`.
+*   **Trait map (`--traits`)**: TSV with `LeafName <tab> Trait1,Trait2...`, used for purity/entropy calculations.
+*   **Reference tree (`--ref`)**: Newick species tree for Local RF and monophyly checks. Gene trees typically sample only a subset of taxa, so leaf-set intersection pruning is required before comparison.
+*   **Original matrix (`--dist`)**: PHYLIP square matrix or pair TSV for Cophenetic correlation.
+*   **Output**: TSV with column groups:
+    *   `Basic`: Size, Diameter, AvgDist.
+    *   `Geom`: Silhouette, Separation.
+    *   `Trait`: Purity, Entropy, DominantTrait.
+    *   `Phylo`: RF-Distance (to reference), ConflictScore.
+    *   `Fit`: CopheneticCorrelation.
+*   **`--metrics`**: controls which column groups are emitted (e.g., `--metrics basic,geom` or `--metrics cophenet`), avoiding unnecessary computation.
+
+Performance notes:
+
+*   For clade-aligned partitions, geometry metrics are O(N); for arbitrary partitions they are O(N²).
+*   Cophenetic correlation is inherently O(N²) because it must compare every leaf pair.
+*   For large trees, Silhouette supports `--samples` to estimate geometry metrics without full O(N²) computation.
 
 ### boot (Not Implemented)
 

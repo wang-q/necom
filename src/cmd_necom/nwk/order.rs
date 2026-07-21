@@ -1,5 +1,5 @@
 use anyhow::Context;
-use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command, Id};
+use clap::{builder, Arg, ArgAction, ArgGroup, ArgMatches, Command, Id};
 use necom::libs::phylo::tree::{algo, Tree};
 use std::collections::HashSet;
 use std::io::Write;
@@ -49,6 +49,28 @@ pub fn make_subcommand() -> Command {
                 .action(ArgAction::SetTrue)
                 .help("De-ladderize (alternate) the tree"),
         )
+        .arg(
+            Arg::new("olo")
+                .long("olo")
+                .num_args(1)
+                .conflicts_with("number-of-descendants")
+                .conflicts_with("alphanumeric-order")
+                .conflicts_with("name_list")
+                .conflicts_with("deladderize")
+                .help("Optimal leaf ordering using a distance matrix"),
+        )
+        .arg(
+            Arg::new("olo_format")
+                .long("olo-format")
+                .default_value("phylip")
+                .value_parser([
+                    builder::PossibleValue::new("phylip"),
+                    builder::PossibleValue::new("pair"),
+                ])
+                .help("Format of the --olo distance matrix"),
+        )
+        .arg(crate::cmd_necom::args::same_arg("0.0"))
+        .arg(crate::cmd_necom::args::missing_arg("1.0"))
         .arg(crate::cmd_necom::args::name_list_arg())
         .arg(crate::cmd_necom::args::outfile_arg())
 }
@@ -78,41 +100,73 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     let is_deladderize = args.get_flag("deladderize");
+    let olo_file = args.get_one::<String>("olo");
 
     // Default behavior: if no specific sort order is requested, use alphanumeric
-    let default_an =
-        names.is_empty() && opt_an.is_empty() && opt_nd.is_empty() && !is_deladderize;
+    let default_an = names.is_empty()
+        && opt_an.is_empty()
+        && opt_nd.is_empty()
+        && !is_deladderize
+        && olo_file.is_none();
+
+    let olo_matrix = if let Some(path) = olo_file {
+        let format = args
+            .get_one::<String>("olo_format")
+            .map(|s| s.as_str())
+            .unwrap_or("phylip");
+        if format == "pair" {
+            let same = *args
+                .get_one::<f32>("same")
+                .context("missing required argument: same")?;
+            let missing = *args
+                .get_one::<f32>("missing")
+                .context("missing required argument: missing")?;
+            Some(necom::libs::pairmat::NamedMatrix::from_pair_scores(
+                path, same, missing,
+            )?)
+        } else {
+            Some(necom::libs::pairmat::NamedMatrix::from_relaxed_phylip(
+                path,
+            )?)
+        }
+    } else {
+        None
+    };
 
     let outfile = crate::cmd_necom::args::get_outfile(args);
     let mut writer = necom::writer(outfile)
         .with_context(|| format!("Failed to open writer for {}", outfile))?;
 
     for tree in &mut trees {
-        if !names.is_empty() {
-            let leaf_name_vec = tree.get_leaf_names();
-            let leaf_names: HashSet<&str> =
-                leaf_name_vec.iter().filter_map(|n| n.as_deref()).collect();
-            let missing: Vec<&str> = names
-                .iter()
-                .map(|s| s.as_str())
-                .filter(|n| !leaf_names.contains(n))
-                .collect();
-            if !missing.is_empty() {
-                anyhow::bail!(
-                    "name-list entries not found in tree: {}",
-                    missing.join(", ")
-                );
+        if let Some(ref matrix) = olo_matrix {
+            algo::optimal_leaf_order(tree, matrix)?;
+        } else {
+            if !names.is_empty() {
+                let leaf_name_vec = tree.get_leaf_names();
+                let leaf_names: HashSet<&str> =
+                    leaf_name_vec.iter().filter_map(|n| n.as_deref()).collect();
+                let missing: Vec<&str> = names
+                    .iter()
+                    .map(|s| s.as_str())
+                    .filter(|n| !leaf_names.contains(n))
+                    .collect();
+                if !missing.is_empty() {
+                    anyhow::bail!(
+                        "name-list entries not found in tree: {}",
+                        missing.join(", ")
+                    );
+                }
+                algo::sort_by_list(tree, &names);
             }
-            algo::sort_by_list(tree, &names);
-        }
-        if default_an || !opt_an.is_empty() {
-            algo::sort_by_name(tree, opt_an == "alphanumeric_rev");
-        }
-        if !opt_nd.is_empty() {
-            algo::ladderize(tree, opt_nd == "num_descendants_rev");
-        }
-        if is_deladderize {
-            algo::deladderize(tree);
+            if default_an || !opt_an.is_empty() {
+                algo::sort_by_name(tree, opt_an == "alphanumeric_rev");
+            }
+            if !opt_nd.is_empty() {
+                algo::ladderize(tree, opt_nd == "num_descendants_rev");
+            }
+            if is_deladderize {
+                algo::deladderize(tree);
+            }
         }
 
         let out_string = tree.to_newick();
