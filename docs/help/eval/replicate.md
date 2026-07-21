@@ -2,8 +2,8 @@ Assign support values to internal nodes of a target tree based on replicate tree
 
 Input:
 
-* Target tree file (first positional argument). May contain one or more trees; each is annotated and emitted on its own line.
-* Replicate trees file (second positional argument), e.g., from bootstrap or jackknife resampling.
+* Target tree file (first positional argument). May contain one or more trees; each is annotated and emitted on its own line. Use `"stdin"` to read from standard input.
+* Replicate trees file (second positional argument), e.g., from bootstrap or jackknife resampling. Use `"stdin"` to read from standard input.
 
 Notes:
 

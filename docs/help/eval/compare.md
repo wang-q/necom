@@ -4,6 +4,7 @@ Input:
 
 * One file: compares all trees in the file against each other (pairwise).
 * Two files: compares each tree in the first file against each tree in the second file.
+* Use `"stdin"` to read from standard input (only one of the two files may be `stdin`).
 
 Output:
 

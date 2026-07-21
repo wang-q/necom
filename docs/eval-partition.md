@@ -182,6 +182,10 @@ geometry/statistics of the data).
         - Near 1: sample is well clustered (close to same cluster, far from others).
         - 0: sample lies on a cluster boundary.
         - Negative: sample may be mis-clustered.
+    - **Implementation note**: Following scikit-learn's convention, samples in singleton
+      clusters contribute $s(i) = 0$ to the average (but are still counted in the divisor $N$).
+      The score is `0.0` when there are fewer than 2 clusters or when every sample is its own
+      cluster.
     - **Advantages**: Intuitive; balances cohesion and separation.
     - **Disadvantages**: High computational complexity ($O(N^2)$); requires optimization for
       large-scale data.
@@ -189,6 +193,9 @@ geometry/statistics of the data).
     - **Principle**: Ratio of the minimum between-cluster distance to the maximum within-cluster
       diameter.
     - **Range**: `[0, +∞)`. **Larger is better**.
+    - **Boundary cases**: If the maximum intra-cluster diameter is zero (perfectly compact
+      clusters) and the minimum inter-cluster distance is positive, the score is infinite and
+      is reported as `NA`. If both are zero, the score is `0.0`.
     - **Advantages**: Simple and intuitive.
     - **Disadvantages**: Extremely sensitive to noise (because it relies on min/max).
 - **C-Index**
@@ -260,6 +267,9 @@ geometry/statistics of the data).
     - **Principle**: Compactness index based on relative distances (distance to own centroid /
       distance to nearest other centroid).
     - **Range**: `[0, 1]`. **Larger is better**.
+    - **Boundary cases**: If a point coincides with another cluster's centroid (inter-cluster
+      distance is zero), a penalty (`10.0`) is applied to the ratio so the index remains
+      finite.
 
 ## Metric Selection Guide
 
