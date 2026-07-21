@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command};
+use clap::{ArgGroup, ArgMatches, Command};
 use necom::libs::cut;
 
 use crate::cmd_necom::args;
@@ -11,79 +11,78 @@ pub fn make_subcommand() -> Command {
         .about("Scans static threshold cut parameters")
         .after_help(include_str!("../../../docs/help/cut/scan-simple.md"))
         .arg(args::infile_arg_required_with_help("Input Newick file"))
-        .arg(
-            Arg::new("k")
-                .long("k")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over cluster count K"),
-        )
-        .arg(
-            Arg::new("height")
-                .long("height")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over height threshold"),
-        )
-        .arg(
-            Arg::new("root_dist")
-                .long("root-dist")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over root-distance threshold"),
-        )
-        .arg(
-            Arg::new("max_clade")
-                .long("max-clade")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over max pairwise distance threshold"),
-        )
-        .arg(
-            Arg::new("avg_clade")
-                .long("avg-clade")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over average pairwise distance threshold"),
-        )
-        .arg(
-            Arg::new("med_clade")
-                .long("med-clade")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over median pairwise distance threshold"),
-        )
-        .arg(
-            Arg::new("sum_branch")
-                .long("sum-branch")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over sum-of-branch-length threshold"),
-        )
-        .arg(
-            Arg::new("leaf_dist_max")
-                .long("leaf-dist-max")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over max leaf-distance threshold"),
-        )
-        .arg(
-            Arg::new("leaf_dist_min")
-                .long("leaf-dist-min")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over min leaf-distance threshold"),
-        )
-        .arg(
-            Arg::new("leaf_dist_avg")
-                .long("leaf-dist-avg")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over average leaf-distance threshold"),
-        )
-        .arg(
-            Arg::new("max_edge")
-                .long("max-edge")
-                .alias("single-linkage")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over max edge-length threshold"),
-        )
-        .arg(
-            Arg::new("inconsistent")
-                .long("inconsistent")
-                .action(ArgAction::SetTrue)
-                .help("Sweep over inconsistency coefficient threshold"),
-        )
+        .arg(args::cut_scan_flag_arg(
+            "k",
+            "k",
+            None,
+            "Sweep over cluster count K",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "height",
+            "height",
+            None,
+            "Sweep over height threshold",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "root_dist",
+            "root-dist",
+            None,
+            "Sweep over root-distance threshold",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "max_clade",
+            "max-clade",
+            None,
+            "Sweep over max pairwise distance threshold",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "avg_clade",
+            "avg-clade",
+            None,
+            "Sweep over average pairwise distance threshold",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "med_clade",
+            "med-clade",
+            None,
+            "Sweep over median pairwise distance threshold",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "sum_branch",
+            "sum-branch",
+            None,
+            "Sweep over sum-of-branch-length threshold",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "leaf_dist_max",
+            "leaf-dist-max",
+            None,
+            "Sweep over max leaf-distance threshold",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "leaf_dist_min",
+            "leaf-dist-min",
+            None,
+            "Sweep over min leaf-distance threshold",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "leaf_dist_avg",
+            "leaf-dist-avg",
+            None,
+            "Sweep over average leaf-distance threshold",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "max_edge",
+            "max-edge",
+            Some("single-linkage"),
+            "Sweep over max edge-length threshold",
+        ))
+        .arg(args::cut_scan_flag_arg(
+            "inconsistent",
+            "inconsistent",
+            None,
+            "Sweep over inconsistency coefficient threshold",
+        ))
         .arg(args::range_arg().required(true))
         .arg(args::deep_arg())
         .arg(args::stats_out_arg())

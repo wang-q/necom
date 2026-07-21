@@ -558,6 +558,45 @@ pub fn k_arg() -> Arg {
 }
 
 // ============================================================================
+// cut simple / scan-simple shared method selectors
+// ============================================================================
+
+/// A cut method threshold argument (f64 value) for `cut simple`.
+/// `alias` is used for `--max-edge` which has visible alias `single-linkage`.
+pub fn cut_threshold_arg(
+    name: &'static str,
+    long: &'static str,
+    alias: Option<&'static str>,
+    help: &'static str,
+) -> Arg {
+    let arg = Arg::new(name)
+        .long(long)
+        .num_args(1)
+        .value_parser(clap::value_parser!(f64));
+    match alias {
+        Some(a) => arg.alias(a),
+        None => arg,
+    }
+    .help(help)
+}
+
+/// A cut method sweep flag (SetTrue) for `cut scan-simple`.
+/// `alias` mirrors `cut_threshold_arg` to keep long names consistent.
+pub fn cut_scan_flag_arg(
+    name: &'static str,
+    long: &'static str,
+    alias: Option<&'static str>,
+    help: &'static str,
+) -> Arg {
+    let arg = Arg::new(name).long(long).action(ArgAction::SetTrue);
+    match alias {
+        Some(a) => arg.alias(a),
+        None => arg,
+    }
+    .help(help)
+}
+
+// ============================================================================
 // Cross-domain shared builders
 // ============================================================================
 

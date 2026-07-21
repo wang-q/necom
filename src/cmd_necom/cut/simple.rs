@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::{value_parser, Arg, ArgGroup, ArgMatches, Command};
+use clap::{ArgGroup, ArgMatches, Command};
 use necom::libs::cut;
 
 use crate::cmd_necom::args;
@@ -12,73 +12,72 @@ pub fn make_subcommand() -> Command {
         .after_help(include_str!("../../../docs/help/cut/simple.md"))
         .arg(args::infile_arg_required_with_help("Input Newick file"))
         .arg(args::k_arg())
-        .arg(
-            Arg::new("height")
-                .long("height")
-                .value_parser(value_parser!(f64))
-                .help("Cut at specific height (max distance to leaves)"),
-        )
-        .arg(
-            Arg::new("root_dist")
-                .long("root-dist")
-                .value_parser(value_parser!(f64))
-                .help("Cut at specific distance from root"),
-        )
-        .arg(
-            Arg::new("max_clade")
-                .long("max-clade")
-                .value_parser(value_parser!(f64))
-                .help("Max pairwise distance in cluster threshold"),
-        )
-        .arg(
-            Arg::new("avg_clade")
-                .long("avg-clade")
-                .value_parser(value_parser!(f64))
-                .help("Average pairwise distance in cluster threshold"),
-        )
-        .arg(
-            Arg::new("med_clade")
-                .long("med-clade")
-                .value_parser(value_parser!(f64))
-                .help("Median pairwise distance in cluster threshold"),
-        )
-        .arg(
-            Arg::new("sum_branch")
-                .long("sum-branch")
-                .value_parser(value_parser!(f64))
-                .help("Sum of branch lengths in cluster threshold"),
-        )
-        .arg(
-            Arg::new("leaf_dist_max")
-                .long("leaf-dist-max")
-                .value_parser(value_parser!(f64))
-                .help("Max distance from cluster root to any leaf"),
-        )
-        .arg(
-            Arg::new("leaf_dist_min")
-                .long("leaf-dist-min")
-                .value_parser(value_parser!(f64))
-                .help("Min distance from cluster root to any leaf"),
-        )
-        .arg(
-            Arg::new("leaf_dist_avg")
-                .long("leaf-dist-avg")
-                .value_parser(value_parser!(f64))
-                .help("Average distance from cluster root to leaves"),
-        )
-        .arg(
-            Arg::new("max_edge")
-                .long("max-edge")
-                .alias("single-linkage")
-                .value_parser(value_parser!(f64))
-                .help("Cut branches longer than threshold (Single Linkage)"),
-        )
-        .arg(
-            Arg::new("inconsistent")
-                .long("inconsistent")
-                .value_parser(value_parser!(f64))
-                .help("Cut by inconsistent coefficient threshold"),
-        )
+        .arg(args::cut_threshold_arg(
+            "height",
+            "height",
+            None,
+            "Cut at specific height (max distance to leaves)",
+        ))
+        .arg(args::cut_threshold_arg(
+            "root_dist",
+            "root-dist",
+            None,
+            "Cut at specific distance from root",
+        ))
+        .arg(args::cut_threshold_arg(
+            "max_clade",
+            "max-clade",
+            None,
+            "Max pairwise distance in cluster threshold",
+        ))
+        .arg(args::cut_threshold_arg(
+            "avg_clade",
+            "avg-clade",
+            None,
+            "Average pairwise distance in cluster threshold",
+        ))
+        .arg(args::cut_threshold_arg(
+            "med_clade",
+            "med-clade",
+            None,
+            "Median pairwise distance in cluster threshold",
+        ))
+        .arg(args::cut_threshold_arg(
+            "sum_branch",
+            "sum-branch",
+            None,
+            "Sum of branch lengths in cluster threshold",
+        ))
+        .arg(args::cut_threshold_arg(
+            "leaf_dist_max",
+            "leaf-dist-max",
+            None,
+            "Max distance from cluster root to any leaf",
+        ))
+        .arg(args::cut_threshold_arg(
+            "leaf_dist_min",
+            "leaf-dist-min",
+            None,
+            "Min distance from cluster root to any leaf",
+        ))
+        .arg(args::cut_threshold_arg(
+            "leaf_dist_avg",
+            "leaf-dist-avg",
+            None,
+            "Average distance from cluster root to leaves",
+        ))
+        .arg(args::cut_threshold_arg(
+            "max_edge",
+            "max-edge",
+            Some("single-linkage"),
+            "Cut branches longer than threshold (Single Linkage)",
+        ))
+        .arg(args::cut_threshold_arg(
+            "inconsistent",
+            "inconsistent",
+            None,
+            "Cut by inconsistent coefficient threshold",
+        ))
         .arg(args::deep_arg())
         .arg(args::format_arg())
         .arg(args::rep_arg())
