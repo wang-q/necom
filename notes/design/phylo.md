@@ -19,7 +19,7 @@
 
 > - [eval-planned.md](eval-planned.md)（`necom eval` 命令的未来工作计划，其中 `eval tree`
   子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
-> - [nwk-planned.md](nwk-planned.md)（`necom nwk` 尚未实现的 OLO 与随机树生成等工作计划）。
+> - [nwk-planned.md](nwk-planned.md)（`necom nwk` 尚未实现的随机树生成等工作计划）。
 
 ## 1. 架构设计
 
@@ -300,6 +300,8 @@ graph LR
     - `remove_node()`: 软删除单个节点。
     - `collapse_node()`: 压缩节点 (合并边长)。
     - `compact()`: 物理删除软删除节点并重构树；调用后所有外部持有的 `NodeId` 均失效。
+    - `algo::optimal_leaf_order()`: 最优叶子排序 (OLO, Bar-Joseph et al. 2001)，基于距离矩阵动态规划
+      优化叶子顺序，已作为 `necom nwk order --olo` 实现。
 
 ### 统计与计算
 
@@ -329,9 +331,6 @@ graph LR
 - **树生成**:
     - `generate_random_tree()` (Yule/Coalescent 模型): 主要用于模拟研究。优先级较低。详见
       [nwk-planned.md](nwk-planned.md)。
-- **树排序增强**:
-    - `Optimal Leaf Ordering` (OLO): 基于距离矩阵动态规划优化叶子顺序，计划加入 `necom nwk order`。
-      详见 [nwk-planned.md](nwk-planned.md)。
 
 ---
 ## 5. 可视化详情
