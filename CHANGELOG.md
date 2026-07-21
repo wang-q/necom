@@ -2,6 +2,23 @@
 
 ## Unreleased - ReleaseDate
 
+### Added
+
+*   `nwk order --olo`: Optimal Leaf Ordering via distance-matrix dynamic
+    programming.
+*   `clust scan-dbscan` subcommand and `--min-pct` cluster filter flag for
+    `dbscan`/`kmedoids`/`mcl`/`scan-dbscan`.
+*   Davies-Bouldin index in `eval partition`.
+*   SciPy parity test suite for clustering and phylogenetic tree construction.
+
+### Fixed
+
+*   NaN safety: replaced `partial_cmp().unwrap_or(Equal)` with `total_cmp`
+    across `clust`, `cut`, `phylo`, and `eval` modules.
+*   `pairmat` log/normalize now propagate NaN and handle non-finite diagonals
+    correctly; `eval partition` rejects non-finite coordinate input.
+*   `cut scan-*` defers output headers until first valid dispatch.
+
 ## 0.4.0 - 2026-07-20
 
 ### Breaking Changes
