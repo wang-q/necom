@@ -537,12 +537,14 @@ fn identify_swaps(
                 for u in u_min..u_max {
                     let mut m_sorted: Vec<(usize, f32)> =
                         (m_min..m_max).map(|mi| (mi, m[mi][u])).collect();
-                    m_sorted.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                    // total_cmp is NaN-safe even though build_sorted_distance_matrix
+                    // already rejects non-finite distances upstream.
+                    m_sorted.sort_by(|a, b| a.1.total_cmp(&b.1));
 
                     for w in w_min..w_max {
                         let mut k_sorted: Vec<(usize, f32)> =
                             (k_min..k_max).map(|ki| (ki, m[ki][w])).collect();
-                        k_sorted.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                        k_sorted.sort_by(|a, b| a.1.total_cmp(&b.1));
 
                         let mut cur_min_m = INF;
 

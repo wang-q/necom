@@ -91,10 +91,7 @@ pub fn get_node_with_longest_edge(tree: &Tree) -> Option<NodeId> {
             // Treat non-finite lengths as 0.0 so they are never selected as the longest edge.
             let len_a = a.finite_length();
             let len_b = b.finite_length();
-            match len_a
-                .partial_cmp(&len_b)
-                .unwrap_or(std::cmp::Ordering::Equal)
-            {
+            match len_a.total_cmp(&len_b) {
                 std::cmp::Ordering::Equal => {
                     // Tie-breaking: prefer internal nodes over leaves
                     let a_internal = !a.children.is_empty();
