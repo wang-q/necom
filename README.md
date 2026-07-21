@@ -44,7 +44,7 @@ toolkit's focus on connections between clusters, matrix entries, and tree nodes.
 
 ## Install
 
-Current release: 0.4.0
+Current release: 0.4.1
 
 `necom` requires the Rust nightly toolchain (pinned by `rust-toolchain.toml` for `portable_simd`),
 auto-installed by `cargo` on first use:

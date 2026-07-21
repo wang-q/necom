@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.4.1 - 2026-07-21
+
 ### Added
 
 *   `nwk order --olo`: Optimal Leaf Ordering via distance-matrix dynamic
