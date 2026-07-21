@@ -547,3 +547,56 @@ fn test_clust_nj_single() {
 
     assert_eq!(stdout.trim(), "A;");
 }
+
+// ========================================================================
+// SciPy parity test for `clust hier` CLI on ytdist data.
+//
+// Mirrors the SciPy `linkage_ytdist_single` reference dendrogram. We do not
+// compare the full Newick string (branch-length formatting may differ); we
+// check that the two earliest merges (2-5 at d=138 and 3-4 at d=219) appear
+// as adjacent pairs with the expected half-distance branch lengths, since
+// `clust hier` emits branch length = merge_distance / 2.
+// ========================================================================
+
+#[test]
+fn test_scipy_clust_hier_ytdist_single() {
+    let (stdout, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "hier",
+            "tests/scipy/ytdist.phy",
+            "--method",
+            "single",
+        ])
+        .run();
+
+    assert!(
+        !stdout.trim().is_empty(),
+        "necom clust hier output is empty. stderr: {}",
+        stderr
+    );
+
+    // SciPy Z[0] = [2, 5, 138, 2] -> branch length = 138 / 2 = 69.
+    assert!(
+        stdout.contains("2:69") || stdout.contains("2:69.0"),
+        "expected leaf 2 with branch length 69, got: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("5:69") || stdout.contains("5:69.0"),
+        "expected leaf 5 with branch length 69, got: {}",
+        stdout
+    );
+
+    // SciPy Z[1] = [3, 4, 219, 2] -> branch length = 219 / 2 = 109.5.
+    assert!(
+        stdout.contains("3:109.5") || stdout.contains("3:109.50"),
+        "expected leaf 3 with branch length 109.5, got: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("4:109.5") || stdout.contains("4:109.50"),
+        "expected leaf 4 with branch length 109.5, got: {}",
+        stdout
+    );
+}

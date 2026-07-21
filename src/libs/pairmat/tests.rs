@@ -861,3 +861,65 @@ fn test_from_relaxed_phylip_numeric_header_ambiguity_warning() {
     assert_eq!(matrix.get_names(), vec!["3", "4"]);
     assert_eq!(matrix.get_by_name("3", "4"), Some(0.2));
 }
+
+// ========================================================================
+// SciPy parity tests for `CondensedMatrix` indexing.
+//
+// Mirrors `scipy.spatial.tests.test_distance::TestSquareForm` (line 1555-1619)
+// and `TestNumObsY` (line 1622-1673). SciPy's `squareform` converts between
+// condensed (upper-triangle vector) and full matrix representations; our
+// `CondensedMatrix` uses the same condensed indexing. These tests verify the
+// round-trip and the implicit `num_obs_y` behavior (inferring N from the
+// condensed vector length via N*(N-1)/2 == len).
+// ========================================================================
+
+#[test]
+fn test_scipy_squareform_roundtrip() {
+    // SciPy `ytdist` condensed vector (15 values for N=6).
+    let data = vec![
+        662.0, 877.0, 255.0, 412.0, 996.0, 295.0, 468.0, 268.0, 400.0, 754.0, 564.0,
+        138.0, 219.0, 869.0, 669.0,
+    ];
+    let n = 6;
+    let m = CondensedMatrix::from_vec(n, data.clone()).unwrap();
+
+    // Dimension invariants.
+    assert_eq!(m.size(), n);
+    assert_eq!(m.data().len(), n * (n - 1) / 2);
+
+    // Round-trip: every (i, j) pair maps back to data[condensed_index(n, i, j)].
+    for i in 0..n {
+        // Diagonal is zero by contract.
+        assert_eq!(m.get(i, i), 0.0);
+        for j in (i + 1)..n {
+            let idx = get_condensed_index(n, i, j);
+            assert_eq!(m.get(i, j), data[idx]);
+            // Symmetric access: get(j, i) must equal get(i, j).
+            assert_eq!(m.get(j, i), m.get(i, j));
+        }
+    }
+}
+
+#[test]
+fn test_scipy_num_obs_y() {
+    // SciPy `num_obs_y` infers N from condensed length via N*(N-1)/2 == len.
+    // `CondensedMatrix::from_vec(N, data)` accepts exactly N*(N-1)/2 values;
+    // any other length is rejected. Verify for N = 2..10 and a few mismatches.
+    for n in 2..=10 {
+        let expected_len = n * (n - 1) / 2;
+        let data = vec![1.0; expected_len];
+        assert!(
+            CondensedMatrix::from_vec(n, data).is_ok(),
+            "n={} with len={} should succeed",
+            n,
+            expected_len
+        );
+    }
+
+    // Mismatched lengths must error (scipy num_obs_y would raise on these).
+    assert!(CondensedMatrix::from_vec(3, vec![1.0]).is_err());
+    assert!(CondensedMatrix::from_vec(3, vec![1.0, 2.0]).is_err());
+    assert!(CondensedMatrix::from_vec(3, vec![1.0, 2.0, 3.0, 4.0]).is_err());
+    assert!(CondensedMatrix::from_vec(6, vec![1.0; 14]).is_err());
+    assert!(CondensedMatrix::from_vec(6, vec![1.0; 16]).is_err());
+}

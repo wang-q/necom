@@ -1121,4 +1121,104 @@ mod tests {
         let err = optimal_leaf_order(&mut tree, &dist).unwrap_err();
         assert!(err.to_string().contains("non-finite distance"));
     }
+
+    // ========================================================================
+    // SciPy parity tests for `optimal_leaf_order`.
+    //
+    // Mirrors `scipy.cluster.hierarchy.tests.test_hierarchy::
+    // test_optimal_leaf_ordering` (line 1214-1219). We rebuild the input tree
+    // via our `linkage` + `to_tree` (which already match SciPy's linkage
+    // output), apply `optimal_leaf_order`, and compare the resulting leaf
+    // order against SciPy's `linkage_ytdist_single_olo` /
+    // `linkage_X_ward_olo` decoded leaf sequences. OLO does not distinguish
+    // left-right mirroring, so both directions are accepted.
+    // ========================================================================
+
+    /// Build a tree from a condensed distance vector using the given linkage
+    /// method, then return `(tree, dist_matrix)` for OLO.
+    fn build_tree_for_olo(
+        names: Vec<String>,
+        condensed: Vec<f32>,
+        method: crate::libs::clust::hier::Method,
+    ) -> (Tree, NamedMatrix) {
+        let dist = NamedMatrix::new_from_values(names.clone(), condensed).unwrap();
+        let steps = crate::libs::clust::hier::linkage(&dist, method).unwrap();
+        let tree = crate::libs::clust::hier::to_tree(&steps, &names).unwrap();
+        (tree, dist)
+    }
+
+    /// Extract the leaf names in left-to-right order from a tree.
+    fn leaf_name_order(tree: &Tree) -> Vec<String> {
+        tree.get_leaf_names()
+            .into_iter()
+            .map(|opt| opt.expect("leaf should have a name"))
+            .collect()
+    }
+
+    #[test]
+    fn test_scipy_olo_ytdist() {
+        // SciPy `linkage_ytdist_single_olo = [[5,2,138,2],[4,3,219,2],
+        // [7,0,255,3],[1,8,268,4],[6,9,295,6]]` decodes to the tree
+        // ((5,2),(1,((4,3),0))) with left-to-right leaves [5,2,1,4,3,0].
+        let names: Vec<String> = (0..6).map(|i| i.to_string()).collect();
+        let condensed = vec![
+            662.0, 877.0, 255.0, 412.0, 996.0, // (0,*) pairs
+            295.0, 468.0, 268.0, 400.0, // (1,*) pairs
+            754.0, 564.0, 138.0, // (2,*) pairs
+            219.0, 869.0, // (3,*) pairs
+            669.0, // (4,5)
+        ];
+        let (mut tree, dist) = build_tree_for_olo(
+            names,
+            condensed,
+            crate::libs::clust::hier::Method::Single,
+        );
+
+        optimal_leaf_order(&mut tree, &dist).unwrap();
+
+        let order = leaf_name_order(&tree);
+        let expected = vec!["5", "2", "1", "4", "3", "0"];
+        let expected_rev: Vec<&str> = expected.iter().rev().copied().collect();
+        let order_str: Vec<&str> = order.iter().map(|s| s.as_str()).collect();
+        assert!(
+            order_str == expected || order_str == expected_rev,
+            "OLO ytdist order {:?} does not match {:?} or {:?}",
+            order_str,
+            expected,
+            expected_rev
+        );
+    }
+
+    #[test]
+    fn test_scipy_olo_x_ward() {
+        // SciPy `linkage_X_ward_olo = [[4,3,...],[5,1,...],[2,0,...],
+        // [6,8,...],[7,9,...]]` decodes to the tree
+        // ((5,1),((4,3),(2,0))) with left-to-right leaves [5,1,4,3,2,0].
+        // Pairwise Euclidean distances of X (6 points, condensed upper-triangle
+        // order (0,1),(0,2),...,(4,5)), computed via `pdist(X)`.
+        let names: Vec<String> = (0..6).map(|i| i.to_string()).collect();
+        let condensed = vec![
+            15.41753, 2.557604, 6.62464, 6.967422, 17.176438, // (0,*) pairs
+            17.004015, 12.910675, 12.98128, 1.770454, // (1,*) pairs
+            6.184128, 6.457123, 18.77446, // (2,*) pairs
+            0.36266, 14.603109, // (3,*) pairs
+            14.659662, // (4,5)
+        ];
+        let (mut tree, dist) =
+            build_tree_for_olo(names, condensed, crate::libs::clust::hier::Method::Ward);
+
+        optimal_leaf_order(&mut tree, &dist).unwrap();
+
+        let order = leaf_name_order(&tree);
+        let expected = vec!["5", "1", "4", "3", "2", "0"];
+        let expected_rev: Vec<&str> = expected.iter().rev().copied().collect();
+        let order_str: Vec<&str> = order.iter().map(|s| s.as_str()).collect();
+        assert!(
+            order_str == expected || order_str == expected_rev,
+            "OLO X_ward order {:?} does not match {:?} or {:?}",
+            order_str,
+            expected,
+            expected_rev
+        );
+    }
 }

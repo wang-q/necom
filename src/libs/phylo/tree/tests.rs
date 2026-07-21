@@ -1084,3 +1084,58 @@ fn test_reroot_at_root_is_noop() {
     assert_eq!(tree.get_root(), Some(root_id));
     assert_eq!(tree.to_newick(), original);
 }
+
+// ========================================================================
+// SciPy parity tests for tree isomorphism.
+//
+// Mirrors `scipy.cluster.hierarchy.tests.test_hierarchy::TestIsIsomorphic`
+// (line 370-452). SciPy's `is_isomorphic` is based on split-set equality of
+// unrooted trees; our `robinson_foulds` returns the symmetric difference of
+// non-trivial splits, so `rf == 0` is equivalent to `is_isomorphic == True`.
+// ========================================================================
+
+#[test]
+fn test_scipy_is_isomorphic_same_tree() {
+    let t1 = Tree::from_newick("((A,B),(C,D));").unwrap();
+    let t2 = Tree::from_newick("((A,B),(C,D));").unwrap();
+    let rf = t1.robinson_foulds(&t2).unwrap();
+    assert_eq!(rf, 0, "identical trees should be isomorphic");
+}
+
+#[test]
+fn test_scipy_is_isomorphic_reordered_leaves() {
+    // Same topology, leaves swapped within cherries. Unrooted topology
+    // is unchanged.
+    let t1 = Tree::from_newick("((A,B),(C,D));").unwrap();
+    let t2 = Tree::from_newick("((B,A),(D,C));").unwrap();
+    let rf = t1.robinson_foulds(&t2).unwrap();
+    assert_eq!(rf, 0, "reordered leaves should preserve isomorphism");
+}
+
+#[test]
+fn test_scipy_is_isomorphic_different_root() {
+    // `((A,B),(C,D))` and `(A,(B,(C,D)))` represent the same unrooted
+    // topology: both have the single non-trivial split {A,B}|{C,D}.
+    let t1 = Tree::from_newick("((A,B),(C,D));").unwrap();
+    let t2 = Tree::from_newick("(A,(B,(C,D)));").unwrap();
+    let rf = t1.robinson_foulds(&t2).unwrap();
+    assert_eq!(
+        rf, 0,
+        "different rooting on the same unrooted topology should be isomorphic"
+    );
+}
+
+#[test]
+fn test_scipy_is_not_isomorphic() {
+    // `((A,B),(C,D))` has split {A,B}|{C,D};
+    // `((A,C),(B,D))` has split {A,C}|{B,D}.
+    // These are different unrooted topologies.
+    let t1 = Tree::from_newick("((A,B),(C,D));").unwrap();
+    let t2 = Tree::from_newick("((A,C),(B,D));").unwrap();
+    let rf = t1.robinson_foulds(&t2).unwrap();
+    assert!(
+        rf > 0,
+        "trees with different non-trivial splits should not be isomorphic (rf={})",
+        rf
+    );
+}

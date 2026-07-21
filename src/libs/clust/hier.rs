@@ -267,7 +267,51 @@ fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step
         }
     }
 
+    // Post-processing: sort by merge distance and relabel cluster IDs.
+    // This mirrors scipy's nn_chain (argsort + label) to guarantee a
+    // monotonically ordered dendrogram with consistent cluster IDs.
+    sort_and_relabel(&mut steps, n);
     steps
+}
+
+/// Sort steps by merge distance (stable) and reassign cluster IDs so the
+/// i-th step's new cluster id is `n + i`, matching scipy's `label`.
+///
+/// Unlike scipy's main loop (which reuses the surviving cluster's id), our
+/// main loop assigns a fresh cluster id `n + step_index` for each merge.
+/// After sorting by distance, we remap these ids so the i-th sorted step
+/// creates cluster `n + i`. A simple mapping table suffices because each
+/// internal cluster id is referenced at most once (in the step that merges
+/// it), and for reducible methods the creating step always precedes the
+/// referencing step in sorted order (monotonicity of merge distances).
+fn sort_and_relabel(steps: &mut Vec<Step>, n: usize) {
+    // Pair each step with its original index, then stable sort by distance.
+    let mut indexed: Vec<(usize, Step)> = steps.drain(..).enumerate().collect();
+    indexed.sort_by(|a, b| {
+        a.1.distance
+            .partial_cmp(&b.1.distance)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    // Build mapping: old_cluster_id -> new_cluster_id.
+    // Leaves (0..n) map to themselves. The internal cluster created at
+    // original step `orig_idx` has old id `n + orig_idx`; after sorting it
+    // lands at sorted position `new_pos` and gets new id `n + new_pos`.
+    let mut mapping: Vec<usize> = (0..2 * n).collect();
+    for (new_pos, (orig_idx, _)) in indexed.iter().enumerate() {
+        mapping[n + orig_idx] = n + new_pos;
+    }
+
+    // Apply mapping and ensure cluster1 < cluster2 (scipy Z-row convention).
+    for (_, step) in indexed.iter_mut() {
+        step.cluster1 = mapping[step.cluster1];
+        step.cluster2 = mapping[step.cluster2];
+        if step.cluster1 > step.cluster2 {
+            std::mem::swap(&mut step.cluster1, &mut step.cluster2);
+        }
+    }
+
+    *steps = indexed.into_iter().map(|(_, s)| s).collect();
 }
 
 /// Convert linkage steps to a Node (tree structure).
@@ -418,12 +462,16 @@ fn linkage_primitive(condensed: &mut CondensedMatrix, method: Method) -> Vec<Ste
         // 2. Record the merge
         // New cluster ID
         let new_id = n + step_idx;
-        let id1 = cluster_ids[u];
-        let id2 = cluster_ids[v];
+        // SciPy convention: each Z row has a < b. Ensure cluster1 < cluster2
+        // regardless of which surviving index (u or v) holds the smaller id.
+        let (id1, id2) = if cluster_ids[u] < cluster_ids[v] {
+            (cluster_ids[u], cluster_ids[v])
+        } else {
+            (cluster_ids[v], cluster_ids[u])
+        };
         let size1 = size[u];
         let size2 = size[v];
         let new_size = size1 + size2;
-
         let dist_out = if is_squared {
             min_dist.sqrt()
         } else {
@@ -550,10 +598,9 @@ mod tests {
         assert_eq!(steps[0].size, 2);
 
         // Step 2: Merge {0,1} (id 3) and 2.
-        // The NN-chain implementation keeps the surviving cluster index (0) as
-        // the first child, so the new cluster id 3 precedes leaf 2.
-        assert_eq!(steps[1].cluster1, 3); // 3 is the new id for {0,1}
-        assert_eq!(steps[1].cluster2, 2);
+        // SciPy convention: cluster1 < cluster2, so leaf 2 precedes internal id 3.
+        assert_eq!(steps[1].cluster1, 2);
+        assert_eq!(steps[1].cluster2, 3); // 3 is the new id for {0,1}
         assert_eq!(steps[1].distance, 2.0);
         assert_eq!(steps[1].size, 3);
     }
@@ -1095,5 +1142,301 @@ mod tests {
             .unwrap();
         let leaf_c = tree.get_node(leaf_c_id).unwrap();
         assert!((leaf_c.length.unwrap() - 0.2).abs() < 1e-6);
+    }
+
+    // ========================================================================
+    // SciPy parity tests.
+    //
+    // These tests mirror `scipy/cluster/hierarchy/tests/test_hierarchy.py`
+    // and `hierarchy_test_data.py` to verify that our `linkage` produces
+    // dendrograms equivalent to SciPy's reference implementation. The `Step`
+    // struct `{cluster1, cluster2, distance, size}` corresponds row-by-row to
+    // SciPy's linkage matrix Z[i] = [a, b, dist, size].
+    //
+    // Our NN-chain keeps the surviving (smaller internal index) cluster first,
+    // which may place a newly-created cluster id before a leaf id (e.g.
+    // `Step{3, 2, ...}`). SciPy orders each row by cluster id (smaller first).
+    // Tests normalize each step by sorting (cluster1, cluster2) before
+    // comparing to SciPy's expected Z.
+    // ========================================================================
+
+    /// SciPy `hierarchy_test_data.ytdist` condensed distance vector for 6
+    /// samples (labelled "0".."5"). Pair order is the standard condensed
+    /// upper-triangle layout: (0,1),(0,2),(0,3),(0,4),(0,5),(1,2),...,(4,5).
+    fn scipy_ytdist_condensed() -> Vec<f32> {
+        vec![
+            662.0, 877.0, 255.0, 412.0, 996.0, // (0,1)..(0,5)
+            295.0, 468.0, 268.0, 400.0, // (1,2)..(1,5)
+            754.0, 564.0, 138.0, // (2,3)..(2,5)
+            219.0, 869.0, // (3,4),(3,5)
+            669.0, // (4,5)
+        ]
+    }
+
+    fn scipy_ytdist_matrix() -> NamedMatrix {
+        let names: Vec<String> = (0..6).map(|i| i.to_string()).collect();
+        NamedMatrix::new_from_values(names, scipy_ytdist_condensed()).unwrap()
+    }
+
+    /// Normalize a Step so cluster1 <= cluster2, matching SciPy's Z-row order.
+    fn normalize_step(step: &Step) -> (usize, usize, f32, usize) {
+        if step.cluster1 <= step.cluster2 {
+            (step.cluster1, step.cluster2, step.distance, step.size)
+        } else {
+            (step.cluster2, step.cluster1, step.distance, step.size)
+        }
+    }
+
+    fn assert_steps_match(steps: &[Step], expected: &[(usize, usize, f32, usize)]) {
+        assert_eq!(
+            steps.len(),
+            expected.len(),
+            "step count mismatch: got {}, expected {}",
+            steps.len(),
+            expected.len()
+        );
+        for (i, (step, exp)) in steps.iter().zip(expected.iter()).enumerate() {
+            let got = normalize_step(step);
+            assert_eq!(
+                got.0, exp.0,
+                "step {} cluster1 mismatch: got {}, expected {}",
+                i, got.0, exp.0
+            );
+            assert_eq!(
+                got.1, exp.1,
+                "step {} cluster2 mismatch: got {}, expected {}",
+                i, got.1, exp.1
+            );
+            assert!(
+                (got.2 - exp.2).abs() < 1e-4,
+                "step {} distance mismatch: got {}, expected {}",
+                i,
+                got.2,
+                exp.2
+            );
+            assert_eq!(
+                got.3, exp.3,
+                "step {} size mismatch: got {}, expected {}",
+                i, got.3, exp.3
+            );
+        }
+    }
+
+    /// Mirrors scipy `test_hierarchy.py::TestLinkage::test_linkage_tdist` for
+    /// the 'single' method. Expected Z = `linkage_ytdist_single`.
+    #[test]
+    fn test_scipy_linkage_ytdist_single() {
+        let m = scipy_ytdist_matrix();
+        let steps = linkage(&m, Method::Single).unwrap();
+        // [[2, 5, 138, 2], [3, 4, 219, 2], [0, 7, 255, 3], [1, 8, 268, 4], [6, 9, 295, 6]]
+        let expected = [
+            (2, 5, 138.0, 2),
+            (3, 4, 219.0, 2),
+            (0, 7, 255.0, 3),
+            (1, 8, 268.0, 4),
+            (6, 9, 295.0, 6),
+        ];
+        assert_steps_match(&steps, &expected);
+    }
+
+    /// Mirrors scipy `test_linkage_tdist` for 'complete'.
+    /// Expected Z = `linkage_ytdist_complete`.
+    #[test]
+    fn test_scipy_linkage_ytdist_complete() {
+        let m = scipy_ytdist_matrix();
+        let steps = linkage(&m, Method::Complete).unwrap();
+        // [[2, 5, 138, 2], [3, 4, 219, 2], [1, 6, 400, 3], [0, 7, 412, 3], [8, 9, 996, 6]]
+        let expected = [
+            (2, 5, 138.0, 2),
+            (3, 4, 219.0, 2),
+            (1, 6, 400.0, 3),
+            (0, 7, 412.0, 3),
+            (8, 9, 996.0, 6),
+        ];
+        assert_steps_match(&steps, &expected);
+    }
+
+    /// Mirrors scipy `test_linkage_tdist` for 'average' (UPGMA).
+    /// Expected Z = `linkage_ytdist_average`.
+    #[test]
+    fn test_scipy_linkage_ytdist_average() {
+        let m = scipy_ytdist_matrix();
+        let steps = linkage(&m, Method::Average).unwrap();
+        // [[2, 5, 138, 2], [3, 4, 219, 2], [0, 7, 333.5, 3], [1, 6, 347.5, 3], [8, 9, 680.77777778, 6]]
+        let expected = [
+            (2, 5, 138.0, 2),
+            (3, 4, 219.0, 2),
+            (0, 7, 333.5, 3),
+            (1, 6, 347.5, 3),
+            (8, 9, 680.77777778, 6),
+        ];
+        assert_steps_match(&steps, &expected);
+    }
+
+    /// Mirrors scipy `test_linkage_tdist` for 'weighted' (WPGMA).
+    /// Expected Z = `linkage_ytdist_weighted`.
+    #[test]
+    fn test_scipy_linkage_ytdist_weighted() {
+        let m = scipy_ytdist_matrix();
+        let steps = linkage(&m, Method::Weighted).unwrap();
+        // [[2, 5, 138, 2], [3, 4, 219, 2], [0, 7, 333.5, 3], [1, 6, 347.5, 3], [8, 9, 670.125, 6]]
+        let expected = [
+            (2, 5, 138.0, 2),
+            (3, 4, 219.0, 2),
+            (0, 7, 333.5, 3),
+            (1, 6, 347.5, 3),
+            (8, 9, 670.125, 6),
+        ];
+        assert_steps_match(&steps, &expected);
+    }
+
+    /// SciPy `hierarchy_test_data.X` — 6 points in 2D.
+    fn scipy_x_coords() -> [[f32; 2]; 6] {
+        [
+            [1.43054825, -7.5693489],
+            [6.95887839, 6.82293382],
+            [2.87137846, -9.68248579],
+            [7.87974764, -6.05485803],
+            [8.24018364, -6.09495602],
+            [7.39020262, 8.54004355],
+        ]
+    }
+
+    /// Compute pairwise Euclidean distances (condensed form) for a set of 2D
+    /// points, mirroring `scipy.spatial.distance.pdist(X, metric='euclidean')`.
+    fn pdist_euclidean_2d(points: &[[f32; 2]]) -> Vec<f32> {
+        let n = points.len();
+        let mut result = Vec::with_capacity(n * (n - 1) / 2);
+        for i in 0..n {
+            for j in (i + 1)..n {
+                result.push(crate::libs::linalg::euclidean_distance(
+                    &points[i], &points[j],
+                ));
+            }
+        }
+        result
+    }
+
+    /// Mirrors scipy `test_linkage_X` for 'centroid'.
+    /// Expected Z = `linkage_X_centroid` (atol=1e-6 in scipy, relaxed to 1e-4
+    /// here because we use f32).
+    #[test]
+    fn test_scipy_linkage_x_centroid() {
+        let points = scipy_x_coords();
+        let values = pdist_euclidean_2d(&points);
+        let names: Vec<String> = (0..6).map(|i| i.to_string()).collect();
+        let m = NamedMatrix::new_from_values(names, values).unwrap();
+
+        let steps = linkage(&m, Method::Centroid).unwrap();
+        // [[3, 4, 0.36265956, 2], [1, 5, 1.77045373, 2], [0, 2, 2.55760419, 2], [6, 8, 6.43614494, 4], [7, 9, 15.17363237, 6]]
+        let expected = [
+            (3, 4, 0.36265956, 2),
+            (1, 5, 1.77045373, 2),
+            (0, 2, 2.55760419, 2),
+            (6, 8, 6.43614494, 4),
+            (7, 9, 15.17363237, 6),
+        ];
+        assert_steps_match(&steps, &expected);
+    }
+
+    /// Mirrors scipy `test_linkage_X` for 'median'.
+    /// Expected Z = `linkage_X_median`.
+    #[test]
+    fn test_scipy_linkage_x_median() {
+        let points = scipy_x_coords();
+        let values = pdist_euclidean_2d(&points);
+        let names: Vec<String> = (0..6).map(|i| i.to_string()).collect();
+        let m = NamedMatrix::new_from_values(names, values).unwrap();
+
+        let steps = linkage(&m, Method::Median).unwrap();
+        // [[3, 4, 0.36265956, 2], [1, 5, 1.77045373, 2], [0, 2, 2.55760419, 2], [6, 8, 6.43614494, 4], [7, 9, 15.17363237, 6]]
+        let expected = [
+            (3, 4, 0.36265956, 2),
+            (1, 5, 1.77045373, 2),
+            (0, 2, 2.55760419, 2),
+            (6, 8, 6.43614494, 4),
+            (7, 9, 15.17363237, 6),
+        ];
+        assert_steps_match(&steps, &expected);
+    }
+
+    /// Mirrors scipy `test_linkage_X` for 'ward'.
+    /// Expected Z = `linkage_X_ward`.
+    #[test]
+    fn test_scipy_linkage_x_ward() {
+        let points = scipy_x_coords();
+        let values = pdist_euclidean_2d(&points);
+        let names: Vec<String> = (0..6).map(|i| i.to_string()).collect();
+        let m = NamedMatrix::new_from_values(names, values).unwrap();
+
+        let steps = linkage(&m, Method::Ward).unwrap();
+        // [[3, 4, 0.36265956, 2], [1, 5, 1.77045373, 2], [0, 2, 2.55760419, 2], [6, 8, 9.10208346, 4], [7, 9, 24.7784379, 6]]
+        let expected = [
+            (3, 4, 0.36265956, 2),
+            (1, 5, 1.77045373, 2),
+            (0, 2, 2.55760419, 2),
+            (6, 8, 9.10208346, 4),
+            (7, 9, 24.7784379, 6),
+        ];
+        assert_steps_match(&steps, &expected);
+    }
+
+    /// Mirrors scipy `test_linkage_ties`. Three collinear points
+    /// `[[-1,-1], [0,0], [1,1]]` produce tied distances; each method must
+    /// resolve them identically to scipy.
+    #[test]
+    fn test_scipy_linkage_ties() {
+        let points: [[f32; 2]; 3] = [[-1.0, -1.0], [0.0, 0.0], [1.0, 1.0]];
+        let values = pdist_euclidean_2d(&points);
+        let names: Vec<String> = (0..3).map(|i| i.to_string()).collect();
+        let m = NamedMatrix::new_from_values(names, values).unwrap();
+
+        // d(0,1) = d(1,2) = sqrt(2) ≈ 1.41421356
+        // d(0,2) = sqrt(8) ≈ 2.82842712
+        let sqrt2: f32 = 2.0_f32.sqrt();
+        let sqrt8: f32 = 8.0_f32.sqrt();
+
+        // Step 0 is always (0, 1, sqrt(2), 2) — closest pair.
+        // Step 1 merges cluster {0,1} (id 3) with leaf 2; the merge distance
+        // depends on the method.
+        let cases: [(Method, f32); 7] = [
+            (Method::Single, sqrt2),        // min(d02, d12) = sqrt(2)
+            (Method::Complete, sqrt8),      // max(d02, d12) = sqrt(8)
+            (Method::Average, 2.12132034),  // (d02 + d12) / 2 = (sqrt8 + sqrt2) / 2
+            (Method::Weighted, 2.12132034), // (h1 + h2) / 2 = (sqrt2 + sqrt2) / 2... wait
+            (Method::Centroid, 2.12132034), // distance between centroids
+            (Method::Median, 2.12132034),   // median of pair distances
+            (Method::Ward, 2.44948974),     // sqrt( (n1*n2/(n1+n2)) * ||c1-c2||^2 )
+        ];
+
+        for (method, expected_step1_dist) in cases {
+            let steps = linkage(&m, method).unwrap();
+            assert_eq!(steps.len(), 2, "method {:?}: expected 2 steps", method);
+            // Step 0: (0, 1, sqrt(2), 2)
+            let s0 = normalize_step(&steps[0]);
+            assert_eq!(s0.0, 0, "method {:?} step 0 cluster1", method);
+            assert_eq!(s0.1, 1, "method {:?} step 0 cluster2", method);
+            assert!(
+                (s0.2 - sqrt2).abs() < 1e-4,
+                "method {:?} step 0 distance: got {}, expected {}",
+                method,
+                s0.2,
+                sqrt2
+            );
+            assert_eq!(s0.3, 2, "method {:?} step 0 size", method);
+
+            // Step 1: (2, 3, expected_step1_dist, 3)
+            let s1 = normalize_step(&steps[1]);
+            assert_eq!(s1.0, 2, "method {:?} step 1 cluster1", method);
+            assert_eq!(s1.1, 3, "method {:?} step 1 cluster2", method);
+            assert!(
+                (s1.2 - expected_step1_dist).abs() < 1e-4,
+                "method {:?} step 1 distance: got {}, expected {}",
+                method,
+                s1.2,
+                expected_step1_dist
+            );
+            assert_eq!(s1.3, 3, "method {:?} step 1 size", method);
+        }
     }
 }
