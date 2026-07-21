@@ -12,7 +12,9 @@ fn apply_transform(
         "linear" => val * scale + offset,
         "inv-linear" => max_val - val,
         "log" => {
-            if val > 0.0 {
+            if val.is_nan() {
+                f32::NAN
+            } else if val > 0.0 {
                 -val.ln()
             } else {
                 f32::INFINITY
@@ -56,10 +58,10 @@ pub fn transform_matrix(
         .unwrap_or_else(|| vec![0.0; size]);
     let has_diags = result.get_diags().is_some();
 
-    // Warn if normalize is requested but diagonals are missing or non-positive.
-    // Non-positive diagonals trigger the `d_i <= 1e-9` branch in the normalize
-    // step, which zeros out the corresponding off-diagonal values, making the
-    // transformation a no-op for those rows/columns.
+    // Warn if normalize is requested but diagonals are missing, non-positive,
+    // or non-finite. Any of these conditions trigger the `d_i <= 1e-9` branch
+    // in the normalize step, which zeros out the corresponding off-diagonal
+    // values, making the transformation a no-op for those rows/columns.
     if normalize {
         if !has_diags {
             log::warn!("--normalize requested but no diagonal values found; treating them as 0.0.");
@@ -71,6 +73,14 @@ pub fn transform_matrix(
             log::warn!(
                 "--normalize requested but all diagonal values are non-positive (max = {}).",
                 max_diag
+            );
+        }
+        let non_finite_count = diags.iter().filter(|d| !d.is_finite()).count();
+        if non_finite_count > 0 {
+            log::warn!(
+                "--normalize requested but {} diagonal value(s) are NaN or Inf; \
+                 treating them as zero.",
+                non_finite_count
             );
         }
     }
@@ -110,9 +120,12 @@ pub fn transform_matrix(
         d = match method {
             // Keep the diagonal at 0 for a valid distance matrix.
             "inv-linear" => 0.0,
-            // log of a non-positive diagonal is defined as 0 (unlike off-diagonal Inf).
+            // log of a non-positive diagonal is defined as 0 (unlike off-diagonal Inf);
+            // NaN is propagated so invalid input remains visible.
             "log" => {
-                if d > 0.0 {
+                if d.is_nan() {
+                    f32::NAN
+                } else if d > 0.0 {
                     -d.ln()
                 } else {
                     0.0

@@ -154,6 +154,49 @@ fn test_transform_log_non_positive() {
 }
 
 #[test]
+fn test_transform_log_nan_propagated() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full matrix with NaN diagonal and off-diagonal values.
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A nan nan").unwrap();
+    writeln!(tmp, "B nan nan").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    let transformed =
+        super::transform_matrix(&matrix, "log", 1.0, 1.0, 0.0, false).unwrap();
+
+    // NaN input must be propagated, not converted to Inf or 0.
+    assert!(transformed.get(0, 0).is_nan());
+    assert!(transformed.get(0, 1).is_nan());
+    assert!(transformed.get(1, 1).is_nan());
+}
+
+#[test]
+fn test_transform_normalize_warns_non_finite_diags() {
+    use std::io::Write;
+
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    // Full 3x3 with one Inf diagonal and one NaN diagonal.
+    writeln!(tmp, "3").unwrap();
+    writeln!(tmp, "A inf 0.5 0.5").unwrap();
+    writeln!(tmp, "B 0.5 nan 0.5").unwrap();
+    writeln!(tmp, "C 0.5 0.5 1.0").unwrap();
+
+    let matrix = NamedMatrix::from_relaxed_phylip(tmp.path().to_str().unwrap()).unwrap();
+    let transformed =
+        super::transform_matrix(&matrix, "linear", 1.0, 1.0, 0.0, true).unwrap();
+
+    // Non-finite diagonals are treated as zero: off-diagonals involving A or B
+    // are zeroed, while C-C remains normalized to 1.0.
+    assert_eq!(transformed.get(0, 1), 0.0);
+    assert_eq!(transformed.get(0, 2), 0.0);
+    assert_eq!(transformed.get(1, 2), 0.0);
+    assert_eq!(transformed.get(2, 2), 1.0);
+}
+
+#[test]
 fn test_transform_sqrt_negative() {
     use std::io::Write;
 

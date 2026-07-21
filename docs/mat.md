@@ -223,8 +223,11 @@ sequence identity probability to evolutionary distance.
 
 - Diagonal information is preserved so that `--normalize` can use self-scores. If the input lacks
   diagonal values, `--normalize` will not work correctly.
+- `log` of `NaN` propagates `NaN` for both off-diagonal and diagonal values.
 - `log` of 0 or negative off-diagonal values produces `Inf`; non-positive diagonal values become
   `0`.
+- `--normalize` warns when diagonal values are `NaN` or `Inf` and treats them as zero for that row
+  and column.
 
 #### Future Work
 

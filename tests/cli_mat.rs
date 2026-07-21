@@ -1381,3 +1381,62 @@ fn command_mat_transform_no_warning_for_default_max_val_scale_offset() {
         stderr
     );
 }
+
+// ============================================================================
+// NaN / Inf handling in transform (Issue 4)
+// ============================================================================
+
+#[test]
+fn command_mat_transform_log_nan_propagated() {
+    // log of NaN must remain NaN in the output matrix (formatted as "nan"),
+    // not converted to Infinity.
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "2").unwrap();
+    writeln!(tmp, "A nan nan").unwrap();
+    writeln!(tmp, "B nan nan").unwrap();
+    tmp.flush().unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            tmp.path().to_str().unwrap(),
+            "--op",
+            "log",
+        ])
+        .run();
+
+    assert!(
+        stdout.to_lowercase().contains("a\tnan\tnan"),
+        "expected NaN to propagate in output, got: {}",
+        stdout
+    );
+}
+
+#[test]
+fn command_mat_transform_normalize_warns_non_finite_diags() {
+    // --normalize with NaN/Inf diagonals must warn the user.
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "3").unwrap();
+    writeln!(tmp, "A inf 0.5 0.5").unwrap();
+    writeln!(tmp, "B 0.5 nan 0.5").unwrap();
+    writeln!(tmp, "C 0.5 0.5 1.0").unwrap();
+    tmp.flush().unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            tmp.path().to_str().unwrap(),
+            "--normalize",
+        ])
+        .run();
+
+    assert!(
+        stderr.contains("diagonal value(s) are NaN or Inf"),
+        "expected NaN/Inf diagonal warning in stderr, got: {}",
+        stderr
+    );
+}
