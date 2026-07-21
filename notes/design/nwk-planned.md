@@ -9,7 +9,7 @@
 以下功能经过评估后决定不实现：
 
 - **`nwk condense`**：由 `necom nwk subtree --condense` 提供，不计划独立子命令。
-- **`nwk match` / `ed` / `gen` / `duration`**：来自 `newick_utils` 的映射，当前没有明确需求。
+- **`nwk match` / `ed` / `duration`**：来自 `newick_utils` 的映射，当前没有明确需求。
 - **`colless_yule` / `colless_pda` / `sackin_yule` / `sackin_pda`**：标准化统计指标，当前未实现。
 - **`inorder` 遍历**：仅适用于二叉树，`necom` 支持多叉树，故不实现。
 - **`generate_random_tree`（随机树生成）**：Yule/Coalescent 模型生成随机系统发育树，主要用于模拟

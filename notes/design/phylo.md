@@ -8,7 +8,7 @@
 > 等可视化属性值也进行 LaTeX 特殊字符转义。
 
 > **未实现且无具体计划**：`nwk condense`（由 `subtree --condense` 提供，不计划独立子命令）；
-> `match`/`ed`/`gen`/`duration`（来自 `newick_utils` 映射，见 §3）；`colless_yule`/`colless_pda`/
+> `match`/`ed`/`duration`（来自 `newick_utils` 映射，见 §3）；`colless_yule`/`colless_pda`/
 > `sackin_yule`/`sackin_pda` 标准化统计指标；`inorder` 遍历（仅适用二叉树，`necom`
 > 支持多叉树故未实现）；`generate_random_tree`（Yule/Coalescent 模型随机树生成，不计划实现，详见
 > [nwk-planned.md](nwk-planned.md)）。终端可读树形展示可直接使用 `necom nwk indent`。
@@ -246,7 +246,7 @@ graph LR
     - **状态**: 未实现
 - **`nw_gen`** $\to$ **`necom nwk gen`**
     - **功能**: 生成随机树
-    - **状态**: 未实现
+    - **状态**: 不计划实现（即 `generate_random_tree`，见 [nwk-planned.md](nwk-planned.md)）
 - **`nw_duration`** $\to$ **`necom nwk duration`**
     - **功能**: (通常指时间树相关)
     - **状态**: 未实现

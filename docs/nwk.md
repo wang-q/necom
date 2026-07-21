@@ -153,8 +153,9 @@ computation. If strict branch-length validation is needed, clean the data in the
 
 - `condense`: Tree condensation functionality is currently provided by
   `necom nwk subtree --condense`; no standalone `condense` subcommand is planned at this time.
-- `match`, `ed`, `gen`, `duration`: Mapped from `newick_utils` but not yet implemented in
-  `necom nwk`; no concrete plan at this time.
+- `match`, `ed`, `duration`: Mapped from `newick_utils` but not yet implemented in
+  `necom nwk`; no concrete plan at this time. `gen` (random tree generation) is decided
+  not to be implemented — see [`notes/design/nwk-planned.md`](../notes/design/nwk-planned.md).
 - Tree evaluation (geometric, taxonomic, phylogenetic, trait consistency) is planned as a top-level
   command `necom eval`. `nwk compare` and `nwk support` have been migrated to `necom eval compare`
   and `necom eval replicate`; see [`docs/eval.md`](eval.md). The `eval tree` subcommand remains in
