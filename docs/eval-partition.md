@@ -202,6 +202,9 @@ geometry/statistics of the data).
     - **Principle**: Compares the sum of within-cluster distances with the sum of the smallest
       $N_W$ distances in the entire dataset ($N_W$ is the number of within-cluster pairs).
     - **Range**: `[0, 1]`. **Smaller is better**.
+    - **Boundary cases**: Returns `0.0` when there are fewer than 2 samples, when there are no
+      within-cluster pairs (all singletons), when all pairs are within-cluster (single cluster),
+      or when all pairwise distances are equal (zero variance in the denominator).
     - **Disadvantages**: High computational complexity ($O(N^2 \log N)$), requiring sorting of all
       pairwise distances.
 - **Hubert's Gamma**
@@ -209,10 +212,15 @@ geometry/statistics of the data).
       same cluster, 1 = different clusters).
     - **Range**: `[-1, 1]`. **Larger is better** (Y=1 means different clusters; larger Gamma means
       between-cluster distances exceed within-cluster distances more strongly).
+    - **Boundary cases**: Returns `0.0` when there are fewer than 2 samples, or when the distance
+      matrix or the clustering matrix has zero variance (degenerate cases such as all-equal
+      distances or a single-cluster partition).
 - **Kendall's Tau**
     - **Principle**: Rank correlation coefficient between the distance matrix and the clustering
       matrix.
     - **Range**: `[-1, 1]`. **Larger is better**.
+    - **Boundary cases**: Returns `0.0` when there are fewer than 2 samples, or when the
+      denominator is zero (degenerate cases with no usable pair comparisons).
 - **Davies-Bouldin Index (DBI)**
     - **Principle**: Same idea as the coordinate version, but uses **medoids** (cluster members
       with the smallest average intra-cluster distance) as cluster representatives because

@@ -114,8 +114,8 @@ Wrap a Newick tree in a complete LaTeX document.
 - Single quotes inside single-quoted labels are escaped by doubling (`''`), and double quotes
   inside double-quoted labels are escaped by doubling (`""`).
 - Name-based selection filters (`-n`, `-l`, `-x`, `--lca`) generally log a warning and continue
-  when a requested name is not found, rather than abort. This applies to commands such as `rename`,
-  `subtree`, `comment`, and `prune`.
+  when a requested name is not found, rather than abort. This applies to commands such as `distance`,
+  `label`, `rename`, `subtree`, `comment`, and `prune`.
 - `order --name-list` is an exception: entries in the name list that are not found among the leaf
   names cause the command to fail with an error listing the missing names.
 - `reroot` is also an exception: if none of the names specified with `--node` are found, it reports
