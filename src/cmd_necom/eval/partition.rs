@@ -253,7 +253,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         if p2.is_none() && dist_provider.is_none() && coords.is_none() {
             anyhow::bail!(
-                "Batch mode requires at least one evaluation target: --other/--truth, --matrix, --tree, or --coords."
+                "Batch mode requires at least one evaluation target: --other/--truth, --matrix, --tree, or --coords (for internal eval)."
             );
         }
 
@@ -398,7 +398,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
     } else {
         anyhow::bail!(
-            "Either --other/--truth (for external eval), --matrix, --tree, or --coords (for internal eval) must be provided."
+            "Single mode requires at least one evaluation target: --other/--truth, --matrix, --tree, or --coords (for internal eval)."
         );
     };
 

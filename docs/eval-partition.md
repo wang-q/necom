@@ -213,7 +213,7 @@ geometry/statistics of the data).
       the medoid, and inter-cluster distance is the distance between medoids.
     - **Range**: `[0, +∞)`. **Smaller is better**.
     - **Boundary cases**: If two medoids coincide and at least one cluster has non-zero scatter,
-      the similarity is undefined; a large finite proxy is used so the TSV remains parseable.
+      the similarity is undefined; a large finite proxy (`1e10`) is used so the TSV remains parseable.
 
 #### 2.2 Coordinate-Based
 
@@ -241,9 +241,12 @@ geometry/statistics of the data).
     - **Principle**: Composite index based on total dispersion, within-cluster dispersion, and
       maximum centroid distance.
     - **Range**: `[0, +∞)`. **Larger is better**.
-    - **Boundary cases**: If within-cluster dispersion is zero while total dispersion is
-      positive (perfectly compact clusters), the score is infinite and is reported as `NA` to keep
-      the TSV parseable.
+    - **Boundary cases**:
+        - If within-cluster dispersion is zero while total dispersion is positive (perfectly
+          compact clusters), the score is infinite and is reported as `NA` to keep the TSV
+          parseable.
+        - If both within-cluster and total dispersion are zero (all points coincide with the
+          global centroid — degenerate input), the score is `0.0`.
 - **Ball-Hall Index**
     - **Principle**: Mean of average within-cluster dispersions.
     - **Range**: `[0, +∞)`. **Smaller is better** (more compact).

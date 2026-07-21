@@ -1035,3 +1035,73 @@ g1\t1\tB\n";
 
     Ok(())
 }
+
+#[test]
+fn test_eval_partition_coords_rejects_nan() -> anyhow::Result<()> {
+    // `f32::parse` accepts "nan"/"inf" literals, which would propagate through
+    // metrics as NaN and produce NA output. The coords loader must reject
+    // non-finite values at the boundary with a clear error.
+    let mut partition_file = NamedTempFile::new()?;
+    partition_file.write_all("1\tA\n1\tB\n2\tC\n2\tD\n".as_bytes())?;
+    let partition_path = partition_file.path().to_str().unwrap();
+
+    let mut coords_file = NamedTempFile::new()?;
+    coords_file.write_all(b"A\t0.0\t0.0\nB\tnan\t0.0\nC\t5.0\t0.0\nD\t6.0\t0.0\n")?;
+    let coords_path = coords_file.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(partition_path)
+        .arg("--coords")
+        .arg(coords_path)
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure for NaN coordinate value, but command succeeded"
+    );
+    assert!(
+        stderr.contains("non-finite"),
+        "Expected non-finite value error, got: {}",
+        stderr
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_eval_partition_coords_rejects_inf() -> anyhow::Result<()> {
+    // Companion to the NaN test: "inf" must also be rejected.
+    let mut partition_file = NamedTempFile::new()?;
+    partition_file.write_all("1\tA\n1\tB\n2\tC\n2\tD\n".as_bytes())?;
+    let partition_path = partition_file.path().to_str().unwrap();
+
+    let mut coords_file = NamedTempFile::new()?;
+    coords_file.write_all(b"A\t0.0\t0.0\nB\tinf\t0.0\nC\t5.0\t0.0\nD\t6.0\t0.0\n")?;
+    let coords_path = coords_file.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("necom")?;
+    let output = cmd
+        .arg("eval")
+        .arg("partition")
+        .arg(partition_path)
+        .arg("--coords")
+        .arg(coords_path)
+        .output()?;
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !output.status.success(),
+        "Expected failure for Inf coordinate value, but command succeeded"
+    );
+    assert!(
+        stderr.contains("non-finite"),
+        "Expected non-finite value error, got: {}",
+        stderr
+    );
+
+    Ok(())
+}

@@ -81,6 +81,13 @@ impl Coordinates {
             })?;
             if !fv.name().is_empty() {
                 let vec: Vec<f64> = fv.list().iter().map(|&v| v as f64).collect();
+                if vec.iter().any(|v| !v.is_finite()) {
+                    anyhow::bail!(
+                        "non-finite value (NaN/Inf) in coordinate data row {}: {}",
+                        data_line_no,
+                        fv.name()
+                    );
+                }
                 // Initialize dim on the first data row (not line index), so that
                 // leading comment/blank lines do not cause false "inconsistent
                 // dimensions" errors.
