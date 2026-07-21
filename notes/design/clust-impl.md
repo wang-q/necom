@@ -91,7 +91,7 @@
     - `necom mat compare` 已提供距离矩阵间相似度指标（Pearson/Spearman/MAE/Cosine/Jaccard/Euclid）。
     - Cophenetic Correlation 仍计划在 `necom eval tree` 中实现，用于量化树对原始距离矩阵的拟合优度。
 4. **Optimal Leaf Ordering (OLO)**:
-    - 已迁移至 [`notes/design/nwk-planned.md`](nwk-planned.md) §1，本文档不再展开。
+    - 已作为 `necom nwk order --olo` 实现，算法见 [`phylo.md`](phylo.md) §4「已实现」。
 5. **Distance Metric Architecture**:
     - 计划参考 `DistanceMetric` 类设计，统一距离计算接口（由 `necom mat` 与 `necom eval partition`
       等命令复用），并在未来支持稀疏距离矩阵计算（Phase 3）。

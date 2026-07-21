@@ -10,16 +10,14 @@
 > **未实现且无具体计划**：`nwk condense`（由 `subtree --condense` 提供，不计划独立子命令）；
 > `match`/`ed`/`gen`/`duration`（来自 `newick_utils` 映射，见 §3）；`colless_yule`/`colless_pda`/
 > `sackin_yule`/`sackin_pda` 标准化统计指标；`inorder` 遍历（仅适用二叉树，`necom`
-> 支持多叉树故未实现）。
-
-> **规划中**：`generate_random_tree`（Yule/Coalescent 模型，主要用于模拟研究，优先级较低），详见
-> [nwk-planned.md](nwk-planned.md)。终端可读树形展示可直接使用 `necom nwk indent`。
+> 支持多叉树故未实现）；`generate_random_tree`（Yule/Coalescent 模型随机树生成，不计划实现，详见
+> [nwk-planned.md](nwk-planned.md)）。终端可读树形展示可直接使用 `necom nwk indent`。
 
 > **关联文档**：
 
 > - [eval-planned.md](eval-planned.md)（`necom eval` 命令的未来工作计划，其中 `eval tree`
   子命令复用本文档描述的 `cmp.rs`/`stat.rs`/`is_monophyletic`）。
-> - [nwk-planned.md](nwk-planned.md)（`necom nwk` 尚未实现的随机树生成等工作计划）。
+> - [nwk-planned.md](nwk-planned.md)（`necom nwk` 已决策不实现的功能清单）。
 
 ## 1. 架构设计
 
@@ -328,9 +326,6 @@ graph LR
 
 - **可视化**:
     - `print_entity()` (或类似): 不计划实现；终端可读树形展示可直接使用 `necom nwk indent`。
-- **树生成**:
-    - `generate_random_tree()` (Yule/Coalescent 模型): 主要用于模拟研究。优先级较低。详见
-      [nwk-planned.md](nwk-planned.md)。
 
 ---
 ## 5. 可视化详情
@@ -340,14 +335,7 @@ DOT（通用图形工具）。
 
 ### 5.1 SVG 输出
 
-- **`necom nwk to-svg`**: 生成 SVG 矢量图，无需外部依赖，浏览器直接打开。
-
-**特点**：
-
-- 自动检测模式：有枝长时绘制 phylogram（含比例尺），无枝长时绘制 cladogram。
-- 默认样式与 LaTeX Forest 模板一致：灰色分支线 (1pt)、黑色节点圆点 (2pt)、无衬线字体。
-- 支持自定义宽度 (`-w`) 和叶节点间距 (`-v`)。
-- Phylogram 模式下自动绘制比例尺（1×/2×/5× 动态刻度算法）。
+SVG 输出的行为、默认样式与参数说明见用户文档 [`help/nwk/to-svg.md`](../../docs/help/nwk/to-svg.md)。
 
 ### 5.2 LaTeX Forest 输出
 
