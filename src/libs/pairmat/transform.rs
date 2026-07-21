@@ -91,10 +91,14 @@ pub fn transform_matrix(
             let mut val = result.get(i, j);
 
             // 1. Normalize
+            // Non-finite diagonals (NaN/Inf) are treated as zero, matching the
+            // warning emitted above. Using `is_finite() && d > 1e-9` ensures
+            // Inf is handled consistently with NaN instead of relying on the
+            // side effect that dividing by Infinity yields 0.0.
             if normalize {
                 let d_i = diags[i];
                 let d_j = diags[j];
-                if d_i > 1e-9 && d_j > 1e-9 {
+                if d_i.is_finite() && d_i > 1e-9 && d_j.is_finite() && d_j > 1e-9 {
                     val /= (d_i * d_j).sqrt();
                 } else {
                     val = 0.0;
@@ -109,13 +113,15 @@ pub fn transform_matrix(
     }
 
     // Transform diagonal elements.
-    // Normalize sets d to 1.0 (if original d > 1e-9) or 0.0, matching off-diagonal behavior
-    // where x_norm(i,i) = x(i,i) / sqrt(x(i,i)*x(i,i)) = 1.0.
+    // Normalize sets d to 1.0 (if original d is finite and > 1e-9) or 0.0,
+    // matching off-diagonal behavior where x_norm(i,i) = 1.0 for a valid
+    // positive diagonal. Non-finite diagonals are treated as zero here too,
+    // consistent with the off-diagonal branch and the warning above.
     let mut new_diags = vec![0.0; size];
     for i in 0..size {
         let mut d = if has_diags { diags[i] } else { 0.0 };
         if normalize {
-            d = if d > 1e-9 { 1.0 } else { 0.0 };
+            d = if d.is_finite() && d > 1e-9 { 1.0 } else { 0.0 };
         }
         d = match method {
             // Keep the diagonal at 0 for a valid distance matrix.

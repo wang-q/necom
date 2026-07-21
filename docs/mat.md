@@ -101,8 +101,8 @@ A dense, named distance matrix used for PHYLIP input/output. It stores:
 - An optional diagonal vector, required by transformations such as
   `necom mat transform --normalize`.
 
-`NamedMatrix` is the in-memory representation after loading a PHYLIP file. For $N = 10{,} 000$, the
-underlying `CondensedMatrix` holds roughly million `f32` values, or about 200 MB.
+`NamedMatrix` is the in-memory representation after loading a PHYLIP file. For $N = 10{,}000$, the
+underlying `CondensedMatrix` holds roughly 50 million `f32` values, or about 200 MB.
 
 #### CondensedMatrix
 
@@ -110,6 +110,9 @@ A memory-efficient dense matrix used directly by hierarchical clustering algorit
 `necom clust hier`. It stores only the upper triangle (excluding the diagonal) of a symmetric
 matrix in a single `Vec<f32>`:
 
+$$
+k = N \cdot \text{row} - \frac{\text{row}(\text{row}+1)}{2} + \text{col} - \text{row} - 1, \quad \text{row} < \text{col}
+$$
 
 The diagonal is implicitly `0.0`, and the matrix is symmetric. This is the standard condensed
 distance matrix layout used by many statistical packages (e.g., SciPy) and by the NN-chain
@@ -118,9 +121,12 @@ implementation in `necom clust hier`.
 #### ScoringMatrix<T>
 
 A sparse matrix for graph-based algorithms (e.g., DBSCAN, MCL) and partial pairwise data. It stores
-only explicitly set values in a `HashMap<usize, T>`,using a single compressed key for the lower
+only explicitly set values in a `HashMap<usize, T>`, using a single compressed key for the lower
 triangle including the diagonal:
 
+$$
+\text{key}(i, j) = \frac{j(j+1)}{2} + i, \quad i \le j
+$$
 
 Because this key depends only on `i` and `j`, not on the matrix size `N`, entries remain valid even
 when the inferred size grows as more samples are discovered.
@@ -201,6 +207,9 @@ clustering commands.
 
 For similarities with a fixed upper bound:
 
+$$
+D = \text{Max} - S
+$$
 
 Examples: BLAST identity (0–100) becomes $D = 100 - S$; fractions become $D = 1 - S$.
 
@@ -208,6 +217,9 @@ Examples: BLAST identity (0–100) becomes $D = 100 - S$; fractions become $D = 
 
 For raw scores without a fixed upper bound, normalize by diagonal self-scores first:
 
+$$
+D = 1 - \frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}}
+$$
 
 A simpler alternative uses the global maximum: $D = 1 - S(x, y) / Max(S)$.
 
@@ -215,6 +227,9 @@ A simpler alternative uses the global maximum: $D = 1 - S(x, y) / Max(S)$.
 
 For probabilities or multiplicative models:
 
+$$
+D = -\ln(S)
+$$
 
 After normalization: $D = -\ln(S(x, y) / \sqrt{S(x, x) \cdot S(y, y)})$. Useful for converting
 sequence identity probability to evolutionary distance.

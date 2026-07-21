@@ -194,6 +194,12 @@ fn test_transform_normalize_warns_non_finite_diags() {
     assert_eq!(transformed.get(0, 2), 0.0);
     assert_eq!(transformed.get(1, 2), 0.0);
     assert_eq!(transformed.get(2, 2), 1.0);
+    // Diagonals of A (Inf) and B (NaN) must also be treated as zero before the
+    // linear op, producing offset (0.0 * scale + offset = 0.0 with scale=1.0,
+    // offset=0.0). Previously the Inf diagonal was normalized to 1.0, yielding
+    // 1.0 — contradicting the "treating them as zero" warning.
+    assert_eq!(transformed.get(0, 0), 0.0);
+    assert_eq!(transformed.get(1, 1), 0.0);
 }
 
 #[test]

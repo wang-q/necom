@@ -1440,3 +1440,34 @@ fn command_mat_transform_normalize_warns_non_finite_diags() {
         stderr
     );
 }
+
+#[test]
+fn command_mat_transform_normalize_inf_diag_treated_as_zero() {
+    // --normalize must treat Inf diagonals as zero, matching the warning text.
+    // Default op is linear with scale=1.0, offset=0.0, so a zeroed diagonal
+    // yields 0.0 (0.0 * 1.0 + 0.0). Previously the Inf diagonal was normalized
+    // to 1.0, yielding 1.0 — contradicting the "treating them as zero" warning.
+    use std::io::Write;
+    let mut tmp = tempfile::NamedTempFile::new().unwrap();
+    writeln!(tmp, "3").unwrap();
+    writeln!(tmp, "A inf 0.5 0.5").unwrap();
+    writeln!(tmp, "B 0.5 nan 0.5").unwrap();
+    writeln!(tmp, "C 0.5 0.5 1.0").unwrap();
+    tmp.flush().unwrap();
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&[
+            "mat",
+            "transform",
+            tmp.path().to_str().unwrap(),
+            "--normalize",
+        ])
+        .run();
+
+    // A-A diagonal: Inf treated as zero -> 0.0
+    assert_row_value(&stdout, "A\t", 1, 0.0, 1e-6);
+    // B-B diagonal: NaN treated as zero -> 0.0
+    assert_row_value(&stdout, "B\t", 2, 0.0, 1e-6);
+    // C-C diagonal: 1.0 normalized -> 1.0
+    assert_row_value(&stdout, "C\t", 3, 1.0, 1e-6);
+}
