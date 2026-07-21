@@ -1,6 +1,6 @@
 use anyhow::Context;
 use clap::parser::ValueSource;
-use clap::{Arg, ArgMatches, Command};
+use clap::{ArgMatches, Command};
 use std::io::Write;
 
 /// Build the clap subcommand for dbscan.
@@ -17,18 +17,8 @@ pub fn make_subcommand() -> Command {
         .arg(crate::cmd_necom::args::missing_arg("1.0"))
         .arg(crate::cmd_necom::args::eps_arg())
         .arg(crate::cmd_necom::args::min_points_arg())
-        .arg(min_pct_arg())
+        .arg(crate::cmd_necom::args::min_pct_arg())
         .arg(crate::cmd_necom::args::outfile_arg())
-}
-
-/// `--min-pct` argument: alternative way to specify `min_points` as a fraction
-/// of the total number of samples.
-pub fn min_pct_arg() -> Arg {
-    Arg::new("min_pct")
-        .long("min-pct")
-        .num_args(1)
-        .value_parser(clap::value_parser!(f64))
-        .help("Minimum points as a fraction of total samples (0..1). Alternative to --min-points")
 }
 
 /// Resolve the effective `min_points` value from `--min-points` and `--min-pct`.
@@ -106,21 +96,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut clusters = dbscan.results_cluster();
 
     // 4. Output
-    let out = if opt_rep == "first" {
-        necom::libs::clust::format::format_flat_clusters(
-            &mut clusters,
-            &names,
-            opt_format,
-            |c| c.first().copied(),
-        )?
-    } else {
-        necom::libs::clust::format::format_flat_clusters(
-            &mut clusters,
-            &names,
-            opt_format,
-            |c| necom::libs::clust::medoid::find_medoid(&matrix, c, false),
-        )?
-    };
+    let out = necom::libs::clust::format::format_flat_clusters_with_rep(
+        &mut clusters,
+        &names,
+        &matrix,
+        opt_rep,
+        false,
+        opt_format,
+    )?;
 
     let mut writer = necom::writer(outfile)
         .with_context(|| format!("Failed to open writer for {}", outfile))?;

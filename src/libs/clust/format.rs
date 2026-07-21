@@ -5,6 +5,8 @@
 
 use std::fmt::Write as _;
 
+use crate::libs::pairmat::MatrixView;
+
 /// Sort and format flat clustering results (indices into `names`).
 ///
 /// Members within each cluster are sorted alphabetically by name; clusters
@@ -77,6 +79,32 @@ where
         _ => anyhow::bail!("unsupported output format: {}", format),
     }
     Ok(out)
+}
+
+/// Format flat clusters with representative selection.
+///
+/// Wrapper around [`format_flat_clusters`] that picks the representative
+/// strategy from `rep`: `"first"` uses the alphabetically-first member (after
+/// sorting); any other value uses [`find_medoid`](crate::libs::clust::medoid::find_medoid).
+/// `find_max` is forwarded to `find_medoid` (`true` for similarity matrices,
+/// `false` for distance matrices).
+pub fn format_flat_clusters_with_rep<M>(
+    clusters: &mut Vec<Vec<usize>>,
+    names: &[String],
+    matrix: &M,
+    rep: &str,
+    find_max: bool,
+    format: &str,
+) -> anyhow::Result<String>
+where
+    M: MatrixView,
+{
+    match rep {
+        "first" => format_flat_clusters(clusters, names, format, |c| c.first().copied()),
+        _ => format_flat_clusters(clusters, names, format, |c| {
+            crate::libs::clust::medoid::find_medoid(matrix, c, find_max)
+        }),
+    }
 }
 
 #[cfg(test)]

@@ -240,8 +240,8 @@ generation, supporting `single`, `complete`, `average`, `weighted`, `centroid`, 
     - Concept: Minimizes the increase in within-cluster sum of squares (total within-group variance,
       SSE); commonly used and robust.
     - Update (squared-distance version, where n is cluster size):
-        - Let the squared distance between merged cluster `u∪v` and a third cluster `w` be:
-        - `d(u∪v,w)^2 = [ (n_u+n_w) d(u,w)^2 + (n_v+n_w) d(v,w)^2 − n_w d(u,v)^2 ] / (n_u+n_v+n_w)`
+        - Let the squared distance between merged cluster `u∪v` and a third cluster `k` be:
+        - `d(u∪v,k)^2 = [ (n_u+n_k) d(u,k)^2 + (n_v+n_k) d(v,k)^2 − n_k d(u,v)^2 ] / (n_u+n_v+n_k)`
     - If the input is non-squared distances: square them for the update, and take the square root
       or use the SSE-increment definition for merge heights when outputting.
     - Distance prerequisite: Theoretically requires Euclidean or near-Euclidean distances; usable on

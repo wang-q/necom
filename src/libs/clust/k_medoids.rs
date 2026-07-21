@@ -52,6 +52,10 @@ impl KMedoids {
     /// * `k` - Number of clusters
     /// * `max_iter` - Maximum number of iterations per run
     /// * `runs` - Number of random initializations to perform
+    ///
+    /// Unlike `Dbscan::new` and `Mcl::new`, this constructor does not validate
+    /// its arguments. Degenerate inputs (`k == 0`, `runs == 0`, or
+    /// `max_iter == 0`) cause `perform_clustering` to return an empty `Vec`.
     pub fn new(k: usize, max_iter: usize, runs: usize) -> Self {
         Self {
             k,

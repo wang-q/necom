@@ -18,7 +18,7 @@ pub fn make_subcommand() -> Command {
         .arg(crate::cmd_necom::args::same_arg("0.0"))
         .arg(crate::cmd_necom::args::missing_arg("1.0"))
         .arg(crate::cmd_necom::args::min_points_arg())
-        .arg(crate::cmd_necom::clust::dbscan::min_pct_arg())
+        .arg(crate::cmd_necom::args::min_pct_arg())
         .arg(crate::cmd_necom::args::outfile_arg())
         .arg(
             Arg::new("scan")
@@ -152,21 +152,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         dbscan.perform_clustering(&matrix);
         let mut clusters = dbscan.results_cluster();
 
-        let out = if opt_rep == "first" {
-            necom::libs::clust::format::format_flat_clusters(
-                &mut clusters,
-                &names,
-                opt_format,
-                |c| c.first().copied(),
-            )?
-        } else {
-            necom::libs::clust::format::format_flat_clusters(
-                &mut clusters,
-                &names,
-                opt_format,
-                |c| necom::libs::clust::medoid::find_medoid(&matrix, c, false),
-            )?
-        };
+        let out = necom::libs::clust::format::format_flat_clusters_with_rep(
+            &mut clusters,
+            &names,
+            &matrix,
+            opt_rep,
+            false,
+            opt_format,
+        )?;
 
         writer.write_all(out.as_bytes())?;
     }

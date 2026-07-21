@@ -61,21 +61,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut clusters = mcl.perform_clustering(&matrix);
 
     // 4. Output
-    let out = if opt_rep == "first" {
-        necom::libs::clust::format::format_flat_clusters(
-            &mut clusters,
-            &names,
-            opt_format,
-            |c| c.first().copied(),
-        )?
-    } else {
-        necom::libs::clust::format::format_flat_clusters(
-            &mut clusters,
-            &names,
-            opt_format,
-            |c| necom::libs::clust::medoid::find_medoid(&matrix, c, true),
-        )?
-    };
+    let out = necom::libs::clust::format::format_flat_clusters_with_rep(
+        &mut clusters,
+        &names,
+        &matrix,
+        opt_rep,
+        true,
+        opt_format,
+    )?;
 
     let mut writer = necom::writer(outfile)
         .with_context(|| format!("Failed to open writer for {}", outfile))?;

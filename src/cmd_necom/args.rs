@@ -269,6 +269,16 @@ pub fn min_points_arg() -> Arg {
         .help("Minimum number of points to form a dense region in DBSCAN")
 }
 
+/// `--min-pct` argument: alternative way to specify `min_points` as a fraction
+/// of the total number of samples.
+pub fn min_pct_arg() -> Arg {
+    Arg::new("min_pct")
+        .long("min-pct")
+        .num_args(1)
+        .value_parser(clap::value_parser!(f64))
+        .help("Minimum points as a fraction of total samples (0..1). Alternative to --min-points")
+}
+
 /// `--inflation` argument for MCL (default: 2.0).
 pub fn mcl_inflation_arg() -> Arg {
     Arg::new("inflation")
