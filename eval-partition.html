@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-01f7349a.js";
+            window.path_to_searchindex_js = "searchindex-3e21a039.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -404,6 +404,10 @@ cluster $a(i)$ and its average distance to the nearest other cluster $b(i)$. $s(
 <li>Negative: sample may be mis-clustered.</li>
 </ul>
 </li>
+<li><strong>Implementation note</strong>: Following scikit-learn’s convention, samples in singleton
+clusters contribute $s(i) = 0$ to the average (but are still counted in the divisor $N$).
+The score is <code>0.0</code> when there are fewer than 2 clusters or when every sample is its own
+cluster.</li>
 <li><strong>Advantages</strong>: Intuitive; balances cohesion and separation.</li>
 <li><strong>Disadvantages</strong>: High computational complexity ($O(N^2)$); requires optimization for
 large-scale data.</li>
@@ -414,6 +418,9 @@ large-scale data.</li>
 <li><strong>Principle</strong>: Ratio of the minimum between-cluster distance to the maximum within-cluster
 diameter.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Larger is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If the maximum intra-cluster diameter is zero (perfectly compact
+clusters) and the minimum inter-cluster distance is positive, the score is infinite and
+is reported as <code>NA</code>. If both are zero, the score is <code>0.0</code>.</li>
 <li><strong>Advantages</strong>: Simple and intuitive.</li>
 <li><strong>Disadvantages</strong>: Extremely sensitive to noise (because it relies on min/max).</li>
 </ul>
@@ -450,7 +457,7 @@ coordinates are not available. <code>scatter_i</code> is the average distance fr
 the medoid, and inter-cluster distance is the distance between medoids.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
 <li><strong>Boundary cases</strong>: If two medoids coincide and at least one cluster has non-zero scatter,
-the similarity is undefined; a large finite proxy is used so the TSV remains parseable.</li>
+the similarity is undefined; a large finite proxy (<code>1e10</code>) is used so the TSV remains parseable.</li>
 </ul>
 </li>
 </ul>
@@ -489,9 +496,15 @@ is infinite and is reported as <code>NA</code> to keep the TSV parseable.</li>
 <li><strong>Principle</strong>: Composite index based on total dispersion, within-cluster dispersion, and
 maximum centroid distance.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Larger is better</strong>.</li>
-<li><strong>Boundary cases</strong>: If within-cluster dispersion is zero while total dispersion is
-positive (perfectly compact clusters), the score is infinite and is reported as <code>NA</code> to keep
-the TSV parseable.</li>
+<li><strong>Boundary cases</strong>:
+<ul>
+<li>If within-cluster dispersion is zero while total dispersion is positive (perfectly
+compact clusters), the score is infinite and is reported as <code>NA</code> to keep the TSV
+parseable.</li>
+<li>If both within-cluster and total dispersion are zero (all points coincide with the
+global centroid — degenerate input), the score is <code>0.0</code>.</li>
+</ul>
+</li>
 </ul>
 </li>
 <li><strong>Ball-Hall Index</strong>
@@ -514,6 +527,9 @@ the score is infinite; it is reported as <code>NA</code> to keep the TSV parseab
 <li><strong>Principle</strong>: Compactness index based on relative distances (distance to own centroid /
 distance to nearest other centroid).</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>. <strong>Larger is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If a point coincides with another cluster’s centroid (inter-cluster
+distance is zero), a penalty (<code>10.0</code>) is applied to the ratio so the index remains
+finite.</li>
 </ul>
 </li>
 </ul>

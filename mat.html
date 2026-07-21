@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-01f7349a.js";
+            window.path_to_searchindex_js = "searchindex-3e21a039.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -276,19 +276,25 @@ than others.</p>
 <li>An optional diagonal vector, required by transformations such as
 <code>necom mat transform --normalize</code>.</li>
 </ul>
-<p><code>NamedMatrix</code> is the in-memory representation after loading a PHYLIP file. For $N = 10{,} 000$, the
-underlying <code>CondensedMatrix</code> holds roughly million <code>f32</code> values, or about 200 MB.</p>
+<p><code>NamedMatrix</code> is the in-memory representation after loading a PHYLIP file. For $N = 10{,}000$, the
+underlying <code>CondensedMatrix</code> holds roughly 50 million <code>f32</code> values, or about 200 MB.</p>
 <h4 id="condensedmatrix"><a class="header" href="#condensedmatrix">CondensedMatrix</a></h4>
 <p>A memory-efficient dense matrix used directly by hierarchical clustering algorithms such as
 <code>necom clust hier</code>. It stores only the upper triangle (excluding the diagonal) of a symmetric
 matrix in a single <code>Vec&lt;f32&gt;</code>:</p>
+<p>$$
+k = N \cdot \text{row} - \frac{\text{row}(\text{row}+1)}{2} + \text{col} - \text{row} - 1, \quad \text{row} &lt; \text{col}
+$$</p>
 <p>The diagonal is implicitly <code>0.0</code>, and the matrix is symmetric. This is the standard condensed
 distance matrix layout used by many statistical packages (e.g., SciPy) and by the NN-chain
 implementation in <code>necom clust hier</code>.</p>
 <h4 id="scoringmatrix"><a class="header" href="#scoringmatrix">ScoringMatrix<t></t></a></h4>
 <p>A sparse matrix for graph-based algorithms (e.g., DBSCAN, MCL) and partial pairwise data. It stores
-only explicitly set values in a <code>HashMap&lt;usize, T&gt;</code>,using a single compressed key for the lower
+only explicitly set values in a <code>HashMap&lt;usize, T&gt;</code>, using a single compressed key for the lower
 triangle including the diagonal:</p>
+<p>$$
+\text{key}(i, j) = \frac{j(j+1)}{2} + i, \quad i \le j
+$$</p>
 <p>Because this key depends only on <code>i</code> and <code>j</code>, not on the matrix size <code>N</code>, entries remain valid even
 when the inferred size grows as more samples are discovered.</p>
 <h2 id="subcommands-in-detail"><a class="header" href="#subcommands-in-detail">Subcommands in Detail</a></h2>
@@ -347,20 +353,32 @@ emitted in non-deterministic order.</li>
 <p><code>necom mat transform</code> supports common similarity-to-distance conversions:</p>
 <h5 id="1-linear-inversion"><a class="header" href="#1-linear-inversion">1. Linear Inversion</a></h5>
 <p>For similarities with a fixed upper bound:</p>
+<p>$$
+D = \text{Max} - S
+$$</p>
 <p>Examples: BLAST identity (0–100) becomes $D = 100 - S$; fractions become $D = 1 - S$.</p>
 <h5 id="2-normalized-linear-inversion"><a class="header" href="#2-normalized-linear-inversion">2. Normalized Linear Inversion</a></h5>
 <p>For raw scores without a fixed upper bound, normalize by diagonal self-scores first:</p>
+<p>$$
+D = 1 - \frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}}
+$$</p>
 <p>A simpler alternative uses the global maximum: $D = 1 - S(x, y) / Max(S)$.</p>
 <h5 id="3-logarithmic"><a class="header" href="#3-logarithmic">3. Logarithmic</a></h5>
 <p>For probabilities or multiplicative models:</p>
+<p>$$
+D = -\ln(S)
+$$</p>
 <p>After normalization: $D = -\ln(S(x, y) / \sqrt{S(x, x) \cdot S(y, y)})$. Useful for converting
 sequence identity probability to evolutionary distance.</p>
 <h4 id="notes"><a class="header" href="#notes">Notes</a></h4>
 <ul>
 <li>Diagonal information is preserved so that <code>--normalize</code> can use self-scores. If the input lacks
 diagonal values, <code>--normalize</code> will not work correctly.</li>
+<li><code>log</code> of <code>NaN</code> propagates <code>NaN</code> for both off-diagonal and diagonal values.</li>
 <li><code>log</code> of 0 or negative off-diagonal values produces <code>Inf</code>; non-positive diagonal values become
 <code>0</code>.</li>
+<li><code>--normalize</code> warns when diagonal values are <code>NaN</code> or <code>Inf</code> and treats them as zero for that row
+and column.</li>
 </ul>
 <h4 id="future-work"><a class="header" href="#future-work">Future Work</a></h4>
 <p>The following conversions are not yet implemented:</p>

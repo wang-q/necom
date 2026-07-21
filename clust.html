@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-01f7349a.js";
+            window.path_to_searchindex_js = "searchindex-3e21a039.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -434,8 +434,8 @@ the distance/cost corresponding to the linkage criterion.</li>
 SSE); commonly used and robust.</li>
 <li>Update (squared-distance version, where n is cluster size):
 <ul>
-<li>Let the squared distance between merged cluster <code>u∪v</code> and a third cluster <code>w</code> be:</li>
-<li><code>d(u∪v,w)^2 = [ (n_u+n_w) d(u,w)^2 + (n_v+n_w) d(v,w)^2 − n_w d(u,v)^2 ] / (n_u+n_v+n_w)</code></li>
+<li>Let the squared distance between merged cluster <code>u∪v</code> and a third cluster <code>k</code> be:</li>
+<li><code>d(u∪v,k)^2 = [ (n_u+n_k) d(u,k)^2 + (n_v+n_k) d(v,k)^2 − n_k d(u,v)^2 ] / (n_u+n_v+n_k)</code></li>
 </ul>
 </li>
 <li>If the input is non-squared distances: square them for the update, and take the square root

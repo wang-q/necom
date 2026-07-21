@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-01f7349a.js";
+            window.path_to_searchindex_js = "searchindex-3e21a039.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -547,8 +547,8 @@ the distance/cost corresponding to the linkage criterion.</li>
 SSE); commonly used and robust.</li>
 <li>Update (squared-distance version, where n is cluster size):
 <ul>
-<li>Let the squared distance between merged cluster <code>u∪v</code> and a third cluster <code>w</code> be:</li>
-<li><code>d(u∪v,w)^2 = [ (n_u+n_w) d(u,w)^2 + (n_v+n_w) d(v,w)^2 − n_w d(u,v)^2 ] / (n_u+n_v+n_w)</code></li>
+<li>Let the squared distance between merged cluster <code>u∪v</code> and a third cluster <code>k</code> be:</li>
+<li><code>d(u∪v,k)^2 = [ (n_u+n_k) d(u,k)^2 + (n_v+n_k) d(v,k)^2 − n_k d(u,v)^2 ] / (n_u+n_v+n_k)</code></li>
 </ul>
 </li>
 <li>If the input is non-squared distances: square them for the update, and take the square root
@@ -867,7 +867,7 @@ distance.</li>
 <ul>
 <li><strong>Definition</strong>: Cut all edges whose path length from the root exceeds $D$.
 <ul>
-<li>For the root node $r_C$ of any resulting cluster $C$, $dist(root, r_C) \le D$.</li>
+<li>For the root node $r_C$ of any resulting cluster $C$ formed by a cut, $dist(root, r_C) &gt; D$.</li>
 <li>Once a path’s cumulative length exceeds $D$, that path is cut and no longer extends downward.</li>
 </ul>
 </li>
@@ -877,7 +877,7 @@ ancestor (root).</li>
 </ul>
 <h3 id="4-cut-by-maximum-within-cluster-diameter---max-clade"><a class="header" href="#4-cut-by-maximum-within-cluster-diameter---max-clade">4. Cut by Maximum Within-Cluster Diameter (<code>--max-clade</code>)</a></h3>
 <ul>
-<li><strong>Definition</strong>: Partition leaves into non-overlapping clusters ${C_1, C_2, …, C_m}C_i$:
+<li><strong>Definition</strong>: Partition leaves into non-overlapping clusters $C_1, C_2, \ldots, C_m$. For each $C_i$:
 <ol>
 <li><strong>Monophyly</strong>: Leaves in $C_i$ must form a clade in the original tree $T$.</li>
 <li><strong>Diameter constraint</strong>: $\max_{u, v \in C_i} dist(u, v) \le T$.</li>
@@ -1002,8 +1002,7 @@ points are connected by a path of “short edges” ($\le T$), they belong to th
 <ul>
 <li><strong>Definition</strong>: Cut based on the “inconsistency” of a node relative to its subtrees.
 <ul>
-<li>For each non-leaf node $i$, compute its inconsistency coefficient $I_i$.</li>
-<li>, where $H$ is the set of all merge heights within $d$ levels (<code>--deep</code>) below node $i$.</li>
+<li>For each non-leaf node $i$, compute its inconsistency coefficient $I_i = \frac{h_i - \mu}{\sigma}$, where $H$ is the set of all merge heights within $d$ levels (<code>--deep</code>) below node $i$, $h_i$ is the height of node $i$, and $\mu$, $\sigma$ are the mean and standard deviation of $H$.</li>
 <li><strong>SciPy reference</strong>: <code>scipy.cluster.hierarchy.inconsistent</code>.</li>
 <li>Traverse from the root downward for each node $i$:
 <ul>
@@ -1446,19 +1445,25 @@ than others.</p>
 <li>An optional diagonal vector, required by transformations such as
 <code>necom mat transform --normalize</code>.</li>
 </ul>
-<p><code>NamedMatrix</code> is the in-memory representation after loading a PHYLIP file. For $N = 10{,} 000$, the
-underlying <code>CondensedMatrix</code> holds roughly million <code>f32</code> values, or about 200 MB.</p>
+<p><code>NamedMatrix</code> is the in-memory representation after loading a PHYLIP file. For $N = 10{,}000$, the
+underlying <code>CondensedMatrix</code> holds roughly 50 million <code>f32</code> values, or about 200 MB.</p>
 <h4 id="condensedmatrix"><a class="header" href="#condensedmatrix">CondensedMatrix</a></h4>
 <p>A memory-efficient dense matrix used directly by hierarchical clustering algorithms such as
 <code>necom clust hier</code>. It stores only the upper triangle (excluding the diagonal) of a symmetric
 matrix in a single <code>Vec&lt;f32&gt;</code>:</p>
+<p>$$
+k = N \cdot \text{row} - \frac{\text{row}(\text{row}+1)}{2} + \text{col} - \text{row} - 1, \quad \text{row} &lt; \text{col}
+$$</p>
 <p>The diagonal is implicitly <code>0.0</code>, and the matrix is symmetric. This is the standard condensed
 distance matrix layout used by many statistical packages (e.g., SciPy) and by the NN-chain
 implementation in <code>necom clust hier</code>.</p>
 <h4 id="scoringmatrix"><a class="header" href="#scoringmatrix">ScoringMatrix<t></t></a></h4>
 <p>A sparse matrix for graph-based algorithms (e.g., DBSCAN, MCL) and partial pairwise data. It stores
-only explicitly set values in a <code>HashMap&lt;usize, T&gt;</code>,using a single compressed key for the lower
+only explicitly set values in a <code>HashMap&lt;usize, T&gt;</code>, using a single compressed key for the lower
 triangle including the diagonal:</p>
+<p>$$
+\text{key}(i, j) = \frac{j(j+1)}{2} + i, \quad i \le j
+$$</p>
 <p>Because this key depends only on <code>i</code> and <code>j</code>, not on the matrix size <code>N</code>, entries remain valid even
 when the inferred size grows as more samples are discovered.</p>
 <h2 id="subcommands-in-detail"><a class="header" href="#subcommands-in-detail">Subcommands in Detail</a></h2>
@@ -1517,20 +1522,32 @@ emitted in non-deterministic order.</li>
 <p><code>necom mat transform</code> supports common similarity-to-distance conversions:</p>
 <h5 id="1-linear-inversion"><a class="header" href="#1-linear-inversion">1. Linear Inversion</a></h5>
 <p>For similarities with a fixed upper bound:</p>
+<p>$$
+D = \text{Max} - S
+$$</p>
 <p>Examples: BLAST identity (0–100) becomes $D = 100 - S$; fractions become $D = 1 - S$.</p>
 <h5 id="2-normalized-linear-inversion"><a class="header" href="#2-normalized-linear-inversion">2. Normalized Linear Inversion</a></h5>
 <p>For raw scores without a fixed upper bound, normalize by diagonal self-scores first:</p>
+<p>$$
+D = 1 - \frac{S(x, y)}{\sqrt{S(x, x) \cdot S(y, y)}}
+$$</p>
 <p>A simpler alternative uses the global maximum: $D = 1 - S(x, y) / Max(S)$.</p>
 <h5 id="3-logarithmic"><a class="header" href="#3-logarithmic">3. Logarithmic</a></h5>
 <p>For probabilities or multiplicative models:</p>
+<p>$$
+D = -\ln(S)
+$$</p>
 <p>After normalization: $D = -\ln(S(x, y) / \sqrt{S(x, x) \cdot S(y, y)})$. Useful for converting
 sequence identity probability to evolutionary distance.</p>
 <h4 id="notes-1"><a class="header" href="#notes-1">Notes</a></h4>
 <ul>
 <li>Diagonal information is preserved so that <code>--normalize</code> can use self-scores. If the input lacks
 diagonal values, <code>--normalize</code> will not work correctly.</li>
+<li><code>log</code> of <code>NaN</code> propagates <code>NaN</code> for both off-diagonal and diagonal values.</li>
 <li><code>log</code> of 0 or negative off-diagonal values produces <code>Inf</code>; non-positive diagonal values become
 <code>0</code>.</li>
+<li><code>--normalize</code> warns when diagonal values are <code>NaN</code> or <code>Inf</code> and treats them as zero for that row
+and column.</li>
 </ul>
 <h4 id="future-work"><a class="header" href="#future-work">Future Work</a></h4>
 <p>The following conversions are not yet implemented:</p>
@@ -2269,6 +2286,10 @@ cluster $a(i)$ and its average distance to the nearest other cluster $b(i)$. $s(
 <li>Negative: sample may be mis-clustered.</li>
 </ul>
 </li>
+<li><strong>Implementation note</strong>: Following scikit-learn’s convention, samples in singleton
+clusters contribute $s(i) = 0$ to the average (but are still counted in the divisor $N$).
+The score is <code>0.0</code> when there are fewer than 2 clusters or when every sample is its own
+cluster.</li>
 <li><strong>Advantages</strong>: Intuitive; balances cohesion and separation.</li>
 <li><strong>Disadvantages</strong>: High computational complexity ($O(N^2)$); requires optimization for
 large-scale data.</li>
@@ -2279,6 +2300,9 @@ large-scale data.</li>
 <li><strong>Principle</strong>: Ratio of the minimum between-cluster distance to the maximum within-cluster
 diameter.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Larger is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If the maximum intra-cluster diameter is zero (perfectly compact
+clusters) and the minimum inter-cluster distance is positive, the score is infinite and
+is reported as <code>NA</code>. If both are zero, the score is <code>0.0</code>.</li>
 <li><strong>Advantages</strong>: Simple and intuitive.</li>
 <li><strong>Disadvantages</strong>: Extremely sensitive to noise (because it relies on min/max).</li>
 </ul>
@@ -2315,7 +2339,7 @@ coordinates are not available. <code>scatter_i</code> is the average distance fr
 the medoid, and inter-cluster distance is the distance between medoids.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Smaller is better</strong>.</li>
 <li><strong>Boundary cases</strong>: If two medoids coincide and at least one cluster has non-zero scatter,
-the similarity is undefined; a large finite proxy is used so the TSV remains parseable.</li>
+the similarity is undefined; a large finite proxy (<code>1e10</code>) is used so the TSV remains parseable.</li>
 </ul>
 </li>
 </ul>
@@ -2354,9 +2378,15 @@ is infinite and is reported as <code>NA</code> to keep the TSV parseable.</li>
 <li><strong>Principle</strong>: Composite index based on total dispersion, within-cluster dispersion, and
 maximum centroid distance.</li>
 <li><strong>Range</strong>: <code>[0, +∞)</code>. <strong>Larger is better</strong>.</li>
-<li><strong>Boundary cases</strong>: If within-cluster dispersion is zero while total dispersion is
-positive (perfectly compact clusters), the score is infinite and is reported as <code>NA</code> to keep
-the TSV parseable.</li>
+<li><strong>Boundary cases</strong>:
+<ul>
+<li>If within-cluster dispersion is zero while total dispersion is positive (perfectly
+compact clusters), the score is infinite and is reported as <code>NA</code> to keep the TSV
+parseable.</li>
+<li>If both within-cluster and total dispersion are zero (all points coincide with the
+global centroid — degenerate input), the score is <code>0.0</code>.</li>
+</ul>
+</li>
 </ul>
 </li>
 <li><strong>Ball-Hall Index</strong>
@@ -2379,6 +2409,9 @@ the score is infinite; it is reported as <code>NA</code> to keep the TSV parseab
 <li><strong>Principle</strong>: Compactness index based on relative distances (distance to own centroid /
 distance to nearest other centroid).</li>
 <li><strong>Range</strong>: <code>[0, 1]</code>. <strong>Larger is better</strong>.</li>
+<li><strong>Boundary cases</strong>: If a point coincides with another cluster’s centroid (inter-cluster
+distance is zero), a penalty (<code>10.0</code>) is applied to the ratio so the index remains
+finite.</li>
 </ul>
 </li>
 </ul>
@@ -3975,6 +4008,7 @@ Each step fully reorders the children of every internal node, so later steps ove
 <li>Run <code>necom eval &lt;subcommand&gt; --help</code> for command-specific options.</li>
 <li><code>eval compare</code> reads from stdin if the input file is <code>stdin</code>.</li>
 <li><code>eval partition</code> accepts <code>stdin</code> for <code>p1</code> and for <code>--other</code>/<code>--matrix</code>/<code>--tree</code>/<code>--coords</code>.</li>
+<li><code>eval replicate</code> accepts <code>stdin</code> for the target or replicates file (but not both at once).</li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -3988,6 +4022,7 @@ Each step fully reorders the children of every internal node, so later steps ove
 <ul>
 <li>One file: compares all trees in the file against each other (pairwise).</li>
 <li>Two files: compares each tree in the first file against each tree in the second file.</li>
+<li>Use <code>"stdin"</code> to read from standard input (only one of the two files may be <code>stdin</code>).</li>
 </ul>
 <p>Output:</p>
 <ul>
@@ -4070,8 +4105,8 @@ Each step fully reorders the children of every internal node, so later steps ove
 <p>Assign support values to internal nodes of a target tree based on replicate trees.</p>
 <p>Input:</p>
 <ul>
-<li>Target tree file (first positional argument). May contain one or more trees; each is annotated and emitted on its own line.</li>
-<li>Replicate trees file (second positional argument), e.g., from bootstrap or jackknife resampling.</li>
+<li>Target tree file (first positional argument). May contain one or more trees; each is annotated and emitted on its own line. Use <code>"stdin"</code> to read from standard input.</li>
+<li>Replicate trees file (second positional argument), e.g., from bootstrap or jackknife resampling. Use <code>"stdin"</code> to read from standard input.</li>
 </ul>
 <p>Notes:</p>
 <ul>
