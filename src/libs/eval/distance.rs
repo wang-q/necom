@@ -355,6 +355,128 @@ pub fn gamma_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> f64 {
     numerator / (var_x.sqrt() * var_y.sqrt())
 }
 
+/// Large finite proxy for infinity used when inter-medoid distance is zero
+/// in Davies-Bouldin (avoids division by zero while keeping finite arithmetic).
+const DB_INFINITY_PROXY: f64 = 1e10;
+
+/// Calculate Davies-Bouldin Index from a distance matrix.
+///
+/// Uses medoids (cluster members with minimum average intra-cluster distance)
+/// as cluster representatives instead of centroids, because coordinates are
+/// not available.
+///
+/// For each cluster i:
+/// - medoid_i = argmin_{x in C_i} mean_{y in C_i} d(x, y)
+/// - scatter_i = mean_{x in C_i} d(x, medoid_i)
+///
+/// Then DB = 1/k * sum_i max_{j != i} (scatter_i + scatter_j) / d(medoid_i, medoid_j)
+///
+/// Lower values indicate better clustering.
+pub fn davies_bouldin_score(partition: &LabelMap, dist_mat: &dyn DistanceMatrix) -> f64 {
+    // 1. Group items by cluster
+    let mut clusters: HashMap<u32, Vec<&String>> = HashMap::new();
+    for (item, &cluster_id) in partition {
+        clusters.entry(cluster_id).or_default().push(item);
+    }
+
+    let n_clusters = clusters.len();
+    if n_clusters < 2 {
+        return 0.0;
+    }
+
+    // 2. Find medoid and scatter for each cluster
+    struct ClusterStat {
+        medoid: String,
+        scatter: f64,
+    }
+
+    let mut stats: HashMap<u32, ClusterStat> = HashMap::new();
+
+    for (&cluster_id, members) in &clusters {
+        let n_members = members.len();
+        if n_members == 0 {
+            continue;
+        }
+
+        // For each candidate medoid, compute mean distance to other members.
+        // Tie-break on equal scatter by choosing the lexicographically smallest
+        // name so the result is deterministic across HashMap iteration order.
+        let mut best_medoid: Option<&String> = None;
+        let mut best_scatter = f64::INFINITY;
+
+        for &candidate in members {
+            let sum_dist: f64 = members
+                .iter()
+                .map(|&m| dist_mat.get_distance(candidate, m))
+                .sum();
+            let scatter = sum_dist / n_members as f64;
+            if scatter.is_nan() {
+                return f64::NAN;
+            }
+            let better = match best_medoid {
+                None => true,
+                Some(current) => {
+                    scatter < best_scatter
+                        || (scatter == best_scatter
+                            && candidate.as_str() < current.as_str())
+                }
+            };
+            if better {
+                best_scatter = scatter;
+                best_medoid = Some(candidate);
+            }
+        }
+
+        let medoid = best_medoid.expect("non-empty cluster has a medoid").clone();
+        stats.insert(
+            cluster_id,
+            ClusterStat {
+                medoid,
+                scatter: best_scatter,
+            },
+        );
+    }
+
+    // 3. Calculate DB Index
+    let mut total_db = 0.0;
+    let cluster_ids: Vec<u32> = stats.keys().cloned().collect();
+
+    for &i in &cluster_ids {
+        let stat_i = stats.get(&i).expect("stat present");
+        let mut max_r = 0.0;
+
+        for &j in &cluster_ids {
+            if i == j {
+                continue;
+            }
+            let stat_j = stats.get(&j).expect("stat present");
+
+            let dist_medoids = dist_mat.get_distance(&stat_i.medoid, &stat_j.medoid);
+            if dist_medoids.is_nan() {
+                return f64::NAN;
+            }
+
+            let r_ij = if dist_medoids == 0.0 {
+                if stat_i.scatter + stat_j.scatter == 0.0 {
+                    0.0
+                } else {
+                    DB_INFINITY_PROXY
+                }
+            } else {
+                (stat_i.scatter + stat_j.scatter) / dist_medoids
+            };
+
+            if r_ij > max_r {
+                max_r = r_ij;
+            }
+        }
+
+        total_db += max_r;
+    }
+
+    total_db / stats.len() as f64
+}
+
 /// Calculate Kendall's Tau (for clustering)
 ///
 /// Measures the ordinal association between the distance matrix and the cluster membership.

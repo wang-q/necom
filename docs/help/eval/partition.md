@@ -9,7 +9,7 @@ Output:
 
 * TSV with a header row.
 * External evaluation: one row of pair-based metrics (`ari`, `ami`, `homogeneity`, `completeness`, `v_measure`, `fmi`, `nmi`, `mi`, `ri`, `jaccard`, `precision`, `recall`).
-* Distance-based internal evaluation: `silhouette`, `dunn`, `c_index`, `gamma`, `tau`.
+* Distance-based internal evaluation: `silhouette`, `dunn`, `c_index`, `gamma`, `tau`, `davies_bouldin`.
 * Coordinate-based internal evaluation: `davies_bouldin`, `calinski_harabasz`, `pbm`, `ball_hall`, `xie_beni`, `wemmert_gancarski`.
 * Batch mode (`--input-format long`): one row per `Group`, with `Group` as the first column.
 

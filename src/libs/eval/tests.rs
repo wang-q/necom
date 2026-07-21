@@ -174,6 +174,75 @@ fn test_davies_bouldin_score_simple() {
 }
 
 #[test]
+fn test_davies_bouldin_distance_score_simple() {
+    // Cluster 1: A(0), B(1)
+    // Cluster 2: C(5), D(6)
+    // Medoids: A and C (both have scatter = 0.5)
+    // d(A, C) = 5.0
+    // R_12 = (0.5 + 0.5) / 5.0 = 0.2
+    // DB = 0.2
+
+    let mut p = LabelMap::new();
+    p.insert("A".to_string(), 1);
+    p.insert("B".to_string(), 1);
+    p.insert("C".to_string(), 2);
+    p.insert("D".to_string(), 2);
+
+    let names = vec![
+        "A".to_string(),
+        "B".to_string(),
+        "C".to_string(),
+        "D".to_string(),
+    ];
+    let mut dist_mat = NamedMatrix::new(names).unwrap();
+    dist_mat.set_by_name("A", "B", 1.0).unwrap();
+    dist_mat.set_by_name("C", "D", 1.0).unwrap();
+    dist_mat.set_by_name("A", "C", 5.0).unwrap();
+    dist_mat.set_by_name("A", "D", 6.0).unwrap();
+    dist_mat.set_by_name("B", "C", 4.0).unwrap();
+    dist_mat.set_by_name("B", "D", 5.0).unwrap();
+
+    let score = davies_bouldin_distance_score(&p, &dist_mat);
+    assert!(
+        (score - 0.2).abs() < 1e-6,
+        "Distance DB score was {}",
+        score
+    );
+}
+
+#[test]
+fn test_davies_bouldin_distance_score_single_cluster() {
+    let mut p = LabelMap::new();
+    p.insert("A".to_string(), 0);
+    p.insert("B".to_string(), 0);
+
+    let names = vec!["A".to_string(), "B".to_string()];
+    let mut dist_mat = NamedMatrix::new(names).unwrap();
+    dist_mat.set_by_name("A", "B", 1.0).unwrap();
+
+    let score = davies_bouldin_distance_score(&p, &dist_mat);
+    assert_eq!(score, 0.0);
+}
+
+#[test]
+fn test_davies_bouldin_distance_score_missing_sample() {
+    let mut p = LabelMap::new();
+    p.insert("A".to_string(), 1);
+    p.insert("B".to_string(), 1);
+    p.insert("C".to_string(), 2);
+    p.insert("E".to_string(), 2);
+
+    let names = vec!["A".to_string(), "B".to_string(), "C".to_string()];
+    let mut dist_mat = NamedMatrix::new(names).unwrap();
+    dist_mat.set_by_name("A", "B", 1.0).unwrap();
+    dist_mat.set_by_name("A", "C", 5.0).unwrap();
+    dist_mat.set_by_name("B", "C", 4.0).unwrap();
+
+    let score = davies_bouldin_distance_score(&p, &dist_mat);
+    assert!(score.is_nan());
+}
+
+#[test]
 fn test_evaluate_perfect() {
     let mut p1 = LabelMap::new();
     p1.insert("A".to_string(), 1);

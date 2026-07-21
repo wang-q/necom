@@ -1,17 +1,19 @@
 # clust dbscan 规划
 
-> **实现状态注记**：本文档列出 `necom clust dbscan` 尚未实现的规划功能（`--scan`/`--opt-eps`/`--min-pct` 等）。当前已实现基本的 `--eps`/`--min-points` 密度聚类。
-> 截至 2026-07-20，扫描、自动选优、比例参数及距离矩阵版 Silhouette/DBIndex 仍未实现。
+> **实现状态注记**：本文档列出 `necom clust dbscan` 尚未实现的规划功能（`--scan`/`--opt-eps`/`--min-pct` 等）。当前已实现基本的 `--eps`/`--min-points` 密度聚类，以及代表点选择（`--rep medoid|first`）。
+> 截至 2026-07-21，`--scan`、`--opt-eps`、`--min-pct` 仍未实现。距离矩阵版 Silhouette 与 Davies–Bouldin 已由 `necom eval partition --matrix` / `--tree` 提供（坐标版在 `eval partition --coords` 中可用）。
 
 ## 1. 扫描与评分
 
 - 新增 `--scan <start>,<end>,<steps>`：参考 `cut --scan` 风格，对主参数 `eps` 进行扫描，输出 TSV 摘要表（不绘图）
 - 评分列（可选）：
-  - `Silhouette`（距离矩阵版）
-  - `DBIndex`（Davies–Bouldin）
+  - `Silhouette`（距离矩阵版，复用 `libs::eval::silhouette_score`）
+  - `DBIndex`（Davies–Bouldin 距离矩阵版，待实现）
 - 建议输出列：
   - `Epsilon`, `Clusters`, `Noise`, `Silhouette`, `DBIndex`
 - 自动选优（可选）：`--opt-eps {silhouette|max-clusters|min-noise}`，在扫描后直接选点并输出该分区
+
+**复用已有指标**：扫描功能实现时应优先复用 `libs::eval` 中的距离矩阵指标（Silhouette、Dunn、C-index 等），避免在 `clust` 内部重复实现。
 
 **用法规划**：
 `necom clust dbscan ... --scan <start>,<end>,<steps>`
@@ -26,21 +28,32 @@
 
 ## 2. 代表点与比例参数
 
-- 代表点（`cluster`/`pair` 通用）：维持现状（medoid），并在 `pair` 中输出 `(medoid, member)`
-- 新增 `--min-pct <0..1>`：按样本比例折算为 `min_points`，与 `--min-points` 二选一
+- 代表点（`cluster`/`pair` 通用）：已实现 `--rep medoid|first`。`medoid` 为簇内平均距离最小点；`first` 为首个发现的点。
+- 新增 `--min-pct <0..1>`：按样本比例折算为 `min_points`，与 `--min-points` 二选一（规划中）
 
 ## 3. 评分实现（距离矩阵版本）
 
 - Silhouette
-  - 对每个点 i：簇内平均距离 `a(i)`；到其它簇的最小平均距离 `b(i)`；`s(i) = (b-a)/max(a,b)`；总体取平均
-- DBIndex
-  - 每簇散度（簇内到中心的平均距离）；簇间中心距；计算最大比值并平均
-- 位置建议：`libs::clust::metrics` 或 `libs::metrics`，供扫描与 `eval partition` 复用
+  - 对每个点 i：簇内平均距离 `a(i)`；到其它簇的最小平均距离 `b(i)`；`s(i) = (b-a)/max(a,b)`；总体取平均。
+  - 状态：已实现于 `libs::eval::silhouette_score`，可通过 `necom eval partition --matrix` 使用。
+- DBIndex（Davies–Bouldin）
+  - 坐标版已实现于 `libs::eval::davies_bouldin_score`（`eval partition --coords`）；距离矩阵版已实现于 `libs::eval::distance::davies_bouldin_score`（`eval partition --matrix` / `--tree`）。
+  - **距离矩阵版实现方案**：
+    1. 在 `libs/eval/distance.rs` 中新增 `davies_bouldin_score(partition, dist_mat)`。
+    2. 以 **medoid** 替代 centroid：对每个簇，选取簇内平均距离最小的样本作为代表点。
+    3. `scatter_i` = 簇内所有点到 medoid_i 的平均距离。
+    4. `d(c_i, c_j)` = medoid_i 与 medoid_j 之间的距离。
+    5. `R_ij = (scatter_i + scatter_j) / d(c_i, c_j)`，取每个簇的最大 `R_ij` 后平均。
+    6. 边界：若 `d(c_i, c_j) == 0` 且 scatter 之和为 0，则 `R_ij = 0`；否则使用大数代理（与坐标版 `DB_INFINITY_PROXY` 一致）。
+    7. 复杂度：`O(K · n_k²)` 计算 medoid + `O(K²)` 计算 medoid 间距离。
+  - **命名冲突处理**：`coordinates.rs` 中已存在同名 `davies_bouldin_score`。`distance.rs` 中的实现不在 `mod.rs` 顶层 re-export，改由 `format.rs` 通过全路径 `super::distance::davies_bouldin_score` 调用；`DISTANCE_METRIC_NAMES` 增加 `davies_bouldin` 列。
+  - 用途：供 `scan-dbscan` 评分列，同时让 `eval partition --matrix` / `--tree` 支持 DBI。
+- 位置建议：新增距离矩阵版 DBIndex 应放入 `libs::eval`，供扫描与 `eval partition --matrix` 复用。
 
 ## 4. 互操作与职责分离
 
 - 算法侧（本命令）：负责 DBSCAN 聚类与扫描 TSV 输出
-- 评估侧（`eval partition`）：外部有效性（`ARI/AMI/V-Measure`）为主；内部有效性（`Silhouette/DBIndex`）作为补充
+- 评估侧（`eval partition`）：外部有效性（`ARI/AMI/V-Measure`）与内部有效性（`Silhouette/Dunn/C-index` 等）均已支持；扫描评分应优先复用这些实现
 - 与树工具协作：不直接涉及 `nwk`，但输出的 `cluster/pair` 可用于后续评估或可视化
 
 ## 5. 性能与边界

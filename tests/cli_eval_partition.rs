@@ -246,11 +246,14 @@ fn test_eval_partition_internal_silhouette() -> anyhow::Result<()> {
     assert!(output.status.success());
 
     // Output format:
-    // silhouette   dunn    c_index   gamma   tau
-    // 0.5167   4.0000  0.0  0.9707  0.8165
+    // silhouette   dunn    c_index   gamma   tau   davies_bouldin
+    // 0.5167   4.0000  0.0  0.9707  0.8165  0.1250
 
     let lines: Vec<&str> = stdout.lines().collect();
-    assert_eq!(lines[0], "silhouette\tdunn\tc_index\tgamma\ttau");
+    assert_eq!(
+        lines[0],
+        "silhouette\tdunn\tc_index\tgamma\ttau\tdavies_bouldin"
+    );
 
     let values: Vec<&str> = lines[1].split_whitespace().collect();
     let score = values[0].parse::<f64>()?;
@@ -279,6 +282,9 @@ fn test_eval_partition_internal_silhouette() -> anyhow::Result<()> {
 
     let tau = values[4].parse::<f64>()?;
     assert!((tau - 0.816497).abs() < 1e-4, "Tau was {}", tau);
+
+    let db = values[5].parse::<f64>()?;
+    assert!((db - 0.125).abs() < 1e-4, "Davies-Bouldin was {}", db);
 
     Ok(())
 }

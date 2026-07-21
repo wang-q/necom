@@ -240,9 +240,9 @@ necom eval tree tree.nwk --dist matrix.phy --metrics cophenet > fit.tsv
 
 - **`libs/eval/`**：分区级指标，三类共 23 个：
   - **外部指标**（[pairwise.rs](../../src/libs/eval/pairwise.rs)，12 个）：ARI、AMI、Homogeneity、Completeness、V-Measure、FMI、NMI、MI、RI、Jaccard、Precision、Recall。
-  - **距离矩阵指标**（[distance.rs](../../src/libs/eval/distance.rs)，5 个）：`silhouette_score`（[distance.rs](../../src/libs/eval/distance.rs)）、`dunn_score`、`c_index_score`、`gamma_score`、`tau_score`。
+  - **距离矩阵指标**（[distance.rs](../../src/libs/eval/distance.rs)，6 个已实现）：`silhouette_score`（[distance.rs](../../src/libs/eval/distance.rs)）、`dunn_score`、`c_index_score`、`gamma_score`、`tau_score`、距离矩阵版 `davies_bouldin_score`。
   - **坐标指标**（[coordinates.rs](../../src/libs/eval/coordinates.rs)，6 个）：`davies_bouldin_score`、`calinski_harabasz_score`、`pbm_score`、`ball_hall_score`、`xie_beni_score`、`wemmert_gancarski_score`。
-  - **关键**：`TreeDistance`（[distance.rs](../../src/libs/eval/distance.rs)）已实现 `DistanceMatrix` trait，包装 `Tree::node_distance`。**所有 5 个距离矩阵指标可直接用于树评估**，无需重写。
+  - **关键**：`TreeDistance`（[distance.rs](../../src/libs/eval/distance.rs)）已实现 `DistanceMatrix` trait，包装 `Tree::node_distance`。**所有 6 个距离矩阵指标可直接用于树评估**，无需重写。
   - 已良好分层（`EvalTarget`/`DistanceMatrix`/`TreeDistance`/`run_single`/`run_batch`，见 [mod.rs](../../src/libs/eval/mod.rs)）。`eval partition` 使用；`eval tree` 复用 `silhouette_score` + `TreeDistance`。
   - **缺失（需新增）**：Purity、Entropy（Phase 2）、Cophenetic 相关系数（Phase 1）。
 - **`libs/phylo/cmp.rs`**：树拓扑比较（RF、WRF、KF）。`eval tree` 复用；`eval compare` 已迁移为顶级命令。

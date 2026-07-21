@@ -30,7 +30,10 @@ fn test_clust_eval_tree_internal() -> anyhow::Result<()> {
     let lines: Vec<&str> = stdout.lines().collect();
 
     // Check Header
-    assert_eq!(lines[0], "silhouette\tdunn\tc_index\tgamma\ttau");
+    assert_eq!(
+        lines[0],
+        "silhouette\tdunn\tc_index\tgamma\ttau\tdavies_bouldin"
+    );
 
     // Values
     let values: Vec<&str> = lines[1].split('\t').collect();

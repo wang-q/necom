@@ -74,7 +74,7 @@ D 1.0 1.0 0.2 0.0
     let stdout_eval = String::from_utf8(output_eval.stdout)?;
 
     // Output:
-    // Group\tsilhouette\tdunn\tc_index\tgamma\ttau
+    // Group\tsilhouette\tdunn\tc_index\tgamma\ttau\tdavies_bouldin
     // height=0\t0.000000\t...\t...
     // height=0.2\t0.800000\t...\t...
     // height=0.4\t0.800000\t...\t...
@@ -83,7 +83,10 @@ D 1.0 1.0 0.2 0.0
     let lines: Vec<&str> = stdout_eval.lines().collect();
     // Parse output
     // Header
-    assert_eq!(lines[0], "Group\tsilhouette\tdunn\tc_index\tgamma\ttau");
+    assert_eq!(
+        lines[0],
+        "Group\tsilhouette\tdunn\tc_index\tgamma\ttau\tdavies_bouldin"
+    );
     // Expect 4 data rows (height=0, 0.2, 0.4, 0.6) + 1 header
     assert_eq!(lines.len(), 5, "expected 4 data rows + 1 header");
 
@@ -238,7 +241,10 @@ g1\t2\tD\n";
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout)?;
     let lines: Vec<&str> = stdout.lines().collect();
-    assert_eq!(lines[0], "Group\tsilhouette\tdunn\tc_index\tgamma\ttau");
+    assert_eq!(
+        lines[0],
+        "Group\tsilhouette\tdunn\tc_index\tgamma\ttau\tdavies_bouldin"
+    );
     assert_eq!(lines.len(), 2, "expected 1 group row + 1 header");
 
     Ok(())

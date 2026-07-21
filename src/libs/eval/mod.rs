@@ -9,8 +9,8 @@ pub use coordinates::{
     wemmert_gancarski_score, xie_beni_score, Coordinates,
 };
 pub use distance::{
-    c_index_score, dunn_score, gamma_score, silhouette_score, tau_score, DistanceMatrix,
-    TreeDistance,
+    c_index_score, davies_bouldin_score as davies_bouldin_distance_score, dunn_score,
+    gamma_score, silhouette_score, tau_score, DistanceMatrix, TreeDistance,
 };
 pub use format::{
     coord_metric_values, distance_metric_values, external_metric_values,

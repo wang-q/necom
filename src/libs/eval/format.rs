@@ -1,6 +1,7 @@
 //! Output formatting helpers for clustering evaluation metrics.
 
 use super::coordinates::Coordinates;
+use super::distance::davies_bouldin_score as davies_bouldin_distance_score;
 use super::distance::DistanceMatrix;
 use super::pairwise::Metrics;
 use super::LabelMap;
@@ -28,8 +29,14 @@ pub const EXTERNAL_METRIC_NAMES: &[&str] = &[
 ];
 
 /// Distance-based evaluation metric names, in output column order.
-pub const DISTANCE_METRIC_NAMES: &[&str] =
-    &["silhouette", "dunn", "c_index", "gamma", "tau"];
+pub const DISTANCE_METRIC_NAMES: &[&str] = &[
+    "silhouette",
+    "dunn",
+    "c_index",
+    "gamma",
+    "tau",
+    "davies_bouldin",
+];
 
 /// Coordinate-based evaluation metric names, in output column order.
 pub const COORD_METRIC_NAMES: &[&str] = &[
@@ -70,6 +77,7 @@ pub fn distance_metric_values(
         c_index_score(partition, dist_mat),
         gamma_score(partition, dist_mat),
         tau_score(partition, dist_mat),
+        davies_bouldin_distance_score(partition, dist_mat),
     ]
 }
 
