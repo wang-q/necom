@@ -287,11 +287,7 @@ fn linkage_nn_chain(condensed: &mut CondensedMatrix, method: Method) -> Vec<Step
 fn sort_and_relabel(steps: &mut Vec<Step>, n: usize) {
     // Pair each step with its original index, then stable sort by distance.
     let mut indexed: Vec<(usize, Step)> = steps.drain(..).enumerate().collect();
-    indexed.sort_by(|a, b| {
-        a.1.distance
-            .partial_cmp(&b.1.distance)
-            .unwrap_or(std::cmp::Ordering::Equal)
-    });
+    indexed.sort_by(|a, b| a.1.distance.total_cmp(&b.1.distance));
 
     // Build mapping: old_cluster_id -> new_cluster_id.
     // Leaves (0..n) map to themselves. The internal cluster created at
