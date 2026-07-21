@@ -8,7 +8,7 @@ Notes:
 
 * Subcommand groups:
     * Tree: `hier`, `nj`, `upgma`
-    * Flat: `cc`, `dbscan`, `k-medoids`, `mcl`
+    * Flat: `cc`, `dbscan`, `k-medoids`, `mcl`, `scan-dbscan`
 * Run `necom clust <subcommand> --help` for algorithm-specific options.
 
 Examples:

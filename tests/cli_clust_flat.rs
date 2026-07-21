@@ -320,6 +320,77 @@ fn command_clust_dbscan_pair_rep_first() {
 }
 
 #[test]
+fn command_clust_dbscan_min_pct() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(
+        &input,
+        "A\tB\t0.1\nA\tC\t0.2\nB\tC\t0.15\nA\tD\t0.5\nB\tD\t0.6\nC\tD\t0.55\n",
+    )
+    .unwrap();
+
+    // 4 samples; 0.5 -> ceil(2.0) = 2, should match --min-points 2.
+    let (stdout_pct, _) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "dbscan",
+            input.to_str().unwrap(),
+            "--eps",
+            "0.25",
+            "--min-pct",
+            "0.5",
+            "--format",
+            "cluster",
+        ])
+        .run();
+
+    let (stdout_points, _) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "dbscan",
+            input.to_str().unwrap(),
+            "--eps",
+            "0.25",
+            "--min-points",
+            "2",
+            "--format",
+            "cluster",
+        ])
+        .run();
+
+    assert_eq!(stdout_pct, stdout_points);
+}
+
+#[test]
+fn command_clust_dbscan_min_pct_conflicts_with_min_points() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let input = temp.path().join("pairs.tsv");
+    std::fs::write(&input, "A\tB\t0.1\nA\tC\t0.2\nB\tC\t0.15\n").unwrap();
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&[
+            "clust",
+            "dbscan",
+            input.to_str().unwrap(),
+            "--eps",
+            "0.25",
+            "--min-points",
+            "2",
+            "--min-pct",
+            "0.5",
+        ])
+        .run_fail();
+
+    assert!(
+        stderr.contains("mutually exclusive")
+            || stderr.contains("--min-points")
+            || stderr.contains("--min-pct"),
+        "expected mutual exclusion error, got stderr: {}",
+        stderr
+    );
+}
+
+#[test]
 fn command_clust_mcl_pair_rep_first() {
     let temp = tempfile::TempDir::new().unwrap();
     let input = temp.path().join("pairs.tsv");

@@ -6,7 +6,7 @@ The `necom clust` module provides a collection of clustering algorithms for sequ
 
 Commands are divided into two categories by input data type (consistent with `necom clust --help`):
 1.  **Tree**: Build phylogenetic or hierarchical structures from a distance matrix (`hier`, `nj`, `upgma`).
-2.  **Flat**: Generate groups directly from pairwise relations, distances, or similarities (`cc`, `dbscan`, `k-medoids`, `mcl`).
+2.  **Flat**: Generate groups directly from pairwise relations, distances, or similarities (`cc`, `dbscan`, `k-medoids`, `mcl`). DBSCAN parameter scanning is available as `scan-dbscan`.
 
 Flat partitions can also be derived from an existing tree using the separate `necom cut` command (see [`docs/cut.md`](cut.md)).
 
@@ -79,7 +79,30 @@ Tree-building commands always output a Newick tree.
 - **Defaults**: `--eps 0.05`, `--min-points 4`.
 - **Note on `--min-points`**: By default (`--same 0.0`), the neighborhood count includes the point itself because self-distance is 0 and is always <= `eps`. If `--same` is set to a value greater than `eps`, the point is not counted as its own neighbor and may fail to become a core point.
 - **Representative selection**: By default (`--rep medoid`), the representative of each cluster is its medoid (the point with the smallest average distance to other cluster members). Use `--rep first` to use the first-discovered point instead. Noise points are emitted as single-member clusters where the representative is the point itself.
-- **Unimplemented options**: Parameter scanning and scoring such as `--scan`, `--opt-eps`, `--min-pct` are not yet implemented; planning details are in [`notes/design/dbscan-planned.md`](../notes/design/dbscan-planned.md). They may be provided later as subcommands of `necom clust dbscan` or standalone scripts.
+- **`--min-pct`**: Alternative to `--min-points`; specify `min_points` as a fraction of the total number of samples. The effective value is `ceil(P * n_samples)`, range `(0, 1]`. Mutually exclusive with `--min-points`.
+- **Parameter scanning**: To scan `eps` and compare internal metrics, use `necom clust scan-dbscan` (see below).
+
+### DBSCAN Scan (`scan-dbscan`)
+
+- **Principle**: Run DBSCAN repeatedly over a range of `eps` values while keeping `min_points` fixed. For each `eps`, report the number of clusters, the number of noise points, and two internal validity indices (Silhouette and Davies-Bouldin). Optionally, select the best `eps` according to a criterion and output the corresponding partition.
+- **Command**: `necom clust scan-dbscan`
+- **Characteristics**: Parameter exploration for DBSCAN without ground truth.
+- **Use cases**: Choose an appropriate `eps` when the distance scale of the data is unknown.
+- **Input**: Pairwise distances `.tsv` (lower is better).
+- **Output**:
+    * Without `--opt-eps`: a TSV table with columns `Epsilon`, `Clusters`, `Noise`, `Silhouette`, `DBIndex`.
+    * With `--opt-eps`: a clustering partition in `cluster` or `pair` format, using the same conventions as `necom clust dbscan`.
+- **Required**: `--scan <start,end,step>`.
+- **Options**:
+    * `--min-points <N>` or `--min-pct <P>`: same semantics as `necom clust dbscan`.
+    * `--opt-eps {silhouette|max-clusters|min-noise}`: select the best `eps` and output its partition.
+        * `silhouette`: maximize Silhouette score.
+        * `max-clusters`: maximize the number of non-noise clusters.
+        * `min-noise`: minimize the number of noise points.
+        * Ties are resolved by choosing the smaller `eps`.
+- **Metrics**: Silhouette and Davies-Bouldin use the distance-matrix definitions described in [`docs/eval-partition.md`](eval-partition.md). Noise points are treated as singleton clusters when computing metrics.
+- **Performance**: Scanning costs `steps × O(N²)`; reduce the range or step count for large matrices.
+- **Note**: The explicit `end` value of `--scan` is always included, even if the step size does not divide the interval evenly.
 
 ### UPGMA
 

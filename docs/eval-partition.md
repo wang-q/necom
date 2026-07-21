@@ -162,6 +162,11 @@ Clustering evaluation metrics usually fall into two categories: **external valid
   - **Principle**: Rank correlation coefficient between the distance matrix and the clustering matrix.
   - **Range**: `[-1, 1]`. **Larger is better**.
 
+- **Davies-Bouldin Index (DBI)**
+  - **Principle**: Same idea as the coordinate version, but uses **medoids** (cluster members with the smallest average intra-cluster distance) as cluster representatives because coordinates are not available. `scatter_i` is the average distance from cluster members to the medoid, and inter-cluster distance is the distance between medoids.
+  - **Range**: `[0, +∞)`. **Smaller is better**.
+  - **Boundary cases**: If two medoids coincide and at least one cluster has non-zero scatter, the similarity is undefined; a large finite proxy is used so the TSV remains parseable.
+
 #### 2.2 Coordinate-Based
 *Requires a coordinate matrix (`--coords`). Suitable for Euclidean-space data.*
 

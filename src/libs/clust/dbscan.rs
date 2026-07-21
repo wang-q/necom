@@ -186,6 +186,22 @@ where
         (cluster_map, noise_points)
     }
 
+    /// Returns the number of density clusters (non-noise) and the number of
+    /// noise points.
+    pub fn counts(&self) -> (usize, usize) {
+        let mut cluster_ids = std::collections::HashSet::new();
+        let mut noise = 0;
+        for label in &self.clusters {
+            match label {
+                Some(id) => {
+                    cluster_ids.insert(*id);
+                }
+                None => noise += 1,
+            }
+        }
+        (cluster_ids.len(), noise)
+    }
+
     /// Returns clusters as a vector of member-index vectors.
     ///
     /// Noise points (points not assigned to any density cluster) are returned

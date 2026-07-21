@@ -25,7 +25,7 @@ fn main() -> anyhow::Result<()> {
             r###"Subcommand groups:
 
 * Clustering:
-    * clust - Algorithms: cc, dbscan, hier, k-medoids, mcl, nj, upgma
+    * clust - Algorithms: cc, dbscan, hier, k-medoids, mcl, nj, scan-dbscan, upgma
 
 * Tree cutting:
     * cut   - Cut a Newick tree into flat partitions (simple/dynamic/hybrid/scan-simple/scan-dynamic)

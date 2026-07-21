@@ -14,6 +14,7 @@ Notes:
 * The input must contain distances, not similarities.
 * `--eps <V>`: neighborhood radius (default: `0.05`).
 * `--min-points <N>`: minimum number of points (including the point itself) to form a dense region (default: `4`).
+* `--min-pct <P>`: alternative to `--min-points`; specify the minimum as a fraction of the total number of samples (range `(0, 1]`). The effective value is `ceil(P * n_samples)`. Mutually exclusive with `--min-points`.
 * `--same <V>`: default score of identical element pairs (default: `0.0`).
 * `--missing <V>`: default score of missing pairs (default: `1.0`).
 * The representative point is selected by `--rep`:
@@ -22,6 +23,7 @@ Notes:
 * In `cluster` format, the representative is placed first; in `pair` format, it is the first column.
 * Noise points (points not assigned to any density cluster) are emitted as single-member clusters. In `pair` format this appears as `Name <tab> Name`.
 * The neighborhood count used by `--min-points` includes the point itself when `--same` is 0.0 (default), because self-distance is then 0 and is always <= eps. Setting `--same` to a value greater than `eps` excludes the point from its own neighborhood.
+* To scan `eps` values and compare internal metrics, use `necom clust scan-dbscan`.
 
 Examples:
 
@@ -31,5 +33,8 @@ Examples:
 2. Set epsilon and min-points (min-points default: 4; here set to 5)
    `necom clust dbscan pairs.tsv --eps 0.05 --min-points 5`
 
-3. Output as pairs
+3. Use --min-pct instead of --min-points
+   `necom clust dbscan pairs.tsv --min-pct 0.1`
+
+4. Output as pairs
    `necom clust dbscan pairs.tsv --format pair`

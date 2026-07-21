@@ -9,6 +9,7 @@ pub mod hier;
 pub mod k_medoids;
 pub mod mcl;
 pub mod nj;
+pub mod scan_dbscan;
 pub mod upgma;
 
 use clap::{ArgMatches, Command};
@@ -26,6 +27,7 @@ pub fn make_subcommand() -> Command {
         .subcommand(k_medoids::make_subcommand())
         .subcommand(mcl::make_subcommand())
         .subcommand(nj::make_subcommand())
+        .subcommand(scan_dbscan::make_subcommand())
         .subcommand(upgma::make_subcommand())
 }
 /// Execute the clust command.
@@ -37,6 +39,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         Some(("k-medoids", sub_matches)) => k_medoids::execute(sub_matches),
         Some(("mcl", sub_matches)) => mcl::execute(sub_matches),
         Some(("nj", sub_matches)) => nj::execute(sub_matches),
+        Some(("scan-dbscan", sub_matches)) => scan_dbscan::execute(sub_matches),
         Some(("upgma", sub_matches)) => upgma::execute(sub_matches),
         _ => anyhow::bail!("unrecognized clust subcommand"),
     }
