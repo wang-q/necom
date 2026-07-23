@@ -139,7 +139,7 @@ fn to_forest_node_props(
                 comment += &display_text(v);
             }
         }
-        if !comment.is_empty() {
+        if !comment.is_empty() && node.is_leaf() {
             let _ = write!(options, ", comment={{{}}}", comment);
         }
     }
@@ -184,14 +184,9 @@ fn to_forest_node_props(
     }
 
     if content.is_empty() {
-        // Strip the leading comma separator when there is no node content.
-        Ok(if options.starts_with(", ") {
-            options.split_off(2)
-        } else if options.starts_with(',') {
-            options.split_off(1)
-        } else {
-            options
-        })
+        // Keep the leading comma so Forest treats the first token as an option
+        // rather than node content when the node has no text.
+        Ok(options)
     } else {
         Ok(content + &options)
     }
@@ -407,6 +402,51 @@ mod tests {
         assert!(
             !output.contains(r"x\y"),
             "unescaped tri value in output: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn to_forest_internal_node_name_as_label_with_dot() {
+        let mut tree = Tree::new();
+        let root = tree.add_node();
+        let leaf = tree.add_node();
+        let _ = tree.set_root(root);
+        tree.add_child(root, leaf).unwrap();
+
+        tree.get_node_mut(root).unwrap().name = Some("Root".to_string());
+
+        let output = to_forest(&tree, 0.0).unwrap();
+        assert!(
+            output.contains("[, dot, label={Root}"),
+            "internal node name should become a label/dot option, not content, got: {}",
+            output
+        );
+        assert!(
+            !output.contains("[dot,"),
+            "dot must be an option, not node content, got: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn to_forest_internal_comment_not_rendered() {
+        let mut tree = Tree::new();
+        let root = tree.add_node();
+        let leaf = tree.add_node();
+        let _ = tree.set_root(root);
+        tree.add_child(root, leaf).unwrap();
+
+        if let Some(node) = tree.get_node_mut(root) {
+            let mut props = BTreeMap::new();
+            props.insert("comment".to_string(), "internal note".to_string());
+            node.properties = Some(props);
+        }
+
+        let output = to_forest(&tree, 0.0).unwrap();
+        assert!(
+            !output.contains("internal note"),
+            "comments on internal nodes should not be rendered, got: {}",
             output
         );
     }
