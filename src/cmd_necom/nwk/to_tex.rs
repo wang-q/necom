@@ -103,6 +103,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Resolve style markers on the original template so user-provided Forest
     // code cannot shadow them after the forest replacement.
+    // The constants must include the trailing `%`; using `%STYLE_BEGIN` would
+    // leave the final `%` in the generated document.
     const STYLE_BEGIN: &str = "%STYLE_BEGIN%";
     const STYLE_END: &str = "%STYLE_END%";
     let style_begin = template

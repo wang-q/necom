@@ -184,8 +184,10 @@ fn to_forest_node_props(
     }
 
     if content.is_empty() {
-        // Keep the leading comma so Forest treats the first token as an option
-        // rather than node content when the node has no text.
+        // Keep the leading comma. Forest syntax is `[<content>,<options>...]`;
+        // without it, `tier=5` / `dot` would be parsed as node content instead
+        // of options and would be rendered as text in the PDF.
+        // Do NOT strip this comma.
         Ok(options)
     } else {
         Ok(content + &options)
