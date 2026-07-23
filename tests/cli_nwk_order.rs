@@ -315,3 +315,52 @@ fn command_order_olo_conflicts_with_other_sorts() {
         stderr
     );
 }
+
+#[test]
+fn command_order_aliases() {
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "order", "tests/newick/abc.nwk", "--nd"])
+        .run();
+    assert!(stdout.contains("(C,(A,B));"));
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "order", "tests/newick/abc.nwk", "--ndr"])
+        .run();
+    assert!(stdout.contains("((A,B),C);"));
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "order", "tests/newick/abc.nwk", "--an"])
+        .run();
+    assert!(stdout.contains("((A,B),C);"));
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "order", "tests/newick/abc.nwk", "--anr"])
+        .run();
+    assert!(stdout.contains("(C,(B,A));"));
+
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "order", "tests/newick/abc.nwk", "--anr", "--ndr"])
+        .run();
+    assert!(stdout.contains("((B,A),C);"));
+}
+
+#[test]
+fn command_order_alias_conflict() {
+    let (_, stderr) = NecomCmd::new()
+        .args(&["nwk", "order", "tests/newick/abc.nwk", "--nd", "--ndr"])
+        .run_fail();
+    assert!(
+        stderr.contains("cannot be used with"),
+        "expected conflict error for --nd --ndr, got stderr: {}",
+        stderr
+    );
+
+    let (_, stderr) = NecomCmd::new()
+        .args(&["nwk", "order", "tests/newick/abc.nwk", "--an", "--anr"])
+        .run_fail();
+    assert!(
+        stderr.contains("cannot be used with"),
+        "expected conflict error for --an --anr, got stderr: {}",
+        stderr
+    );
+}

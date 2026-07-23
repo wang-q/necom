@@ -13,12 +13,14 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("num_descendants")
                 .long("num-descendants")
+                .visible_alias("nd")
                 .action(ArgAction::SetTrue)
                 .help("By number of descendants"),
         )
         .arg(
             Arg::new("num_descendants_rev")
                 .long("num-descendants-rev")
+                .visible_alias("ndr")
                 .action(ArgAction::SetTrue)
                 .help("By number of descendants, in reverse order"),
         )
@@ -29,12 +31,14 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("alphanumeric")
                 .long("alphanumeric")
+                .visible_alias("an")
                 .action(ArgAction::SetTrue)
                 .help("By alphanumeric order of labels"),
         )
         .arg(
             Arg::new("alphanumeric_rev")
                 .long("alphanumeric-rev")
+                .visible_alias("anr")
                 .action(ArgAction::SetTrue)
                 .help("By alphanumeric order of labels, in reverse order"),
         )

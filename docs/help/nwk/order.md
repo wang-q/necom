@@ -19,8 +19,8 @@ Notes:
    `necom nwk order tree.nwk --num-descendants | necom nwk order stdin --alphanumeric`
 * Sort orders:
     * `--name-list`: by a list of names in the file, one per line.
-    * `--alphanumeric` / `--alphanumeric-rev`: by alphanumeric order of labels, or in reverse order.
-    * `--num-descendants` / `--num-descendants-rev`: by number of descendants (ladderize), or in reverse order.
+    * `--alphanumeric` (`--an`) / `--alphanumeric-rev` (`--anr`): by alphanumeric order of labels, or in reverse order.
+    * `--num-descendants` (`--nd`) / `--num-descendants-rev` (`--ndr`): by number of descendants (ladderize), or in reverse order.
     * `--deladderize` (alias `--dl`): alternate sort direction at each level.
     * `--olo <MATRIX>`: optimal leaf ordering using a distance matrix.
 * `--olo-format` controls the format of the `--olo` matrix: `phylip` (default) or `pair`.
