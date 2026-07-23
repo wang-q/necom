@@ -14,7 +14,7 @@ Notes:
 * Operations:
     * Reroot (default): creates a bifurcating root at the target edge.
     * `--deroot` / `-d`: converts a bifurcating root into a multifurcating root by collapsing its internal children into the root. Takes priority over `--node` and `--lax` (which are ignored when `--deroot` is given).
-* `--support-as-labels`: treat internal node labels as support values and shift them along the rerooting path to maintain split associations.
+* `--support-as-labels` / `-s`: treat internal node labels as support values and shift them along the rerooting path to maintain split associations.
 * Topology cleanup: the original root's parent edge is merged, and degree-2 nodes created during the process are removed.
 
 Examples:

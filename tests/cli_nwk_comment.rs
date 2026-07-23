@@ -91,3 +91,42 @@ fn command_nwk_comment_no_dot_leaves_node_unchanged() {
 
     assert!(!stdout.contains(":dot"));
 }
+
+#[test]
+fn command_nwk_comment_short_flags_and_aliases() {
+    let mut file = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(file, "(A,B);").unwrap();
+    let path = file.path().to_str().unwrap();
+
+    let (stdout_long, _) = NecomCmd::new()
+        .args(&["nwk", "comment", path, "--node", "A", "--string", "x"])
+        .run();
+    let (stdout_short, _) = NecomCmd::new()
+        .args(&["nwk", "comment", path, "--node", "A", "-s", "x"])
+        .run();
+    assert_eq!(stdout_long, stdout_short);
+    assert!(stdout_short.contains(":string=x"));
+
+    let (stdout_long, _) = NecomCmd::new()
+        .args(&["nwk", "comment", path, "--node", "A", "--comment-text", "y"])
+        .run();
+    let (stdout_alias, _) = NecomCmd::new()
+        .args(&["nwk", "comment", path, "--node", "A", "--comment", "y"])
+        .run();
+    assert_eq!(stdout_long, stdout_alias);
+    assert!(stdout_alias.contains(":comment=y"));
+
+    // Write a property and then remove it with the regex short flag.
+    let (stdout, _) = NecomCmd::new()
+        .args(&["nwk", "comment", path, "--node", "A", "--string", "temp"])
+        .run();
+    assert!(stdout.contains(":string=temp"));
+
+    let mut temp_in = Builder::new().suffix(".nwk").tempfile().unwrap();
+    writeln!(temp_in, "{}", stdout.trim()).unwrap();
+    let temp_path = temp_in.path().to_str().unwrap();
+    let (stdout_remove, _) = NecomCmd::new()
+        .args(&["nwk", "comment", temp_path, "-r", "^string="])
+        .run();
+    assert!(!stdout_remove.contains(":string="));
+}

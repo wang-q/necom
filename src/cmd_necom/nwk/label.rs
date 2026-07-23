@@ -25,6 +25,7 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("tab")
                 .long("tab")
+                .short('t')
                 .action(ArgAction::SetTrue)
                 .help("Print labels on a single line, separated by tab stops"),
         )
@@ -34,6 +35,7 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("extra_column")
                 .long("extra-column")
+                .visible_alias("column")
                 .short('c')
                 .action(ArgAction::Append)
                 .value_parser([

@@ -22,6 +22,8 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("no_default_style")
                 .long("no-default-style")
+                .visible_alias("style")
+                .short('s')
                 .action(ArgAction::SetTrue)
                 .help("Skip default font settings in the template to allow custom styles"),
         )

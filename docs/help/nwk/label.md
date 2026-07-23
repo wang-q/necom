@@ -8,13 +8,13 @@ Notes:
 
 * By default, prints all non-empty labels in Newick order, one per line.
 * Use `--root` to print only the root label.
-* Use `--tab` to print labels on a single line separated by tabs.
+* Use `--tab` / `-t` to print labels on a single line separated by tabs.
 * Use `-I` to exclude internal nodes and `-L` to exclude leaf nodes.
 * Selection options (`-n`, `-l`, `-x`) can be combined.
 * With `-D`, descendants of selected internal nodes are also included.
 * `-M` verifies that the selected nodes form a clade with at least two nodes.
 * Duplicate node names may affect selection and clade checks.
-* Extra columns (`-c`):
+* Extra columns (`-c` / `--column`):
     * `dup`: duplicate the node name.
     * `taxid`: `:T=` field from the comment.
     * `species`: `:S=` field from the comment.

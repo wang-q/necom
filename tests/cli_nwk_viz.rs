@@ -430,6 +430,29 @@ fn command_to_tex_no_default_style() {
 }
 
 #[test]
+fn command_to_tex_style_short_flag_and_alias() {
+    let (stdout_long, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "to-tex",
+            "tests/newick/hg38.7way.nwk",
+            "--no-default-style",
+        ])
+        .run();
+    let (stdout_short, _) = NecomCmd::new()
+        .args(&["nwk", "to-tex", "tests/newick/hg38.7way.nwk", "-s"])
+        .run();
+    assert_eq!(stdout_long, stdout_short);
+    assert!(stdout_short.contains("Fira Sans"));
+    assert!(!stdout_short.contains("NotoSans"));
+
+    let (stdout_alias, _) = NecomCmd::new()
+        .args(&["nwk", "to-tex", "tests/newick/hg38.7way.nwk", "--style"])
+        .run();
+    assert_eq!(stdout_long, stdout_alias);
+}
+
+#[test]
 fn command_to_forest_color_latex_escaped() {
     // Color values containing LaTeX special characters must be escaped.
     let newick = "(A[&&NHX:color=#FF0000],B)Root;";

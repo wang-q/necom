@@ -6,8 +6,8 @@ Input:
 
 Output:
 
-* `--style col` (default): key-value pairs.
-* `--style line`: tab-separated values with a header row.
+* `--style` / `-s` `col` (default): key-value pairs.
+* `--style` / `-s` `line`: tab-separated values with a header row.
 
 Notes:
 

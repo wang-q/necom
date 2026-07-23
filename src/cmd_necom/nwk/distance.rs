@@ -10,11 +10,14 @@ pub fn make_subcommand() -> Command {
         .about("Calculates distances between nodes")
         .after_help(include_str!("../../../docs/help/nwk/distance.md"))
         .arg(crate::cmd_necom::args::infile_arg_required())
-        .arg(crate::cmd_necom::args::mode_arg(
-            "root",
-            &["root", "parent", "pairwise", "lca", "phylip"],
-            "Set the mode for calculating distances",
-        ))
+        .arg(
+            crate::cmd_necom::args::mode_arg(
+                "root",
+                &["root", "parent", "pairwise", "lca", "phylip"],
+                "Set the mode for calculating distances",
+            )
+            .short('m'),
+        )
         .arg(crate::cmd_necom::args::internal_arg())
         .arg(crate::cmd_necom::args::leaf_arg())
         .arg(crate::cmd_necom::args::node_arg())

@@ -66,6 +66,24 @@ fn command_stat_style_line() {
 }
 
 #[test]
+fn command_stat_style_short_flag() {
+    let (stdout_long, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "stat",
+            "tests/newick/catarrhini.nwk",
+            "--style",
+            "line",
+        ])
+        .run();
+    let (stdout_short, _) = NecomCmd::new()
+        .args(&["nwk", "stat", "tests/newick/catarrhini.nwk", "-s", "line"])
+        .run();
+    assert_eq!(stdout_long, stdout_short);
+    assert!(stdout_short.contains("phylogram\t19\t10\tYes\t9\t10\t6\t18\t0"));
+}
+
+#[test]
 fn command_stat_forest() {
     let (stdout, _) = NecomCmd::new()
         .args(&["nwk", "stat", "tests/newick/forest.nwk", "--style", "line"])
@@ -362,6 +380,38 @@ fn command_label_formatting_tab() {
 }
 
 #[test]
+fn command_label_short_flags_and_aliases() {
+    let (stdout_long, _) = NecomCmd::new()
+        .args(&["nwk", "label", "tests/newick/catarrhini.nwk", "--tab"])
+        .run();
+    let (stdout_short, _) = NecomCmd::new()
+        .args(&["nwk", "label", "tests/newick/catarrhini.nwk", "-t"])
+        .run();
+    assert_eq!(stdout_long, stdout_short);
+
+    let (stdout_long, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "label",
+            "tests/newick/catarrhini.comment.nwk",
+            "--extra-column",
+            "species",
+        ])
+        .run();
+    let (stdout_alias, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "label",
+            "tests/newick/catarrhini.comment.nwk",
+            "--column",
+            "species",
+        ])
+        .run();
+    assert_eq!(stdout_long, stdout_alias);
+    assert!(stdout_alias.contains("\tHomo\n"));
+}
+
+#[test]
 fn command_label_special_chars() {
     // Special chars (slash, space)
     let (stdout, _) = NecomCmd::new()
@@ -490,6 +540,32 @@ fn command_distance_phylip() {
     assert!(stdout.trim().starts_with("10"));
     assert!(stdout.contains("Homo"));
     assert!(stdout.contains(" 65.000000"));
+}
+
+#[test]
+fn command_distance_mode_short_flag() {
+    let (stdout_long, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "distance",
+            "tests/newick/catarrhini.nwk",
+            "-I",
+            "--mode",
+            "root",
+        ])
+        .run();
+    let (stdout_short, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "distance",
+            "tests/newick/catarrhini.nwk",
+            "-I",
+            "-m",
+            "root",
+        ])
+        .run();
+    assert_eq!(stdout_long, stdout_short);
+    assert!(stdout_short.contains("Homo\t60"));
 }
 
 #[test]
@@ -840,4 +916,19 @@ fn command_indent_zero_length_omitted() {
         .run();
 
     assert_eq!(stdout.trim(), "(A,B)Root;");
+}
+
+#[test]
+fn command_indent_text_short_flag() {
+    let input = "(A,B)Root;";
+    let (stdout_long, _) = NecomCmd::new()
+        .args(&["nwk", "indent", "stdin", "--text", "."])
+        .stdin(input)
+        .run();
+    let (stdout_short, _) = NecomCmd::new()
+        .args(&["nwk", "indent", "stdin", "-t", "."])
+        .stdin(input)
+        .run();
+    assert_eq!(stdout_long, stdout_short);
+    assert!(stdout_short.contains("\n."));
 }

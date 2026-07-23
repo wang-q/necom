@@ -14,7 +14,7 @@ Notes:
 * Underscores (`_`) in names, labels, comments, and visualization attributes (`dot`, `bar`, `rec`, `tri`) are replaced with spaces.
 * Other LaTeX special characters (`{ } \ # $ % & ~ ^`) in names, labels, comments, and visualization attributes (`dot`, `bar`, `rec`, `tri`) are escaped automatically.
 * Requires a LaTeX installation with `fontspec`, `xeCJK` (for East Asian characters), and the `forest` package. Compilation can be done with `tectonic` or `latexmk -xelatex`.
-* Use `--no-default-style` to keep the template's original font setup instead of injecting the default `Noto Sans` configuration.
+* Use `--no-default-style` (`--style`) / `-s` to keep the template's original font setup instead of injecting the default `Noto Sans` configuration.
 
 Examples:
 

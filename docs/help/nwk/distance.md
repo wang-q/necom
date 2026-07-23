@@ -7,7 +7,7 @@ Input:
 
 Notes:
 
-* Modes (`--mode`):
+* Modes (`--mode` / `-m`):
     * `root` (default): distance from each node to the root. Output: `Node \t Distance`.
     * `parent`: distance from each node to its parent. Output: `Node \t Distance`.
     * `pairwise`: distance between every pair of selected nodes, including self-pairs and both `(i, j)` and `(j, i)` orderings. Output: `Node1 \t Node2 \t Distance`.

@@ -9,9 +9,9 @@ Notes:
 * Comments are stored in an NHX-like format (`:key=value`).
 * For named nodes, use `--node`.
 * For unnamed internal nodes, use `--lca` with two comma-separated names, e.g. `--lca A,B`.
-* Use `--string` to add a free-form string stored under the `string` property.
+* Use `--string` / `-s` to add a free-form string stored under the `string` property.
 * Visualization options:
-    * `--color`, `--label`, and `--comment-text` each take one argument.
+    * `--color`, `--label`, and `--comment-text` (`--comment`) each take one argument.
     * `--dot`, `--bar`, `--rec`, and `--tri` take zero or one argument. When no value is supplied they use their default color (see below); any other value is passed through as the color directly.
 * Defaults when no color is given:
     * `--dot` / `--bar`: `black`
@@ -36,7 +36,7 @@ Notes:
     * `ElectricBlue` (142,236,245)
     * `Aquamarine` (152,245,225)
     * `Celadon` (185,251,192)
-* `--remove <REGEX>` scans all nodes and removes whole property entries whose serialized `key=value` (or bare `key`) matches the regex.
+* `--remove` / `-r` <REGEX> scans all nodes and removes whole property entries whose serialized `key=value` (or bare `key`) matches the regex.
 
 Examples:
 

@@ -25,6 +25,35 @@ fn command_rename_basic() {
 }
 
 #[test]
+fn command_rename_short_flag() {
+    let (stdout_long, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "rename",
+            "tests/newick/catarrhini.nwk",
+            "-n",
+            "Homo",
+            "--rename",
+            "Human",
+        ])
+        .run();
+    let (stdout_short, _) = NecomCmd::new()
+        .args(&[
+            "nwk",
+            "rename",
+            "tests/newick/catarrhini.nwk",
+            "-n",
+            "Homo",
+            "-r",
+            "Human",
+        ])
+        .run();
+    assert_eq!(stdout_long, stdout_short);
+    assert!(stdout_short.contains("Human"));
+    assert!(!stdout_short.contains("Homo"));
+}
+
+#[test]
 fn command_rename_lca() {
     // In catarrhini.nwk, Homo and Pan are children of Hominini.
     // Rename Hominini (LCA of Homo,Pan) to CladeX
@@ -327,14 +356,9 @@ fn command_reroot() {
 #[test]
 fn command_reroot_support() {
     // bs.nwk: (((((A,(B,C)61)41,((D,E)86,F)93)100,G)100,H,I);
-    // Reroot at C with -s.
+    // Reroot at C with --support-as-labels.
     // Labels should shift.
-    // 61 (on node (B,C)) should move to node connecting (B,C) to rest?
-    // Path: Root -> ... -> 41 -> 61 -> C
-    // 61 moves to 41. 41 moves to ...
-    // Result should show labels in new positions.
-    // Just verify execution for now and check consistency.
-    let (stdout, _) = NecomCmd::new()
+    let (stdout_long, _) = NecomCmd::new()
         .args(&[
             "nwk",
             "reroot",
@@ -344,12 +368,12 @@ fn command_reroot_support() {
             "--support-as-labels",
         ])
         .run();
-
-    // We expect the tree structure to be rerooted at C.
-    // And labels shifted.
-    // (C, (B, (A, ...)))
-    assert!(stdout.contains("(C,"));
-    assert!(stdout.contains("(B,(A,(((D,E)86,F)93,(G,(H,I)100)100)41)61)"));
+    let (stdout_short, _) = NecomCmd::new()
+        .args(&["nwk", "reroot", "tests/newick/bs.nwk", "-n", "C", "-s"])
+        .run();
+    assert_eq!(stdout_long, stdout_short);
+    assert!(stdout_short.contains("(C,"));
+    assert!(stdout_short.contains("(B,(A,(((D,E)86,F)93,(G,(H,I)100)100)41)61)"));
 }
 
 #[test]

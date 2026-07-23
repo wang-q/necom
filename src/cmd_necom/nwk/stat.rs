@@ -13,6 +13,7 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("style")
                 .long("style")
+                .short('s')
                 .value_parser(["col", "line"])
                 .default_value("col")
                 .help("Output style. [col] for key-value pairs, [line] for TSV"),

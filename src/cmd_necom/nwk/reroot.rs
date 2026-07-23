@@ -15,6 +15,7 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("support_as_labels")
                 .long("support-as-labels")
+                .short('s')
                 .action(ArgAction::SetTrue)
                 .help("Treat internal node labels as support values and shift them when rerooting"),
         )

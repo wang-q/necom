@@ -15,6 +15,7 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("string")
                 .long("string")
+                .short('s')
                 .num_args(1)
                 .help("Free-form string stored as a separate property"),
         )
@@ -28,6 +29,7 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("comment_text")
                 .long("comment-text")
+                .visible_alias("comment")
                 .num_args(1)
                 .help("Comment text after names"),
         )
@@ -64,6 +66,7 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("remove")
                 .long("remove")
+                .short('r')
                 .num_args(1)
                 .help("Scan all nodes and remove parts of comments matching the regex"),
         )

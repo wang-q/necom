@@ -12,6 +12,7 @@ pub fn make_subcommand() -> Command {
         .arg(
             Arg::new("text")
                 .long("text")
+                .short('t')
                 .num_args(1)
                 .default_value("  ")
                 .help("Use this text instead of the default two spaces"),
