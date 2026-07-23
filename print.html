@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2e2c13aa.js";
+            window.path_to_searchindex_js = "searchindex-0e2e87f1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-57acacb7.js"></script>
@@ -3393,10 +3393,10 @@ lengths. See <a href="#necom-nwk"><code>docs/nwk.md</code></a> for the full spec
 <li>Comments are stored in an NHX-like format (<code>:key=value</code>).</li>
 <li>For named nodes, use <code>--node</code>.</li>
 <li>For unnamed internal nodes, use <code>--lca</code> with two comma-separated names, e.g. <code>--lca A,B</code>.</li>
-<li>Use <code>--string</code> to add a free-form string stored under the <code>string</code> property.</li>
+<li>Use <code>--string</code> / <code>-s</code> to add a free-form string stored under the <code>string</code> property.</li>
 <li>Visualization options:
 <ul>
-<li><code>--color</code>, <code>--label</code>, and <code>--comment-text</code> each take one argument.</li>
+<li><code>--color</code>, <code>--label</code>, and <code>--comment-text</code> (<code>--comment</code>) each take one argument.</li>
 <li><code>--dot</code>, <code>--bar</code>, <code>--rec</code>, and <code>--tri</code> take zero or one argument. When no value is supplied they use their default color (see below); any other value is passed through as the color directly.</li>
 </ul>
 </li>
@@ -3432,7 +3432,7 @@ lengths. See <a href="#necom-nwk"><code>docs/nwk.md</code></a> for the full spec
 <li><code>Celadon</code> (185,251,192)</li>
 </ul>
 </li>
-<li><code>--remove &lt;REGEX&gt;</code> scans all nodes and removes whole property entries whose serialized <code>key=value</code> (or bare <code>key</code>) matches the regex.</li>
+<li><code>--remove</code> / <code>-r</code> <regex> scans all nodes and removes whole property entries whose serialized <code>key=value</code> (or bare <code>key</code>) matches the regex.</regex></li>
 </ul>
 <p>Examples:</p>
 <ol>
@@ -3455,7 +3455,7 @@ lengths. See <a href="#necom-nwk"><code>docs/nwk.md</code></a> for the full spec
 </ul>
 <p>Notes:</p>
 <ul>
-<li>Modes (<code>--mode</code>):
+<li>Modes (<code>--mode</code> / <code>-m</code>):
 <ul>
 <li><code>root</code> (default): distance from each node to the root. Output: <code>Node \t Distance</code>.</li>
 <li><code>parent</code>: distance from each node to its parent. Output: <code>Node \t Distance</code>.</li>
@@ -3501,8 +3501,8 @@ lengths. See <a href="#necom-nwk"><code>docs/nwk.md</code></a> for the full spec
 </ul>
 <p>Notes:</p>
 <ul>
-<li>By default, prints the tree indented with two spaces (<code>--text "  "</code>).</li>
-<li>Use <code>--text</code> to customize the indentation string.</li>
+<li>By default, prints the tree indented with two spaces (<code>--text</code> / <code>-t</code> “  “).</li>
+<li>Use <code>--text</code> / <code>-t</code> to customize the indentation string.</li>
 <li>Use <code>--compact</code> / <code>-c</code> to output the tree as a single line.</li>
 <li>The default output is valid Newick.</li>
 <li>Using non-whitespace characters for <code>--text</code> may produce invalid Newick.</li>
@@ -3533,13 +3533,13 @@ lengths. See <a href="#necom-nwk"><code>docs/nwk.md</code></a> for the full spec
 <ul>
 <li>By default, prints all non-empty labels in Newick order, one per line.</li>
 <li>Use <code>--root</code> to print only the root label.</li>
-<li>Use <code>--tab</code> to print labels on a single line separated by tabs.</li>
+<li>Use <code>--tab</code> / <code>-t</code> to print labels on a single line separated by tabs.</li>
 <li>Use <code>-I</code> to exclude internal nodes and <code>-L</code> to exclude leaf nodes.</li>
 <li>Selection options (<code>-n</code>, <code>-l</code>, <code>-x</code>) can be combined.</li>
 <li>With <code>-D</code>, descendants of selected internal nodes are also included.</li>
 <li><code>-M</code> verifies that the selected nodes form a clade with at least two nodes.</li>
 <li>Duplicate node names may affect selection and clade checks.</li>
-<li>Extra columns (<code>-c</code>):
+<li>Extra columns (<code>-c</code> / <code>--column</code>):
 <ul>
 <li><code>dup</code>: duplicate the node name.</li>
 <li><code>taxid</code>: <code>:T=</code> field from the comment.</li>
@@ -3597,8 +3597,8 @@ Each step fully reorders the children of every internal node, so later steps ove
 <li>Sort orders:
 <ul>
 <li><code>--name-list</code>: by a list of names in the file, one per line.</li>
-<li><code>--alphanumeric</code> / <code>--alphanumeric-rev</code>: by alphanumeric order of labels, or in reverse order.</li>
-<li><code>--num-descendants</code> / <code>--num-descendants-rev</code>: by number of descendants (ladderize), or in reverse order.</li>
+<li><code>--alphanumeric</code> (<code>--an</code>) / <code>--alphanumeric-rev</code> (<code>--anr</code>): by alphanumeric order of labels, or in reverse order.</li>
+<li><code>--num-descendants</code> (<code>--nd</code>) / <code>--num-descendants-rev</code> (<code>--ndr</code>): by number of descendants (ladderize), or in reverse order.</li>
 <li><code>--deladderize</code> (alias <code>--dl</code>): alternate sort direction at each level.</li>
 <li><code>--olo &lt;MATRIX&gt;</code>: optimal leaf ordering using a distance matrix.</li>
 </ul>
@@ -3684,7 +3684,7 @@ Each step fully reorders the children of every internal node, so later steps ove
 <ul>
 <li>For nodes with names, use <code>--node</code>.</li>
 <li>For unnamed internal nodes, use <code>--lca</code> with two comma-separated names.</li>
-<li>The total number of <code>--node</code> and <code>--lca</code> arguments must equal the number of <code>--rename</code> arguments.</li>
+<li>The total number of <code>--node</code> and <code>--lca</code> arguments must equal the number of <code>--rename</code> (<code>-r</code>) arguments.</li>
 <li>Matching order: the first N <code>--rename</code> values are applied to the N <code>--node</code> arguments in order, and the remaining <code>--rename</code> values are applied to the <code>--lca</code> arguments in order. The order in which <code>--node</code>, <code>--lca</code>, and <code>--rename</code> arguments appear on the command line does not affect this matching.</li>
 <li>This command is designed for small edits, not batch replacement. For batch replacement, use <code>necom nwk replace</code> or external tools such as <code>sed</code> or <code>perl</code>.</li>
 </ul>
@@ -3763,7 +3763,7 @@ Each step fully reorders the children of every internal node, so later steps ove
 <li><code>--deroot</code> / <code>-d</code>: converts a bifurcating root into a multifurcating root by collapsing its internal children into the root. Takes priority over <code>--node</code> and <code>--lax</code> (which are ignored when <code>--deroot</code> is given).</li>
 </ul>
 </li>
-<li><code>--support-as-labels</code>: treat internal node labels as support values and shift them along the rerooting path to maintain split associations.</li>
+<li><code>--support-as-labels</code> / <code>-s</code>: treat internal node labels as support values and shift them along the rerooting path to maintain split associations.</li>
 <li>Topology cleanup: the original root’s parent edge is merged, and degree-2 nodes created during the process are removed.</li>
 </ul>
 <p>Examples:</p>
@@ -3794,8 +3794,8 @@ Each step fully reorders the children of every internal node, so later steps ove
 </ul>
 <p>Output:</p>
 <ul>
-<li><code>--style col</code> (default): key-value pairs.</li>
-<li><code>--style line</code>: tab-separated values with a header row.</li>
+<li><code>--style</code> / <code>-s</code> <code>col</code> (default): key-value pairs.</li>
+<li><code>--style</code> / <code>-s</code> <code>line</code>: tab-separated values with a header row.</li>
 </ul>
 <p>Notes:</p>
 <ul>
@@ -3951,7 +3951,7 @@ Each step fully reorders the children of every internal node, so later steps ove
 <li>Underscores (<code>_</code>) in names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are replaced with spaces.</li>
 <li>Other LaTeX special characters (<code>{ } \ # $ % &amp; ~ ^</code>) in names, labels, comments, and visualization attributes (<code>dot</code>, <code>bar</code>, <code>rec</code>, <code>tri</code>) are escaped automatically.</li>
 <li>Requires a LaTeX installation with <code>fontspec</code>, <code>xeCJK</code> (for East Asian characters), and the <code>forest</code> package. Compilation can be done with <code>tectonic</code> or <code>latexmk -xelatex</code>.</li>
-<li>Use <code>--no-default-style</code> to keep the template’s original font setup instead of injecting the default <code>Noto Sans</code> configuration.</li>
+<li>Use <code>--no-default-style</code> (<code>--style</code>) / <code>-s</code> to keep the template’s original font setup instead of injecting the default <code>Noto Sans</code> configuration.</li>
 </ul>
 <p>Examples:</p>
 <ol>

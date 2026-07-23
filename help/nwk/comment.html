@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-2e2c13aa.js";
+            window.path_to_searchindex_js = "../../searchindex-0e2e87f1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-57acacb7.js"></script>
@@ -190,10 +190,10 @@
 <li>Comments are stored in an NHX-like format (<code>:key=value</code>).</li>
 <li>For named nodes, use <code>--node</code>.</li>
 <li>For unnamed internal nodes, use <code>--lca</code> with two comma-separated names, e.g. <code>--lca A,B</code>.</li>
-<li>Use <code>--string</code> to add a free-form string stored under the <code>string</code> property.</li>
+<li>Use <code>--string</code> / <code>-s</code> to add a free-form string stored under the <code>string</code> property.</li>
 <li>Visualization options:
 <ul>
-<li><code>--color</code>, <code>--label</code>, and <code>--comment-text</code> each take one argument.</li>
+<li><code>--color</code>, <code>--label</code>, and <code>--comment-text</code> (<code>--comment</code>) each take one argument.</li>
 <li><code>--dot</code>, <code>--bar</code>, <code>--rec</code>, and <code>--tri</code> take zero or one argument. When no value is supplied they use their default color (see below); any other value is passed through as the color directly.</li>
 </ul>
 </li>
@@ -229,7 +229,7 @@
 <li><code>Celadon</code> (185,251,192)</li>
 </ul>
 </li>
-<li><code>--remove &lt;REGEX&gt;</code> scans all nodes and removes whole property entries whose serialized <code>key=value</code> (or bare <code>key</code>) matches the regex.</li>
+<li><code>--remove</code> / <code>-r</code> <regex> scans all nodes and removes whole property entries whose serialized <code>key=value</code> (or bare <code>key</code>) matches the regex.</regex></li>
 </ul>
 <p>Examples:</p>
 <ol>
